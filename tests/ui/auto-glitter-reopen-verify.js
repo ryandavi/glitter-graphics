@@ -3,7 +3,7 @@
 const assert = require('assert');
 const { chromium } = require('playwright');
 
-const APP_URL = process.env.GLITTER_APP_URL || 'http://localhost/glitter/';
+const APP_URL = process.env.GLITTER_URL || 'http://localhost/glitter/';
 
 async function main() {
 	const browser = await chromium.launch({ headless: true });
@@ -151,13 +151,13 @@ async function main() {
 			layer.name = first.name;
 			editor.layerManager.insertLayer(layer);
 			editor.glitterManager.armPicker();
-			await editor.glitterManager.selectGlitter(second.id);
+			await editor.glitterLibrary.selectGlitter(second.id);
 			const generatedName = layer.name;
 			const rowName = editor.layerManager.layersListContainer
 				.querySelector(`[data-layer-id="${layer.id}"] .layer-name`)?.textContent;
 			const pickerDetail = document.getElementById('designGalleryTitleText').textContent;
 			layer.name = 'My custom fill';
-			await editor.glitterManager.selectGlitter(first.id);
+			await editor.glitterLibrary.selectGlitter(first.id);
 			return { generatedName, rowName, pickerDetail, customName: layer.name, expected: second.name };
 		});
 		assert.strictEqual(renamed.generatedName, renamed.expected, 'Generated fill-layer name did not follow its new swatch');

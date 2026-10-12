@@ -125,6 +125,43 @@ async function main() {
 			} catch (error) { failures.push(`${name}: ${error.message.split('\n')[0]}`); }
 		}
 		const probes = [
+			['Failed project decode preserves document and history', async () => {
+				assert(await page.evaluate(async () => {
+					historyAudit.shape();
+					const project = await editor.projectSerializer.serialize();
+					const layer = editor.glitterManager.createLayer();
+					project.layers.push(editor.layerManager.serializeLayer(layer));
+					project.masks[layer.id] = { add: 'data:image/png;base64,broken' };
+					const before = historyAudit.document(), index = editor.historyManager.historyIndex;
+					editor.isSaved = true;
+					try { await editor.projectSerializer.load(project); return false; }
+					catch { return before === historyAudit.document() && index === editor.historyManager.historyIndex; }
+				}), 'failed load changed live document');
+			}],
+			...['canvas', 'image', 'project'].map(target => [`Replace document during ${target === 'image' ? 'path' : 'text'} edit (${target})`, async () => {
+				assert(await page.evaluate(async target => {
+					const e = editor;
+					const project = target === 'project' ? await e.projectSerializer.serialize() : null;
+					if (target === 'image') {
+						e.setTool(ToolType.PEN);
+						e.pathEdit.press(historyAudit.point(20, 20)); e.pathEdit.release(historyAudit.point(20, 20));
+						e.pathEdit.press(historyAudit.point(100, 60)); e.pathEdit.release(historyAudit.point(100, 60));
+					} else {
+						await createTextAt(e, { position: { x: 20, y: 40 } });
+						e.textGlitterManager.applyTextEdit(e.layerManager.getActiveLayer(), 'Unfinished text');
+					}
+					const tool = e.currentTool;
+					if (target === 'canvas') await e.loadBlankImage(200, 150, '#ffffff');
+					else if (target === 'project') { e.isSaved = true; await e.projectSerializer.load(project); }
+					else {
+						const canvas = document.createElement('canvas'); canvas.width = 200; canvas.height = 150;
+						const blob = await new Promise(resolve => canvas.toBlob(resolve));
+						await e.loadImageFile(new File([blob], 'replacement.png', { type: 'image/png' }));
+					}
+					return e.currentTool === tool && !e.getActiveSession() && !e.historyManager.canUndo()
+						&& !e.textGlitterManager.editSession && !e.pathEdit.session;
+				}, target), 'replacement retained a stale session, tool or undo step');
+			}]),
 			['Ten queued undos and redos', async () => {
 				assert(await page.evaluate(async () => {
 					const index = editor.historyManager.historyIndex;

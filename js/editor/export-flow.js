@@ -2,17 +2,11 @@
 
 const EDITOR_EXPORT_FLOW_METHODS = {
 	showExportProgress(target) { this.exportProgressPresenter.show(target); },
-
 	updateExportProgress(...args) { this.exportProgressPresenter.update(...args); },
-
-	_updateExportProgressTime() { this.exportProgressPresenter.updateTime(); },
-
 	hideExportProgress() { this.exportProgressPresenter.hide(); },
-
 	validateExportSettings() {
 		this.settingsStore.validate(this.exportSettings);
 	},
-
 	_layerIntersectsExportCanvas(layer) {
 		if (!isTransformableLayerType(layer?.type)) return true;
 		if (!this.originalCanvas?.width || !this.originalCanvas?.height) return true;
@@ -26,7 +20,6 @@ const EDITOR_EXPORT_FLOW_METHODS = {
 			return true;
 		}
 	},
-
 	// The document as an export or a scene snapshot composes it.
 	getExportCanvasData() {
 		return {
@@ -40,13 +33,11 @@ const EDITOR_EXPORT_FLOW_METHODS = {
 			baseAnimation: this.baseBackgroundManager?.getAnimation() || null
 		};
 	},
-
 	// Export settings for a picture of the scene at document size (filter
 	// previews, the eyedropper): never watermarked, matted or resized.
 	getSceneSnapshotSettings(overrides = {}) {
 		return { ...structuredClone(this.exportSettings), watermarkEnabled: false, transparency: true, outputScale: CONFIG.export.defaults.outputScale, ...overrides };
 	},
-
 	getSceneSnapshotParams(layers, overrides = {}) {
 		return {
 			visibleLayers: layers,
@@ -64,7 +55,6 @@ const EDITOR_EXPORT_FLOW_METHODS = {
 			...overrides
 		};
 	},
-
 	// `fit` ({ label, limitBytes }) exports under a file size; without it the
 	// Target Size export setting decides. A fit lowers settings on the job's
 	// own snapshot and never writes to the stored export settings.

@@ -2,18 +2,16 @@ const CANVAS_GESTURE_METHODS = {
 	// Tool settings remain editable in a sheet, but its hidden tool cannot draw.
 	isCanvasToolSuspended() {
 		return Boolean(this.mobileManager?.isMobile && this.mobileManager.activeDrawer && this.currentTool !== ToolType.SELECT);
-	}
+	},
 
-,
 
 	// The kind of the edit session that owns the canvas and keyboard right
 	// now, or null. Context toolbars and commands
 	// that must not fire inside a session read it.
 	getActiveSession() {
 		return getSessionDefinition(this)?.id || null;
-	}
+	},
 
-,
 togglePreview() {
 		if (this.autoGlitterManager?.isSessionActive()) return;
 		this.showAllLayers = !this.showAllLayers;
@@ -28,9 +26,8 @@ togglePreview() {
 
 		this.requestPreviewUpdate();
 		this.updateActionButtons(); // Updates the button title
-	}
+	},
 
-,
 	setupPreviewListeners() {
 		const previewToggle = document.getElementById('previewModeToggle');
 		const transparencyToggle = document.getElementById('transparencyToggle');
@@ -61,18 +58,7 @@ togglePreview() {
 				this.previewContainer.classList.toggle('bounds', isActive);
 			});
 		}
-		if (snappingToggle) {
-			snappingToggle.classList.toggle('active', PREFERENCES.get('snappingEnabled'));
-			snappingToggle.addEventListener('click', () => {
-				const enabled = !PREFERENCES.get('snappingEnabled');
-				PREFERENCES.set('snappingEnabled', enabled);
-				snappingToggle.classList.toggle('active', enabled);
-				// Settings shows the same preference, so it has to agree.
-				const settingsInput = document.getElementById('snappingEnabled');
-				if (settingsInput) settingsInput.checked = enabled;
-				this.clearSmartGuides();
-			});
-		}
+		this.bindPreferenceControl(snappingToggle, 'snappingEnabled');
 
 		this.previewContainer.addEventListener('pointerdown', event => {
 			if (this.isCanvasToolSuspended() || event.pointerType === 'touch' || !this.originalImage || event.target.closest('.ui-ignore-gestures, .transform-handle-wrapper, .transform-handles')) return;
@@ -146,9 +132,8 @@ togglePreview() {
 				e.preventDefault();
 			}
 		});
-	}
+	},
 
-,
 	startScrubbyZoom(event) {
 		const start = { x: event.clientX, y: event.clientY, zoom: this.viewport.currentZoom };
 		let active = false;
@@ -179,9 +164,8 @@ togglePreview() {
 		window.addEventListener('pointermove', onMove);
 		window.addEventListener('pointerup', onUp);
 		window.addEventListener('pointercancel', onCancel);
-	}
+	},
 
-,
 	// The canvas-picked layer a press at this pointer would drag, if any. The
 	// press and the hover cursor share this test.
 	getCanvasPickedLayerAt(e) {
@@ -189,9 +173,8 @@ togglePreview() {
 		const point = this.viewport.screenToCanvas(e.clientX, e.clientY);
 		const layer = this.layerManager.getTopVisibleLayerAtPoint(point.x, point.y, { includeBase: false, excludeLocked: true });
 		return layer && LAYER_UI_CONFIG[layer.type]?.pickedOnCanvas && isLayerSelectableOnCanvas(layer) ? layer : null;
-	}
+	},
 
-,
 	// A layer picked on the canvas (LAYER_UI_CONFIG pickedOnCanvas) has no
 	// element to press, so a press on its painted pixels selects it and hands
 	// the drag to its move handle: one press-and-drag, like a sticker.
@@ -208,9 +191,8 @@ togglePreview() {
 		if (!transform.chrome) return false;
 		transform.beginHandleDrag('move', e, transform.chrome.box);
 		return true;
-	}
+	},
 
-,
 	startSelectionMarquee(e) {
 		const start = { x: e.clientX, y: e.clientY };
 		const additive = e.shiftKey;
@@ -261,12 +243,11 @@ togglePreview() {
 		window.addEventListener('pointermove', onMove);
 		window.addEventListener('pointerup', onUp);
 		window.addEventListener('pointercancel', onCancel);
-	}
+	},
 
 	// Rubber-band shape creation: drag out the box, release to create a shape of
 	// that size (Shift constrains to a square). A negligible drag = a plain click,
 	// which makes a default-size shape at the click point.
-,
 	beginCreationGesture(clientX, clientY, options = {}) {
 		if (!this.originalImage || !this.previewContainer) {
 			return false;
@@ -288,9 +269,8 @@ togglePreview() {
 		};
 
 		return true;
-	}
+	},
 
-,
 	getCreationBox(clientX, clientY, useCanvas = false, shiftKey = false) {
 		const session = this.creationGesture;
 		if (!session) {
@@ -322,9 +302,8 @@ togglePreview() {
 			centerX: left + width / 2,
 			centerY: top + height / 2
 		};
-	}
+	},
 
-,
 	// Where a line-shaped creation drag ends: the pointer, or with Shift the
 	// nearest angle step around the start.
 	getCreationLineEnd(clientX, clientY, useCanvas = false, shiftKey = false) {
@@ -334,9 +313,8 @@ togglePreview() {
 			? this.viewport.screenToCanvas(clientX, clientY)
 			: { x: clientX - session.containerRect.left, y: clientY - session.containerRect.top };
 		return shiftKey ? PathGeometry.constrainAngle(start, end, CONFIG.tools.path.line.angleStepDeg) : end;
-	}
+	},
 
-,
 	updateCreationGesture(clientX, clientY, shiftKey = false) {
 		const session = this.creationGesture;
 		if (!session) {
@@ -363,9 +341,8 @@ togglePreview() {
 		session.preview.style.top = `${box.top}px`;
 		session.preview.style.width = `${box.width}px`;
 		session.preview.style.height = `${box.height}px`;
-	}
+	},
 
-,
 	cancelCreationGesture() {
 		const session = this.creationGesture;
 		if (!session) {
@@ -374,9 +351,8 @@ togglePreview() {
 
 		session.preview?.remove();
 		this.creationGesture = null;
-	}
+	},
 
-,
 	finishCreationGesture(clientX, clientY, options = {}) {
 		const session = this.creationGesture;
 		if (!session) {
@@ -402,9 +378,8 @@ togglePreview() {
 		}
 
 		return layer;
-	}
+	},
 
-,
 	startCreationDrag(e) {
 		if (this.beginCreationGesture(e.clientX, e.clientY, { shiftKey: e.shiftKey, suppressNextClick: true })) {
 			const onMove = (ev) => {
@@ -434,10 +409,9 @@ togglePreview() {
 			return;
 		}
 
-	}
+	},
 
 	// ===== GLOBAL LISTENERS =====
-,
 	setupGlobalListeners() {
 		// Keyboard
 		document.addEventListener('keydown', (e) => this.handleKeyboard(e));

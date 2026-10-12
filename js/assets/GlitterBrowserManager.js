@@ -56,7 +56,6 @@ class GlitterBrowserManager extends ContentManager {
 		return item;
 	}
 
-
 	async getRecolorSource(item) {
 		const sourceId = item.recipe?.sourceId ?? item.id;
 		if (!this.recolorSources.has(sourceId)) {
@@ -356,7 +355,6 @@ class GlitterBrowserManager extends ContentManager {
 		this.editor.updateStatus(`Selected ${glitter.name} for the ${picker.typeWord} ${getPaintSlotLabel(layer.type, target)}`);
 		window.dispatchEvent(new CustomEvent('layerChanged'));
 
-
 		// Keep the asset-info thumbnail + swatches in sync with the layer's hue
 		// (identity after a fresh pick above, so this clears any prior tint).
 		this.editor.refreshGlitterSwatchVisuals(layer);
@@ -381,11 +379,6 @@ class GlitterBrowserManager extends ContentManager {
 		}
 		// Delegate to main editor's update method
 		this.editor.updateGlitterSelection();
-	}
-
-	setupFilterChips() {
-		// Static facet chips are wired by ContentManager; dynamic category
-		// chips bind when populateCategoryChips creates them.
 	}
 
 }

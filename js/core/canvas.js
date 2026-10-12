@@ -52,3 +52,10 @@ function downscaleCanvas(source, target, width, height, scratch) {
 	draw(current, currentWidth, currentHeight, target, width, height);
 	return target;
 }
+
+function encodeCanvasToBlob(canvas, mimeType, quality) {
+	if (typeof canvas.convertToBlob === 'function') return canvas.convertToBlob({ type: mimeType, quality });
+	return new Promise((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob.type === mimeType ? blob : new Blob([blob], { type: mimeType })) : reject(new Error(`${mimeType} encoder produced no file.`)), mimeType, quality));
+}
+
+if (typeof module !== 'undefined' && module.exports) module.exports = { encodeCanvasToBlob };

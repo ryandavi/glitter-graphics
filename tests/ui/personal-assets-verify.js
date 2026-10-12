@@ -4,16 +4,13 @@ const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
 const { chromium } = require('playwright');
+const { openApp } = require('../lib/app');
 const { exportSnapshot, assertByteIdentity } = require('../parity/export-harness');
 const root = path.resolve(__dirname, '../..');
-const url = process.env.GLITTER_URL || 'http://localhost/glitter/';
 
 async function open(browser) {
-	const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
-	if (process.env.GLITTER_TEST_CSS) await page.route('**/css/style.css*', route => route.fulfill({ contentType: 'text/css', body: fs.readFileSync(process.env.GLITTER_TEST_CSS) }));
-	await page.goto(url, { waitUntil: 'networkidle' });
-	await page.waitForFunction(() => window.editor?.glitterLibrary?.browser && window.editor?.stickerLibrary?.browser);
-	await page.evaluate(() => editor.modalManager.closeAll());
+	const { page } = await openApp({ browser, viewport: { width: 1280, height: 900 } });
+	await page.waitForFunction(() => editor.glitterLibrary?.browser && editor.stickerLibrary?.browser);
 	return page;
 }
 
@@ -65,10 +62,13 @@ async function main() {
 				dx: (icon.left + icon.right - badge.left - badge.right) / 2,
 				dy: (icon.top + icon.bottom - badge.top - badge.bottom) / 2 };
 		});
+		// The entry reveal scales the whole card; hover geometry is measured after it settles.
+		await originTile.evaluate(async tile => { await Promise.all(tile.getAnimations({ subtree: true }).map(animation => animation.finished)); });
 		const restingBadge = await badgeGeometry();
 		assert(restingBadge.iconWidth > 0 && Math.abs(restingBadge.dx) < 0.5 && Math.abs(restingBadge.dy) < 0.5, 'Origin icon is not centered');
 		await originTile.hover();
-		assert.deepStrictEqual(await badgeGeometry(), restingBadge, 'Origin icon changes size or alignment on hover');
+		const hoveredBadge = await badgeGeometry();
+		assert.deepStrictEqual(hoveredBadge, restingBadge, `Origin icon changes size or alignment on hover: ${JSON.stringify({ restingBadge, hoveredBadge })}`);
 		// A static JPEG uses the same pipeline and keeps photographic rendering smooth.
 		ids.jpg = await page.evaluate(async () => {
 			const blob = await fetch('images/glitter/ms-office-texture/wood-oak.jpg').then(response => response.blob());

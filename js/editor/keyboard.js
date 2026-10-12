@@ -12,7 +12,6 @@ const EDITOR_KEYBOARD_METHODS = {
 			}
 		}
 	},
-
 	endTemporaryHandTool() {
 		if (!this.temporaryHandToolActive) return;
 		this.temporaryHandToolActive = false;
@@ -21,7 +20,6 @@ const EDITOR_KEYBOARD_METHODS = {
 		}
 		this.toolBeforeTemporaryHand = null;
 	},
-
 	handleKeyboard(e) {
 		// Track Shift so slider drags (which fire modifier-less 'input' events) can
 		// snap — mirrors the rotation handle's Shift-to-snap.
@@ -60,7 +58,6 @@ const EDITOR_KEYBOARD_METHODS = {
 
 		dispatchKeyboardCommand(this, e, { isTyping });
 	},
-
 	tryArrowNudge(e) {
 		if (this.currentTool !== ToolType.SELECT) return false;
 		if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown' &&
@@ -103,7 +100,6 @@ const EDITOR_KEYBOARD_METHODS = {
 		this.scheduleNudgeSave();
 		return true;
 	},
-
 	scheduleNudgeSave() {
 		clearTimeout(this._nudgeSaveTimer);
 		const ids = this.layerManager.getSelectedLayers().map(layer => layer.id).join(',');
@@ -116,16 +112,13 @@ const EDITOR_KEYBOARD_METHODS = {
 		});
 		this._nudgeSaveTimer = setTimeout(() => this.runPendingCommit('nudge'), CONFIG.ui.history.coalesceMs);
 	},
-
 	registerPendingCommit(key, commit) {
 		this._pendingCommits ||= new Map();
 		this._pendingCommits.set(key, commit);
 	},
-
 	cancelPendingCommit(key) {
 		this._pendingCommits?.delete(key);
 	},
-
 	runPendingCommit(key) {
 		const commit = this._pendingCommits?.get(key);
 		if (!commit) return;
@@ -136,7 +129,6 @@ const EDITOR_KEYBOARD_METHODS = {
 		result.then(() => this._commitsInFlight.delete(result), () => this._commitsInFlight.delete(result));
 		return result;
 	},
-
 	async flushPendingCommits() {
 		while (this._pendingCommits?.size || this._commitsInFlight?.size) {
 			for (const key of this._pendingCommits?.keys() || []) this.runPendingCommit(key);

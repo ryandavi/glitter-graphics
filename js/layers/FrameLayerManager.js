@@ -690,7 +690,7 @@ class FrameLayerManager {
 		this.syncPinnedGeometry(layer);
 		const compositor = context.compositor;
 		if (layer.frameData.kind === 'image') return this.buildImageExportPlan(layer, compositor);
-		return compositor._buildSlotStackExportPlan(layer, {
+		return compositor.buildSlotStackExportPlan(layer, {
 			buildStack: (resolveSource) => this.buildFrameStack(layer, resolveSource)
 		});
 	}

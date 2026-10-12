@@ -70,7 +70,7 @@ foreach ($apis as $type => $api) {
 	$indexById = [];
 	foreach ($index as $record) {
 		$indexById[$record['id']] = $record;
-		if (array_key_exists('slice', $record) || array_key_exists('fileSize', $record) || array_key_exists('frameCount', $record)) {
+		if (array_key_exists('slice', $record) || array_key_exists('fileSize', $record) || ($type === 'sticker' && array_key_exists('frameCount', $record))) {
 			failContract("$type browse index contains deferred detail fields");
 		}
 		if ($type === 'glitter' && (!array_key_exists('colorCodes', $record) || !array_key_exists('colorWeights', $record))) {
@@ -78,6 +78,9 @@ foreach ($apis as $type => $api) {
 		}
 		if ($type === 'glitter' && (empty($record['width']) || empty($record['height']))) {
 			failContract('glitter browse index omits the tile size the preview needs before decoding');
+		}
+		if ($type === 'glitter' && (!array_key_exists('frameCount', $record) || !array_key_exists('frameRate', $record))) {
+			failContract('glitter browse index omits Auto Glitter timing metadata');
 		}
 	}
 	foreach ($assets as $asset) {

@@ -328,23 +328,13 @@ class MaskEditor {
 	// sparkle / swirl tips. The panel surfaces that shared preference as a plain
 	// toggle row (R4); the note below it (R7) only explains the trade-off when a
 	// raster tip is active and edges are crisp. The toggle shows the same
-	// preference as Settings; both write it through editor.setMaskEdgeAntialias
-	// and this method syncs the checked state back.
+	// preference as Settings; both follow the preference store.
 	_syncAntialiasControls() {
 		const toggle = this.ui.antialiasToggle;
 		const note = this.ui.antialiasNote;
 		const edgesCrisp = shouldUseCrispMaskEdges();
 
-		if (toggle) {
-			if (!toggle.dataset.wired) {
-				toggle.dataset.wired = '1';
-				toggle.addEventListener('change', () => {
-					if (toggle.checked === !shouldUseCrispMaskEdges()) return;
-					this.editor.setMaskEdgeAntialias(toggle.checked);
-				});
-			}
-			toggle.checked = !edgesCrisp;
-		}
+		this.editor.bindPreferenceControl(toggle, 'crispMaskEdges', { invert: true });
 
 		if (note) {
 			if (!note.dataset.built) {

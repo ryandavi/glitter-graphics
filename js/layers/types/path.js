@@ -121,7 +121,7 @@ registerLayerType(LayerType.PATH, {
 	},
 	timelineSources: (layer, context) => [
 		...context.compositor._createLayerAnimationTimelineSources(layer, context),
-		...context.compositor._createSparkleTimelineSources(layer)
+		...context.compositor.createSparkleTimelineSources(layer)
 	],
 	serialization: {
 		dataKey: 'pathData',

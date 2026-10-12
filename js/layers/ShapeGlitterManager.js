@@ -24,7 +24,6 @@ class ShapeGlitterManager {
 		this.maskUrlCache = createMaskUrlCache(64);
 		// Uploaded pixels stay outside JSON-cloned layer/history state. Layers keep
 		// only an immutable ref, so old refs remain available to undo/redo.
-		this.imageFillAssets = new Map();
 		this.ui = {};
 		// Shape id used for the NEXT shape created by the tool (set by the picker).
 		this.activeShapeId = CONFIG.tools.shapes.defaultShapeId;
@@ -52,7 +51,6 @@ class ShapeGlitterManager {
 	setupUI() {
 		const id = (x) => document.getElementById(x);
 		this.ui.section = id('shapeSettingsSection');
-		this.ui.picker = id('shapeShapePicker');
 		this.ui.gallery = id('shapesOptions');
 		this.ui.assetThumbnail = id('shapeAssetThumbnail');
 		this.ui.assetName = id('shapeAssetName');
@@ -72,7 +70,6 @@ class ShapeGlitterManager {
 		this.ui.fillImageInput.className = 'ui-ignore-gestures';
 		document.body.appendChild(this.ui.fillImageInput);
 
-		this.renderShapePicker();
 	}
 
 	// How the declared field binder (ui/paint-slot-controls.js) edits a shape.
@@ -105,18 +102,6 @@ class ShapeGlitterManager {
 		};
 	}
 
-	renderShapePicker() {
-		const picker = this.ui.picker;
-		if (!picker) return;
-		picker.innerHTML = '';
-		ShapeLibrary.FILL_SHAPES.forEach(({ id, label }) => {
-			const card = createShapeCard(id, label);
-			card.setAttribute('role', 'option');
-			picker.appendChild(card);
-		});
-		this.syncShapeSelection();
-	}
-
 	// A Library pick reshapes the shape being replaced or the selected shape.
 	// It never adds a layer.
 	pickLibraryShape(shapeId) {
@@ -129,11 +114,6 @@ class ShapeGlitterManager {
 	syncShapeSelection() {
 		const activeLayer = this.getActiveShapeLayer();
 		const current = activeLayer ? activeLayer.shapeData.shapeId : this.getActiveShapeId();
-		this.ui.picker?.querySelectorAll('.brush-shape-option').forEach((el) => {
-			const selected = el.dataset.shape === current;
-			el.classList.toggle('active', selected);
-			el.setAttribute('aria-selected', selected ? 'true' : 'false');
-		});
 		this.ui.gallery?.querySelectorAll('.shape-gallery-option').forEach((el) => {
 			const selected = el.dataset.shape === current;
 			el.classList.toggle('selected', selected);
@@ -146,17 +126,6 @@ class ShapeGlitterManager {
 
 		[this.ui.assetThumbnail, this.ui.assetChange].filter(Boolean).forEach((control) => {
 			control.addEventListener('click', () => pressAssetRow(this.editor, this, () => this.armAssetPicker()));
-		});
-
-		// Shape picker: sets the active shape for new shapes, and reshapes the
-		// selected layer if one is active.
-		this.ui.picker?.addEventListener('click', (event) => {
-			const card = event.target.closest('.brush-shape-option');
-			if (!card) return;
-			this.activeShapeId = card.dataset.shape;
-			const layer = this.getActiveShapeLayer();
-			if (layer) this.applyShapeToLayer(layer, card.dataset.shape);
-			this.syncShapeSelection();
 		});
 
 		[this.ui.fillImageThumbnail, this.ui.fillImageChange].filter(Boolean).forEach((control) => {
@@ -246,16 +215,16 @@ class ShapeGlitterManager {
 			return false;
 		}
 		try {
-			const dataUrl = await this.readFileAsDataUrl(file);
+			const dataUrl = await blobToDataUrl(file);
 			const imageRef = `shape-fill-${Date.now()}-${crypto.randomUUID?.() || Math.random().toString(36).slice(2)}`;
-			await this.registerImageFillAsset(imageRef, {
+			await this.editor.imageFills.register(imageRef, {
 				dataUrl,
 				name: file.name,
 				mimeType: file.type
 			});
 			const targetLayer = this.editor.layerManager.getLayerById(layerId);
 			if (!targetLayer || targetLayer.type !== LayerType.SHAPE) {
-				this.pruneImageFillAssets();
+				this.editor.imageFills.prune();
 				return false;
 			}
 			const fill = this.ensureEffectData(targetLayer, 'fill');
@@ -270,66 +239,6 @@ class ShapeGlitterManager {
 			this.editor.showError(error.message || 'Could not load that image.');
 			return false;
 		}
-	}
-
-	readFileAsDataUrl(file) {
-		return new Promise((resolve, reject) => {
-			const reader = new FileReader();
-			reader.onload = () => resolve(reader.result);
-			reader.onerror = () => reject(new Error('Could not read that image.'));
-			reader.readAsDataURL(file);
-		});
-	}
-
-	async registerImageFillAsset(imageRef, payload) {
-		if (!imageRef || !payload?.dataUrl) return null;
-		const image = await loadImageElement(payload.dataUrl);
-		const asset = {
-			image,
-			url: payload.dataUrl,
-			dataUrl: payload.dataUrl,
-			name: payload.name || 'Image',
-			mimeType: payload.mimeType || 'image/png',
-			// Multi-frame GIFs are decoded only when an export needs them
-			// (SceneCompositor), like glitter and sticker GIFs. isAnimated is a
-			// cheap up-front probe (readGifTiming decodes no pixels) so the
-			// exporter knows which slots to ask for.
-			isAnimated: false
-		};
-		if (asset.mimeType === 'image/gif') {
-			try {
-				asset.isAnimated = await this._probeAnimatedGif(payload.dataUrl);
-			} catch (error) {
-				console.warn('Animated GIF probe failed; treating fill as static.', error);
-			}
-		}
-		this.imageFillAssets.set(imageRef, asset);
-		return asset;
-	}
-
-	async _probeAnimatedGif(dataUrl) {
-		return readGifTiming(await fetchGifBytes(dataUrl)).frameCount > 1;
-	}
-
-	getImageFillAsset(imageRef) {
-		return imageRef ? this.imageFillAssets.get(imageRef) || null : null;
-	}
-
-	clearImageFillAssets() {
-		this.imageFillAssets.clear();
-	}
-
-	pruneImageFillAssets() {
-		const used = new Set();
-		const collect = (layers) => (layers || []).forEach((layer) => {
-			const imageRef = layer?.type === LayerType.SHAPE ? layer.shapeData?.fill?.imageRef : null;
-			if (imageRef) used.add(imageRef);
-		});
-		collect(this.editor.layers);
-		(this.editor.historyManager?.history || []).forEach((state) => collect(state.layers));
-		Array.from(this.imageFillAssets.keys()).forEach((imageRef) => {
-			if (!used.has(imageRef)) this.imageFillAssets.delete(imageRef);
-		});
 	}
 
 	// Shared transform interface (same contract as StickerManager.updateTransform)
@@ -406,7 +315,6 @@ class ShapeGlitterManager {
 
 	// Close or Esc while a shape's picker is armed.
 
-
 	loadLayerSettings(layer) {
 		if (!layer || layer.type !== LayerType.SHAPE) return;
 		const d = layer.shapeData;
@@ -431,7 +339,7 @@ class ShapeGlitterManager {
 	// The image source's asset display, fit, alignment and sampling. Its scale
 	// and position sliders are declared fill fields.
 	syncFillImageControls(fill) {
-		const asset = this.getImageFillAsset(fill?.imageRef);
+		const asset = this.editor.imageFills.get(fill?.imageRef);
 		if (this.ui.fillImageThumbnail) {
 			this.ui.fillImageThumbnail.replaceChildren();
 			if (asset) {
@@ -1066,7 +974,7 @@ class ShapeGlitterManager {
 	}
 
 	buildExportPlan(layer, context) {
-		return context.compositor._buildSlotStackExportPlan(layer);
+		return context.compositor.buildSlotStackExportPlan(layer);
 	}
 }
 

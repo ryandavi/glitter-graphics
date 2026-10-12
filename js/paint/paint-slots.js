@@ -267,7 +267,7 @@ function resolvePaintSlotSource(layer, entry, options = {}) {
 function resolvePaintSlotPreviewSource(editor, layer, entry) {
 	return resolvePaintSlotSource(layer, entry, {
 		glitterAvailable: (glitterId) => Boolean(editor.glitterLibrary?.getItemById(glitterId)),
-		imageResolver: (imageRef) => editor.shapeGlitterManager?.getImageFillAsset(imageRef)
+		imageResolver: (imageRef) => editor.imageFills?.get(imageRef)
 	});
 }
 

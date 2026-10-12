@@ -1378,7 +1378,7 @@ async function checkSheetSettle(page) {
 		PREFERENCES.set('reduceMotion', true);
 		window.editor.mobileManager.setSheetHeight(CONFIG.ui.mobile.sheetDetents.full);
 	});
-	assert(await page.evaluate(() => parseFloat(getComputedStyle(document.getElementById('designPanel')).transitionDuration) === 0), 'App Reduce Motion did not disable sheet transitions');
+	assert(await page.evaluate(() => parseFloat(getComputedStyle(document.getElementById('designPanel')).transitionDuration) <= 0.00001 && editor.mobileManager.sheetTransitionMs() === 0), 'App Reduce Motion did not disable sheet transitions');
 	await page.evaluate(() => PREFERENCES.set('reduceMotion', false));
 	await page.emulateMedia({ reducedMotion: 'reduce' });
 	await page.evaluate(() => window.editor.mobileManager.setSheetHeight(CONFIG.ui.mobile.sheetDetents.half));

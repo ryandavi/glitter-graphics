@@ -20,9 +20,8 @@ const EDITOR_PANEL_METHODS = {
 				? (value, sliderEl, event) => updateCallback(event || { target: sliderEl })
 				: null,
 		});
-	}
+	},
 
-,
 	syncQuickSlider(canonicalId, quickId, quickValueId, suffix) {
 		const canonical = document.getElementById(canonicalId);
 		const quick = document.getElementById(quickId);
@@ -60,9 +59,8 @@ const EDITOR_PANEL_METHODS = {
 			canonical.dispatchEvent(new Event('input'));
 			syncing = false;
 		});
-	}
+	},
 
-,
 	setupMaskEditorListeners() {
 		// Size / Spacing revert to the ACTIVE raster tip's manifest value (its
 		// authored diameter / spacing), falling back to the global default for
@@ -92,9 +90,8 @@ const EDITOR_PANEL_METHODS = {
 		this.syncQuickSlider('maskBrushSize', 'maskBrushSizeQuick', 'maskBrushSizeQuickValue', 'px');
 
 		this.maskEditor?.setupUIListeners();
-	}
+	},
 
-,
 	syncCheckboxes(id1, id2, bidirectional = true) {
 		const elem1 = document.getElementById(id1);
 		const elem2 = document.getElementById(id2);
@@ -120,15 +117,13 @@ const EDITOR_PANEL_METHODS = {
 				syncing = false;
 			});
 		}
-	}
+	},
 
-,
 	setupLayerSettingsListeners() {
 		this.syncCheckboxes('contiguous', 'contextContiguous');
 		this.syncCheckboxes('multiSelect', 'contextMultiSelect');
-	}
+	},
 
-,
 
 setupLayerBlendModeListeners() {
 	if (this._layerBlendModeListenersBound) return;
@@ -142,9 +137,8 @@ setupLayerBlendModeListeners() {
 		this.requestPreviewUpdate();
 		this.saveState('Edit appearance');
 	});
-}
+},
 
-,
 syncLayerBlendModeControl(layer) {
 	if (!layer || !LAYER_UI_CONFIG[layer.type]?.blendable) return;
 	const sectionId = PANEL_SCHEMAS[layer.type]?.section?.id;
@@ -152,23 +146,20 @@ syncLayerBlendModeControl(layer) {
 	if (!control) return;
 	control.value = GlitterBlendModes.forLayer(layer);
 	syncPropertyReverts(control.closest('.property-row'));
-}
+},
 
-,
 isLayerContentLocked(layer) {
 		return Boolean(isLayerFullyLocked(layer) && layer.type !== LayerType.BASE_IMAGE);
-	}
+	},
 
-,
 	canEditLayer(layer, options = {}) {
 		const editable = Boolean(layer) && !this.isLayerContentLocked(layer);
 		if (!editable && options.notify) {
 			this.showError('Unlock this layer to edit it');
 		}
 		return editable;
-	}
+	},
 
-,
 	// Every lock pins the transform, including a position-only one that
 	// canEditLayer lets through.
 	canTransformLayer(layer, options = {}) {
@@ -177,9 +168,8 @@ isLayerContentLocked(layer) {
 			this.showError('Unlock this layer to move or transform it');
 		}
 		return free;
-	}
+	},
 
-,
 	syncLockedLayerUI(layer) {
 		const locked = this.isLayerContentLocked(layer) && !this.layerManager.hasMultiSelection();
 		Object.values(LayerType).map((type) => PANEL_SCHEMAS[type]).filter(Boolean).forEach((schema) => {
@@ -216,9 +206,8 @@ isLayerContentLocked(layer) {
 			const button = document.getElementById(id);
 			if (button) button.disabled = locked;
 		});
-	}
+	},
 
-,
 	// The Inspector's panels by `sectionPrefix`, in the order the switch and the
 	// phone bar show them: the tool's own panel leads, then the session's or
 	// the selection's. With nothing selected the canvas's own properties show
@@ -236,9 +225,8 @@ isLayerContentLocked(layer) {
 		}
 		const tool = TOOLS[this.currentTool]?.panel(this, layer);
 		return tool ? [tool, ...panels.filter((name) => name !== tool)] : panels;
-	}
+	},
 
-,
 	// The one way the Inspector follows the editor: which panels show, their
 	// values, the lock state, the header, and pickers armed for another layer.
 	// Selection, tools, undo, project load and sessions all end here.
@@ -274,9 +262,8 @@ isLayerContentLocked(layer) {
 		syncPickerTarget(this);
 
 		this.syncCanvasBoundsViews();
-	}
+	},
 
-,
 	// What a new layer most likely needs next, from its type's `openOnCreate`:
 	// 'asset' is the Library on its asset, 'panel' is its properties (which
 	// only the phone has to open), and anything else is the key of a flyout
@@ -294,30 +281,26 @@ isLayerContentLocked(layer) {
 			if (mobile?.isMobile) this.armPaintSlot(layer, target);
 		}
 	},
-
 	// Open the glitter Library on one of a layer's paints, through the type's
 	// own field host: the call its glitter chip makes.
 	armPaintSlot(layer, slotKey) {
 		const host = getLayerManagerForType(this, layer.type).fieldHost;
 		if (getPaintSlotDefinition(layer.type, slotKey) && host.getLayer() === layer) host.armPicker(slotKey);
 	},
-
 	// The tail end of "a tool made a layer": back to Select, and the panel
 	// reloads once the caller has finished placing it.
 	finishLayerCreation(layer) {
 		if (!layer) return;
 		this.setTool(ToolType.SELECT);
 		setTimeout(() => this.refreshInspector(), 0);
-	}
+	},
 
-,
 	getVisibleSwitchPanels() {
 		return this.getVisiblePanels().filter((name) => this.switchPanels.has(name));
-	}
+	},
 
 	// The switch between panels showing together (a tool's settings beside the
 	// layer's properties).
-,
 	renderPanelSwitch(host, names) {
 		host.replaceChildren();
 		if (names.length < 2) return;
@@ -332,17 +315,15 @@ isLayerContentLocked(layer) {
 			if (names.includes(name)) this.setCollapsibleSectionOpen(name, true);
 		});
 		host.appendChild(group);
-	}
+	},
 
 	// The bar names the open panel and keeps the selected layer's name beside it.
-,
 	getInspectorPanelTitle(name) {
 		const section = this.switchPanels.get(name)?.section;
 		const active = this.layerManager?.getActiveLayer?.();
 		const own = active && active.type !== LayerType.BASE_IMAGE && PANEL_SCHEMAS[active.type].sectionPrefix === name;
 		return section ? { icon: section.icon, text: own ? LAYER_UI_CONFIG[active.type].displayName : name === 'baseLayerSettings' ? section.tab : section.title } : { icon: 'sliders', text: 'Properties' };
 	},
-
 	syncInspectorHeader() {
 		const icon = document.getElementById('inspectorTitleIcon');
 		const text = document.getElementById('inspectorTitleText');
@@ -381,9 +362,8 @@ isLayerContentLocked(layer) {
 		// The window names the same layer, and follows the selection.
 		this.libraryWindow?.sync();
 		this.updateStatusBar();
-	}
+	},
 
-,
 	// One field per fact, left to right: selection, pointer, document, save
 	// state, zoom. An empty field takes no room.
 	updateStatusBar() {
@@ -405,9 +385,8 @@ isLayerContentLocked(layer) {
 		fields.dimensions.innerHTML = formatDimensions(this.originalCanvas.width, this.originalCanvas.height);
 		fields.save.textContent = this.isSaved ? 'Saved' : 'Unsaved';
 		fields.zoom.innerHTML = formatUnit(this.viewport.getZoomPercentage(), '%');
-	}
+	},
 
-,
 	setupStatusBar() {
 		// The bar sits on the window's bottom edge, so its menu is placed by the
 		// popover (fixed), which opens upward when there is no room below.
@@ -434,9 +413,8 @@ isLayerContentLocked(layer) {
 			cursor.textContent = `${Math.round(point.x)}, ${Math.round(point.y)}`;
 		});
 		container.addEventListener('pointerleave', () => { cursor.textContent = ''; });
-	}
+	},
 
-,
 	updateZoomUI() {
 		const percentage = this.viewport.getZoomPercentage();
 		// Zoom context toolbar reads with the muted-unit treatment like the panels.
@@ -453,9 +431,8 @@ isLayerContentLocked(layer) {
 		} else if (this.currentTool === ToolType.HAND) {
 			this.previewContainer.classList.add('hand-cursor');
 		}
-	}
+	},
 
-,
 	updateTransparencyGrid() {
 		if (!this.previewContainer.classList.contains('transparent-bg')) return;
 
@@ -466,11 +443,10 @@ isLayerContentLocked(layer) {
 		this.previewWrapper.style.backgroundSize = `${size}px ${size}px`;
 		this.previewWrapper.style.backgroundPosition =
 			`${this.viewport.panX}px ${this.viewport.panY}px, ${this.viewport.panX}px ${this.viewport.panY + half}px, ${this.viewport.panX + half}px ${this.viewport.panY - half}px, ${this.viewport.panX - half}px ${this.viewport.panY}px`;
-	}
+	},
 
 	// ===== UX: EMPTY STATE MANAGEMENT =====,
 
-,
 	// A panel with an empty state (schema `controls`) shows its controls while
 	// the inspected layer is of the panel's type and has something to edit
 	// (the type's `panelEmpty`). Pass no layer to reset every panel.
@@ -484,9 +460,8 @@ isLayerContentLocked(layer) {
 			});
 		});
 		this.mobileManager?.syncBar();
-	}
+	},
 
-,
 	syncNoLayerPanelState() {
 		const selectedLayers = this.layerManager?.getSelectedLayers?.() || [];
 		const multiCount = selectedLayers.length;
@@ -505,7 +480,7 @@ isLayerContentLocked(layer) {
 				: 'Selected together for layer actions. Movement and alignment are unavailable while the selection includes a locked, pinned, empty, or Base Image layer.';
 			document.querySelectorAll('#multiSelectionAlignScope button, [data-multi-align]').forEach((button) => { button.disabled = !canTransform; });
 			document.querySelectorAll('[data-multi-distribute]').forEach((button) => { button.disabled = !canTransform || multiCount < 3; });
-			const canChangeLayers = selectedLayers.every((layer) => layer.type !== LayerType.BASE_IMAGE && !isLayerFullyLocked(layer));
+			const canChangeLayers = selectedLayers.every((layer) => canEditLayerInStack(layer));
 			const duplicate = document.getElementById('multiSelectionDuplicateBtn');
 			const remove = document.getElementById('multiSelectionDeleteBtn');
 			if (duplicate) {
@@ -522,9 +497,8 @@ isLayerContentLocked(layer) {
 		if (multiGroup) multiGroup.hidden = true;
 		if (emptyText) emptyText.textContent = 'Nothing selected';
 		if (emptySubtext) emptySubtext.textContent = 'Pick a layer to edit it, or add content below.';
-	}
+	},
 
-,
 	loadActiveLayerSettings() {
 		const layer = this.layerManager.getInspectedLayer();
 		if (!layer) return;
@@ -532,9 +506,8 @@ isLayerContentLocked(layer) {
 
 		getLayerManagerForType(this, layer.type)?.loadLayerSettings(layer);
 		queueMicrotask(() => syncPropertyReverts());
-	}
+	},
 
-,
 	updateGlitterSelection() {
 		const layer = this.layerManager.getInspectedLayer();
 		const manager = getLayerManagerForType(this, layer?.type);
@@ -554,9 +527,8 @@ isLayerContentLocked(layer) {
 		// Update helpful message
 		this.updateHelpfulMessage();
 
-	}
+	},
 
-,
 	updateStickerSelection() {
 		const layer = this.layerManager.getActiveLayer();
 

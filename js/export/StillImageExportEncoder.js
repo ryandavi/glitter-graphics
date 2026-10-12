@@ -1,9 +1,5 @@
 'use strict';
 
-function encodeCanvasToBlob(canvas, mimeType, quality) {
-	return new Promise((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob.type === mimeType ? blob : new Blob([blob], { type: mimeType })) : reject(new Error(`${mimeType} encoder produced no file.`)), mimeType, quality));
-}
-
 class StillImageExportEncoder {
 	setFileName(fileName) { if (fileName) this.fileName = fileName; }
 	async process(params) {

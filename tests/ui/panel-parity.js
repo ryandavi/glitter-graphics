@@ -5,7 +5,7 @@
 // (tag, classes, nearest [id] ancestor, input ranges) plus, per layer type,
 // the hidden/active state of every control through a full paint-slot mode
 // sweep. The committed baseline is the zero-behavior-change contract: after
-// a template migration the diff must be empty — any delta is a defect, not
+// a template migration the diff must be empty â€” any delta is a defect, not
 // a judgment call.
 //
 //   node tests/ui/panel-parity.js            diff current DOM against baseline
@@ -20,7 +20,7 @@ const path = require('path');
 
 const { routeSourceSnapshot } = require('../../tools/ui-states');
 
-const APP_URL = process.env.GLITTER_URL || 'http://localhost/glitter/';
+const { openApp } = require('../lib/app');
 const VIEWPORT = { width: 1400, height: 1000 };
 const BASELINE_PATH = process.env.GLITTER_PANEL_BASELINE || path.join(__dirname, '..', 'fixtures', 'panel-parity-baseline.json');
 const MAX_REPORTED_DIFFS = 200;
@@ -49,16 +49,8 @@ function assert(condition, message) {
 	}
 }
 
-async function openEditor(page) {
-	await routeSourceSnapshot(page);
-	await page.goto(APP_URL, { waitUntil: 'networkidle' });
-	await page.evaluate(() => {
-		document.querySelectorAll('.modal-overlay.visible').forEach((node) => node.classList.remove('visible'));
-	});
-	await page.evaluate(async () => {
-		await window.editor.loadBlankImage(500, 400, '#ffffff');
-	});
-	await page.waitForFunction(() => Boolean(window.editor?.originalImage));
+async function openEditor(browser) {
+	return openApp({ browser, viewport: VIEWPORT, document: { width: 500, height: 400 }, setup: routeSourceSnapshot });
 }
 
 async function settle(page) {
@@ -342,9 +334,8 @@ async function capture(browser) {
 	const snapshot = { structure: null, states: {} };
 
 	{
-		const page = await browser.newPage({ viewport: VIEWPORT });
+		const { page } = await openEditor(browser);
 		try {
-			await openEditor(page);
 			await settle(page);
 			await page.evaluate(() => {
 				const image = document.getElementById('imagePanelSection');
@@ -377,9 +368,8 @@ async function capture(browser) {
 	}
 
 	for (const [type, setup] of Object.entries(LAYER_SETUPS)) {
-		const page = await browser.newPage({ viewport: VIEWPORT });
+		const { page } = await openEditor(browser);
 		try {
-			await openEditor(page);
 			await setup(page);
 			await settle(page);
 			snapshot.states[type] = await captureLayerState(page);
@@ -432,7 +422,7 @@ async function main() {
 	const browser = await chromium.launch({ headless: true });
 	try {
 		const snapshot = await capture(browser);
-		assert(snapshot.structure.length > 100, `Suspiciously small structure capture (${snapshot.structure.length} entries) — did the app boot?`);
+		assert(snapshot.structure.length > 100, `Suspiciously small structure capture (${snapshot.structure.length} entries) â€” did the app boot?`);
 
 		if (captureMode) {
 			fs.mkdirSync(path.dirname(BASELINE_PATH), { recursive: true });
@@ -445,14 +435,14 @@ async function main() {
 			return;
 		}
 
-		assert(fs.existsSync(BASELINE_PATH), `No baseline at ${BASELINE_PATH} — run with --capture first`);
+		assert(fs.existsSync(BASELINE_PATH), `No baseline at ${BASELINE_PATH} â€” run with --capture first`);
 		const baseline = JSON.parse(fs.readFileSync(BASELINE_PATH, 'utf8'));
 		const problems = diff(baseline, snapshot);
 		if (problems.length) {
 			console.error(`Panel parity FAILED: ${problems.length} diff(s) against baseline\n`);
 			problems.slice(0, MAX_REPORTED_DIFFS).forEach((line) => console.error(line));
 			if (problems.length > MAX_REPORTED_DIFFS) {
-				console.error(`… and ${problems.length - MAX_REPORTED_DIFFS} more`);
+				console.error(`â€¦ and ${problems.length - MAX_REPORTED_DIFFS} more`);
 			}
 			process.exit(1);
 		}

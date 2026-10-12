@@ -6,6 +6,7 @@
 	const BlendModes = root.GlitterBlendModes || (typeof require === 'function' ? require('./blend-modes.js') : null);
 	const Ops = root.GlitterFilterOps || (typeof require === 'function' ? require('./filter-ops.js') : null);
 	const Filters = root.GlitterFilters || (typeof require === 'function' ? require('./filter-looks.js') : null);
+	const canvasBlob = typeof encodeCanvasToBlob === 'function' ? encodeCanvasToBlob : require('../core/canvas.js').encodeCanvasToBlob;
 	const FILTER_TYPES = Filters.FILTER_TYPES;
 
 	function config() {
@@ -200,11 +201,6 @@
 		context.fillStyle = gradient;
 		context.fillRect(-centerX * radiusY / radiusX, -centerY, width * radiusY / radiusX, height);
 		context.restore();
-	}
-
-	function canvasBlob(canvas, type, quality) {
-		if (typeof canvas.convertToBlob === 'function') return canvas.convertToBlob({ type, quality });
-		return new Promise((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('JPEG encoder produced no data.')), type, quality));
 	}
 
 	async function jpegRoundTrip(imageData, params, options = {}) {

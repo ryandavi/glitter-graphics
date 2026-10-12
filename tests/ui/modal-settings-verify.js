@@ -7,8 +7,7 @@
 // decided by option text, a tab strip that resized the window, toggles that no
 // keyboard could reach, and "disabled" rows that Tab could still edit.
 
-const { chromium } = require("playwright");
-const APP_URL = process.env.GLITTER_URL || 'http://localhost/glitter/';
+const { openApp } = require('../lib/app');
 const results = [];
 function check(name, cond, detail='') {
 	results.push({ name, ok: !!cond, detail });
@@ -52,19 +51,7 @@ async function verifySteppedSlider(page, width) {
 	}));
 }
 (async () => {
-	const browser = await chromium.launch({ headless: true });
-	const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
-	await context.addInitScript(() => localStorage.setItem('glitterEditor_welcomeModalSeen', 'true'));
-	const page = await context.newPage();
-	if (process.env.GLITTER_CSS) {
-		await page.route('**/css/style.css*', (route) => route.fulfill({ path: process.env.GLITTER_CSS, contentType: 'text/css' }));
-	}
-	const errors = [];
-	page.on('pageerror', e => errors.push('pageerror: ' + e.message));
-	page.on('console', m => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
-	await page.goto(APP_URL, { waitUntil: 'domcontentloaded' });
-	await page.waitForFunction(() => window.editor != null, null, { timeout: 20000 });
-	await page.waitForTimeout(600);
+	const { browser, page, errors } = await openApp({ viewport: { width: 1440, height: 900 } });
 
 	// ---- switches are focusable ------------------------------------------
 	await page.evaluate(() => window.editor.modalManager.open('settingsModal'));
@@ -429,6 +416,7 @@ async function verifySteppedSlider(page, width) {
 		editor.saveSettingsToStorage();
 	});
 	await page.reload({ waitUntil: 'networkidle' });
+	await page.waitForFunction(() => window.editor?.modalManager);
 	check('theme survives reload through its early-paint key', await page.evaluate(() =>
 		document.documentElement.dataset.theme === 'light' && window.editor.interfaceTheme === 'light'
 			&& readStored(STORAGE_KEYS.theme.key, null) === 'light'

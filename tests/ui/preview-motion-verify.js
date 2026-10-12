@@ -1,16 +1,14 @@
 'use strict';
 
 const assert = require('assert/strict');
-const fs = require('fs');
 const { chromium } = require('playwright');
+const { openApp } = require('../lib/app');
 const { exportSnapshot, assertByteIdentity } = require('../parity/export-harness');
 
 async function main() {
 	const browser = await chromium.launch();
 	try {
-		const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
-		if (process.env.GLITTER_TEST_CSS) await page.route('**/css/style.css*', route => route.fulfill({ contentType: 'text/css', body: fs.readFileSync(process.env.GLITTER_TEST_CSS) }));
-		await page.goto(process.env.GLITTER_URL || 'http://localhost/glitter/', { waitUntil: 'networkidle' });
+		const { page } = await openApp({ browser });
 		await page.evaluate(async () => {
 			const editor = window.editor;
 			await editor.loadBlankImage(96, 96, '#ffffff');
@@ -99,7 +97,7 @@ async function main() {
 		await page.evaluate(() => window.editor.animationPanel.setPaused(false));
 		await page.waitForFunction(() => [...window.editor.stickerManager.layerElements.values()].every(node => node.querySelector('img').src === window.motionFixture.url));
 		assert.equal(await page.evaluate(() => window.editor.animationPanel.previewFrames.size), 0, 'Resume releases cached preview frames');
-		assert(await page.evaluate(() => editor.shapeGlitterManager.layerElements.get(window.motionFixture.patternId).querySelector('.pattern-scrolling').getAnimations().length === 1), 'Resume must restart pattern scroll');
+		assert(await page.evaluate(() => editor.shapeGlitterManager.layerElements.get(window.motionFixture.patternId).querySelector('.pattern-scrolling').getAnimations().map(animation => animation.animationName).sort().join(',') === 'pattern-scroll-x,pattern-scroll-y'), 'Resume must restart pattern scroll');
 		assert(await page.evaluate(() => [...window.editor.canvasElementsContainer.querySelectorAll('*')].filter(node => node.style.backgroundImage.startsWith('url("data:image/gif')).length >= 4), 'Resume restores animated paint textures');
 		await page.evaluate(() => { window.editor.animationPanel.setPaused(true); window.editor.animationPanel.setPaused(false); });
 		await page.waitForTimeout(200);

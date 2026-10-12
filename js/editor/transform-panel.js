@@ -7,53 +7,46 @@ renderTransformPanels() {
 
 			buildTransformPanel(this, host, prefix, LAYER_UI_CONFIG[type].transformCapabilities || {});
 		});
-	}
+	},
 
-,
 	getTransformIds(prefix) {
 		return getPanelTransformIds(prefix);
-	}
+	},
 
-,
 	getLayerTransformData(layer) {
 		return getLayerTransform(layer);
-	}
+	},
 
 	// Single source of truth for "which manager + panel prefix owns this
 	// layer's transform" (arrow nudge, centering, panel load/save, context
 	// toolbars): the type's transformPrefix and managerKey. A layer that is
 	// not transformable right now (a pinned frame) has none.
-,
 	getMovableLayerContext(layer) {
 		const prefix = LAYER_UI_CONFIG[layer?.type]?.transformPrefix;
 		if (!prefix || !isLayerTransformable(layer)) return null;
 		return { prefix, manager: getLayerManagerForType(this, layer.type) };
-	}
+	},
 
-,
 	formatScaleSummary(transform) {
 		const x = Math.round(transform.scale.x);
 		const y = Math.round(transform.scale.y);
 		return x === y
 			? formatUnit(x, '%')
 			: `${formatUnit(x, '%')} × ${formatUnit(y, '%')}`;
-	}
+	},
 
-,
 	getScaleSliderValue(transform) {
 		const x = Math.round(transform.scale.x || 100);
 		const y = Math.round(transform.scale.y || 100);
 		return x === y ? x : Math.round((x + y) / 2);
-	}
+	},
 
-,
 	hasScaleAdjustment(transform) {
 		if (!transform?.scale) return false;
 		return Math.abs((transform.scale.x || 100) - 100) > 0.5
 			|| Math.abs((transform.scale.y || 100) - 100) > 0.5;
-	}
+	},
 
-,
 	hasResettableTransformAdjustments(transform, options = {}) {
 		if (!transform) return false;
 		return this.hasScaleAdjustment(transform)
@@ -61,11 +54,10 @@ renderTransformPanels() {
 			|| Boolean(transform.flipX)
 			|| Boolean(transform.flipY)
 			|| transform.proportionalScale === false;
-	}
+	},
 
 	// Handlers that bypass loadTransformSettings (rotation slider, flips) still
 	// need the Reset Transform enabled state to track the layer.
-,
 	syncResetTransformState(prefix, layer) {
 		const ids = this.getTransformIds(prefix);
 		const transform = this.getLayerTransformData(layer);
@@ -84,9 +76,8 @@ renderTransformPanels() {
 		if (resetFlip) resetFlip.disabled = !(transform?.flipX || transform?.flipY);
 		const resetAnchor = document.getElementById(ids.resetAnchor);
 		if (resetAnchor) resetAnchor.disabled = Math.abs(transform.anchor.x - 0.5) < 1e-6 && Math.abs(transform.anchor.y - 0.5) < 1e-6;
-	}
+	},
 
-,
 	getTransformSizeState(layer, prefix) {
 		const transform = this.getLayerTransformData(layer);
 		if (!layer || !transform) return null;
@@ -113,9 +104,8 @@ renderTransformPanels() {
 			width: Math.max(1, Math.round((frame?.width || 1) * ((transform.scale.x || 100) / 100))),
 			height: Math.max(1, Math.round((frame?.height || 1) * ((transform.scale.y || 100) / 100)))
 		};
-	}
+	},
 
-,
 	getTransformAlignmentState(layer) {
 		if (!layer || !this.originalCanvas) return null;
 
@@ -153,9 +143,8 @@ renderTransformPanels() {
 				{ mode: 'bottom', delta: Math.abs(metrics.maxY - canvasHeight) }
 			])
 		};
-	}
+	},
 
-,
 	syncTransformAlignmentButtons(prefix, alignmentState) {
 		const ids = this.getTransformIds(prefix);
 		[
@@ -173,9 +162,8 @@ renderTransformPanels() {
 				: alignmentState?.y === mode;
 			button.classList.toggle('active', Boolean(active));
 		});
-	}
+	},
 
-,
 	loadTransformSettings(layer, prefix, options = {}) {
 		const transform = this.getLayerTransformData(layer);
 		if (!transform) return;
@@ -271,9 +259,8 @@ renderTransformPanels() {
 		this.syncTransformAlignmentButtons(prefix, this.getTransformAlignmentState(layer));
 
 		this.syncResetTransformState(prefix, layer);
-	}
+	},
 
-,
 	syncTransformHandlesForActiveLayer() {
 		const managers = [...new Set(Object.values(LayerType)
 			.filter((type) => LAYER_UI_CONFIG[type]?.transformPrefix)

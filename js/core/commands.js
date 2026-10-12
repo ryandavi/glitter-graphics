@@ -111,7 +111,7 @@ const COMMANDS = {
 	selectAll: {
 		label: 'Select All Movable Layers', group: 'Selection', keys: ['mod+a'], displayKey: 'Ctrl/Cmd + A',
 		run: (editor) => {
-			const ids = editor.layerManager.layers.filter((layer) => !layer.locked && layer.type !== LayerType.BASE_IMAGE).map((layer) => layer.id);
+			const ids = editor.layerManager.layers.filter((layer) => canEditLayerInStack(layer) && !layer.locked).map((layer) => layer.id);
 			if (ids.length) editor.layerManager.setSelection(ids, { activeLayerId: ids[ids.length - 1] });
 		}
 	},

@@ -160,13 +160,8 @@ class ContentManager {
 		// Child classes can add more listeners by overriding and calling super.setupEventListeners()
 	}
 
-
 	getLayerType() {
 		return null;
-	}
-
-	scrollToContent(contentId) {
-		this.browser.navigateToItem(contentId);
 	}
 
 	ensureAssetImageReady(asset) {
@@ -930,10 +925,6 @@ class ContentManager {
 		throw new Error('handleItemClick() must be implemented by child class');
 	}
 
-	setupFilterChips() {
-		// Override in child classes
-	}
-
 	getAllContent() {
 		return [...this.content, ...this.userContent];
 	}
@@ -1228,13 +1219,10 @@ class ContentManager {
 			this.userContent.find(item => item.id === id) || this.retiredCustom.get(id);
 	}
 
-
-
 	// ===== ABSTRACT METHODS (must be implemented by children) =====
 
 	async loadContent() {
 		throw new Error('loadContent() must be implemented by child class');
 	}
-
 
 }

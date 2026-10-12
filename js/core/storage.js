@@ -1,7 +1,7 @@
 'use strict';
 
 const STORAGE_KEYS = Object.freeze({
-	preferences: { key: 'glitter.preferences', resetWith: editor => { PREFERENCES.resetAll(); editor.syncCanvasPreferenceControls(); } },
+	preferences: { key: 'glitter.preferences', resetWith: () => PREFERENCES.resetAll() },
 	exportSettings: { key: 'glitter.export-settings', resetWith: editor => { editor.settingsStore.reset(editor.exportSettings); editor.saveSettingsToStorage(); } },
 	theme: { key: 'glitter.theme', resetWith: editor => { editor.interfaceTheme = 'dark'; editor.applyInterfaceTheme(); } },
 	toolbarPlacement: { key: 'glitter.toolbar-placement', resetWith: editor => editor.contextToolbarRenderer.resetPlacement() },

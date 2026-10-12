@@ -347,12 +347,7 @@ class HtmlSceneExporter {
 		const response = await fetch(url);
 		if (!response.ok) throw new Error(`Sticker request failed with ${response.status}`);
 		const blob = await response.blob();
-		return new Promise((resolve, reject) => {
-			const reader = new FileReader();
-			reader.addEventListener('load', () => resolve(reader.result), { once: true });
-			reader.addEventListener('error', () => reject(reader.error), { once: true });
-			reader.readAsDataURL(blob);
-		});
+		return blobToDataUrl(blob);
 	}
 
 	async resolveAssetSource(url, embedAssets) {

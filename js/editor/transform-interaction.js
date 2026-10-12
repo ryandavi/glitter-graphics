@@ -13,8 +13,7 @@ const TRANSFORM_INTERACTION_METHODS = {
 			if (policy.layerCenters) { x.push((frame.left + frame.right) / 2); y.push((frame.top + frame.bottom) / 2); }
 		});
 		return { x, y };
-	},
-applyTransformEditWithAnchor(layer, manager, mutate) {
+	},applyTransformEditWithAnchor(layer, manager, mutate) {
 		const before = getLayerAnchorPoint(this, layer);
 		const result = mutate();
 		const after = getLayerAnchorPoint(this, layer);
@@ -25,17 +24,15 @@ applyTransformEditWithAnchor(layer, manager, mutate) {
 			manager.updateTransform(layer.id, {});
 		}
 		return result;
-	}
+	},
 
-,
 zoomToSelection(options = {}) {
 		const bounds = getLayersCanvasBox(this, this.layerManager.getSelectedLayers());
 		if (!bounds) return false;
 		this.viewport.zoomToBounds(bounds, options);
 		return true;
-	}
+	},
 
-,
 snapTransformPosition(transform, position, options = {}) {
 		const config = CONFIG.snapping;
 		if (!PREFERENCES.get('snappingEnabled') || options.ctrlKey) {
@@ -63,9 +60,8 @@ snapTransformPosition(transform, position, options = {}) {
 		const y = best(movingY, targetsY);
 		this.renderSmartGuides(x?.target, y?.target);
 		return { x: position.x + (x?.delta || 0), y: position.y + (y?.delta || 0) };
-	}
+	},
 
-,
 	// Snaps the point a scale handle is dragging to the canvas and layer edges.
 	// Only meaningful while the frame's edges are axis-aligned (rotation a
 	// multiple of 90), so rotated layers pass through. `axes` limits an edge
@@ -130,9 +126,8 @@ snapTransformPosition(transform, position, options = {}) {
 		}
 		this.renderSmartGuides(guideX, guideY);
 		return next;
-	}
+	},
 
-,
 	renderSmartGuides(x, y) {
 		this.clearSmartGuides();
 		if (x == null && y == null) return;
@@ -158,9 +153,8 @@ snapTransformPosition(transform, position, options = {}) {
 		};
 		if (x != null) add('x', x);
 		if (y != null) add('y', y);
-	}
+	},
 
-,
 	snapGroupDelta(bounds, delta, excludedIds, options = {}) {
 		const config = CONFIG.snapping;
 		if (!PREFERENCES.get('snappingEnabled') || options.ctrlKey || !bounds) { this.clearSmartGuides(); return delta; }
@@ -175,22 +169,19 @@ snapTransformPosition(transform, position, options = {}) {
 		const y = nearest([bounds.top + delta.y, bounds.centerY + delta.y, bounds.bottom + delta.y], targetsY);
 		this.renderSmartGuides(x?.target, y?.target);
 		return { x: delta.x + (x?.adjustment || 0), y: delta.y + (y?.adjustment || 0) };
-	}
+	},
 
-,
 	clearSmartGuides() {
 		this.viewport?.selectionOverlay?.element.querySelectorAll('.smart-guide').forEach((guide) => guide.remove());
-	}
+	},
 
-,
 	// A panel scale edit stretches the raster the layer already has. A type
 	// that rasterizes its scale is redrawn at the new one when the edit settles,
 	// as a handle drag does on release.
 	redrawSettledScale(layer, manager) {
 		if (LAYER_UI_CONFIG[layer.type]?.rasterizesScale) manager.renderLayer(layer);
-	}
+	},
 
-,
 	applyTransformSizeFromPanel(prefix, layer, manager, axis, rawValue) {
 		const value = Math.max(1, Math.round(rawValue));
 		const lockAspect = resolveAspectLock(getLayerTransform(layer));
@@ -257,9 +248,8 @@ snapTransformPosition(transform, position, options = {}) {
 		else scale.y = clampLayerScale(scale.y * value / current.height);
 		this.applyTransformEditWithAnchor(layer, manager, () => manager.updateTransform(layer.id, { scale }));
 		return true;
-	}
+	},
 
-,
 	setupTransformListeners(prefix, layerType, getManager) {
 		const ids = this.getTransformIds(prefix);
 		const activeManager = () => {
@@ -563,7 +553,6 @@ snapTransformPosition(transform, position, options = {}) {
 			});
 		}
 	},
-
 	initializeAltDuplicateFeedback() {
 		const sync = (armed) => this.previewContainer?.classList.toggle(
 			'alt-duplicate-armed', Boolean(armed) && this.currentTool === ToolType.SELECT
@@ -586,13 +575,11 @@ snapTransformPosition(transform, position, options = {}) {
 		});
 
 	},
-
 	setDuplicateDragFeedback(active, count = 1) {
 		this.previewContainer?.classList.toggle('duplicate-drag-active', Boolean(active));
 		this.duplicateDragStatus = active ? (count > 1 ? `Duplicating ${count} layers` : 'Duplicating layer') : '';
 		this.updateStatus(this.duplicateDragStatus);
 	},
-
 	addDuplicateGhost(sourceTransform, targetTransform) {
 		if (!sourceTransform?.element || !targetTransform || targetTransform.refreshElementReference?.()) return null;
 		const ghost = sourceTransform.element.cloneNode(true);
@@ -622,14 +609,12 @@ snapTransformPosition(transform, position, options = {}) {
 		requestAnimationFrame(retireWhenReady);
 		return ghost;
 	},
-
 	syncDuplicateGhost(targetTransform) {
 		const ghost = this._duplicateGhosts?.get(targetTransform);
 		if (!ghost?.isConnected) return;
 		targetTransform.applyTransform(ghost, targetTransform.getDimensions());
 		ghost.style.pointerEvents = 'none';
 	},
-
 	syncDuplicateGhosts() {
 		this._duplicateGhosts?.forEach((_ghost, transform) => this.syncDuplicateGhost(transform));
 	}

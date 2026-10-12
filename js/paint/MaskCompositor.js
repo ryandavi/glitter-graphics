@@ -91,7 +91,7 @@ class MaskCompositor {
 			}
 		}
 		if (!draft && layer.settings.feather > 0) {
-			this.editor.glitterManager.applyFeatherToMask(mask, layer.settings.feather);
+			featherColorSelection(this.editor, mask, layer.settings.feather);
 		}
 		return mask;
 	}

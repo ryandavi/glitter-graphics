@@ -1,28 +1,15 @@
 'use strict';
 
-const { chromium } = require('playwright');
+const { openApp } = require('../lib/app');
 
-const APP_URL = process.env.GLITTER_URL || 'http://localhost/glitter/';
 
 function assert(condition, message) {
 	if (!condition) throw new Error(message);
 }
 
 async function main() {
-	const browser = await chromium.launch({ headless: true });
-	const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
-	await context.addInitScript(() => localStorage.setItem('glitterEditor_welcomeModalSeen', 'true'));
-	const page = await context.newPage();
-	const runtimeErrors = [];
-	page.on('pageerror', (error) => runtimeErrors.push(error.message || String(error)));
-	page.on('console', (message) => {
-		if (message.type() === 'error') runtimeErrors.push(message.text());
-	});
-
+	const { browser, context, page, errors: runtimeErrors } = await openApp();
 	try {
-		await page.goto(APP_URL, { waitUntil: 'domcontentloaded' });
-		await page.waitForFunction(() => window.editor != null, null, { timeout: 15000 });
-
 		await page.evaluate(() => window.editor.modalManager.open('shortcutsModal'));
 		const shortcutKeyboardState = await page.evaluate(() => ({
 			tabs: document.querySelectorAll('#shortcutsModal [data-shortcut-view]').length,
@@ -49,6 +36,7 @@ async function main() {
 			const deviceIconStyle = getComputedStyle(gesture.querySelector('.shortcut-device-icon'));
 			return {
 				selected: document.querySelector('#shortcutsModal [data-shortcut-view].active')?.dataset.shortcutView,
+				expectedGroups: getShortcutGroups('gesture').length,
 				groups: document.querySelectorAll('#shortcutList .shortcut-group[data-shortcut-kind="gesture"]:not([hidden])').length,
 				icons: document.querySelectorAll('#shortcutList .shortcut-group[data-shortcut-kind="gesture"] .shortcut-device-icon').length,
 				sameHeight: keyStyle.height === gestureStyle.height,
@@ -58,7 +46,7 @@ async function main() {
 				deviceIconUsesColor: deviceIconStyle.fill === deviceIconStyle.color
 			};
 		});
-		assert(shortcutGestureState.selected === 'gesture' && shortcutGestureState.groups === 2 && shortcutGestureState.icons >= 8,
+		assert(shortcutGestureState.selected === 'gesture' && shortcutGestureState.groups === shortcutGestureState.expectedGroups && shortcutGestureState.icons >= 8,
 			`Commands panel gesture organization is incomplete: ${JSON.stringify(shortcutGestureState)}`);
 		assert(shortcutGestureState.sameHeight && shortcutGestureState.sameRadius && shortcutGestureState.sameBackground,
 			`Keyboard and gesture tokens do not share one visual language: ${JSON.stringify(shortcutGestureState)}`);
@@ -70,13 +58,18 @@ async function main() {
 		await page.evaluate(() => window.editor.modalManager.close('shortcutsModal'));
 		console.log('PASS Organized keyboard and canvas-gesture command views');
 
+		await page.evaluate(() => {
+			editor.ensureSettingsModal('exportSettingsModal');
+			editor.ensureSettingsModal('settingsModal');
+		});
 		const modalAudit = await page.evaluate(() => {
 			return {
 				// The only disclosures are the two Customize footers; nothing else
 				// in Export Settings is nested behind one.
 				disclosureIds: [...document.querySelectorAll('#exportSettingsModal [data-advanced]')].map((node) => node.id).sort(),
-				creativeIds: ['exportTransparency', 'exportMatteColor', 'exportWatermarkEnabled', 'exportFrameDelay', 'exportReverse']
-					.filter((id) => !document.getElementById(id)?.closest('[data-advanced]')),
+				creativeIds: ['exportTransparency', 'exportMatteColor', 'exportWatermarkEnabled', 'exportReverse']
+					.filter((id) => document.getElementById(id) && !document.getElementById(id).closest('[data-advanced]')),
+				frameDelayGoverned: document.getElementById('exportFrameDelay')?.closest('[data-advanced]')?.id === 'exportFidelitySet',
 				// Every group is a titled card that owns a reset.
 				exportSections: [...document.querySelectorAll('#exportSettingsModal .settings-group')].map((group) => ({
 					title: group.querySelector('.property-card-label')?.textContent,
@@ -89,8 +82,8 @@ async function main() {
 		});
 		assert(modalAudit.disclosureIds.join() === 'exportFidelitySet,exportGifLookSet',
 			`Export Settings disclosures are not the two Customize footers: ${modalAudit.disclosureIds}`);
-		assert(modalAudit.creativeIds.length === 5, 'Creative export controls are not all top-level');
-		assert(modalAudit.exportSections.length === 4 && modalAudit.exportSections.every((s) => s.title && s.section && s.reset),
+		assert(modalAudit.creativeIds.length === 4 && modalAudit.frameDelayGoverned, 'Creative controls or governed frame timing are misplaced');
+		assert(modalAudit.exportSections.length === 5 && modalAudit.exportSections.every((s) => s.title && s.section && s.reset),
 			`Export Settings groups are missing a title or a reset: ${JSON.stringify(modalAudit.exportSections)}`);
 		assert(modalAudit.settingsRows === 4, 'Settings modal is missing backed interface controls');
 		console.log('PASS Export and Settings modal hierarchy');
@@ -108,7 +101,7 @@ async function main() {
 		const themeState = await page.evaluate(() => ({
 			theme: document.documentElement.dataset.theme,
 			background: getComputedStyle(document.documentElement).getPropertyValue('--color-bg-primary').trim(),
-			saved: localStorage.getItem('glitterEditorTheme')
+			saved: readStored(STORAGE_KEYS.theme.key, null)
 		}));
 		assert(themeState.theme === 'light' && themeState.saved === 'light', 'Light theme was not applied and persisted');
 		assert(themeState.background === '#eef3f9', `Unexpected light theme background token: ${themeState.background}`);
@@ -121,7 +114,7 @@ async function main() {
 		assert(await page.evaluate(() => PREFERENCES.get('showWelcomeOnStartup') === false),
 			'Disabling the welcome screen did not set its preference');
 		await page.$eval('#confirmDestructiveActions', (input) => { input.checked = false; input.dispatchEvent(new Event('change', { bubbles: true })); });
-		assert(await page.evaluate(() => window.editor.confirmAction({ destructive: true })),
+		assert(await page.evaluate(() => window.editor.confirmAction({ tone: 'danger', skippable: true })),
 			'Disabled destructive confirmations did not bypass the modal');
 		console.log('PASS Backed interface preference behavior');
 
@@ -153,7 +146,10 @@ async function main() {
 		assert(await page.evaluate(() => window.editor.currentTool === ToolType.SELECT), 'Space changed tools while typing');
 		console.log('PASS Temporary Hand tool and typing guard');
 
-		await page.evaluate(() => {
+		await page.evaluate(async () => {
+			document.activeElement.blur();
+			editor.layerManager.addLayer(LayerType.SHAPE);
+			await editor.undo();
 			window.__redoCalls = 0;
 			window.editor.redo = async () => { window.__redoCalls += 1; };
 		});
@@ -252,7 +248,7 @@ async function main() {
 		console.log('PASS Zoom to selection shortcut');
 		await page.dblclick(`.text-glitter-element[data-layer-id="${textId}"]`, { force: true });
 		await page.waitForTimeout(80);
-		assert(await page.evaluate(() => document.activeElement === (CONFIG.tools.text.canvasEditing ? window.editor.textGlitterManager.textProxy : window.editor.textGlitterManager.ui.textInput)),
+		assert(await page.evaluate(() => document.activeElement === window.editor.textGlitterManager.textProxy),
 			'Double-clicking text did not focus the text input');
 		console.log('PASS Desktop text double-click editing');
 
@@ -308,7 +304,8 @@ async function main() {
 				toolbarHasSettings: Boolean(document.querySelector('.toolbar #settingsBtn')),
 				toolbarHasClear: Boolean(document.querySelector('.toolbar #clearAllTool')),
 				hasLayersClear: Boolean(document.getElementById('layersBarClearAll')),
-				bottomNavButtons: document.querySelectorAll('.mobile-bottom-nav .mobile-drawer-btn').length
+				layersDrawer: Boolean(document.querySelector('.mobile-bottom-nav [data-drawer="layers"]')),
+				propertyChips: document.querySelector('#phoneChipBar')?.getAttribute('role') === 'toolbar'
 			};
 		});
 		assert(mobileActions.expanded === 'true' && mobileActions.panelVisible,
@@ -318,9 +315,9 @@ async function main() {
 		assert(!mobileActions.toolbarHasSettings && !mobileActions.toolbarHasClear,
 			'Toolbar still carries the app-level Settings/Clear groups');
 		assert(mobileActions.collapsedAfterToggle, 'App menu does not close on re-tap');
-		assert(mobileActions.hasLayersClear && mobileActions.bottomNavButtons === 4,
-			`Mobile four-button navigation or relocated Clear All is unavailable: ${JSON.stringify(mobileActions)}`);
-		console.log('PASS App menu consolidation and mobile four-button navigation');
+		assert(mobileActions.hasLayersClear && mobileActions.layersDrawer && mobileActions.propertyChips,
+			`Mobile Layers, property chips or Clear All is unavailable: ${JSON.stringify(mobileActions)}`);
+		console.log('PASS App menu, mobile Layers navigation and property chips');
 
 		assert(runtimeErrors.length === 0, `Runtime errors:\n${runtimeErrors.join('\n')}`);
 		console.log('\nUX polish verification finished with all checks passing.');

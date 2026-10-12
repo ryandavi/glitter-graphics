@@ -1,20 +1,11 @@
 'use strict';
 
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const { chromium } = require('playwright');
+const { openApp } = require('../lib/app');
 
 async function main() {
-	const browser = await chromium.launch({ headless: true });
+	const { browser, page, errors } = await openApp({ viewport: { width: 1440, height: 900 } });
 	try {
-		const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
-		const errors = [];
-		page.on('pageerror', error => errors.push(error.message));
-		if (process.env.GLITTER_TEST_CSS) {
-			await page.route('**/css/style.css*', route => route.fulfill({ contentType: 'text/css', body: fs.readFileSync(process.env.GLITTER_TEST_CSS) }));
-		}
-		await page.goto(process.env.GLITTER_URL || 'http://localhost/glitter/', { waitUntil: 'networkidle' });
-		await page.waitForFunction(() => Boolean(window.editor));
 		await page.evaluate(async () => {
 			editor.modalManager.closeAll({ force: true });
 			PREFERENCES.set('reduceMotion', true);
@@ -62,10 +53,10 @@ async function main() {
 				assert.equal(after.y, before.y, 'A deliberately panned vertical position stays put');
 			}
 		}
-		await page.evaluate(() => {
-			PREFERENCES.set('balanceSidebars', true);
-			editor.viewport.resetViewport();
-		});
+		await page.evaluate(() => PREFERENCES.set('balanceSidebars', true));
+		await settle();
+		await page.evaluate(() => editor.viewport.resetViewport());
+		await settle();
 		await drag('inspector', 40);
 		assert.equal(await page.evaluate(() => PREFERENCES.get('balanceSidebars')), false, 'Dragging Inspector switches to independent widths');
 		assert(Math.abs((await frame()).dx) < 1, 'Switching balance off during a drag retains centering');

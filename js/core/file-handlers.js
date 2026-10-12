@@ -10,10 +10,10 @@ const FILE_HANDLERS = Object.freeze([
 async function openImageAssetFile(editor, file, { uploadLibrary = null, asDocument = false } = {}) {
 	if (asDocument || !editor.originalImage) return editor.loadImage({ target: { files: [file] } });
 	if (!editor.layerManager.requireLayerCapacity()) return false;
-	const library = uploadLibrary || editor.stickerManager;
+	const library = uploadLibrary || editor.stickerLibrary;
 	const item = await library.handleUserUpload(file, { navigate: false });
 	if (!item || item.error) return false;
-	if (library === editor.stickerManager) return editor.stickerManager.createStickerLayer(item.id);
+	if (library === editor.stickerLibrary) return editor.stickerManager.createStickerLayer(item.id);
 	if (editor.originalImage) return library.handleItemClick(item);
 	return item;
 }

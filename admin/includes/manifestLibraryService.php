@@ -1,4 +1,5 @@
 <?php
+require_once(__DIR__ . '/attributionSchema.php');
 
 class ManifestLibraryService
 {
@@ -48,11 +49,6 @@ class ManifestLibraryService
 		}
 		return $this->get() + ['success' => true];
 	}
-
-	// Shared attribution shape — mirrors js/core/attribution.js. Optional
-	// everywhere; an empty object or null is fine.
-	private const ATTRIBUTION_FIELDS = ['author', 'authorUrl', 'source', 'sourceUrl', 'license', 'notes'];
-	private const ATTRIBUTION_LICENSES = ['unknown', 'personal-use', 'commercial', 'public-domain', 'CC0-1.0', 'CC-BY-4.0', 'CC-BY-SA-4.0', 'OFL-1.1', 'system'];
 
 	private function validate($manifest)
 	{
@@ -124,7 +120,7 @@ class ManifestLibraryService
 			throw new InvalidArgumentException("$label attribution must be an object");
 		}
 		foreach ($value as $key => $fieldValue) {
-			if (!in_array($key, self::ATTRIBUTION_FIELDS, true)) {
+			if (!in_array($key, ATTRIBUTION_FIELDS, true)) {
 				throw new InvalidArgumentException("$label attribution has an unknown field \"$key\"");
 			}
 			if (!is_string($fieldValue)) {
@@ -132,7 +128,7 @@ class ManifestLibraryService
 			}
 		}
 		$license = trim((string)($value['license'] ?? ''));
-		if ($license !== '' && !in_array($license, self::ATTRIBUTION_LICENSES, true)) {
+		if ($license !== '' && !in_array($license, ATTRIBUTION_LICENSES, true)) {
 			throw new InvalidArgumentException("$label attribution license \"$license\" is not recognized");
 		}
 	}

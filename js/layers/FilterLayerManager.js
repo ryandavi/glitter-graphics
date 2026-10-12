@@ -25,7 +25,7 @@ class FilterLayerManager {
 		this.nextImageIdentity = 1;
 		this.snapshotCompositor = new SceneCompositor({
 			editor,
-			resolveShapeFillImage: (imageRef) => editor.shapeGlitterManager.getImageFillAsset(imageRef)
+			resolveImageFill: (imageRef) => editor.imageFills.get(imageRef)
 		});
 		this.snapshotQueue = Promise.resolve();
 		this.setupUI();
@@ -118,7 +118,7 @@ class FilterLayerManager {
 	shouldPauseForEdit() {
 		if (!this.displayedSnapshotLayerId || this.editor.viewport?.isPanning) return false;
 		const topIndex = this.editor.layers.findIndex((layer) => layer.id === this.displayedSnapshotLayerId);
-		const ids = new Set([...(this.editor.selectedLayerIds || []), this.editor.layerManager.activeLayerId]);
+		const ids = new Set([...this.editor.selectedLayerIds, this.editor.layerManager.activeLayerId]);
 		return this.editor.layers.some((layer, index) => index < topIndex && ids.has(layer.id));
 	}
 

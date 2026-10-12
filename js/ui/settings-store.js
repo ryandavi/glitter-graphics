@@ -142,7 +142,11 @@ const EXPORT_SETTINGS_LAYOUT = (() => {
 // PREFERENCES), so the rows declare their fields here, each with the default
 // its revert restores.
 const APP_SETTINGS_LAYOUT = (() => {
-	const toggle = (id, label, description, { default: value, ...options } = {}) => ({ field: { id, label, description, control: { type: 'switch' }, default: value }, ...options });
+	const toggle = (key, label, description, { id = key, invert = false, ...options } = {}) => ({
+		...(PREFERENCE_SCHEMA[key] ? { preference: key, invert } : {}),
+		field: { id, label, description, control: { type: 'switch' },
+			...(PREFERENCE_SCHEMA[key] ? { default: invert ? !PREFERENCE_SCHEMA[key].default() : PREFERENCE_SCHEMA[key].default() } : {}) }, ...options
+	});
 	const preference = (key) => PREFERENCE_SCHEMA[key].default();
 	const action = (label, description, button, options = {}) => ({ field: { label, description, control: { type: 'button', ...button } }, ...options });
 	const choice = (id, label, description, options) => ({ field: { id, label, description, control: { type: 'select', options } } });
@@ -150,25 +154,25 @@ const APP_SETTINGS_LAYOUT = (() => {
 	return [
 		{ title: 'Interface', section: 'interface', rows: [
 			{ field: { id: 'interfaceTheme', label: 'Theme', description: 'Choose the editor interface appearance.', control: { type: 'select', options: 'interfaceTheme' }, default: 'dark' } },
-			toggle('showHelpfulHints', 'Helpful Hints', 'Show contextual hints based on active tool and selected layer.', { default: preference('showHints') }),
-			toggle('showAllControls', 'Show All Controls', 'Keep every Advanced section open, in panels and in these windows.', { default: preference('showAllControls') }),
-			toggle('confirmDestructiveActions', 'Confirm Before Deleting', 'Ask before deleting layers or clearing paint.', { default: preference('confirmDestructiveActions') }),
-			toggle('reduceMotion', 'Reduce Motion', 'Turn off interface transitions and animated previews. Exported animation is unaffected.', { default: preference('reduceMotion'), aliases: 'animation accessibility motion transitions' }),
-			toggle('showWelcomeOnStartup', 'Welcome on Startup', 'Show the Welcome screen when Glitter Editor starts.', { default: preference('showWelcomeOnStartup'), hidden: !CONFIG.app.startup.showWelcome }),
-			toggle('balanceSidebars', 'Balance Sidebar Widths', 'Keep the Inspector as wide as the toolbar and Layers together. Dragging the Inspector turns this off.', { default: preference('balanceSidebars'), aliases: 'panels layout symmetric widths resize' })
+			toggle('showHints', 'Helpful Hints', 'Show contextual hints based on active tool and selected layer.', { id: 'showHelpfulHints' }),
+			toggle('showAllControls', 'Show All Controls', 'Keep every Advanced section open, in panels and in these windows.', { }),
+			toggle('confirmDestructiveActions', 'Confirm Before Deleting', 'Ask before deleting layers or clearing paint.', { }),
+			toggle('reduceMotion', 'Reduce Motion', 'Turn off interface transitions and animated previews. Exported animation is unaffected.', { aliases: 'animation accessibility motion transitions' }),
+			toggle('showWelcomeOnStartup', 'Welcome on Startup', 'Show the Welcome screen when Glitter Editor starts.', { hidden: !CONFIG.app.startup.showWelcome }),
+			toggle('balanceSidebars', 'Balance Sidebar Widths', 'Keep the Inspector as wide as the toolbar and Layers together. Dragging the Inspector turns this off.', { aliases: 'panels layout symmetric widths resize' })
 		] },
 		{ title: 'Canvas', section: 'canvas', rows: [
-			toggle('autoSelectLayers', 'Auto-Select Layers', 'Clicking the canvas selects the layer under the pointer. Turn off to keep the current selection while dragging on the canvas.', { default: preference('autoSelect'), aliases: 'click pick layer canvas' }),
-			toggle('snappingEnabled', 'Snapping', 'Align layers to the canvas edges, its center, and other layers while dragging.', { default: preference('snappingEnabled'), aliases: 'snap align guides magnetic' }),
-			toggle('panInertia', 'Pan Momentum', 'Let the canvas keep gliding after a flick with the Hand tool. Turn off for panning that stops the moment you let go.', { default: preference('panInertia'), aliases: 'momentum pan flick scroll' }),
-			toggle('pixelGrid', 'Pixel Grid', 'Show a one-screen-pixel grid at 600% zoom and above.', { default: preference('pixelGrid'), aliases: 'pixels zoom grid photoshop' }),
-			{ field: { id: 'filterPreviewLevel', label: 'Pixel Filter Preview', description: 'Choose whether pixel-only filter layers render on the canvas. Animated previews use more memory and may fall back to Still.', control: { type: 'select', options: [{ value: 'off', label: 'Off' }, { value: 'still', label: 'Still' }, { value: 'animated', label: 'Animated (uses more memory)' }] }, default: preference('filterPreviewLevel') } },
-			toggle('antialiasMaskEdges', 'Smooth Edges', 'Smooth the edges of text, shapes and new brush strokes. Off keeps them pixel-crisp.', { default: !preference('crispMaskEdges'), aliases: 'antialias aliasing crisp pixel' })
+			toggle('autoSelect', 'Auto-Select Layers', 'Clicking the canvas selects the layer under the pointer. Turn off to keep the current selection while dragging on the canvas.', { id: 'autoSelectLayers', aliases: 'click pick layer canvas' }),
+			toggle('snappingEnabled', 'Snapping', 'Align layers to the canvas edges, its center, and other layers while dragging.', { aliases: 'snap align guides magnetic' }),
+			toggle('panInertia', 'Pan Momentum', 'Let the canvas keep gliding after a flick with the Hand tool. Turn off for panning that stops the moment you let go.', { aliases: 'momentum pan flick scroll' }),
+			toggle('pixelGrid', 'Pixel Grid', 'Show a one-screen-pixel grid at 600% zoom and above.', { aliases: 'pixels zoom grid photoshop' }),
+			{ preference: 'filterPreviewLevel', field: { id: 'filterPreviewLevel', label: 'Pixel Filter Preview', description: 'Choose whether pixel-only filter layers render on the canvas. Animated previews use more memory and may fall back to Still.', control: { type: 'select', options: [{ value: 'off', label: 'Off' }, { value: 'still', label: 'Still' }, { value: 'animated', label: 'Animated (uses more memory)' }] }, default: preference('filterPreviewLevel') } },
+			toggle('crispMaskEdges', 'Smooth Edges', 'Smooth the edges of text, shapes and new brush strokes. Off keeps them pixel-crisp.', { id: 'antialiasMaskEdges', invert: true, aliases: 'antialias aliasing crisp pixel' })
 		] },
 		{ title: 'Resizing Layers', section: 'resizing', rows: [
-			toggle('scaleEffectsOnTransform', 'Scale Outlines & Effects', 'Scale outline widths, dotted spacing, and shadow offsets when stickers, text or shapes are resized.', { default: preference('scaleEffects') }),
-			toggle('scaleCorners', 'Scale Corners', 'Scale shape and frame corner radii when resizing layers.', { default: preference('scaleCorners') }),
-			toggle('scaleTexturesOnTransform', 'Scale Textures', 'Scale the glitter pattern with text and shapes. Off resizes the artwork and keeps the pattern size.', { default: preference('scaleTextures') })
+			toggle('scaleEffects', 'Scale Outlines & Effects', 'Scale outline widths, dotted spacing, and shadow offsets when stickers, text or shapes are resized.', { id: 'scaleEffectsOnTransform' }),
+			toggle('scaleCorners', 'Scale Corners', 'Scale shape and frame corner radii when resizing layers.', { }),
+			toggle('scaleTextures', 'Scale Textures', 'Scale the glitter pattern with text and shapes. Off resizes the artwork and keeps the pattern size.', { id: 'scaleTexturesOnTransform' })
 		] },
 		{ title: 'Reset', section: 'reset', rows: [
 			action('Brush & Eraser', 'Restore Brush and Eraser tip, stroke and pressure settings to their defaults.', { id: 'resetToolSettings', label: 'Reset Tools' }),

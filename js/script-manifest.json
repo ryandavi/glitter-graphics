@@ -162,6 +162,7 @@
 		"js/systems/HistoryManager.js",
 		"js/export/ProjectSerializer.js",
 		"js/paint/PaintMaskStore.js",
+		"js/paint/ImageFillStore.js",
 		"js/systems/AreaSelection.js",
 		"js/paint/MaskCompositor.js",
 		"js/assets/ShapeLibrary.js",

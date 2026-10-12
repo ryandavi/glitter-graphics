@@ -1,6 +1,7 @@
 'use strict';
 
 registerLayerType(LayerType.BASE_IMAGE, {
+	protectedInStack: true,
 	describe: (layer) => ({ name: 'Base Image', detail: `Background · ${layer.background?.mode === 'none' ? 'Transparent' : panelCap(layer.background?.mode || 'image')}` }),
 	displayName: 'Base Image',
 	// The canvas background is one whole-layer paint. Image and gradient modes
@@ -25,7 +26,7 @@ registerLayerType(LayerType.BASE_IMAGE, {
 		normalize: (editor, layer) => editor.baseBackgroundManager?.normalizeLayer(layer)
 	},
 	managerKey: 'baseBackgroundManager',
-	timelineSources: (layer, context) => (context.includeBaseImage ? context.compositor._createSparkleTimelineSources(layer) : []),
+	timelineSources: (layer, context) => (context.includeBaseImage ? context.compositor.createSparkleTimelineSources(layer) : []),
 	renderSwatch: (layer, context) => {
 		const background = getLayerFillSlot(layer) || { mode: 'image' };
 		if (background.mode === 'image' && context.editor.baseBackgroundManager?.hasBaseImage() && context.editor.originalImage) {

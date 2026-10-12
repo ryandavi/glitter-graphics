@@ -1,6 +1,9 @@
 'use strict';
 
 registerLayerType(LayerType.SHAPE, {
+	onDoubleClick: (editor) => {
+		if (editor.mobileManager.isMobile) editor.mobileManager.openLeadingSection();
+	},
 	vectorGeometry: (editor, layer) => {
 		const data = layer.shapeData;
 		const entry = editor.shapeGlitterManager.getMeasurementEntry(layer);
@@ -127,7 +130,7 @@ registerLayerType(LayerType.SHAPE, {
 	animationBox: (_editor, layer) => ({ width: layer.shapeData.width, height: layer.shapeData.height }),
 	timelineSources: (layer, context) => [
 		...context.compositor._createLayerAnimationTimelineSources(layer, context),
-		...context.compositor._createSparkleTimelineSources(layer)
+		...context.compositor.createSparkleTimelineSources(layer)
 	],
 	serialization: {
 		dataKey: 'shapeData',
@@ -164,7 +167,7 @@ registerLayerType(LayerType.SHAPE, {
 	blendable: true,
 	renderSwatch: (layer, context) => {
 		const fill = getLayerFillSlot(layer);
-		const imageAsset = context.editor.shapeGlitterManager?.getImageFillAsset(fill?.imageRef);
+		const imageAsset = context.editor.imageFills?.get(fill?.imageRef);
 		if (!context.renderPaint(fill, imageAsset)) context.swatch.classList.add('empty');
 		const shapeSvg = ShapeLibrary.getIconSvg(layer.shapeData?.shapeId);
 		const shapeMask = `url("data:image/svg+xml;base64,${btoa(shapeSvg)}")`;

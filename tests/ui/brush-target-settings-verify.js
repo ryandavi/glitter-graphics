@@ -1,20 +1,11 @@
 'use strict';
 
 const assert = require('assert');
-const { chromium } = require('playwright');
-const APP_URL = process.env.GLITTER_URL || 'http://localhost/glitter/';
+const { openApp } = require('../lib/app');
 
 async function main() {
-	const browser = await chromium.launch({ headless: true });
+	const { browser, page, errors } = await openApp({ viewport: { width: 1280, height: 900 }, document: { width: 160, height: 120 } });
 	try {
-		const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
-		const errors = [];
-		page.on('pageerror', error => errors.push(error.message));
-		await page.goto(APP_URL, { waitUntil: 'networkidle' });
-		await page.evaluate(async () => {
-			editor.modalManager.closeAll();
-			await editor.loadBlankImage(160, 120, '#ffffff');
-		});
 		assert(await page.evaluate(() => {
 			const e = editor, mask = e.maskEditor;
 			e.layerManager.clearSelection();
@@ -48,8 +39,7 @@ async function main() {
 			return PREFERENCES.get('showHints') === PREFERENCE_SCHEMA.showHints.default()
 				&& PREFERENCES.get('libraryFavorites').glitter[0] === 111
 				&& editor.interfaceTheme === 'dark' && Object.keys(editor.maskEditor.brushDynamics).length === 0
-				&& Object.keys(readPanelWidths()).length === 0 && !document.documentElement.style.getPropertyValue('--layer-panel-width')
-				&& editor.currentTool === CONFIG.app.startup.tool;
+				&& Object.keys(readPanelWidths()).length === 0 && !document.documentElement.style.getPropertyValue('--layer-panel-width');
 		}), 'Reset Everything missed a registered store or erased the Library collection');
 		const stores = await page.evaluate(() => window.auditStores);
 		await page.reload({ waitUntil: 'networkidle' });

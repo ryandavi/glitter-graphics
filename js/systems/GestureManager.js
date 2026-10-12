@@ -668,24 +668,7 @@ class GestureManager {
 
 			this.editor.layerManager.selectLayerFromCanvas(layer.id);
 			LAYER_UI_CONFIG[layer.type]?.onDoubleClick?.(this.editor, layer);
-			if (layer.type === LayerType.TEXT_GLITTER || layer.type === LayerType.SHAPE) {
-				if (layer.type === LayerType.TEXT_GLITTER && CONFIG.tools.text.canvasEditing) {
-					this.editor.textGlitterManager?.beginTextEdit(layer);
-					return;
-				}
-				if (this.editor.mobileManager?.isMobile) {
-					this.editor.mobileManager.openLeadingSection();
-					this.editor.setCollapsibleSectionOpen?.('textSettings', true);
-					requestAnimationFrame(() => {
-						requestAnimationFrame(() => {
-							this.editor.textGlitterManager?.beginTextEdit(this.editor.layerManager.getActiveLayer());
-						});
-					});
-					return;
-				}
 
-				this.editor.textGlitterManager?.beginTextEdit(this.editor.layerManager.getActiveLayer());
-			}
 			return;
 		}
 

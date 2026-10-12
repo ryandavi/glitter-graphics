@@ -5,9 +5,8 @@ async ensureHtmlSceneExporter() {
 		this.htmlSceneExporter = new HtmlSceneExporter(this);
 		this.htmlSceneExporter.initialize();
 		return this.htmlSceneExporter;
-	}
+	},
 
-,
 updateOrientationButtons(width, height) {
 		const portraitBtn = document.getElementById('orientationPortrait');
 		const landscapeBtn = document.getElementById('orientationLandscape');
@@ -21,9 +20,8 @@ updateOrientationButtons(width, height) {
 			button.classList.toggle('active', active);
 			button.setAttribute('aria-pressed', String(active));
 		});
-	}
+	},
 
-,
 	setupModalListeners() {
 		this.modalManager = new ModalManager();
 		this.glitterRecolor = new GlitterRecolorController(this);
@@ -166,17 +164,13 @@ updateOrientationButtons(width, height) {
 				initTooltipsInContainer(modalBody);
 			},
 			onOpen: () => {
-				const checked = !PREFERENCES.get('showWelcomeOnStartup');
 				document.querySelectorAll('#welcomeDontShowAgain, #welcomeDontShowAgainMobile').forEach((checkbox) => {
-					checkbox.checked = checked;
 					checkbox.closest('.welcome-checkbox').hidden = !CONFIG.app.startup.showWelcome;
 				});
 			},
 			onClose: () => {
-				const checkbox = document.querySelector('#welcomeDontShowAgain, #welcomeDontShowAgainMobile');
 				try {
 					PREFERENCES.set('welcomeLastSeenRelease', CONFIG.app.currentRelease);
-					PREFERENCES.set('showWelcomeOnStartup', !checkbox?.checked);
 				} catch (e) {
 					console.warn('Failed to save welcome modal preference:', e);
 				}
@@ -195,9 +189,8 @@ updateOrientationButtons(width, height) {
 		this.setupStickerUploadModalListeners();
 		this.setupNewCanvasModalListeners();
 		this.setupAppMenu();
-	}
+	},
 
-,
 	// The header "Menu" popover is a thin shell: its items keep the same ids the
 	// ModalManager (and the toolbar action wiring for #clearAllTool) already bind
 	// to, so this only owns open/close, focus, and dismissal of the panel.
@@ -221,9 +214,8 @@ updateOrientationButtons(width, height) {
 
 		// Any activated item runs its own handler (modal open, resetAll, …) — we
 		// just dismiss the panel afterwards.
-	}
+	},
 
-,
 	// The view toggles are one set of buttons with two presentations: an inline
 	// row at desktop width, and a dropdown under one trigger when narrow. The
 	// buttons keep their ids and listeners; this only owns the panel.
@@ -254,9 +246,8 @@ updateOrientationButtons(width, height) {
 			toggles.some((button) => button.classList.contains('active') !== defaults.get(button)));
 		new MutationObserver(syncMarker).observe(panel, { subtree: true, attributes: true, attributeFilter: ['class'] });
 		syncMarker();
-	}
+	},
 
-,
 renderVersionHistory(root, { limit = null, openCount = 0 } = {}) {
 	const releases = limit == null ? CONFIG.app.releases : CONFIG.app.releases.slice(0, limit);
 
@@ -277,9 +268,8 @@ renderVersionHistory(root, { limit = null, openCount = 0 } = {}) {
 			});
 		}
 	});
-}
+},
 
-,
 // Each entry reuses the app's one "Advanced disclosure" primitive
 // (`.advanced-disclosure` / `data-advanced-toggle`, see disclosures.js) so
 // expand/collapse comes from the same delegated click handler every property
@@ -368,9 +358,8 @@ buildVersionHistoryEntry(release, { open = false } = {}) {
 
 	entry.append(content);
 	return entry;
-}
+},
 
-,
 // Welcome keeps the latest release concise; the full history lives in About.
 setupWelcomeUpdatesActions(modalBody) {
 	const pastUpdatesBtn = modalBody.querySelector('[data-welcome-past-updates]');
@@ -378,9 +367,8 @@ setupWelcomeUpdatesActions(modalBody) {
 	if (pastUpdatesBtn) {
 		pastUpdatesBtn.addEventListener('click', () => this.openDocumentAt('aboutModal', 'AboutVersionHistory'));
 	}
-}
+},
 
-,
 // index.html#modal=history&at=HistoryMicasTile opens a document modal at a
 // heading, so a writer can jump straight to the paragraph being edited.
 openModalFromHash() {
@@ -391,9 +379,8 @@ openModalFromHash() {
 	if (!config) return false;
 	this.openDocumentAt(config.id, params.get('at'));
 	return true;
-}
+},
 
-,
 // On localhost only: while a document modal is open, re-render it in place
 // when its generated file changes (node tools/build-modals.js --watch), keeping
 // the scroll position. Production never polls.
@@ -426,14 +413,12 @@ watchModalSources() {
 			dbg('Modal live reload failed:', error);
 		}
 	}, 1500);
-}
+},
 
-,
 async openGuideAt(anchor) {
 	return this.openDocumentAt('guideModal', anchor);
-}
+},
 
-,
 // Shared by the Guide and About deep links: open() closes whatever is
 // showing and awaits the target modal's external content, so the anchored
 // section exists by the time we scroll to it.
@@ -446,9 +431,8 @@ async openDocumentAt(modalId, anchor) {
 		return;
 	}
 	requestAnimationFrame(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }));
-}
+},
 
-,
 async checkWelcomeModal() {
 
 	if (!CONFIG.app.startup.showWelcome) {
@@ -474,9 +458,8 @@ async checkWelcomeModal() {
 	} catch (e) {
 		console.warn('Failed to check welcome modal status:', e);
 	}
-}
+},
 
-,
 setupWelcomeModalListeners() {
 	
 	const takeTourBtn = document.getElementById('welcomeTakeTourBtn');
@@ -487,19 +470,14 @@ setupWelcomeModalListeners() {
 	if (takeTourBtn) takeTourBtn.dataset.welcomeBound = 'true';
 	if (startCreatingBtn) startCreatingBtn.dataset.welcomeBound = 'true';
 
-	[dontShowCheckbox, dontShowMobileCheckbox].filter(Boolean).forEach((checkbox) => {
-		checkbox.addEventListener('change', () => {
-			[dontShowCheckbox, dontShowMobileCheckbox].filter(Boolean).forEach((peer) => {
-				peer.checked = checkbox.checked;
-			});
-		});
+	[dontShowCheckbox, dontShowMobileCheckbox].filter(Boolean).forEach(checkbox => {
+		this.bindPreferenceControl(checkbox, 'showWelcomeOnStartup', { invert: true });
 	});
 	
 	const markAsSeenIfChecked = () => {
 		if (dontShowCheckbox?.checked || dontShowMobileCheckbox?.checked) {
 			try {
 				PREFERENCES.set('showWelcomeOnStartup', false);
-				this.saveSettingsToStorage();
 			} catch (e) {
 				console.warn('Failed to save welcome modal preference:', e);
 			}
@@ -519,9 +497,8 @@ setupWelcomeModalListeners() {
 			this.modalManager.close('welcomeModal');
 		});
 	}
-}
+},
 
-,
 	setupConfirmationModalListeners() {
 		document.querySelector('#confirmationModal .modal-footer').addEventListener('click', (event) => {
 			const button = event.target.closest('[data-dialog-action]');
@@ -529,17 +506,15 @@ setupWelcomeModalListeners() {
 			this.pendingConfirmationValue = button.dataset.dialogAction;
 			this.modalManager.close('confirmationModal');
 		});
-	}
+	},
 
-,
 	resolvePendingConfirmation(value) {
 		const resolve = this.pendingConfirmationResolve;
 		this.pendingConfirmationResolve = null;
 		this.pendingConfirmationValue = null;
 		resolve?.(value ?? null);
-	}
+	},
 
-,
 	confirmAction(options = {}) {
 		if (options.skippable && PREFERENCES.get('confirmDestructiveActions') === false) return Promise.resolve(true);
 		return this.chooseAction({
@@ -549,9 +524,8 @@ setupWelcomeModalListeners() {
 				{ id: 'confirm', label: options.confirmLabel || 'Confirm', tone: options.tone, primary: true }
 			]
 		}).then(value => value === 'confirm');
-	}
+	},
 
-,
 	chooseAction(options = {}) {
 		const {
 			title = 'Confirm',
@@ -651,9 +625,8 @@ setupWelcomeModalListeners() {
 			if (this.modalManager.getTopOpenModalConfig() === config) this.modalManager.focusInitialElement(config);
 			else this.modalManager.open('confirmationModal');
 		});
-	}
+	},
 
-,
 	registerDocumentModal(id, { url, references, onLoaded }) {
 		const name = id.slice(0, -5);
 		this.modalManager.register(id, {

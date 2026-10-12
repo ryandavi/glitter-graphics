@@ -324,10 +324,6 @@ body.no-document .app-header {
 
 	@include overflow-edge-mask(var(--toolbar-fade));
 
-	>.toolbar-spacer {
-		flex: 1;
-	}
-
 	>.toolbar-group {
 		display: flex;
 		flex-direction: column;

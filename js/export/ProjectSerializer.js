@@ -98,39 +98,37 @@ class ProjectSerializer {
 				if (!this.editor.isSaved) return false;
 			}
 		}
-		this.editor.pickers.closeAll();
-
-		await this.loadBaseImage(migrated);
-		// Base-image loading resets manager state, so embedded assets must bind after it.
+		// Decode and hydrate before replacing the live collection: failures leave its history intact.
 		await this.registerCustomStickers(migrated.customStickers || {});
 		await this.registerCustomGlitter(migrated.customGlitter || {});
-		this.editor.shapeGlitterManager.clearImageFillAssets();
-		await this.registerShapeFillImages(migrated.shapeFillImages || {});
-
-		this.editor.layers = [];
+		const imageFills = new ImageFillStore(this.editor);
+		await this.registerShapeFillImages(migrated.shapeFillImages || {}, imageFills);
+		const layers = [];
 		for (const layerData of migrated.layers) {
 			const layer = await this.editor.layerManager.deserializeLayer(layerData);
-			if (layer) {
-				this.editor.layers.push(layer);
+			if (layer) layers.push(layer);
+		}
+		const masks = {};
+		for (const layer of layers) {
+			if (layer.type !== LayerType.GLITTER_FILL) continue;
+			const entry = migrated.masks?.[layer.id];
+			if (!entry) continue;
+			masks[layer.id] = {};
+			for (const key of ['add', 'sub']) {
+				if (entry[key]) masks[layer.id][key] = await this.decodeImage(entry[key]);
 			}
 		}
-
-		await this.restoreMasks(migrated.masks || {});
+		await this.loadBaseImage(migrated);
+		this.editor.layers = layers;
+		this.editor.imageFills.assets = imageFills.assets;
+		await this.restoreMasks(masks);
 
 		const activeLayer = this.editor.layerManager.getLayerById(migrated.activeLayerId);
 		this.editor.layerManager.restoreSelectionState(activeLayer ? activeLayer.id : null);
 		this.editor.setProjectName(migrated.name || '', { markDirty: false });
-		this.editor.historyManager.reset(this.editor.historyManager.createStateSnapshot());
-		this.editor.isSaved = true;
 		this.editor.openedFromNewerProjectVersion = migrated.version > ProjectSerializer.FORMAT_VERSION;
-		this.editor.layerManager.renderLayersList();
-		this.editor.updatePreview();
-		this.editor.refreshInspector();
-		this.editor.syncTransformHandlesForActiveLayer?.();
-		this.editor.updateActionButtons();
-		this.editor.updateSelectedColorsDisplay?.();
-		this.editor.updateStatusBar();
-		this.editor.updateHelpfulMessage();
+		this.editor.finishDocumentReplace({ saved: true });
+		this.editor.updateSelectedColorsDisplay();
 		this.editor.updateStatus('Project loaded');
 		return true;
 	}
@@ -153,10 +151,10 @@ class ProjectSerializer {
 				return;
 			}
 			const available = {
-				sticker: id => embedded[id] || this.editor.stickerManager.getItemById(id),
+				sticker: id => embedded[id] || this.editor.stickerLibrary.getItemById(id),
 				font: id => FontLibrary.has(id),
 				shape: id => ShapeLibrary.FILL_SHAPES.some(shape => shape.id === id),
-				image: id => data.shapeFillImages?.[id]?.data || this.editor.shapeGlitterManager.getImageFillAsset(id)
+				image: id => data.shapeFillImages?.[id]?.data || this.editor.imageFills.get(id)
 			};
 			for (const { kind, id } of getLayerAssetRefs(layer)) {
 				if (!available[kind](id)) issues.push({ kind, index, id, message: `${label}: ${kind} "${id}" is unavailable; the default or an empty source will be used` });
@@ -254,7 +252,7 @@ class ProjectSerializer {
 			baseImage.preset = { ...source.preset };
 		} else if (source?.file) {
 			baseImage.mimeType = source.file.type || 'application/octet-stream';
-			baseImage.data = await this.blobToDataUrl(source.file);
+			baseImage.data = await blobToDataUrl(source.file);
 		}
 
 		const sourceWidth = source?.renderedWidth ?? source?.preset?.width ?? this.editor.originalCanvas.width;
@@ -269,7 +267,7 @@ class ProjectSerializer {
 		// file is no longer it (a project reopened from its still canvas).
 		if (placement) {
 			baseImage.animation = { placement: structuredClone(placement) };
-			if (source.animation.file !== source.file) baseImage.animation.data = await this.blobToDataUrl(source.animation.file);
+			if (source.animation.file !== source.file) baseImage.animation.data = await blobToDataUrl(source.animation.file);
 		}
 
 		return baseImage;
@@ -311,7 +309,7 @@ class ProjectSerializer {
 		const usedIds = new Set(layers.flatMap(getLayerAssetRefs).filter(ref => ref.kind === 'sticker' && String(ref.id).startsWith('user-upload-')).map(ref => ref.id));
 
 		for (const stickerId of usedIds) {
-			const sticker = this.editor.stickerManager.getItemById(stickerId);
+			const sticker = this.editor.stickerLibrary.getItemById(stickerId);
 			if (!sticker?.url) continue;
 			const blob = await fetch(sticker.url).then((response) => response.blob());
 			customStickers[stickerId] = {
@@ -319,7 +317,7 @@ class ProjectSerializer {
 				fileName: sticker.filename || `${sticker.name || stickerId}.png`,
 				mimeType: sticker.mimeType || blob.type || 'image/png',
 				backgroundRemoved: sticker.backgroundRemoved === true,
-				data: await this.blobToDataUrl(blob)
+				data: await blobToDataUrl(blob)
 			};
 		}
 
@@ -330,7 +328,7 @@ class ProjectSerializer {
 		const images = {};
 		const usedRefs = new Set(layers.flatMap(getLayerAssetRefs).filter(ref => ref.kind === 'image').map(ref => ref.id));
 		usedRefs.forEach((imageRef) => {
-			const asset = this.editor.shapeGlitterManager.getImageFillAsset(imageRef);
+			const asset = this.editor.imageFills.get(imageRef);
 			if (!asset?.dataUrl) return;
 			images[imageRef] = {
 				name: asset.name,
@@ -341,10 +339,10 @@ class ProjectSerializer {
 		return images;
 	}
 
-	async registerShapeFillImages(images) {
+	async registerShapeFillImages(images, store = this.editor.imageFills) {
 		for (const [imageRef, payload] of Object.entries(images || {})) {
 			if (!payload?.data) continue;
-			await this.editor.shapeGlitterManager.registerImageFillAsset(imageRef, {
+			await store.register(imageRef, {
 				dataUrl: payload.data,
 				name: payload.name,
 				mimeType: payload.mimeType
@@ -355,7 +353,7 @@ class ProjectSerializer {
 	async registerCustomStickers(customStickers) {
 		const entries = Object.entries(customStickers || {});
 		for (const [id, payload] of entries) {
-			await this.editor.stickerManager.registerEmbeddedSticker({
+			await this.editor.stickerLibrary.registerEmbeddedSticker({
 				id,
 				...payload
 			});
@@ -369,14 +367,14 @@ class ProjectSerializer {
 			const item = this.editor.glitterLibrary.getItemById(id);
 			if (item?.source === 'user-upload') {
 				const blob = await fetch(item.url).then(response => response.blob());
-				embedded[id] = { upload: { name: item.name, fileName: item.filename, mimeType: item.mimeType }, data: await this.blobToDataUrl(blob) };
+				embedded[id] = { upload: { name: item.name, fileName: item.filename, mimeType: item.mimeType }, data: await blobToDataUrl(blob) };
 				continue;
 			}
 			if (!item?.recipe) continue;
 			embedded[id] = {
 				recipe: item.recipe,
-				data: await this.blobToDataUrl(new Blob([item.gifBytes], { type: 'image/gif' })),
-				sourceData: item.sourceBytes ? await this.blobToDataUrl(new Blob([item.sourceBytes], { type: 'image/gif' })) : null
+				data: await blobToDataUrl(new Blob([item.gifBytes], { type: 'image/gif' })),
+				sourceData: item.sourceBytes ? await blobToDataUrl(new Blob([item.sourceBytes], { type: 'image/gif' })) : null
 			};
 		}
 		return embedded;
@@ -394,6 +392,7 @@ class ProjectSerializer {
 		if (baseImage.canvasData) {
 			const blob = this.dataUrlToBlob(baseImage.canvasData);
 			const loaded = await this.editor.loadImageFromBlob(blob, {
+				deferFinish: true,
 				fileName: `${projectData.name || 'project'}-canvas.png`,
 				source: {
 					kind: 'serialized-canvas',
@@ -415,7 +414,8 @@ class ProjectSerializer {
 				baseImage.preset.width,
 				baseImage.preset.height,
 				baseImage.preset.color,
-				{ preserveProjectName: true }
+				{ preserveProjectName: true,
+				deferFinish: true }
 			);
 			if (!loaded) throw new Error('Could not load the project base image.');
 			return;
@@ -425,6 +425,7 @@ class ProjectSerializer {
 			const blob = this.dataUrlToBlob(baseImage.data);
 			const extension = (baseImage.mimeType || 'image/png').split('/')[1] || 'bin';
 			const loaded = await this.editor.loadImageFromBlob(blob, {
+				deferFinish: true,
 				fileName: `${projectData.name || 'project-base'}.${extension}`,
 				source: {
 					kind: 'project-file',
@@ -470,21 +471,12 @@ class ProjectSerializer {
 			return;
 		}
 
-		const img = await this.decodeImage(dataUrl);
+		const img = typeof dataUrl === 'string' ? await this.decodeImage(dataUrl) : dataUrl;
 		ctx.drawImage(img, 0, 0);
 	}
 
 	decodeImage(src) {
 		return loadImageElement(src);
-	}
-
-	blobToDataUrl(blob) {
-		return new Promise((resolve, reject) => {
-			const reader = new FileReader();
-			reader.onload = () => resolve(reader.result);
-			reader.onerror = () => reject(new Error('Failed to read project data.'));
-			reader.readAsDataURL(blob);
-		});
 	}
 
 	dataUrlToBlob(dataUrl) {

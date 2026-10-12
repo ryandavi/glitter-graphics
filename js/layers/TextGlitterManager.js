@@ -915,17 +915,12 @@ class TextGlitterManager {
 		syncPaintSlotPickerTargets(this.fieldHost, layer);
 	}
 
-
 	// Explicit exit from picker mode (Close / Esc) returns focus to where the
 	// user armed from. This is deliberately NOT part of closePickerSession —
 	// the automatic clears (layer switch, effect disable, history restore)
 	// already move the user elsewhere and must not yank the view back.
 
 	// One place each slot's default comes from.
-
-	getEffectTitle(effectName) {
-		return getPaintSlotLabel(LayerType.TEXT_GLITTER, effectName);
-	}
 
 	scheduleTextCommit(layer) {
 		clearTimeout(this.textInputTimer);
@@ -2002,6 +1997,10 @@ class TextGlitterManager {
 		LAYER_ELEMENT_METHODS.removeLayerElement.call(this, layerId);
 	}
 
+	releaseLayerResources(layer) {
+		this.removeLayerElement(layer.id);
+	}
+
 	clearElements() {
 		// New document / image reset: no layer survives, so any armed picker
 		// session is stale.
@@ -2031,7 +2030,7 @@ class TextGlitterManager {
 	}
 
 	buildExportPlan(layer, context) {
-		return context.compositor._buildSlotStackExportPlan(layer, { ensureTextFont: true });
+		return context.compositor.buildSlotStackExportPlan(layer, { ensureTextFont: true });
 	}
 }
 

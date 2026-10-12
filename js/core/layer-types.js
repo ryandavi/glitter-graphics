@@ -98,6 +98,10 @@ function isLayerFullyLocked(layer) {
 	return Boolean(layer?.locked) && LAYER_UI_CONFIG[layer.type]?.lockScope !== 'position';
 }
 
+function canEditLayerInStack(layer) {
+	return Boolean(layer && !LAYER_UI_CONFIG[layer.type]?.protectedInStack && !isLayerFullyLocked(layer));
+}
+
 function isAnimatableLayerType(type) {
 	return Boolean(LAYER_UI_CONFIG[type]?.animatable);
 }

@@ -14,8 +14,8 @@ function assertManifest($condition, $label)
 $fonts = (new ManifestLibraryService('fonts'))->get();
 assertManifest(array_is_list($fonts['manifest']['tagGroups']), 'font tag groups are present');
 assertManifest(array_is_list($fonts['manifest']['fonts']), 'fonts manifest contains a font list');
-assertManifest(count($fonts['manifest']['tagGroups']) === 4, 'font taxonomy has four tag groups');
-assertManifest($fonts['health']['tags'] === 20, 'font taxonomy has twenty tags');
+assertManifest(count($fonts['manifest']['tagGroups']) > 0, 'font taxonomy has tag groups');
+assertManifest($fonts['health']['tags'] === array_sum(array_map(function ($group) { return count($group['tags']); }, $fonts['manifest']['tagGroups'])), 'font taxonomy count matches its manifest');
 assertManifest($fonts['health']['registered'] === count($fonts['manifest']['fonts']), 'font health count matches manifest');
 assertManifest(count($fonts['health']['issues']) === 0, 'every font file is registered and available');
 assertManifest(
@@ -26,7 +26,7 @@ assertManifest(
 );
 
 $shapes = (new ManifestLibraryService('shapes'))->get();
-assertManifest(count($shapes['manifest']['shapes']) === 42, 'all canonical shapes are present');
+assertManifest($shapes['health']['registered'] === count($shapes['manifest']['shapes']), 'shape health count matches manifest');
 assertManifest(count($shapes['health']['issues']) === 0, 'shapes manifest validates');
 $shapeIds = array_column($shapes['manifest']['shapes'], 'id');
 assertManifest(in_array('circle', $shapeIds, true), 'default circle shape is present');

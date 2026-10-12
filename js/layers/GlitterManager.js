@@ -24,7 +24,7 @@ class GlitterManager {
 			onPicked: (layer, id, previousId) => {
 				const previous = this.editor.glitterLibrary.getItemById(previousId);
 				if (this.getGlitterSelectionTarget(layer) === 'fill' && layer.name === previous?.name) layer.name = this.editor.glitterLibrary.getItemById(id).name;
-				this.renderLayer(layer, this.editor.originalCanvas.width, this.editor.originalCanvas.height);
+				this.renderLayer(layer);
 				syncFieldControls(this.fieldHost, layer);
 				this.editor.requestPreviewUpdate();
 			}
@@ -87,7 +87,7 @@ class GlitterManager {
 			layer.shadow = null;
 			layer.sparkles = null;
 			delete layer.effectDrafts;
-			this.renderLayer(layer, this.editor.originalCanvas.width, this.editor.originalCanvas.height);
+			this.renderLayer(layer);
 			syncFieldControls(this.fieldHost, layer);
 			this.editor.layerManager.renderLayersList();
 			this.editor.saveState('Reset fill effects');
@@ -119,7 +119,6 @@ class GlitterManager {
 		const layer = this.editor.layerManager.getActiveLayer();
 		return Boolean(layer?.type === LayerType.GLITTER_FILL && this.pickerSession?.layerId === layer.id);
 	}
-
 
 	closePickerSession() {
 		pickerCloseSession(this, { updateSelection: () => this.editor.updateGlitterSelection() });
@@ -302,7 +301,7 @@ class GlitterManager {
 			const layer = this.editor.layerManager.getActiveLayer();
 			return layer?.type === LayerType.GLITTER_FILL ? layer : null;
 		};
-		const render = (layer) => this.renderLayer(layer, this.editor.originalCanvas.width, this.editor.originalCanvas.height);
+		const render = (layer) => this.renderLayer(layer);
 		return {
 			type: LayerType.GLITTER_FILL,
 			editor: this.editor,
@@ -477,7 +476,7 @@ class GlitterManager {
 
 		const maskObjectUrl = this.getMaskObjectUrlForLayer(layer, width, height, options);
 		reconcileSlotStack(stack, this.getSlotStack(layer), {
-			spanClassName: 'glitter-fill-content', width, height, layer, glitterLibrary: this,
+			spanClassName: 'glitter-fill-content', width, height, layer, glitterLibrary: this.editor.glitterLibrary,
 			getMask: (item) => {
 				const mask = this.getSlotMask(layer, item, fillMask, fillMaskKey);
 				if (!mask?.canvas) return null;
@@ -791,18 +790,12 @@ class GlitterManager {
 		});
 	}
 
-	floodFill(mask, startX, startY, targetColor, thresholdSq) { return floodColorSelection(this.editor, mask, startX, startY, targetColor, thresholdSq); }
-
-	applyFeatherToMask(mask, radius) { return featherColorSelection(this.editor, mask, radius); }
-
-	colorDistanceSq(r1, g1, b1, r2, g2, b2) { return selectionColorDistanceSq(r1, g1, b1, r2, g2, b2); }
-
 	buildExportPlan(layer, context) {
 		return context.compositor._buildGlitterFillExportPlan(layer);
 	}
-	selectGlitter(...args) { return this.editor.glitterLibrary.selectGlitter(...args); }
-	updateSelection(...args) { return this.editor.glitterLibrary.updateSelection(...args); }
-	getItemById(id) { return this.editor.glitterLibrary.getItemById(id); }
+
+
+
 	async init() { this.setupUI(); this.setupEventListeners(); }
 }
 

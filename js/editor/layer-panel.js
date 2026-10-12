@@ -23,9 +23,8 @@ setupLayerTypePickerListeners() {
 				this.createLayerByType(button.dataset.layerType, button._createOptions);
 			});
 		});
-	}
+	},
 
-,
 	createAddMenuButton(entry) {
 		const button = tplClone('tpl-layer-type-option');
 		if (!ADD_MENU_GROUPS.find((group) => group.id === entry.group)?.primary) button.classList.add('is-horizontal');
@@ -38,9 +37,8 @@ setupLayerTypePickerListeners() {
 		button.querySelector('.layer-type-description').textContent = entry.description;
 		button._createOptions = entry.createOptions || null;
 		return button;
-	}
+	},
 
-,
 	async renderAddMenu(container) {
 		const staticEntries = getAddMenuEntries();
 		let templateEntries = [];
@@ -75,9 +73,8 @@ setupLayerTypePickerListeners() {
 			section.append(title, grid);
 			container.appendChild(section);
 		});
-	}
+	},
 
-,
 	createLayerByType(layerType, createOptions = null) {
 		if (!APP_BOOT.isComplete('library')) return;
 		if (!LAYER_UI_CONFIG[layerType]?.addableViaModal) {
@@ -94,9 +91,8 @@ setupLayerTypePickerListeners() {
 			// After the creation flow has settled on its tool and panel.
 			requestAnimationFrame(() => this.openCreateTarget(layer));
 		}
-	}
+	},
 
-,
 	createLayerTypeOptionButton(type, { iconSizeClass = 'xl', id = null, entry = null } = {}) {
 		const modalConfig = LAYER_UI_CONFIG[type]?.addableViaModal;
 		if (!modalConfig) return null;
@@ -113,9 +109,8 @@ setupLayerTypePickerListeners() {
 		button._createOptions = entry?.createOptions || null;
 		if (entry?.phoneChip === false) button.dataset.phoneChip = 'false';
 		return button;
-	}
+	},
 
-,
 	renderLayerTypePickerOptions(container, options = {}) {
 		container.innerHTML = '';
 		const iconSizeClass = options.iconSizeClass || 'xl';
@@ -136,9 +131,8 @@ setupLayerTypePickerListeners() {
 				container.appendChild(button);
 			}
 		});
-	}
+	},
 
-,
 	setupStickerUploadModalListeners() {
 		// Note: Modal open/close is handled by ModalManager
 		// uploadStickerBtn opens the modal via ModalManager.register()
@@ -187,22 +181,19 @@ setupLayerTypePickerListeners() {
 				if (files.length) await uploadAndUse(files);
 			});
 		}
-	}
+	},
 
-,
 	getMultiSelectionLayerOpacity(layer) {
-		if (!layer || layer.type === LayerType.BASE_IMAGE) return null;
+		if (!canEditLayerInStack(layer)) return null;
 		// v2 opacity model: one canonical whole-layer opacity for every type.
 		return Number.isFinite(layer.opacity) ? layer.opacity : 100;
-	}
+	},
 
-,
 	setMultiSelectionLayerOpacity(layer, value) {
-		if (!layer || layer.type === LayerType.BASE_IMAGE) return;
+		if (!canEditLayerInStack(layer)) return;
 		layer.opacity = value;
-	}
+	},
 
-,
 	syncMultiSelectionOpacity(layers = []) {
 		const input = document.getElementById('multiSelectionOpacity');
 		const value = document.getElementById('multiSelectionOpacityValue');
@@ -210,15 +201,14 @@ setupLayerTypePickerListeners() {
 		if (!input || !value || !reset) return;
 		const opacities = layers.map((layer) => this.getMultiSelectionLayerOpacity(layer)).filter(Number.isFinite);
 		const editable = opacities.length === layers.length
-			&& layers.every((layer) => layer.type !== LayerType.BASE_IMAGE && !isLayerFullyLocked(layer));
+			&& layers.every((layer) => canEditLayerInStack(layer));
 		const mixed = opacities.some((opacity) => opacity !== opacities[0]);
 		input.value = mixed ? 100 : (opacities[0] ?? 100);
 		value.textContent = mixed ? 'Mixed' : `${input.value}%`;
 		input.disabled = !editable;
 		reset.disabled = !editable || (!mixed && Number(input.value) === 100);
-	}
+	},
 
-,
 	setupLayerPanelListeners() {
 		// Add layer buttons - open layer type picker
 		['addLayerBtn'].forEach((id) => {
@@ -275,7 +265,7 @@ setupLayerTypePickerListeners() {
 		if (layersBarGoToSelected) {
 			layersBarGoToSelected.addEventListener('click', () => {
 				const selectedLayer = this.layerManager.getActiveLayer();
-				if (!selectedLayer || selectedLayer.type === LayerType.BASE_IMAGE) return;
+				if (!selectedLayer || LAYER_UI_CONFIG[selectedLayer.type]?.protectedInStack) return;
 				this.layerManager.goToLayerSource(selectedLayer.id);
 			});
 		}

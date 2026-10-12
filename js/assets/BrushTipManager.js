@@ -28,7 +28,7 @@ class BrushTipManager extends ContentManager {
 	}
 
 	getLayerType() { return null; }
-	setupFilterChips() {}
+
 	getFilterKey(filterType) {
 		return filterType === 'brush-category' ? 'tipCategories' : super.getFilterKey(filterType);
 	}
@@ -117,7 +117,6 @@ class BrushTipManager extends ContentManager {
 		});
 		this.updateSelection();
 	}
-
 
 	closePickerSession() {
 		return pickerCloseSession(this, { updateSelection: () => this.updateSelection() });

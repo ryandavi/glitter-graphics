@@ -121,7 +121,7 @@ class SceneCompositor {
 		this._patternAdjustScratch = null;
 		this.filterGrainTileCache = new Map();
 		this.authoredFrameResolver = options.authoredFrameResolver || new AuthoredFrameResolver();
-		this.resolveShapeFillImage = options.resolveShapeFillImage || (() => null);
+		this.resolveImageFill = options.resolveImageFill || (() => null);
 		// Animated sources decoded for the running export, by URL. Nothing is
 		// stored on asset records or layers; releaseDecodedSources() drops these
 		// when an export finishes. Timing reads (no pixels) are small and kept.
@@ -248,7 +248,7 @@ class SceneCompositor {
 	// One procedural source per sparkles slot, period = its cycle. The sampled
 	// value is the slot's own clock: the fitted period maps back onto cycleMs,
 	// so every particle (a whole number of blinks per cycle) closes the loop.
-	_createSparkleTimelineSources(layer) {
+	createSparkleTimelineSources(layer) {
 		if (layer.visible === false) return [];
 		return getLayerSparkleEntries(layer).map((entry) => {
 			const cycle = Math.max(1, Number(entry.data.cycleMs) || FIELDS.sparkleCycle.value);
@@ -627,7 +627,7 @@ class SceneCompositor {
 	// The preview resolves the same slot with resolvePaintSlotSource, adding
 	// only the live glitter-availability check.
 	_getSlotSource(layer, entry) {
-		return resolvePaintSlotSource(layer, entry, { imageResolver: this.resolveShapeFillImage });
+		return resolvePaintSlotSource(layer, entry, { imageResolver: this.resolveImageFill });
 	}
 
 	// Authored animation sources for every slot that will actually draw:
@@ -651,7 +651,7 @@ class SceneCompositor {
 					glitterId: source.glitterId
 				}));
 			} else if (entry.data.mode === 'image') {
-				const asset = this.resolveShapeFillImage(entry.data.imageRef);
+				const asset = this.resolveImageFill(entry.data.imageRef);
 				if (asset?.isAnimated) images.push(this._createSlotImageDescriptor(layer, entry, asset));
 			}
 		});
@@ -870,7 +870,7 @@ class SceneCompositor {
 	// buildStack(resolveSource) replaces buildSlotStack for a type whose paint
 	// list is not one item per slot (a frame's shade bands); its items name
 	// the slotMasks key they paint through.
-	_buildSlotStackExportPlan(layer, { ensureTextFont = false, buildStack = null } = {}) {
+	buildSlotStackExportPlan(layer, { ensureTextFont = false, buildStack = null } = {}) {
 		if (ensureTextFont && !buildStack) buildStack = resolveSource => this.editor.textGlitterManager.getSlotStack(layer, resolveSource);
 		const getAuthoredSources = (library) => this._getSlotAuthoredSources(layer, library);
 		const scratch = {

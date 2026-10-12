@@ -1,26 +1,15 @@
 'use strict';
 
 const { chromium } = require('playwright');
-const fs = require('fs');
+const { openApp } = require('../lib/app');
 
-const APP_URL = process.env.GLITTER_URL || 'http://localhost/glitter/';
 
 function assert(condition, message) {
 	if (!condition) throw new Error(message);
 }
 
 async function openEditor(browser) {
-	const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
-	await context.addInitScript(() => localStorage.setItem('glitterEditor_welcomeModalSeen', 'true'));
-	const page = await context.newPage();
-	if (process.env.GLITTER_TEST_CSS) await page.route('**/css/style.css*', (route) => route.fulfill({ contentType: 'text/css', body: fs.readFileSync(process.env.GLITTER_TEST_CSS) }));
-	const errors = [];
-	page.on('pageerror', (error) => errors.push(error.message));
-	page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
-	await page.goto(APP_URL, { waitUntil: 'domcontentloaded' });
-	await page.waitForFunction(() => window.editor != null);
-	await page.evaluate(() => document.querySelectorAll('.modal-overlay.visible').forEach((modal) => modal.classList.remove('visible')));
-	return { context, page, errors };
+	return openApp({ browser });
 }
 
 async function main() {
@@ -156,13 +145,15 @@ async function main() {
 			for (const layer of e.layers.filter(layer => layer.type === LayerType.TEXT_GLITTER)) {
 				await manager.refreshLayer(layer);
 				const before = getLayerAnchorPoint(e, layer);
+				const boxBefore = manager.getPointAnchorSnapshot(layer, { layoutBox: true }).world;
 				manager.applyTextEdit(layer, 'FIRST LINE\nSECOND LINE\nTHIRD LINE');
 				const after = getLayerAnchorPoint(e, layer);
-				results.push({ mode: layer.textData.boxMode, width: layer.textData.boxWidth, dy: after.y - before.y });
+				results.push({ mode: layer.textData.boxMode, width: layer.textData.boxWidth, dy: after.y - before.y, boxDy: manager.getPointAnchorSnapshot(layer, { layoutBox: true }).world.y - boxBefore.y });
 			}
 			return results;
 		});
-		assert(growth.every(item => item.mode === 'autoHeight' && item.width === 800 && Math.abs(item.dy) < 0.01), `Caption anchor drift: ${JSON.stringify(growth)}`);
+		// Typing holds the fractional layout box; the outer frame rounds out to mask pixels.
+		assert(growth.every(item => item.mode === 'autoHeight' && item.width === 800 && Math.abs(item.boxDy) < 0.01 && Math.abs(item.dy) < 1), `Caption anchor drift: ${JSON.stringify(growth)}`);
 		assert(memeProject.errors.length === 0, `Browser errors: ${memeProject.errors.join('; ')}`);
 		await memeProject.context.close();
 

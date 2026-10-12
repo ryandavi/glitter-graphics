@@ -3,12 +3,12 @@
 registerLayerType(LayerType.STICKER, {
 	assetRefs: (layer) => [{ kind: 'sticker', id: layer.stickerSourceId }],
 	describe: (layer, editor) => {
-		const sticker = editor.stickerManager.getItemById(layer.stickerSourceId);
+		const sticker = editor.stickerLibrary.getItemById(layer.stickerSourceId);
 		return { name: layer.name || 'Sticker', detail: sticker?.category ? `Sticker · ${sticker.category}` : 'Sticker' };
 	},
 	defaultCreateOptions: (editor) => {
 		const id = CONFIG.tools.stickers.defaultStickerId;
-		return id != null && editor.stickerManager.getItemById(id) ? id : null;
+		return id != null && editor.stickerLibrary.getItemById(id) ? id : null;
 	},
 	displayName: 'Sticker',
 	// The sticker image itself is not a paint slot. Outline, shadow and bevel
@@ -123,10 +123,14 @@ registerLayerType(LayerType.STICKER, {
 	animationBox: (_editor, layer) => ({ width: layer.stickerData.width, height: layer.stickerData.height }),
 	timelineSources: (layer, context) => [
 		...context.compositor._createLayerAnimationTimelineSources(layer, context),
-		...context.compositor._createSparkleTimelineSources(layer)
+		...context.compositor.createSparkleTimelineSources(layer)
 	],
 	serialization: {
-		custom: { serialize: 'serializeSticker', deserialize: 'deserializeSticker' }
+		dataKey: 'stickerData',
+		extraKeys: ['stickerSourceId'],
+		runtimeKeys: ['element', 'staticImageData', '_exportResolvedUrl'],
+		normalize: (editor, layer) => editor.stickerManager.normalizeLayer(layer),
+		hydrate: (editor, layer) => editor.stickerManager.hydrateLayer(layer)
 	},
 	addedStatusMessage: 'New sticker layer added',
 	goTo: 'asset',

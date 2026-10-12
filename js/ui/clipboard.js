@@ -50,7 +50,7 @@ async function pasteLayerPayload(editor, payload) {
 	for (const layerData of payload.layers) {
 		const sourceId = layerData.id;
 		const layer = await editor.layerManager.deserializeLayer(layerData);
-		if (!layer || layer.type === LayerType.BASE_IMAGE) continue;
+		if (!layer || LAYER_UI_CONFIG[layer.type]?.protectedInStack) continue;
 		layer.id = editor.layerManager.generateLayerId();
 		layer.locked = false;
 		const transform = isTransformableLayerType(layer.type) ? getLayerTransform(layer) : null;

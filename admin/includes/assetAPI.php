@@ -1,4 +1,5 @@
 <?php
+require_once(__DIR__ . '/attributionSchema.php');
 require_once(__DIR__ . '/assetPathService.php');
 require_once(__DIR__ . '/assetNaming.php');
 require_once(__DIR__ . '/assetAnalysisResult.php');
@@ -457,13 +458,11 @@ abstract class AssetAPI
         if (!is_array($value)) {
             return null;
         }
-        $fields = ['author', 'authorId', 'authorUrl', 'source', 'sourceId', 'sourceUrl', 'license', 'notes'];
-        $licenses = ['unknown', 'personal-use', 'commercial', 'public-domain', 'CC0-1.0', 'CC-BY-4.0', 'CC-BY-SA-4.0', 'OFL-1.1', 'system'];
         $out = [];
-        foreach ($fields as $field) {
+        foreach (ATTRIBUTION_FIELDS as $field) {
             $entry = trim((string)($value[$field] ?? ''));
             if ($entry === '') continue;
-            if ($field === 'license' && !in_array($entry, $licenses, true)) {
+            if ($field === 'license' && !in_array($entry, ATTRIBUTION_LICENSES, true)) {
                 throw new InvalidArgumentException("Attribution license \"$entry\" is not recognized");
             }
             $out[$field] = $entry;

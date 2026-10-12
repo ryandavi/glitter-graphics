@@ -76,14 +76,5 @@ class LibraryCatalog {
 		const counts = this.getCategoryCounts(this.getCreatorItems(id, items));
 		return this.categories.filter(category => counts[category.id]);
 	}
-	getUnknownGroups(items) {
-		const groups = new Map();
-		this.getCreatorItems('__unknown', items).forEach(item => {
-			const root = this.getRootOf(item.category);
-			const id = root?.id || item.category;
-			if (!groups.has(id)) groups.set(id, { id, name: root?.name || id, items: [] });
-			groups.get(id).items.push(item);
-		});
-		return [...groups.values()];
-	}
+
 }

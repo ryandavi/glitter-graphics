@@ -1,7 +1,7 @@
 # ============================================================
-# INTERIM ADMIN LOCKDOWN
-# The admin API has no application-level auth yet, so restrict
-# the whole /admin directory to local requests.
+# LOCAL ADMIN ACCESS
+# Sessions, CSRF checks and login rate limits protect the application.
+# Restrict the whole /admin directory to local requests as an additional boundary.
 #
 # If you use the admin remotely on production, replace this
 # with HTTP Basic Auth before deploying:

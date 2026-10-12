@@ -36,8 +36,6 @@ class GlitterEditor {
 		// ============================================================================
 		// CONTENT & LAYERS
 		// ============================================================================
-		this.content = [];
-		this.selectedLayerIds = new Set();
 
 		// ============================================================================
 		// TOOL & HISTORY
@@ -68,7 +66,6 @@ class GlitterEditor {
 		// ============================================================================
 		// EXPORT STATE
 		// ============================================================================
-		this.exportStartTime = 0;
 		this.exportCancelled = false;
 		this.exportInProgress = false;
 
@@ -102,6 +99,7 @@ class GlitterEditor {
 		this.animationTicker = new AnimationTicker(this);
 		this.stickerManager = new StickerManager(this);
 		this.paintMaskStore = new PaintMaskStore(this);
+		this.imageFills = new ImageFillStore(this);
 		this.glitterManager = new GlitterManager(this);
 		this.glitterLibrary = new GlitterBrowserManager(this);
 		this.stickerLibrary = new StickerBrowserManager(this);
@@ -176,61 +174,6 @@ class GlitterEditor {
 			(this.originalImageData?.data?.byteLength || 0) + (this.originalAlphaChannel?.byteLength || 0) });
 	}
 
-	// ===== DEBUG CONFIGURATION LOADER =====
-	async loadDebugConfig() {
-		if (!DEBUG_CONFIG.enabled) return;
-
-		// Load blank canvas
-		await this.loadBlankImage(
-			DEBUG_CONFIG.canvas.width,
-			DEBUG_CONFIG.canvas.height,
-			DEBUG_CONFIG.canvas.color
-		);
-
-		// Wait for image to fully load
-		await new Promise(resolve => {
-			const checkImage = setInterval(() => {
-				if (this.originalImage) {
-					clearInterval(checkImage);
-					resolve();
-				}
-			}, 50);
-		});
-
-		// Load each sticker preset
-		for (const stickerPreset of DEBUG_CONFIG.stickers) {
-			const stickerId = stickerPreset.id;
-			const stickerInfo = this.stickerManager.getItemById(stickerId);
-
-			if (!stickerInfo) {
-				console.warn(`[DEBUG] Sticker ID ${stickerId} not found, skipping`);
-				continue;
-			}
-
-			// Create the sticker layer with default settings
-			const layer = this.stickerManager.createLayer(stickerId);
-
-			// Override position from preset
-			layer.transform.position.x = stickerPreset.x;
-			layer.transform.position.y = stickerPreset.y;
-
-			// Insert layer
-			this.layerManager.insertLayer(layer);
-
-			// Render the sticker
-			this.stickerManager.renderLayer(layer);
-
-			dbg(`[DEBUG] Loaded sticker: ${stickerInfo.name} at (${stickerPreset.x}, ${stickerPreset.y})`);
-		}
-
-		// Update UI
-		this.layerManager.renderLayersList();
-		this.requestPreviewUpdate();
-		this.updateActionButtons();
-		this.saveState('Add stickers');
-
-	}
-
 	// ===== UTILITY METHODS =====
 
 	initializeProjectNameInput() {
@@ -298,6 +241,10 @@ class GlitterEditor {
 		return this.layerManager.activeLayerId;
 	}
 
+	get selectedLayerIds() {
+		return this.layerManager.selectedLayerIds;
+	}
+
 	set activeLayerId(value) {
 		this.layerManager.activeLayerId = value;
 	}
@@ -315,7 +262,7 @@ class GlitterEditor {
 		this.sceneCompositor = new SceneCompositor({
 			editor: this,
 			authoredFrameResolver: this.authoredFrameResolver,
-			resolveShapeFillImage: (imageRef) => this.shapeGlitterManager.getImageFillAsset(imageRef)
+			resolveImageFill: (imageRef) => this.imageFills.get(imageRef)
 		});
 		this.exporter = new GifExporter(this.sceneCompositor, {
 			resultPresenter: this.exportResultPresenter,
@@ -352,13 +299,8 @@ class GlitterEditor {
 	setupAutoSelectListener() {
 		const toggle = document.getElementById('contextAutoSelect');
 		if (!toggle) return;
-		toggle.checked = PREFERENCES.get('autoSelect');
+		this.bindPreferenceControl(toggle, 'autoSelect');
 		toggle.addEventListener('change', () => {
-			PREFERENCES.set('autoSelect', toggle.checked);
-			// Settings shows the same preference, so it has to agree.
-			const settingsInput = document.getElementById('autoSelectLayers');
-			if (settingsInput) settingsInput.checked = toggle.checked;
-			this.saveSettingsToStorage();
 			this.updateStatus(toggle.checked
 				? 'Auto-Select on: click an object to select it'
 				: 'Auto-Select off: canvas drags keep the selected layer');
@@ -389,12 +331,12 @@ class GlitterEditor {
 	}
 
 	getSelectedActionableLayers() {
-		return this.layerManager.getSelectedLayers().filter((layer) => layer.type !== LayerType.BASE_IMAGE);
+		return this.layerManager.getSelectedLayers().filter(canEditLayerInStack);
 	}
 
 	cloneSelectedLayers() {
 		const allSelectedLayers = this.layerManager.getSelectedLayers();
-		if (allSelectedLayers.some((layer) => layer.type === LayerType.BASE_IMAGE || isLayerFullyLocked(layer))) {
+		if (allSelectedLayers.some((layer) => !canEditLayerInStack(layer))) {
 			this.showError('Unlock protected layers or remove them from the selection before duplicating');
 			return null;
 		}
@@ -410,7 +352,7 @@ class GlitterEditor {
 
 	async deleteSelectedLayers() {
 		const allSelectedLayers = this.layerManager.getSelectedLayers();
-		if (allSelectedLayers.some((layer) => layer.type === LayerType.BASE_IMAGE || isLayerFullyLocked(layer))) {
+		if (allSelectedLayers.some((layer) => !canEditLayerInStack(layer))) {
 			this.showError('Unlock protected layers or remove them from the selection before deleting');
 			return false;
 		}
@@ -454,7 +396,7 @@ class GlitterEditor {
 			ctx.fillRect(0, 0, width, height);
 		}
 
-		const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+		const blob = await encodeCanvasToBlob(canvas, 'image/png');
 		const fileName = color === 'transparent'
 			? `blank_${width}x${height}_transparent.png`
 			: `blank_${width}x${height}.png`;
@@ -656,16 +598,6 @@ class GlitterEditor {
 		}
 	}
 
-	// Arrow-key nudge for the selected movable layer (1px, 10px with Shift).
-	// Returns true when it handled the key. Runs ahead of the typing guard so a
-	// selected text/shape layer moves like a sticker; the text content field is
-	// blurred on the first nudge so continued typing needs a deliberate refocus.
-	// Arrows belong to the focused control when it uses them (a field, select,
-	// slider, list or grid: focusKeyClaim) and to the layer otherwise.
-
-	// Collapses a burst of arrow-key nudges (held key / rapid presses) into a
-	// single history entry, the same debounce pattern sliders use.
-
 	// ===== HISTORY =====
 
 	// A save made while a numeric key step runs shares that step's key, so a
@@ -809,35 +741,16 @@ class GlitterEditor {
 	}
 
 	clearImage() {
-		if (this.autoGlitterManager?.isSessionActive()) this.autoGlitterManager.endSessionUI();
+		this.beginDocumentReplace();
 
 		// ======================
 		// Core image + data state
 		// ======================
-		this.exportResultPresenter?.clear();
-		if (this.originalImage && this.originalImage.src.startsWith('blob:')) {
-			URL.revokeObjectURL(this.originalImage.src);
-		}
 		this.originalImage = null;
 		this.originalImageData = null;
 		this.originalAlphaChannel = null;
 		this.baseImageSource = null;
-		this.releaseBaseAnimationUrls();
-		this.maskEditor?.exitEditMode({ commitStroke: false });
 		this.layerManager.clearBaseImageSwatchCache();
-
-		if (this.glitterManager) {
-			this.layerManager.layers.forEach(layer => {
-				this.glitterManager.releaseLayerResources(layer);
-			});
-			this.paintMaskStore.clearAllPaintData();
-		}
-
-		this.layerManager.layers = [];
-		this.layerManager.activeLayerId = null;
-
-		// Reset history — old states reference layers of the removed image
-		this.historyManager.reset();
 
 		// ======================
 		// Preview + canvas state
@@ -847,9 +760,6 @@ class GlitterEditor {
 		this.originalCanvas.classList.remove('visible');
 
 		this.clearPreview();
-		this.canvasElementsContainer.innerHTML = '';
-		this.areaSelection.reset();
-		this.viewport.selectionOverlay.clear();
 
 		// ======================
 		// Upload / dropzone UI
@@ -901,12 +811,7 @@ class GlitterEditor {
 		// ======================
 		// UI refresh + tool state
 		// ======================
-		this.updateHelpfulMessage();
-		this.layerManager.renderLayersList();
-		this.updateHistoryButtons();
-		this.updateActionButtons();
-
-		this.setTool(ToolType.SELECT);
+		this.finishDocumentReplace();
 		this.updateStatus(CONFIG.app.status.noDocument);
 		this.updateStatusBar();
 
@@ -916,17 +821,9 @@ class GlitterEditor {
 		window.dispatchEvent(new Event('imageRemoved'));
 	}
 
-	// ===== IMAGE LOADING =====
 
-	// ===== CANVAS SIZE (Photoshop-style) =====
 
-	// The 9 anchor cells, row-major. `fx`/`fy` are the fraction of the size
-	// delta applied as the content offset (0 = pin to that edge, 1 = pin to the
-	// opposite edge). `arrow` is the glyph shown in the cell; the active cell is
-	// rendered as a filled dot instead.
 
-	// Editable document scaling. Base pixels and painted masks are resampled with
-	// nearest-neighbor; layer geometry stays live and history retains old buffers.
 
 	// ===== CLICK HANDLERS =====
 
@@ -944,75 +841,47 @@ class GlitterEditor {
 
 	handlePreviewContainerClick(e) {
 		if (this.isCanvasToolSuspended()) return;
-		dbg('📍 Click handler fired', e.type);
-
-		// 0. IGNORE IF JUST FINISHED HANDLE DRAGGING
+		dbg('Click handler fired', e.type);
 		if (this.ignoreNextClick) {
-			dbg('🚫 Ignoring click - just finished handle drag');
+			dbg('Ignoring click - just finished handle drag');
 			return;
 		}
-
-		// IGNORE TRANSFORM HANDLES
 		const clickedGroupBoundingBox = e.target.closest('.group-transform-handles .transform-bounding-box');
 		if ((e.target.closest('.transform-handles') ||
 			e.target.classList.contains('transform-bounding-box')) && !clickedGroupBoundingBox) return;
-
-		// IGNORE UI ELEMENTS
 		if (e.target.closest('.ui-ignore-gestures')) {
 			return;
 		}
-
-		// MOUSE BUTTON CHECKS
 		if (e.button === 1) return; // Ignore middle mouse button
-		// Ignore right-click for all tools EXCEPT zoom tool
 		if (e.button === 2 && this.currentTool !== ToolType.ZOOM) {
 			return;
 		}
 
-		// 4. EVENT TYPE FILTERING - Different tools need different events
-		// HAND tool needs pointerdown to start dragging
-		// Other tools need click to prevent double-firing
-
 		if (this.currentTool === ToolType.HAND) {
-			// Hand tool: ONLY respond to pointerdown (ignore click)
 			if (e.type === 'click') {
-				dbg('🚫 HAND tool: Ignoring click event (already handled by pointerdown)');
+				dbg('Hand drag owns pointerdown; ignore click');
 				return;
 			}
 		} else {
-			// Other tools (SELECT, COLOR_PICKER, ZOOM): ONLY respond to click
-			// EXCEPT: ZOOM tool with right-click needs pointerdown (right-click doesn't fire 'click')
-			// EXCEPT: SELECT tool on sticker elements - let mousedown pass through to sticker handlers
 			if (e.type === 'pointerdown' || e.type === 'mousedown') {
-				// Allow pointerdown for zoom tool with right-click
 				if (this.currentTool === ToolType.ZOOM && e.button === 2) {
-					dbg('✅ ZOOM tool: Allowing right-click pointerdown');
-					// Continue to handle this event
+					dbg('ZOOM tool: Allowing right-click pointerdown');
 				}
-				// CRITICAL FIX: Allow mousedown on transformable overlays to pass through
 				else if (this.currentTool === ToolType.SELECT && e.target.closest(getTransformableLayerElementSelector())) {
-					dbg('✅ SELECT tool: Allowing transformable overlay mousedown to pass through');
-					// Don't return - let it fall through, but don't process it here
-					// The sticker's own mousedown handler will handle it
+					dbg('SELECT tool: Allowing transformable overlay mousedown to pass through');
 					return;
 				}
 				else {
-					dbg('🚫 Click-based tool: Ignoring pointerdown (waiting for click)');
+					dbg('Click-based tool: Ignoring pointerdown (waiting for click)');
 					return;
 				}
 			}
 		}
 
 		const hitTransformableOverlay = e.target.closest(getTransformableLayerElementSelector());
-
-		// Check if click is within the canvas area using viewport coordinates
 		const canvasCoords = this.viewport.screenToCanvas(e.clientX, e.clientY);
 		const hitCanvas = this.viewport.isWithinCanvas(canvasCoords.x, canvasCoords.y);
-
-		// We treat transformable overlays and the canvas as the "Image Area"
 		const hitImageArea = hitCanvas || hitTransformableOverlay;
-
-		// Gatekeeper: If they clicked a button/sidebar, stop here
 		const isWorkspace = e.target === this.previewContainer || e.target === this.previewWrapper || hitImageArea;
 		if (!isWorkspace) return;
 
@@ -1121,14 +990,9 @@ class GlitterEditor {
 	}
 
 	renderPreviewCanvas(layersToShow) {
-		// ============================================================
-		// UPDATED LOGIC: BASE IMAGE VISIBILITY
-		// ============================================================
-
-		// Find the Base Image layer in the stack
 		const baseLayer = this.layerManager.getBaseLayer();
 
-		// If the base layer exists and is set to hidden, stop here (leave canvas transparent)
+		// Hidden base layers leave the preview canvas transparent.
 		if (baseLayer && !baseLayer.visible) {
 			this.clearBasePreviewCanvas();
 			return;
@@ -1175,8 +1039,6 @@ class GlitterEditor {
 		this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
 		this._basePreviewCache = { key: 'transparent' };
 	}
-
-	// ===== EXPORT PROGRESS =====
 
 	showError(message) {
 		this.notifications.notify('error', message);
@@ -1231,7 +1093,6 @@ BOOT_TASKS.register('editor', async ({ boot }) => {
 
 APP_BOOT.run(async (stage, editor) => {
 	if (stage !== 'library') return;
-	if (DEBUG_CONFIG.enabled) await editor.loadDebugConfig();
 	window.editor = editor;
 	syncLibraryView();
 }).catch((error) => {

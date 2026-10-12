@@ -15,11 +15,9 @@ const CANVAS_RESIZE_METHODS = {
 		this.resetDocumentSize();
 		this.layerManager.updateBaseImageSwatchCache();
 		if (restoring) return;
-		this.requestPreviewUpdate(); this.layerManager.renderLayersList();
-		this.loadActiveLayerSettings(); this.syncTransformHandlesForActiveLayer?.();
-		this.updateStatusBar(); this.updateHistoryButtons();
+		this.requestPreviewUpdate();
+		this.refreshDocumentUI();
 	},
-
 scaleDocument(newWidth, newHeight, uniformScale, options = {}) {
 		if (!this.originalImage) return;
 		const oldWidth = this.originalCanvas.width;
@@ -67,7 +65,7 @@ scaleDocument(newWidth, newHeight, uniformScale, options = {}) {
 		if (options.updateStatus !== false) this.updateStatus(`Design scaled to ${newWidth} × ${newHeight} px`);
 
 		this.refreshAfterCanvasChange();
-	}
+	},
 
 	// Bounding box (canvas pixel coords) of everything that counts as
 	// "artwork": every movable layer's visual bounds (every painted pixel,
@@ -77,7 +75,6 @@ scaleDocument(newWidth, newHeight, uniformScale, options = {}) {
 	// opaque edge-to-edge, so folding it in would make this a no-op for the
 	// common case. Fill layers contribute their transformed visible-mask bounds.
 	// Returns null when there are no movable painted layers.
-,
 	getArtworkBounds(layers = this.layers, options = {}) { return this.boxToBounds(this.getArtworkBox(layers, options)); },
 	// `motion` includes everything the layers' animations sweep.
 	getArtworkBox(layers = this.layers, { motion = false } = {}) {
@@ -90,7 +87,6 @@ scaleDocument(newWidth, newHeight, uniformScale, options = {}) {
 		return { minX, minY, width: Math.max(1, Math.ceil(box.right) - minX), height: Math.max(1, Math.ceil(box.bottom) - minY) };
 	},
 	getCanvasBox() { return { left: 0, top: 0, right: this.originalCanvas.width, bottom: this.originalCanvas.height }; },
-
 	// What the Base Image layer paints: the whole canvas for a solid, gradient
 	// or glitter background, and the image's own pixels otherwise. The scan is
 	// kept until the base pixels are replaced.
@@ -117,7 +113,6 @@ scaleDocument(newWidth, newHeight, uniformScale, options = {}) {
 		return this._baseContentBox.box;
 	},
 	getBaseContentBounds() { return this.boxToBounds(this.getBaseContentBox()); },
-
 	// Photoshop's Trim: everything visible, never beyond the canvas.
 	getTrimBounds() {
 		const box = unionBoxes(this.getBaseContentBox(), this.getArtworkBox());
@@ -127,7 +122,7 @@ scaleDocument(newWidth, newHeight, uniformScale, options = {}) {
 		return trimmed.right - trimmed.left >= 1 && trimmed.bottom - trimmed.top >= 1 ? this.boxToBounds(trimmed) : null;
 	},
 	// Photoshop's Reveal All: the canvas grown to hold the artwork that hangs off it.
-	getRevealBounds() { return this.originalImage ? this.boxToBounds(unionBoxes(this.getCanvasBox(), this.getArtworkBox())) : null; }
+	getRevealBounds() { return this.originalImage ? this.boxToBounds(unionBoxes(this.getCanvasBox(), this.getArtworkBox())) : null; },
 
 	// Structural canvas resize (Photoshop "Canvas Size"): change the canvas
 	// bounds WITHOUT resampling. Content keeps its pixel size; it's translated by
@@ -137,7 +132,6 @@ scaleDocument(newWidth, newHeight, uniformScale, options = {}) {
 	// smaller size. Re-anchors every buffer and records an undoable history entry
 	// (the snapshot carries the new canvas dims + base pixels; see
 	// applyCanvasStateFromHistory), so Ctrl+Z restores the previous size.
-,
 	resizeCanvas(newWidth, newHeight, offsetX, offsetY, options = {}) {
 		if (!this.originalImage) return;
 		newWidth = Math.max(1, Math.round(newWidth));
@@ -193,7 +187,7 @@ scaleDocument(newWidth, newHeight, uniformScale, options = {}) {
 		this.layers.forEach((layer) => {
 			if (!isTransformableLayerType(layer.type)) return;
 			if (layer.type === LayerType.GLITTER_FILL) {
-				this.glitterManager?.renderLayer(layer, newWidth, newHeight);
+				getLayerManagerForType(this, layer.type)?.renderLayer(layer);
 				return;
 			}
 			const position = layer.transform.position;
@@ -223,12 +217,11 @@ scaleDocument(newWidth, newHeight, uniformScale, options = {}) {
 
 		// 7. Repaint composite + list + status; drop any live resize preview.
 		this.refreshAfterCanvasChange();
-	}
+	},
 
 	// Restore canvas dimensions + base-image pixels from a history snapshot's
 	// `canvas` field (see HistoryManager.createStateSnapshot). Called at the top
 	// of restoreState, before paint/layers, so buffers rebuild at the right size.
-,
 	applyCanvasStateFromHistory(canvasState) {
 		if (!canvasState || !canvasState.imageData) return;
 

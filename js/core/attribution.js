@@ -7,8 +7,10 @@
 // and "" mean the same thing — no attribution.
 //
 //   author     creator / artist / foundry
+//   authorId   creator entity in content/entities.json
 //   authorUrl  link for `author`
 //   source     where this copy came from (archive, pack, re-share)
+//   sourceId   source entity in content/entities.json
 //   sourceUrl  link for `source`
 //   license    one of LICENSES ids, or omitted when unknown
 //   notes      free text ("will remove on request", track / film, …)

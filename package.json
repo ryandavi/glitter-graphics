@@ -1,8 +1,7 @@
 {
-	"name": "glitter-touch-tests",
+	"name": "glitter-editor",
 	"private": true,
 	"scripts": {
-		"cache:bust": "node tools/bump-cache.js",
 		"manifests:split": "node tools/split-manifests.js",
 		"lint:modals": "node tools/modal-lint.js",
 		"build:modals": "node tools/build-modals.js",

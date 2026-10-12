@@ -12,7 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GLITTER_URL: http://127.0.0.1:8000/
-      GLITTER_APP_URL: http://127.0.0.1:8000/
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -22,15 +21,18 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run lint
-      - run: node tools/build-shell.js --check
-      - run: node tools/build-bundle.js --check
+      - run: node tools/build.js --check
       - name: Verify compiled CSS
         shell: bash
         run: |
           npx sass css/style.scss /tmp/style.css --no-source-map
           # Live Sass Compiler writes no final newline and the CLI does; ignore only that.
           printf '%s\n' "$(cat css/style.css)" | diff -u - /tmp/style.css
+      - name: Verify compiled admin CSS
+        shell: bash
+        run: |
+          npx sass admin/css/swatch_admin.scss /tmp/swatch_admin.css --no-source-map
+          printf '%s\n' "$(cat admin/css/swatch_admin.css)" | diff -u - /tmp/swatch_admin.css
       - name: Start app server
         run: php -S 127.0.0.1:8000 -t . > /tmp/glitter-php.log 2>&1 &
-      - run: npm run test:quick
-      - run: npm run test:export
+      - run: node tests/run.js --skip-tag admin --skip-tag local

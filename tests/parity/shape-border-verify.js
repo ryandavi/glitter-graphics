@@ -346,7 +346,7 @@ async function check7(page) {
 			ctx.fillRect(10, 0, 10, 10);
 			return canvas.toDataURL('image/png');
 		};
-		await editor.shapeGlitterManager.registerImageFillAsset('image-a', {
+		await editor.imageFills.register('image-a', {
 			dataUrl: makeImage('#ef247a', '#25b9e8'), name: 'A.png', mimeType: 'image/png'
 		});
 
@@ -399,11 +399,11 @@ async function check7(page) {
 
 		const project = await editor.projectSerializer.serialize();
 		const snapshotText = JSON.stringify(editor.historyManager.createStateSnapshot());
-		editor.shapeGlitterManager.clearImageFillAssets();
+		editor.imageFills.clear();
 		await editor.projectSerializer.registerShapeFillImages(project.shapeFillImages);
-		const reloadedAssetName = editor.shapeGlitterManager.getImageFillAsset('image-a')?.name;
+		const reloadedAssetName = editor.imageFills.get('image-a')?.name;
 		editor.historyManager.reset(editor.historyManager.createStateSnapshot());
-		await editor.shapeGlitterManager.registerImageFillAsset('image-b', {
+		await editor.imageFills.register('image-b', {
 			dataUrl: makeImage('#ffd33d', '#4c55ef'), name: 'B.png', mimeType: 'image/png'
 		});
 		layer.shapeData.fill.imageRef = 'image-b';

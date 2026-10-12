@@ -61,7 +61,7 @@ registerLayerType(LayerType.FRAME, {
 	],
 	hasVisibleContent: (layer) =>
 		Boolean(layer.frameData) && (layer.frameData.kind !== 'image' || Boolean(layer.frameData.image?.url)),
-	timelineSources: (layer, context) => context.compositor._createSparkleTimelineSources(layer),
+	timelineSources: (layer, context) => context.compositor.createSparkleTimelineSources(layer),
 	serialization: {
 		dataKey: 'frameData',
 		omit: ['settings'],

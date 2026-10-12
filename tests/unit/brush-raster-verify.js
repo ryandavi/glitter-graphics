@@ -57,6 +57,7 @@ stampCache.clear();
 assert.notStrictEqual(stampCache.get('round', 20, 50), stamp, 'clearing releases the cached stamp');
 
 const brushCtx = {
+	BOOT_TASKS: { register() {} },
 	console, CONFIG, ShapeLibrary, Promise, Math, JSON, Object, Array, Number, String, Set, Map,
 	document: { createElement: stubCanvas },
 	Image: function () {},

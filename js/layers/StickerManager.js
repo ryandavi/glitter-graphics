@@ -394,6 +394,7 @@ class StickerManager {
 			}
 		};
 
+		this.normalizeLayer(layer);
 		return layer;
 	}
 
@@ -726,7 +727,7 @@ updateTransform(layerId, updates) {
                 height: layer.stickerData.height
             };
             transform.applyTransform(element, dimensions);
-            
+
             // MOVED: Update handles AFTER applying transform
             if (transform.transformHandles) {
                 transform.updateHandlePositions();
@@ -776,118 +777,75 @@ updateTransform(layerId, updates) {
 
 	// ===== SERIALIZATION =====
 
-	serializeSticker(layer) {
-		// For undo/redo: a deep copy, so an in-place edit to a live slot (outline
-		// width, shadow, bevel, sparkles) never rewrites a history state. The DOM
-		// element and decoded pixels are runtime-only and never copied.
-		const stickerData = { ...layer.stickerData, element: null, staticImageData: null };
-		delete stickerData.blendMode;
-		return structuredClone({
-			...layer,
-			blendMode: GlitterBlendModes.forLayer(layer),
-			transform: cloneTransform(getLayerTransform(layer)),
-			stickerSourceId: layer.stickerSourceId,
-			stickerData
-		});
+	normalizeLayer(layer) {
+		layer.transform ||= createDefaultTransform();
+		layer.stickerData ||= {};
+		layer.stickerData.element = null;
+		layer.stickerData.staticImageData = null;
+		delete layer.stickerData.blendMode;
+		layer.stickerData.slice = normalizeSlice(layer.stickerData.slice, layer.stickerData.width, layer.stickerData.height);
+		layer.stickerData.colorAdjust = normalizeColorAdjust(layer.stickerData.colorAdjust);
+		if (layer.stickerData.border) layer.stickerData.border = { ...getSlotDefaults(LayerType.STICKER, 'border'), ...layer.stickerData.border };
+		if (layer.stickerData.shadow) layer.stickerData.shadow = { ...getSlotDefaults(LayerType.STICKER, 'shadow'), ...layer.stickerData.shadow };
+		layer.stickerData.bevel ||= buildDefaultBevel();
+		layer.stickerData.bevel.highlight = mergeSlotEffectDefaults(layer.stickerData.bevel.highlight, buildDefaultBevel().highlight);
+		layer.stickerData.bevel.shade = mergeSlotEffectDefaults(layer.stickerData.bevel.shade, buildDefaultBevel().shade);
+		normalizeBevelData(layer.stickerData.bevel.highlight);
+		normalizeSlotTextureCoordinates(layer.stickerData.border);
+		normalizeSlotTextureCoordinates(layer.stickerData.shadow);
+		normalizeSlotTextureCoordinates(layer.stickerData.bevel.highlight);
+		normalizeSlotTextureCoordinates(layer.stickerData.bevel.shade);
+		layer.stickerData.sparkles = normalizeSparklesData(layer.stickerData.sparkles);
+		snapLayerScaleToWholePixels(layer);
 	}
 
-	async deserializeSticker(serialized) {
-		// Restore into a copy: the serialized object is a history snapshot, and the
-		// live layer must not alias it.
-		const layerData = structuredClone(serialized);
-		layerData.blendMode = GlitterBlendModes.forLayer(layerData);
-		if (layerData.animations?.length) layerData.animations = GlitterAnimation.normalizeAnimations(layerData.animations);
-		if (layerData.stickerData) {
-			delete layerData.stickerData.blendMode;
-			layerData.stickerData.staticImageData = null;
-		}
-		layerData.transform ||= createDefaultTransform();
+	hydrateLayer(layer) {
 		// Handle empty sticker layers (no sticker selected yet)
-		if (!layerData.stickerSourceId) {
-			return layerData;
+		if (!layer.stickerSourceId) {
+			return;
 		}
 
 		// Restore sticker layer from serialized data
-		const sticker = this.editor.stickerLibrary.getItemById(layerData.stickerSourceId);
+		const sticker = this.editor.stickerLibrary.getItemById(layer.stickerSourceId);
 		if (!sticker) {
-			const missingId = layerData.stickerSourceId;
-			layerData._missingAssets = [...(layerData._missingAssets || []), `sticker ${missingId}`];
-			layerData.stickerSourceId = null;
-			layerData.stickerData = {
-				...(layerData.stickerData || {}),
+			const missingId = layer.stickerSourceId;
+			layer._missingAssets = [...(layer._missingAssets || []), `sticker ${missingId}`];
+			layer.stickerSourceId = null;
+			layer.stickerData = {
+				...(layer.stickerData || {}),
 				isEmpty: true,
 				url: null,
 				name: 'Missing Sticker'
 			};
-			return layerData;
+			return;
 		}
 
 		// Serialized blob URLs belong to the session that saved the project. Always
 		// bind the layer to the freshly resolved library/embedded asset URL.
-		layerData.stickerData.url = sticker.url;
-		layerData.stickerData.baseUrl = sticker.url;
-		layerData.stickerData.variantUrls = sticker.variantUrls || null;
-		layerData.stickerData.name = sticker.name;
-		layerData.stickerData.source = sticker.source;
+		layer.stickerData.url = sticker.url;
+		layer.stickerData.baseUrl = sticker.url;
+		layer.stickerData.variantUrls = sticker.variantUrls || null;
+		layer.stickerData.name = sticker.name;
+		layer.stickerData.source = sticker.source;
 		// Geometry belongs to the saved layer, not to asynchronously hydrated
 		// library metadata. Replacing it here made undo resize a sticker whenever
 		// its detail record finished loading after the snapshot was captured.
-		layerData.stickerData.width = layerData.stickerData.width || sticker.width;
-		layerData.stickerData.height = layerData.stickerData.height || sticker.height;
-		layerData.stickerData.frameCount = layerData.stickerData.frameCount || sticker.frameCount || 1;
-		// Projects saved before scale snapping carry free percentages; bring them
-		// onto whole-pixel sizes the same way every scale edit does.
-		snapLayerScaleToWholePixels(layerData);
-		// The library asset owns this flag, so a project saved before an admin
-		// change picks up the corrected rendering on reopen.
-		layerData.stickerData.isPixelated = sticker.isPixelated !== false;
-		layerData.stickerData.slice = normalizeSlice(layerData.stickerData.slice, layerData.stickerData.width, layerData.stickerData.height);
-		layerData.stickerData.colorAdjust = normalizeColorAdjust(layerData.stickerData.colorAdjust);
-		if (layerData.stickerData.border) layerData.stickerData.border = { ...getSlotDefaults(LayerType.STICKER, 'border'), ...layerData.stickerData.border };
-		if (layerData.stickerData.shadow) layerData.stickerData.shadow = { ...getSlotDefaults(LayerType.STICKER, 'shadow'), ...layerData.stickerData.shadow };
-		layerData.stickerData.bevel ||= buildDefaultBevel();
-		layerData.stickerData.bevel.highlight = mergeSlotEffectDefaults(layerData.stickerData.bevel.highlight, buildDefaultBevel().highlight);
-		layerData.stickerData.bevel.shade = mergeSlotEffectDefaults(layerData.stickerData.bevel.shade, buildDefaultBevel().shade);
-		normalizeBevelData(layerData.stickerData.bevel.highlight);
-		normalizeSlotTextureCoordinates(layerData.stickerData.border);
-		normalizeSlotTextureCoordinates(layerData.stickerData.shadow);
-		normalizeSlotTextureCoordinates(layerData.stickerData.bevel.highlight);
-		normalizeSlotTextureCoordinates(layerData.stickerData.bevel.shade);
-		layerData.stickerData.sparkles = normalizeSparklesData(layerData.stickerData.sparkles);
-
-		return layerData;
+		layer.stickerData.width = layer.stickerData.width || sticker.width;
+		layer.stickerData.height = layer.stickerData.height || sticker.height;
+		layer.stickerData.frameCount = layer.stickerData.frameCount || sticker.frameCount || 1;
+		layer.stickerData.isPixelated = sticker.isPixelated !== false;
+		layer.stickerData.isEmpty = false;
 	}
 
 	// ===== CLEANUP =====
 
-	destroy() {
-		// Remove all sticker elements
-		this.layerElements.forEach((element, layerId) => {
-			if (element.parentNode) {
-				element.parentNode.removeChild(element);
-			}
-		});
-
-		// Clean up all transform instances
-		this.layerTransforms.forEach(transform => {
-			transform.destroy();
-		});
-
-		this.editor.stickerLibrary.destroy();
-
-		// Clear maps
-		this.layerElements.clear();
-		this.layerTransforms.clear();
-		this.effectMaskCache.clear();
-	}
-
 	buildExportPlan(layer, context) {
 		return context.compositor._buildStickerExportPlan(layer);
 	}
-	handleUserUpload(...args) { return this.editor.stickerLibrary.handleUserUpload(...args); }
-	registerEmbeddedSticker(...args) { return this.editor.stickerLibrary.registerEmbeddedSticker(...args); }
-	handleItemClick(...args) { return this.editor.stickerLibrary.handleItemClick(...args); }
-	getItemById(id) { return this.editor.stickerLibrary.getItemById(id); }
+
+
+
+
 	async init() { this.setupUI(); this.setupEventListeners(); }
 }
 

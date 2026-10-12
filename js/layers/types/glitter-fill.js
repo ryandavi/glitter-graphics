@@ -93,7 +93,7 @@ registerLayerType(LayerType.GLITTER_FILL, {
 	animationBox: (_editor, _layer, canvas) => ({ width: canvas.width, height: canvas.height }),
 	timelineSources: (layer, context) => [
 		...context.compositor._createLayerAnimationTimelineSources(layer, context),
-		...context.compositor._createSparkleTimelineSources(layer)
+		...context.compositor.createSparkleTimelineSources(layer)
 	],
 	serialization: {
 		extraKeys: ['selections', 'fill', 'border', 'shadow', 'autoGlitter', 'sparkles', 'effectDrafts'],

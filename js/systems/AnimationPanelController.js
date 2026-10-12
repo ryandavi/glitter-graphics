@@ -122,10 +122,6 @@ class AnimationPanelController {
 
 	_renderLayer(layer) {
 		const manager = getLayerManagerForType(this.editor, layer.type);
-		if (layer.type === LayerType.GLITTER_FILL) {
-			manager?.renderLayer?.(layer, this.editor.originalCanvas.width, this.editor.originalCanvas.height);
-			return;
-		}
 		manager?.renderLayer?.(layer);
 	}
 

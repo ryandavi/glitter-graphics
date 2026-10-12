@@ -11,6 +11,7 @@ class LayerManager {
 
 		// Layer state
 		this.layers = [];
+		this.selectedLayerIds = new Set();
 		this.activeLayerId = null;
 		this.selectionCycleState = null;
 
@@ -97,14 +98,6 @@ class LayerManager {
 		});
 	}
 
-	get selectedLayerIds() {
-		return this.editor.selectedLayerIds;
-	}
-
-	set selectedLayerIds(value) {
-		this.editor.selectedLayerIds = value;
-	}
-
 	getLayerZIndex(layerId) {
 		const index = this.layers.findIndex(l => l.id === layerId);
 		return index !== -1 ? index + 1 : 1;
@@ -142,11 +135,6 @@ class LayerManager {
 		if (!layer) return null;
 		const type = layer.type || LayerType.GLITTER_FILL;
 		const spec = LAYER_UI_CONFIG[type]?.serialization || {};
-		if (spec.custom) {
-			const manager = getLayerManagerForType(this.editor, type);
-			return this.serializePaintSlots(manager?.[spec.custom.serialize]?.(layer) || null);
-		}
-
 		const serialized = {};
 		['id', 'type', 'name', 'visible', 'locked'].forEach((key) => {
 			if (!spec.omit?.includes(key)) serialized[key] = key === 'type' ? type : layer[key];
@@ -162,7 +150,10 @@ class LayerManager {
 		if (!spec.omit?.includes('settings')) serialized.settings = structuredClone(layer.settings || {});
 		[spec.dataKey, ...(spec.extraKeys || [])].filter(Boolean).forEach((key) => {
 			const fallback = key === 'selections' ? [] : null;
-			serialized[key] = layer[key] == null ? fallback : structuredClone(layer[key]);
+			const value = key === spec.dataKey && spec.runtimeKeys && layer[key]
+				? { ...layer[key], ...Object.fromEntries(spec.runtimeKeys.map(name => [name, null])) }
+				: layer[key];
+			serialized[key] = value == null ? fallback : structuredClone(value);
 		});
 		if (includeMaskVersion && spec.includeMaskVersion) serialized.maskVersion = layer.maskVersion || 0;
 		return this.serializePaintSlots(serialized);
@@ -182,11 +173,6 @@ class LayerManager {
 		if (!layerData) return null;
 		const type = layerData.type || LayerType.GLITTER_FILL;
 		const spec = LAYER_UI_CONFIG[type]?.serialization || {};
-		if (spec.custom) {
-			const manager = getLayerManagerForType(this.editor, type);
-			return manager?.[spec.custom.deserialize]?.(layerData) || null;
-		}
-
 		const defaultTransform = !layerData.transform
 			? LAYER_UI_CONFIG[type]?.defaultTransform?.(this.editor, layerData)
 			: null;
@@ -318,7 +304,7 @@ class LayerManager {
 
 	toggleLayerLock(layerId) {
 		const layer = this.getLayerById(layerId);
-		if (!layer || layer.type === LayerType.BASE_IMAGE) return;
+		if (!layer || LAYER_UI_CONFIG[layer.type]?.protectedInStack) return;
 		layer.locked = !layer.locked;
 		this.editor.pathEdit?.revalidate();
 		if (isLayerFullyLocked(layer) && this.activeLayerId === layer.id) {
@@ -809,7 +795,7 @@ class LayerManager {
 		const selectedLayers = this.getSelectedLayers();
 		const canAddLayers = this.canAddLayers().ok;
 		const canInteractWithSelected = selectedLayers.length > 0
-			&& selectedLayers.every((layer) => layer.type !== LayerType.BASE_IMAGE && !isLayerFullyLocked(layer));
+			&& selectedLayers.every((layer) => canEditLayerInStack(layer));
 		const hasSingleSelection = selectedLayers.length === 1;
 		const canGoToSelected = hasSingleSelection
 			&& Boolean(LAYER_UI_CONFIG[selectedLayers[0].type]?.goTo);
@@ -893,11 +879,7 @@ class LayerManager {
 	renderClonedLayerPreview(layer) {
 		if (!layer) return;
 		const manager = getLayerManagerForType(this.editor, layer.type);
-		if (layer.type === LayerType.GLITTER_FILL) {
-			manager?.renderLayer(layer, this.editor.previewCanvas?.width, this.editor.previewCanvas?.height);
-		} else {
-			manager?.renderLayer?.(layer);
-		}
+		manager?.renderLayer?.(layer);
 	}
 
 	cloneLayers(layerIds, options = {}) {
@@ -1043,7 +1025,7 @@ class LayerManager {
 		nameText.title = 'Double-click to rename';
 		nameText.addEventListener('dblclick', (event) => {
 			event.stopPropagation();
-			if (layer.type === LayerType.BASE_IMAGE || isLayerFullyLocked(layer)) return;
+			if (!canEditLayerInStack(layer)) return;
 			const input = document.createElement('input');
 			input.className = 'layer-name-input';
 			input.type = 'text';

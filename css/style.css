@@ -3178,9 +3178,6 @@ body.no-document .app-header > .app-header-right > .app-header-project {
   -webkit-mask-image: linear-gradient(to top, transparent 0, #000 var(--toolbar-fade));
   mask-image: linear-gradient(to top, transparent 0, #000 var(--toolbar-fade));
 }
-.toolbar > .toolbar-spacer {
-  flex: 1;
-}
 .toolbar > .toolbar-group {
   display: flex;
   flex-direction: column;
@@ -5578,9 +5575,6 @@ body.boot-interactive .workspace-start-loading, body.boot-failed .workspace-star
 }
 .zoom-controls > .zoom-percentage:hover {
   color: var(--color-accent);
-}
-.zoom-controls > .zoom-fit-btn {
-  align-self: stretch;
 }
 
 /* Shared context-toolbar controls (Color Fill, Mask Brush) */
@@ -8467,21 +8461,6 @@ body.tool-text .text-hover-baselines {
 .segmented-control > label.segmented-option > input:checked + span {
   background: var(--color-accent);
   color: var(--color-text-on-accent);
-}
-
-.segmented-control.choice-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(96px, 100%), 1fr));
-  gap: var(--spacing-xs);
-  height: auto;
-  border: 0;
-  border-radius: 0;
-  overflow: visible;
-}
-.segmented-control.choice-grid > .segmented-option {
-  height: var(--control-height);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-control);
 }
 
 .property-panel .property-set > .segmented-control {
@@ -12423,7 +12402,6 @@ body.modal-open {
     pointer-events: auto;
     transition-delay: 0s;
   }
-  body:not(.mobile-no-image) .main-content > .layers-panel .image-container,
   body:not(.mobile-no-image) .main-content > .layers-panel .layer-settings-section {
     display: none;
   }

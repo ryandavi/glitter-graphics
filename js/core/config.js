@@ -136,12 +136,7 @@ const CONFIG = deepFreeze({
 		grid: {
 			baseSize: 20
 		},
-		artboard: {
-			showBorder: false,
-			borderColor: '#00ffff',
-			borderWidth: 2,
-			borderStyle: 'dashed'
-		}
+
 	},
 
 	layers: {
@@ -152,12 +147,7 @@ const CONFIG = deepFreeze({
 			'color-dodge', 'color-burn', 'hard-light', 'soft-light', 'difference',
 			'exclusion', 'hue', 'saturation', 'color', 'luminosity'
 		],
-		export: {
-			frameRateSource: 'first-layer'
-		},
-		ui: {
-			settingsOpenByDefault: false
-		},
+
 		reorder: {
 			autoScroll: {
 				zoneSize: 50,
@@ -237,7 +227,7 @@ const CONFIG = deepFreeze({
 				shadow: { color: 'rgba(0,0,0,0.5)', offsetX: 0, offsetY: 1, blur: 2 },
 				position: 'center',
 				maxWidthFraction: 0.6,
-				stampField: 'name'
+
 			},
 			grainTilePx: 256,
 			snapshot: { settleMs: 300, maxFrames: 24, fallbackDurationMs: 1200 }
@@ -278,9 +268,7 @@ const CONFIG = deepFreeze({
 			cursor: {
 				stroke: '#ffffff'
 			},
-			livePreview: {
-				throttle: 'raf'
-			},
+
 			// Sampled bitmap-tip brush packs (imported from Photoshop .abr — see
 			// tools/abr-import.js). BrushLibrary loads this at boot alongside the
 			// vector tips in ShapeLibrary.
@@ -361,9 +349,7 @@ const CONFIG = deepFreeze({
 				borderColor: '#000000',
 				shadowColor: '#000000'
 			},
-			ui: {
-				settingsOpenByDefault: false
-			},
+
 			border: {
 				defaultPlacement: 'outside',
 				defaultDrawOrder: 'behind',
@@ -413,7 +399,7 @@ const CONFIG = deepFreeze({
 				rise: { periodMs: 4000, easing: 'linear', direction: 'normal', iterations: Infinity }
 			},
 			jitterQuantMs: 60,
-			maxPeriodMs: 20000,
+
 			exportFps: 12
 		},
 		// The Sparkles effect (js/paint/sparkles.js). Particle counts are capped
@@ -568,7 +554,7 @@ const CONFIG = deepFreeze({
 				useAllFrames: true,
 				fillInterior: true
 			},
-			rotationSnapTolerance: 5,
+
 			transform: {
 				// Also snaps sticker scale to whole-pixel sizes (snapScaleToWholePixels).
 				roundValues: true,
@@ -583,7 +569,6 @@ const CONFIG = deepFreeze({
 			// WARP_TYPES id (js/paint/text-warp.js); 'none' draws text flat.
 			defaultWarpType: 'none',
 			// Canvas input uses the same string and layout as the panel.
-			canvasEditing: true,
 			fontsManifest: 'data/fonts.json',
 			defaultFontId: 'comic-sans',
 			defaultFontWeight: 400,
@@ -800,7 +785,7 @@ const CONFIG = deepFreeze({
 			}
 		},
 		gallery: {
-			defaultTab: 'glitter'
+
 		},
 		mobile: {
 			editingViewportPadding: 40,
@@ -965,7 +950,7 @@ const CONFIG = deepFreeze({
 			outwardOffset: 4,
 			rotationHandleDistance: 30,
 			textModeHandleDistance: { fine: 30, coarse: 64 },
-			edgeHitWidth: 8,
+
 			rotateZoneSize: 20,
 			minChromeSpan: 24,
 			badgeGap: 8,
@@ -1016,10 +1001,7 @@ const CONFIG = deepFreeze({
 			workers: Math.max(1, Math.min(4, navigator.hardwareConcurrency || 4)),
 			workerScript: 'js/workers/gif-encode.worker.js?v=77ee2fd9',
 			quality: 1,
-			timing: {
-				forceDelay: 100,
-				maxFrames: 60
-			}
+
 		},
 		progress: { yieldEveryFrames: 2 },
 		timeline: {
@@ -1033,9 +1015,7 @@ const CONFIG = deepFreeze({
 			// frame count as a short one and end up choppy.
 			minFrameRateFps: 24,
 			hardFrameLimit: 1000,
-			exactDuplicateThreshold: 0,
-			balancedVisualError: 0.008,
-			smallFileVisualError: 0.02,
+
 			maxLoopDurationMs: 12000,
 			// The composite render clock owns displayed time once any procedural
 			// (continuously evaluated) source is present: source boundaries stop
@@ -1058,12 +1038,7 @@ const CONFIG = deepFreeze({
 			},
 			fidelityStops: EXPORT_FIDELITY_STOPS,
 			fidelityEndLabels: ['Best quality', 'Smallest file'],
-			defaultPreset: 'balanced',
-			presets: {
-				highFidelity: EXPORT_FIDELITY_STOPS[1],
-				balanced: EXPORT_FIDELITY_STOPS[2],
-				smallFile: EXPORT_FIDELITY_STOPS[3]
-			}
+
 		},
 		defaults: {
 			outputMode: 'animation',
@@ -1285,20 +1260,4 @@ const ASSET_TYPE_CONFIG = {
 			return badges;
 		}
 	}
-};
-
-const DEBUG_CONFIG = {
-	enabled: false,
-
-	canvas: {
-		width: 800,
-		height: 800,
-		color: '#ffffff'
-	},
-
-	stickers: [
-		{ id: 1, x: 200, y: 200 },
-		{ id: 2, x: 400, y: 400 },
-		{ id: 3, x: 600, y: 600 }
-	]
 };

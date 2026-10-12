@@ -141,3 +141,12 @@ function yieldToEventLoop() {
 		port2.postMessage(null);
 	});
 }
+
+function blobToDataUrl(blob) {
+	return new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		reader.onload = () => resolve(reader.result);
+		reader.onerror = () => reject(reader.error || new Error('Could not read file data.'));
+		reader.readAsDataURL(blob);
+	});
+}

@@ -26,11 +26,6 @@ class StickerBrowserManager extends ContentManager {
 		if (personal) { personal.name = 'My Stickers'; personal.icon = ''; personal.description = 'Your uploaded stickers. Used stickers are included in saved projects.'; }
 	}
 
-	setupFilterChips() {
-		// Static facet chips are wired by ContentManager; dynamic category
-		// chips bind when populateCategoryChips creates them.
-	}
-
 	matchesChildFilters(item) {
 		if (this.activeFilters.stretchable.size && !item.sliced) return false;
 		// Animated filter

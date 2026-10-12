@@ -1,15 +1,12 @@
 const CANVAS_SIZE_CONTROL_METHODS = {
 	get canvasBounds() { return this.documentSize?.bounds || null; },
-
 	ensureCanvasBounds() {
 		if (!this.documentSize.bounds) this.documentSize.bounds = new CanvasBounds(this, () => this.syncCanvasBoundsViews());
 		return this.documentSize.bounds;
 	},
-
 	documentSizeDefaults() {
 		return { operation: 'image', scale: { percent: 100, textures: true, effects: true }, anchor: '0.5,0.5', relative: false, bounds: null };
 	},
-
 	setupCanvasSizeControls() {
 		this.documentSize = this.documentSizeDefaults();
 		const bind = (id, event, setter) => document.getElementById(id)?.addEventListener(event, (event) => setter(event.target));
@@ -37,10 +34,8 @@ const CANVAS_SIZE_CONTROL_METHODS = {
 			apply: (percent) => this.setDocumentScale({ percent })
 		});
 		this.bindDocumentSizeReverts();
-		window.addEventListener('imageLoaded', () => this.resetDocumentSize());
 		this.syncCanvasBoundsViews();
 	},
-
 	bindDocumentSizeReverts() {
 		const fields = {
 			canvasSizeWidth: { read: () => this.canvasBounds?.rect.width || this.originalCanvas.width, default: () => this.originalCanvas.width, set: (value) => this.setCanvasBoundsDimension('width', value, false) },
@@ -66,12 +61,11 @@ const CANVAS_SIZE_CONTROL_METHODS = {
 			this._sizeReverts.push(sync);
 		});
 	},
-
-	resetDocumentSize() {
+	resetDocumentSize({ preserveTool = false } = {}) {
 		const operation = this.documentSize?.operation || 'image';
 		this.documentSize = this.documentSizeDefaults();
 		this.documentSize.operation = operation;
-		if (this.currentTool === ToolType.CROP) this.setTool(ToolType.SELECT);
+		if (!preserveTool && this.currentTool === ToolType.CROP) this.setTool(ToolType.SELECT);
 		const ratio = document.getElementById('canvasBoundsRatio');
 		if (ratio) ratio.replaceChildren();
 		this.syncCanvasBoundsViews();
@@ -135,14 +129,12 @@ const CANVAS_SIZE_CONTROL_METHODS = {
 		if (!keepTool && this.currentTool === ToolType.CROP) this.setTool(ToolType.SELECT);
 		this.syncCanvasBoundsViews();
 	},
-
 	// Opens the Crop tool with its bounds fitted to a source; Enter applies.
 	cropTo(source) {
 		if (!this.originalImage || !this.canFitCanvasBounds(source)) return;
 		this.setTool(ToolType.CROP);
 		if (this.currentTool === ToolType.CROP) this.ensureCanvasBounds().setSource(source);
 	},
-
 	// Says why when a source has nothing to fit.
 	canFitCanvasBounds(source) {
 		const available = canFitCanvasBounds(this, source);
@@ -153,11 +145,9 @@ const CANVAS_SIZE_CONTROL_METHODS = {
 		if (this.canFitCanvasBounds(source)) this.ensureCanvasBounds().setSource(source);
 		else this.syncCanvasBoundsViews();
 	},
-
 	openCanvasBoundsMenu(triggerId, options, apply) {
 		this.contextToolbarRenderer.openMenu(triggerId, options.map(option => ({ label: option.label, disabled: option.disabled, run: () => apply(option.id) })));
 	},
-
 	syncCanvasBoundsViews() {
 		if (!this.documentSize) return;
 		const { operation, scale, relative, anchor } = this.documentSize;

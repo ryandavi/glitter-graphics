@@ -2,21 +2,13 @@
 
 const assert = require('assert');
 const { chromium } = require('playwright');
+const { openApp } = require('../lib/app');
 
 (async () => {
 	const browser = await chromium.launch({ headless: true });
 	try {
 		for (const width of [1440, 390]) {
-			const page = await browser.newPage({ viewport: { width, height: 900 } });
-			const errors = [];
-			page.on('pageerror', error => errors.push(error.message));
-			if (process.env.GLITTER_TEST_CSS) await page.route('**/css/style.css*', route => route.fulfill({ path: process.env.GLITTER_TEST_CSS, contentType: 'text/css' }));
-			await page.goto(process.env.GLITTER_URL || 'http://localhost/glitter/');
-			await page.waitForFunction(() => window.editor?.modalManager);
-			await page.evaluate(async () => {
-				editor.modalManager.closeAll({ force: true });
-				await editor.modalManager.pendingHistoryBack;
-			});
+			const { page, errors } = await openApp({ browser, viewport: { width, height: 900 } });
 			const settle = () => page.evaluate(async () => {
 				await editor.modalManager.pendingHistoryBack;
 				await new Promise(requestAnimationFrame);
@@ -115,6 +107,7 @@ const { chromium } = require('playwright');
 					const events = [];
 					const owner = {
 						originalImage: true, isSaved: false,
+						pickers: { closeAll() {} },
 						chooseAction: async () => action,
 						saveProjectFile: async function () { events.push('save'); this.isSaved = saves; }
 					};
@@ -123,8 +116,11 @@ const { chromium } = require('playwright');
 					serializer.validateProjectData = () => {};
 					serializer.runMigrations = data => data;
 					serializer.preflight = async () => ({ issues: [] });
+					serializer.registerCustomStickers = async () => {};
+					serializer.registerCustomGlitter = async () => {};
+					serializer.registerShapeFillImages = async () => {};
 					serializer.loadBaseImage = async () => { events.push('replace'); throw new Error('replacement reached'); };
-					try { await serializer.load({}); }
+					try { await serializer.load({ layers: [] }); }
 					catch (error) { if (error.message !== 'replacement reached') throw error; }
 					results.push(events);
 				}

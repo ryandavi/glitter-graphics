@@ -185,7 +185,7 @@ const TEXT_EDIT_METHODS = {
 		if (layer?.type !== LayerType.TEXT_GLITTER || !this.editor.canEditLayer(layer, { notify: true })) return;
 		// Typing on the canvas is the Text tool's job; setTool ends any edit, so
 		// switch before the session starts.
-		if (focus && CONFIG.tools.text.canvasEditing && this.editor.currentTool !== ToolType.TEXT) this.editor.setTool(ToolType.TEXT, { announce: false });
+		if (focus && this.editor.currentTool !== ToolType.TEXT) this.editor.setTool(ToolType.TEXT, { announce: false });
 		this.setTextHover(null);
 		if (this.editSession?.layerId !== layer.id) {
 			this.endTextEdit();
@@ -193,14 +193,13 @@ const TEXT_EDIT_METHODS = {
 			Object.assign(this.editSession, { undoStack: [], redoStack: [], groupClosed: true });
 		}
 		this.textProxy.value = layer.textData.text;
-		this.textProxy.hidden = !CONFIG.tools.text.canvasEditing;
+		this.textProxy.hidden = false;
 		this.setTextSelection(selectAll ? 0 : this.editSession.selectionStart, selectAll ? layer.textData.text.length : this.editSession.selectionEnd);
 		this.renderLayer(layer);
 		this.editor.updateContextToolbars();
 		this.syncTextKeyboardViewport();
 		if (focus) {
-			if (CONFIG.tools.text.canvasEditing) this.textProxy.focus({ preventScroll: true });
-			else this.focusTextInput(selectAll);
+			this.textProxy.focus({ preventScroll: true });
 		}
 	},
 	endTextEdit() {
@@ -374,7 +373,7 @@ const TEXT_EDIT_METHODS = {
 		// The overlay lives in the stack, so it takes the layer's scale with the
 		// glyphs it marks.
 		const stack = this.layerElements.get(layer?.id)?.querySelector('.text-glitter-stack');
-		if (!layer || !stack || !CONFIG.tools.text.canvasEditing) return;
+		if (!layer || !stack) return;
 		const entry = this.getMeasurementEntry(layer);
 		let overlay = stack.querySelector('.text-edit-overlay');
 		if (!overlay) { overlay = document.createElement('div'); overlay.className = 'text-edit-overlay ui-ignore-gestures'; stack.appendChild(overlay); }

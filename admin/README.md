@@ -32,6 +32,7 @@ The pages call one JSON endpoint, `includes/api.php`, which dispatches on an `ac
 | `assetHealthService.php`, `assetVariantService.php`, `assetPathService.php`, `assetNaming.php` | Health scans, multi-resolution sticker variants, file paths, generated names |
 | `manifestLibraryService.php`, `manifestApi.php` | Font, shape and brush manifest editing |
 | `exportStateService.php`, `adminEventService.php` | Export freshness tracking and the activity log |
+| `attributionSchema.php` | Shared attribution fields and licence ids for assets and manifest libraries; cross-language contracts pin the JS schema and nine-slice tile limit. |
 | `auth.php` | Sessions, CSRF tokens, and login rate limiting |
 
 ## Exporting to the editor
@@ -97,4 +98,4 @@ GIF analysis and thumbnails tolerate historical files whose logical-screen heade
 
 Font source is the existing System font checkbox (`system` boolean), separate from style tags. Editor Source filters read that field. Category representatives come from the first ordered/featured member; no separate category-icon setting is needed.
 
-After adding or replacing fonts, regenerate dropdown glyph outlines with `python tools/build-font-preview-icons.py`, then `node tools/bump-cache.js`. This tool reads the manifest without changing it, uses the editor's script-aware sample rules, and writes `js/generated/font-preview-icons.js`. It requires fontTools and brotli plus Node. System outlines come from Windows Fonts by default; `--system-font-dir` selects another installed-font directory. An unavailable system face is omitted and gets a live-lettering fallback in the editor. `--check` verifies the generated output on the same font environment. Home-card phrases and individual font samples still load the actual font; dropdown SVGs do not.
+After adding or replacing fonts, regenerate dropdown glyph outlines with `python tools/build-font-preview-icons.py`, then `node tools/build.js`. This tool reads the manifest without changing it, uses the editor's script-aware sample rules, and writes `js/generated/font-preview-icons.js`. It requires fontTools and brotli plus Node. System outlines come from Windows Fonts by default; `--system-font-dir` selects another installed-font directory. An unavailable system face is omitted and gets a live-lettering fallback in the editor. `--check` verifies the generated output on the same font environment. Home-card phrases and individual font samples still load the actual font; dropdown SVGs do not.

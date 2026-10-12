@@ -39,19 +39,17 @@ const EDITOR_ASSET_INFO_METHODS = {
 				this.renderAssetBadges(badges, detailedAsset, manager, getExtraBadges);
 			}).catch((error) => console.warn(`Could not load ${type} details:`, error));
 		}
-	}
+	},
 
 	// ===== Shared asset-info formatting (one place to change size/frames text) =====,
 
-,
 	formatAssetSize(asset) {
 		if (asset?.width && asset?.height) {
 			return formatDimensions(asset.width, asset.height);
 		}
 		return '—';
-	}
+	},
 
-,
 	formatAssetFrames(asset) {
 		if (asset?.frameCount === undefined || asset?.frameCount === null) {
 			return '—';
@@ -64,13 +62,12 @@ const EDITOR_ASSET_INFO_METHODS = {
 			? 'variable'
 			: asset.frameRate ? `${asset.frameRate} fps` : '';
 		return rate ? `${frames}<span class="setting-separator"> · </span>${rate}` : frames;
-	}
+	},
 
 	// Populate a glitter asset-info block (thumbnail + name + badges + size +
 	// frames) from a glitter library item. Reused by the text Fill/Border/Shadow
 	// source cards so their glitter display matches Glitter Properties' Asset
 	// section exactly. `els` holds the target elements (any may be omitted).
-,
 	renderGlitterAssetDisplay(els, glitter, colorAdjust = null) {
 		if (!glitter) return;
 		const assetId = String(glitter.id);
@@ -105,11 +102,10 @@ const EDITOR_ASSET_INFO_METHODS = {
 				if (els.frames) els.frames.innerHTML = this.formatAssetFrames(detailedGlitter);
 			}).catch((error) => console.warn('Could not load glitter details:', error));
 		}
-	}
+	},
 
 	// A glitter source whose asset can't be resolved (missing or not loaded
 	// yet): reset the display to a neutral placeholder.
-,
 	clearGlitterAssetDisplay(els, placeholder = 'No glitter selected') {
 		[els.thumbnail, els.name, els.badges, els.size, els.frames]
 			.filter(Boolean)
@@ -127,13 +123,12 @@ const EDITOR_ASSET_INFO_METHODS = {
 		if (els.badges) els.badges.innerHTML = '';
 		if (els.size) els.size.textContent = '';
 		if (els.frames) els.frames.textContent = '';
-	}
+	},
 
 	// Shared by Glitter/Sticker asset info (updateAssetInfo) and the Text
 	// layer's Fill/Border/Shadow glitter pickers — same badge vocabulary
 	// (category/animated/transparency/variable-fps) wherever a glitter or
 	// sticker asset is shown.
-,
 	renderAssetBadges(badgesEl, asset, manager, getExtraBadges) {
 		if (!badgesEl) return;
 
@@ -197,9 +192,8 @@ const EDITOR_ASSET_INFO_METHODS = {
 				manager.browser.navigateToCategory(asset.category);
 			});
 		}
-	}
+	},
 
-,
 	updateStickerAssetInfo(sticker) {
 		this.updateAssetInfo(sticker, 'sticker');
 	}

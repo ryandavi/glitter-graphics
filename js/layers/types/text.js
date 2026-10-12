@@ -1,6 +1,7 @@
 'use strict';
 
 registerLayerType(LayerType.TEXT_GLITTER, {
+	onDoubleClick: (editor, layer) => editor.textGlitterManager.beginTextEdit(layer),
 	vectorGeometry: async (editor, layer) => {
 		const data = layer.textData;
 		await FontLibrary.ensureLoaded(data.fontId);
@@ -196,7 +197,7 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 	animationBox: (_editor, layer) => ({ width: layer.textData.width, height: layer.textData.height }),
 	timelineSources: (layer, context) => [
 		...context.compositor._createLayerAnimationTimelineSources(layer, context),
-		...context.compositor._createSparkleTimelineSources(layer)
+		...context.compositor.createSparkleTimelineSources(layer)
 	],
 	serialization: {
 		dataKey: 'textData',

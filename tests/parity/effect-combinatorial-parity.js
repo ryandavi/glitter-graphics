@@ -39,7 +39,7 @@ async function main() {
 			imageContext.fillRect(0, 0, 6, 8);
 			imageContext.fillStyle = '#25b9e8';
 			imageContext.fillRect(6, 0, 6, 8);
-			await editor.shapeGlitterManager.registerImageFillAsset('parity-image', {
+			await editor.imageFills.register('parity-image', {
 				dataUrl: imageCanvas.toDataURL('image/png'),
 				name: 'Parity Image',
 				mimeType: 'image/png'

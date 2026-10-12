@@ -703,7 +703,7 @@ class AutoGlitterManager {
 		color.selectedGlitterId = glitter.id;
 		color.selectedColorAdjust = null;
 		this.renderReviewResults();
-		this.editor.glitterManager.updateSelection();
+		this.editor.glitterLibrary.updateSelection();
 	}
 
 

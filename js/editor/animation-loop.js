@@ -5,7 +5,6 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		document.getElementById('resetAnimationLoop')?.addEventListener('click', () => this.resetAnimationLoop());
 		this.scheduleExportDuration();
 	},
-
 	openAnimationLoop() {
 		['exportSettingsModal', 'exportPreviewModal'].forEach((id) => {
 			if (document.getElementById(id)?.classList.contains('visible')) this.modalManager.close(id);
@@ -25,7 +24,6 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		document.getElementById('animationLoopCandidate')?.focus({ preventScroll: true });
 		this.updateExportDuration();
 	},
-
 	syncAnimationLoop(estimate, message = 'No animation sources.') {
 		this.loopEstimate = estimate;
 		const status = document.getElementById('animationLoopStatus');
@@ -90,12 +88,10 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		sources.parentElement.hidden = sources.hidden;
 		this.syncLoopCandidate();
 	},
-
 	getLoopCandidate() {
 		const duration = Number(document.getElementById('animationLoopCandidate')?.value);
 		return this.loopEstimate?.loopFit.candidates.find((candidate) => candidate.duration === duration);
 	},
-
 	syncLoopCandidate() {
 		const fit = this.loopEstimate?.loopFit;
 		const candidate = this.getLoopCandidate();
@@ -128,7 +124,6 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		document.getElementById('animationLoopLengthSet').hidden = !fit?.candidates.some((entry) => entry.canApply);
 		document.getElementById('animationLoopActionSet').hidden = button.hidden && (!reset || reset.hidden);
 	},
-
 	fitAnimationsToLoop() {
 		const candidate = this.getLoopCandidate();
 		if (!candidate?.canApply) return;
@@ -148,7 +143,6 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		this.saveState('Fit animations to loop');
 		this.updateStatus('Animation speeds fitted to the loop');
 	},
-
 	resetAnimationLoop() {
 		let changed = false;
 		(this.loopEstimate?.loopFit.sources || []).forEach((source) => {

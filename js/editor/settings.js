@@ -57,17 +57,15 @@ saveSettingsToStorage() {
 		const settings = this.settingsStore.serialize(this.exportSettings);
 
 		writeStored(STORAGE_KEYS.exportSettings.key, settings);
-	}
+	},
 
-,
 	loadSettingsFromStorage() {
 		return readStored(STORAGE_KEYS.exportSettings.key, null);
-	}
+	},
 
 
 	// ===== EXPORT SETTINGS =====
 
-,
 initializeExportSettings() {
 	const savedSettings = this.loadSettingsFromStorage();
 	this.settingsStore = new SettingsStore(EXPORT_SETTINGS_SCHEMA);
@@ -76,6 +74,7 @@ initializeExportSettings() {
 	this.applyInterfaceTheme();
 	this.applyReduceMotion();
 	this.applyShowAllControls();
+	this.setupPreferenceEffects();
 
 	// Sync UI to match exportSettings
 	this.syncExportSettingsToUI();
@@ -93,9 +92,8 @@ initializeExportSettings() {
 
 	this.setupSettingsResetListeners();
 	this.setupAnimationLoop();
-}
+},
 
-,
 	ensureSettingsModal(id) {
 		const modal = document.getElementById(id);
 		if (modal.dataset.bodyReady) return;
@@ -113,37 +111,12 @@ initializeExportSettings() {
 		}
 		modal.dataset.bodyReady = 'true';
 		performance.measure(`glitter:modal:${id}`, { start: started, end: performance.now() });
-	}
+	},
 
-,
 	syncExportSettingsToUI() {
 		this.settingsStore.syncToUI(this.exportSettings);
-		const uiElements = {
-			showHelpfulHints: { checked: PREFERENCES.get('showHints') },
-			showWelcomeOnStartup: { checked: PREFERENCES.get('showWelcomeOnStartup') },
-			confirmDestructiveActions: { checked: PREFERENCES.get('confirmDestructiveActions') },
-			antialiasMaskEdges: { checked: !PREFERENCES.get('crispMaskEdges') },
-			scaleEffectsOnTransform: { checked: PREFERENCES.get('scaleEffects') },
-			scaleTexturesOnTransform: { checked: PREFERENCES.get('scaleTextures') },
-			scaleCorners: { checked: PREFERENCES.get('scaleCorners') },
-			autoSelectLayers: { checked: PREFERENCES.get('autoSelect') },
-			snappingEnabled: { checked: PREFERENCES.get('snappingEnabled') },
-			panInertia: { checked: PREFERENCES.get('panInertia') },
-			pixelGrid: { checked: PREFERENCES.get('pixelGrid') },
-			reduceMotion: { checked: PREFERENCES.get('reduceMotion') },
-			showAllControls: { checked: PREFERENCES.get('showAllControls') },
-			balanceSidebars: { checked: PREFERENCES.get('balanceSidebars') },
-			filterPreviewLevel: { value: PREFERENCES.get('filterPreviewLevel') },
-			interfaceTheme: { value: this.interfaceTheme }
-		};
-
-		Object.entries(uiElements).forEach(([id, props]) => {
-			const element = document.getElementById(id);
-			if (!element) return;
-
-			if ('value' in props) element.value = props.value;
-			if ('checked' in props) element.checked = props.checked;
-		});
+		const theme = document.getElementById('interfaceTheme');
+		if (theme) theme.value = this.interfaceTheme;
 
 		this.updateDitherDependentUI();
 		this.updateMatteColorUI();
@@ -158,9 +131,8 @@ initializeExportSettings() {
 		this.renderExportDitherPreview?.();
 		// The controls above were written without events.
 		syncFieldReverts();
-	}
+	},
 
-,
 	// Everything the Dithering toggle governs. Inactive, not hidden: a person
 	// needs to see that dithering has options in order to know why to turn it on.
 	updateDitherDependentUI() {
@@ -177,38 +149,33 @@ initializeExportSettings() {
 			const note = row?.querySelector('[data-inactive-reason-text]');
 			if (note && inactive) note.textContent = '';
 		});
-	}
+	},
 
-,
 	updateExportOutputSizeUI() {
 		const output = document.getElementById('exportOutputSize');
 		if (!output) return;
 		const { width, height } = getExportOutputSize(this.originalCanvas.width, this.originalCanvas.height, this.exportSettings.outputScale);
 		output.textContent = `Exports at ${width} \u00d7 ${height} px.`;
-	}
+	},
 
-,
 	updateTargetSizeUI() {
 		const row = document.getElementById('exportTargetSizeKBRow');
 		if (row) row.hidden = this.exportSettings.targetSize !== 'custom' || getActiveExportTarget(this.exportSettings).isVector;
-	}
+	},
 
-,
 	updateMatteColorUI() {
 		const target = getActiveExportTarget(this.exportSettings, { mp4Supported: this.mp4ExportSupported !== false });
 		const row = document.getElementById('matteColorRow');
 		if (row) row.hidden = !target.usesMatte || (target.supportsTransparency && this.exportSettings.transparency);
-	}
+	},
 
-,
 	// The collapsed preset row states what the current look means, so the eight
 	// rows it wrote do not have to be expanded to be understood.
 	updateGifLookSummary() {
 		const summary = document.querySelector('[data-governed-summary]');
 		if (summary) summary.textContent = describeGifLook(this.exportSettings);
-	}
+	},
 
-,
 	renderExportDitherPreview() {
 		const canvas = document.getElementById('exportDitherPreview');
 		const description = document.getElementById('exportDitherPreviewDescription');
@@ -259,50 +226,43 @@ initializeExportSettings() {
 			bayer: 'Grid: regular tiled pixels, the classic early-web look.', halftone: 'Dots: round dots like a printed picture.'
 		};
 		if (description) description.textContent = `${this.exportSettings.ditherEnabled ? descriptions[algorithm] : 'Dithering is off, so colors have sharp boundaries.'} Shown at ${CONFIG.export.ditherPreview.zoom}\u00d7.`;
-	}
+	},
 
-,
 	updateWatermarkUI() {
 		const enabled = Boolean(this.exportSettings.watermarkEnabled);
 		const row = document.getElementById('watermarkSelectionRow');
 		if (row) row.hidden = !enabled || getActiveExportTarget(this.exportSettings).isVector;
 		this.updateWatermarkPreview?.();
-	}
+	},
 
-,
 	// A primary setting plus the rows it governs, which sit in the panel's
 	// Advanced disclosure (its shared click handler toggles it). Closed by
 	// default because the summary already states the effective values.
 	setupGovernedSets() {
 		this.setGifLookExpanded(this.exportSettings.ditherPreset === 'custom');
 		this.setExportFidelityExpanded(false);
-	}
+	},
 
-,
 	setGovernedSetExpanded(disclosure, expanded) {
 		if (disclosure) setAdvancedDisclosureOpen(disclosure, expanded || PREFERENCES.get('showAllControls'));
-	}
+	},
 
-,
 	setGifLookExpanded(expanded) {
 		this.setGovernedSetExpanded(document.getElementById('exportGifLookSet'), expanded);
-	}
+	},
 
-,
 	setExportFidelityExpanded(expanded) {
 		this.setGovernedSetExpanded(document.getElementById('exportFidelitySet'), expanded);
-	}
+	},
 
-,
 	updateWatermarkPreview() {
 		const preview = document.querySelector('#exportWatermarkPreview img');
 		if (!preview) return;
 		const option = CONFIG.export.watermark.options.find(({ url }) => url === this.exportSettings.watermark);
 		preview.src = option?.url || CONFIG.export.defaults.watermark;
 		preview.alt = `${option?.label || 'Selected'} watermark preview`;
-	}
+	},
 
-,
 	setupExportSettingsListeners() {
 		const canvas = document.getElementById('exportDitherPreview');
 		canvas.style.setProperty('--export-dither-preview-height', `${CONFIG.export.ditherPreview.height}px`);
@@ -408,93 +368,69 @@ initializeExportSettings() {
 			this.updateExportFormatUI();
 			this.saveSettingsToStorage();
 		});
-	}
+	},
 
-,
-	// The one writer of the mask-edge preference. Settings and the Brush panel
-	// both show it, and the Settings body may not have been built yet.
-	setMaskEdgeAntialias(enabled) {
-		PREFERENCES.set('crispMaskEdges', !enabled);
-		const master = document.getElementById('antialiasMaskEdges');
-		if (master) master.checked = enabled;
-		this.refreshMaskEdgeRendering();
-		this.updateStatus(enabled ? 'Smooth Edges on' : 'Smooth Edges off');
-	}
+	bindPreferenceControl(element, key, { invert = false } = {}) {
+		if (!element || element.dataset.preferenceBound) return;
+		element.dataset.preferenceBound = key;
+		const checkbox = element.matches('input[type="checkbox"]');
+		const button = element.tagName === 'BUTTON';
+		const sync = value => {
+			const displayed = invert ? !value : value;
+			if (checkbox) element.checked = displayed;
+			else if (button) { element.classList.toggle('active', displayed); element.setAttribute('aria-pressed', String(displayed)); }
+			else element.value = displayed;
+		};
+		element.addEventListener(button ? 'click' : 'change', () => {
+			const value = button ? !PREFERENCES.get(key) : checkbox ? element.checked : element.value;
+			PREFERENCES.set(key, invert ? !value : value);
+		});
+		PREFERENCES.onChange(key, sync);
+		sync(PREFERENCES.get(key));
+	},
 
-,
+	setupPreferenceEffects() {
+		PREFERENCES.onChange('showHints', () => this.updateHelpfulMessage());
+		PREFERENCES.onChange('reduceMotion', () => this.applyReduceMotion());
+		PREFERENCES.onChange('showAllControls', () => this.applyShowAllControls());
+		PREFERENCES.onChange('pixelGrid', () => this.viewport.applyTransform());
+		PREFERENCES.onChange('snappingEnabled', () => this.clearSmartGuides());
+		PREFERENCES.onChange('crispMaskEdges', value => {
+			this.refreshMaskEdgeRendering();
+			this.updateStatus(value ? 'Smooth Edges off' : 'Smooth Edges on');
+		});
+		PREFERENCES.onChange('filterPreviewLevel', () => {
+			this.filterLayerManager.refreshSnapshots();
+			this.layerManager.renderLayersList();
+		});
+	},
+
 	setupAppSettingsListeners() {
-		this.bindPreferenceToggle('showHelpfulHints', 'showHints', () => this.updateHelpfulMessage());
-		this.bindPreferenceToggle('showWelcomeOnStartup', 'showWelcomeOnStartup');
-		this.bindPreferenceToggle('confirmDestructiveActions', 'confirmDestructiveActions');
-		this.bindPreferenceToggle('scaleEffectsOnTransform', 'scaleEffects');
-		this.bindPreferenceToggle('scaleCorners', 'scaleCorners');
-		this.bindPreferenceToggle('scaleTexturesOnTransform', 'scaleTextures');
-		document.getElementById('antialiasMaskEdges')?.addEventListener('change', (e) => this.setMaskEdgeAntialias(e.target.checked));
-
-		const themeInput = document.getElementById('interfaceTheme');
-		themeInput?.addEventListener('change', (e) => {
-			this.interfaceTheme = CONFIG.ui.themes.includes(e.target.value) ? e.target.value : 'dark';
+		for (const group of APP_SETTINGS_LAYOUT) for (const row of group.rows) {
+			if (row.preference) this.bindPreferenceControl(document.getElementById(row.field.id), row.preference, row);
+		}
+		document.getElementById('interfaceTheme')?.addEventListener('change', event => {
+			this.interfaceTheme = event.target.value;
 			this.applyInterfaceTheme();
-			this.saveSettingsToStorage();
 		});
-
-		// Preferences that used to be reachable only from a transient canvas
-		// control. The canvas controls stay; Settings is simply where a person
-		// looks to find out whether they are on.
-		this.bindPreferenceToggle('autoSelectLayers', 'autoSelect', (value) => {
-			const canvasToggle = document.getElementById('contextAutoSelect');
-			if (canvasToggle) canvasToggle.checked = value;
-		});
-		this.bindPreferenceToggle('snappingEnabled', 'snappingEnabled', (value) => {
-			document.getElementById('snappingToggle')?.classList.toggle('active', value);
-		});
-		this.bindPreferenceToggle('panInertia', 'panInertia');
-		this.bindPreferenceToggle('pixelGrid', 'pixelGrid', () => this.viewport?.applyTransform());
-		this.bindPreferenceToggle('reduceMotion', 'reduceMotion', () => this.applyReduceMotion());
-		this.bindPreferenceToggle('showAllControls', 'showAllControls', () => this.applyShowAllControls());
-		this.bindPreferenceToggle('balanceSidebars', 'balanceSidebars');
-		const filterPreviewLevel = document.getElementById('filterPreviewLevel');
-		filterPreviewLevel?.addEventListener('change', () => {
-			const value = ['off', 'still', 'animated'].includes(filterPreviewLevel.value) ? filterPreviewLevel.value : 'still';
-			PREFERENCES.set('filterPreviewLevel', value);
-			this.filterLayerManager?.refreshSnapshots();
-			this.layerManager?.renderLayersList();
-			this.saveSettingsToStorage();
-		});
-
 		document.getElementById('resetToolbarPlacement')?.addEventListener('click', () => this.resetToolbarPlacement());
-	}
+	},
 
-,
-	bindPreferenceToggle(elementId, preferenceKey, onChange = null) {
-		const input = document.getElementById(elementId);
-		if (!input || input.dataset.bound === 'true') return;
-		input.dataset.bound = 'true';
-		input.addEventListener('change', () => {
-			PREFERENCES.set(preferenceKey, input.checked);
-			this.saveSettingsToStorage();
-			onChange?.(input.checked);
-		});
-	}
-
-,
 	applyShowAllControls() {
 		const showAll = PREFERENCES.get('showAllControls');
 		if (showAll) document.documentElement.dataset.showAllControls = 'true';
 		else delete document.documentElement.dataset.showAllControls;
 		document.querySelectorAll('[data-advanced]').forEach((disclosure) => setAdvancedDisclosureOpen(disclosure, showAll));
-	}
+	},
 
-,
 	applyReduceMotion() {
 		// Only stamp the attribute when the preference is on, so the universal
 		// selector it gates never has to be evaluated in the common case.
 		if (PREFERENCES.get('reduceMotion')) document.documentElement.dataset.reduceMotion = 'true';
 		else delete document.documentElement.dataset.reduceMotion;
 		this.animationTicker?.refresh();
-	}
+	},
 
-,
 	async resetToolbarPlacement() {
 		const confirmed = await this.confirmAction({
 			tone: 'danger',
@@ -506,9 +442,8 @@ initializeExportSettings() {
 		if (!confirmed) return;
 		this.contextToolbarRenderer?.resetPlacement?.();
 		this.updateStatus('Toolbar position reset');
-	}
+	},
 
-,
 	updateExportFormatUI() {
 		const target = getActiveExportTarget(this.exportSettings, { mp4Supported: this.mp4ExportSupported !== false });
 		const isMp4 = target.isVideo;
@@ -589,23 +524,20 @@ initializeExportSettings() {
 		this.exportSettingsFilter?.apply();
 		if (target.isAnimation) this.updateExportDuration();
 		else this.clearExportDurationUI();
-	}
+	},
 
-,
 	hasAnimatedExportContent() {
 		return this.layers.some((layer) => layer.visible && (GlitterAnimation.isActive(layer.animations) || layer.type === LayerType.STICKER || layer.type === LayerType.GLITTER_FILL));
-	}
+	},
 
-,
 	clearExportDurationUI() {
 		this.exportDurationRequestId = (this.exportDurationRequestId || 0) + 1;
 		const duration = document.getElementById('exportMp4Duration');
 		const estimate = document.getElementById('exportFidelityEstimate');
 		if (duration) duration.textContent = '';
 		if (estimate) estimate.textContent = '';
-	}
+	},
 
-,
 	updateExportFidelityUI() {
 		const stop = CONFIG.export.timeline.fidelityStops[this.exportSettings.exportFidelity]
 			|| CONFIG.export.timeline.fidelityStops[CONFIG.export.defaults.exportFidelity];
@@ -622,9 +554,8 @@ initializeExportSettings() {
 			? 'No frame target'
 			: `${this.exportSettings.maxFrames}-frame target`;
 		summary.textContent = `${samplesPerSecond} samples/sec · ${frameTarget} · ≤ ${(visualError * 100).toFixed(1)}% difference`;
-	}
+	},
 
-,
 	scheduleExportDuration() {
 		clearTimeout(this.exportDurationTimer);
 		this.exportDurationRequestId = (this.exportDurationRequestId || 0) + 1;
@@ -634,9 +565,8 @@ initializeExportSettings() {
 		const reset = document.getElementById('resetAnimationLoop');
 		if (reset) reset.disabled = true;
 		this.exportDurationTimer = setTimeout(() => this.updateExportDuration(), CONFIG.export.timeline.estimateDebounceMs);
-	}
+	},
 
-,
 	async updateExportDuration() {
 		clearTimeout(this.exportDurationTimer);
 		const output = document.getElementById('exportMp4Duration');
@@ -715,9 +645,8 @@ initializeExportSettings() {
 			if (output && !usesTargetDuration) output.textContent = 'Could not load an animation source to estimate the duration. Export will try again.';
 			if (fidelityOutput) fidelityOutput.textContent = 'Could not estimate this animation. Export will calculate it again.';
 		}
-	}
+	},
 
-,
 	// Timing-only plan of the next export (no frames are composed): loop
 	// duration and frame count for the current export settings.
 	estimateExportAnimation(layers) {
@@ -737,9 +666,8 @@ initializeExportSettings() {
 			// realized by the same planner the export will actually use.
 			outputFormat: getActiveExportTarget(this.exportSettings, { mp4Supported: this.mp4ExportSupported !== false }).format
 		});
-	}
+	},
 
-,
 	// An animated GIF holds every composed frame until it is encoded. When the
 	// estimate is past this device's export budget, ask before starting rather
 	// than letting the tab run out of memory. MP4 and stills encode frame by
@@ -767,9 +695,8 @@ initializeExportSettings() {
 			confirmLabel: 'Export Anyway',
 			cancelLabel: 'Cancel'
 		});
-	}
+	},
 
-,
 	applyInterfaceTheme() {
 		document.documentElement.dataset.theme = this.interfaceTheme;
 		try {
@@ -777,9 +704,8 @@ initializeExportSettings() {
 		} catch (error) {
 			console.warn('Failed to save interface theme:', error);
 		}
-	}
+	},
 
-,
 	refreshMaskEdgeRendering() {
 		this.textGlitterManager?.textMaskCache.clear();
 		this.textGlitterManager?.clearPreviewMaskUrls();
@@ -787,9 +713,8 @@ initializeExportSettings() {
 		this.maskEditor?._syncAntialiasControls();
 		document.querySelectorAll('[data-pattern-editor]').forEach((set) => set._renderEffectPattern?.());
 		this.requestPreviewUpdate();
-	}
+	},
 
-,
 // Row and group resets belong to the panel renderer (rule D): a row revert
 // restores its control and a group reset replays the reverts under it. Only
 // the footer resets, which also clear state no row shows, are bound here.
@@ -810,9 +735,8 @@ setupSettingsResetListeners() {
 
 	document.getElementById('resetToolSettings')?.addEventListener('click', () => this.resetToolSettings());
 	document.getElementById('resetPanelLayout')?.addEventListener('click', () => this.resetPanelLayout());
-}
+},
 
-,
 async resetToolSettings() {
 	const confirmed = await this.confirmAction({
 		tone: 'danger',
@@ -824,9 +748,8 @@ async resetToolSettings() {
 	if (!confirmed) return;
 	this.maskEditor?.resetToolSettingsToDefaults();
 	this.updateStatus('Brush and Eraser settings reset');
-}
+},
 
-,
 async resetPanelLayout() {
 	const confirmed = await this.confirmAction({
 		tone: 'danger',
@@ -838,23 +761,12 @@ async resetPanelLayout() {
 	if (!confirmed) return;
 	this.applyDefaultPanelLayout();
 	this.updateStatus('Panel layout reset');
-}
+},
 
-,
 applyDefaultPanelLayout() {
 	resetPanelCardStates();
-}
+},
 
-,
-// Preferences shown in both Settings and a canvas control have to agree after
-// a reset, whichever surface triggered it.
-syncCanvasPreferenceControls() {
-	const autoSelect = document.getElementById('contextAutoSelect');
-	if (autoSelect) autoSelect.checked = PREFERENCES.get('autoSelect');
-	document.getElementById('snappingToggle')?.classList.toggle('active', PREFERENCES.get('snappingEnabled'));
-}
-
-,
 async resetAllSettings() {
 	const confirmed = await this.confirmAction({
 		tone: 'danger',
@@ -876,9 +788,8 @@ async resetAllSettings() {
 
 	this.syncExportSettingsToUI();
 	this.saveSettingsToStorage();
-}
+},
 
-,
 	async resetExportSettings() {
 		const confirmed = await this.confirmAction({
 			tone: 'danger',
@@ -892,9 +803,8 @@ async resetAllSettings() {
 		this.settingsStore.reset(this.exportSettings);
 		this.syncExportSettingsToUI();
 		this.saveSettingsToStorage();
-	}
+	},
 
-,
 	setupExportListeners() {
 		const exportGif = document.getElementById('exportGif');
 		if (exportGif) {
@@ -920,9 +830,8 @@ async resetAllSettings() {
 		document.querySelectorAll('#saveProject, #saveProjectMenuItem').forEach((button) => {
 			button.addEventListener('click', () => this.saveProjectFile());
 		});
-	}
+	},
 
-,
 	updateExportActionUI() {
 		if (!this.exportSettings) return;
 		const target = getActiveExportTarget(this.exportSettings, { mp4Supported: this.mp4ExportSupported !== false });

@@ -147,7 +147,7 @@ const FIELDS = Object.freeze({
 	textWarpBend: { label: 'Bend', unit: '%', min: -100, max: 100, step: 1, value: 50, cost: 'raster' },
 	transformScale: { label: 'Scale', unit: '%', min: 10, max: 500, step: 1, value: 100 },
 	transformRotation: { label: 'Rotation', unit: '°', min: 0, max: 360, step: 1, value: 0 },
-	transformOpacity: { label: 'Opacity', unit: '%', min: 0, max: 100, step: 1, value: 100 },
+
 	multiSelectionOpacity: { label: 'Opacity', unit: '%', min: 0, max: 100, step: 1, value: 100 },
 	documentScale: { label: 'Scale', unit: '%', min: 10, max: 500, step: 1, value: 100 }
 });

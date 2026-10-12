@@ -29,7 +29,7 @@ class SparkleLayerManager {
 		this.sceneTimers = new Map();
 		this.sceneCompositor = new SceneCompositor({
 			editor,
-			resolveShapeFillImage: (imageRef) => editor.shapeGlitterManager.getImageFillAsset(imageRef)
+			resolveImageFill: (imageRef) => editor.imageFills.get(imageRef)
 		});
 		this.fieldHost = this.createFieldHost();
 		bindFieldControls(this.fieldHost);

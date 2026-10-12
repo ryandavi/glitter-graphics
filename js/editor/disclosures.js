@@ -32,10 +32,9 @@ initializeCollapsibleSections() {
 		this.initializeIndependentCollapsibles();
 
 		this.syncPanelEmptyStates();
-	}
+	},
 
 	// Each column's sections collapse independently (both can stay open).
-,
 	initializeIndependentCollapsibles() {
 		const setters = new Map();
 		this.setIndependentSectionOpen = (name, isOpen) => setters.get(name)?.(isOpen);
@@ -68,13 +67,12 @@ initializeCollapsibleSections() {
 				if (isOpen) requestAnimationFrame(() => header.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
 			});
 		});
-	}
+	},
 
 	// Reusable "Advanced" disclosure. One delegated click handler drives
 	// every `[data-advanced]` block (Glitter Properties, text/shape effect cards),
 	// so all instances behave identically. Collapsed by default; open state is
 	// intentionally NOT persisted — it resets each session/relayout.
-,
 	initializeAdvancedDisclosures() {
 		const initializeSubsections = (root = document) => {
 			const cards = [];
@@ -160,20 +158,18 @@ initializeCollapsibleSections() {
 			event.preventDefault();
 			toggleSubsection(toggle);
 		});
-	}
+	},
 
 	// The colorAdjust that tints a layer's layers-list swatch — the FILL slot's,
 	// since that's the glitter the swatch shows. A sticker's swatch is its image.
-,
 	getLayerFillColorAdjust(layer) {
 		if (layer?.type === LayerType.STICKER) return layer.stickerData?.colorAdjust;
 		return getLayerFillSlot(layer)?.colorAdjust;
-	}
+	},
 
 	// Tint the layers-list swatch + mobile swatch for any glitter-bearing layer to
 	// match its fill hue. Render paths bake this in too; this is the live-drag path
 	// that updates without a full list re-render. Shared by all three layer types.
-,
 	refreshLayerSwatchFilter(layer) {
 		if (!layer) return;
 		const filter = buildCssColorFilter(this.getLayerFillColorAdjust(layer));
@@ -186,21 +182,19 @@ initializeCollapsibleSections() {
 			const mobileSwatch = document.querySelector('.mobile-layers-swatch');
 			if (mobileSwatch) mobileSwatch.style.filter = filter;
 		}
-	}
+	},
 
 	// Glitter-fill: also tint the Glitter Properties asset-info thumbnail. Text and
 	// shape tint their own per-slot chips in their managers (refreshSlotSwatch).
-,
 	refreshGlitterSwatchVisuals(layer) {
 		if (!layer || layer.type !== LayerType.GLITTER_FILL) return;
 		const thumb = document.getElementById('glitterFillGlitterChip');
 		if (thumb) thumb.style.filter = buildCssColorFilter(layer.fill.colorAdjust);
 		this.refreshLayerSwatchFilter(layer);
-	}
+	},
 
 	// A form modal: a property section holding a note and one titled card per
 	// command group, each command a property row whose control is its chips.
-,
 	initializeShortcutsModal() {
 		const section = document.getElementById('shortcutSection');
 		if (!section) return;
@@ -327,9 +321,8 @@ initializeCollapsibleSections() {
 				setView(next.dataset.shortcutView, { focus: true });
 			});
 		});
-	}
+	},
 
-,
 	initializeModalFilters() {
 		this.shortcutsFilter = createModalFilter({
 			root: '#shortcutsModal',

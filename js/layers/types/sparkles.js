@@ -24,7 +24,7 @@ registerLayerType(LayerType.SPARKLES, {
 	// below the layer.
 	sparkleHost: (editor, layer) => editor.sparkleLayerManager?.getSparkleHost(layer) || null,
 	hasVisibleContent: (layer) => layerHasPaintSlotRole(layer, 'sparkles'),
-	timelineSources: (layer, context) => context.compositor._createSparkleTimelineSources(layer),
+	timelineSources: (layer, context) => context.compositor.createSparkleTimelineSources(layer),
 	serialization: {
 		extraKeys: ['sparkles'],
 		omit: ['settings'],

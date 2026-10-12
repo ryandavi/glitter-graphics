@@ -1,6 +1,5 @@
 const DOCUMENT_START_METHODS = {
 	whenBooted(stageId) { return APP_BOOT.whenBooted(stageId); },
-
 setupImageListeners() {
 		const imageUpload = document.getElementById('imageUpload');
 		const projectUpload = document.getElementById('projectUpload');
@@ -92,9 +91,8 @@ setupImageListeners() {
 			this.fitDocumentToSettledWorkspace();
 		});
 		window.addEventListener('imageRemoved', () => this.syncDocumentStartState());
-	}
+	},
 
-,
 	syncDocumentStartState() {
 		const noDocument = !this.originalImage;
 		const workspaceStart = document.getElementById('workspaceStart');
@@ -103,9 +101,8 @@ setupImageListeners() {
 			workspaceStart.setAttribute('aria-hidden', noDocument ? 'false' : 'true');
 		}
 		document.body.classList.toggle('no-document', noDocument);
-	}
+	},
 
-,
 	// One-click blank canvases on the start card. Each tile uses the default
 	// blank-document color; anything else goes through More Presets.
 	renderWorkspaceStartPresets() {
@@ -138,9 +135,8 @@ setupImageListeners() {
 			}
 			button.addEventListener('click', () => this.loadBlankImage(preset.width, preset.height));
 		});
-	}
+	},
 
-,
 	// With the startup Welcome gated off, an unseen release marks the start
 	// card's "What's new" link instead of reopening the modal. A first visit
 	// has nothing to compare against, so it records the release silently.
@@ -156,9 +152,8 @@ setupImageListeners() {
 		} catch (error) {
 			console.warn('Failed to check the last-seen release:', error);
 		}
-	}
+	},
 
-,
 	fitDocumentToSettledWorkspace() {
 		if (!this.originalImage || !this.previewWrapper) return;
 		this.previewWrapper.style.opacity = '0';
@@ -170,9 +165,8 @@ setupImageListeners() {
 			this.previewWrapper.style.transition = '';
 			this.previewWrapper.style.opacity = '1';
 		}));
-	}
+	},
 
-,
 	renderNewCanvasPresets() {
 		const host = document.getElementById('newCanvasPresets');
 		if (!host || host.dataset.rendered === 'true') return;
@@ -256,9 +250,8 @@ setupImageListeners() {
 			});
 			addGroup('Templates', grid).dataset.templateGroup = '';
 		}).catch((error) => console.warn('Templates unavailable:', error));
-	}
+	},
 
-,
 	// Color / Transparent is one segment; the color row shows only for Color,
 	// the same contract as the canvas extension fill.
 	setNewCanvasBackground(value) {
@@ -269,9 +262,8 @@ setupImageListeners() {
 		});
 		const colorRow = document.getElementById('canvasColorRow');
 		if (colorRow) colorRow.hidden = value !== 'color';
-	}
+	},
 
-,
 	initializeNewCanvasModal() {
 		this.renderNewCanvasPresets();
 		const widthInput = document.getElementById('newCanvasWidth');
@@ -311,9 +303,8 @@ setupImageListeners() {
 
 		// Update orientation buttons based on default dimensions
 		this.updateOrientationButtons(CONFIG.canvas.defaults.blankDocument.width, CONFIG.canvas.defaults.blankDocument.height);
-	}
+	},
 
-,
 	setupNewCanvasModalListeners() {
 		this.renderNewCanvasPresets();
 		const createBtn = document.getElementById('createCanvasBtn');

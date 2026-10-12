@@ -57,7 +57,7 @@ class HistoryManager {
 		if (this.coalescingOpen && coalesceKey && current?.coalesceKey === coalesceKey) {
 			this.history[this.historyIndex] = state;
 			this.editor.paintMaskStore?.prunePaintHistory();
-			this.editor.shapeGlitterManager?.pruneImageFillAssets();
+			this.editor.imageFills?.prune();
 			this.updateButtons();
 			return;
 		}
@@ -72,7 +72,7 @@ class HistoryManager {
 		this.coalescingOpen = true;
 		this.trimToByteBudget();
 		this.editor.paintMaskStore?.prunePaintHistory();
-		this.editor.shapeGlitterManager?.pruneImageFillAssets();
+		this.editor.imageFills?.prune();
 		this.updateButtons();
 	}
 
@@ -231,7 +231,7 @@ class HistoryManager {
 		}
 
 		this.editor.paintMaskStore?.prunePaintHistory();
-		this.editor.shapeGlitterManager?.pruneImageFillAssets();
+		this.editor.imageFills?.prune();
 		this.updateButtons();
 	}
 

@@ -4,6 +4,12 @@ const { spawnSync } = require('child_process');
 const path = require('path');
 
 const SUITES = [
+	{ file: 'unit/cross-language-contract-unit.js', tags: ['unit'] },
+	{ file: 'unit/suite-registry-unit.js', tags: ['unit'] },
+	{ file: 'unit/config-usage-unit.js', tags: ['unit'] },
+	{ file: 'unit/doc-paths-unit.js', tags: ['unit'] },
+	{ file: 'ui/background-removal-browser.js', tags: ['assets', 'document'] },
+	{ file: 'ui/upload-delete-browser.js', tags: ['assets'] },
 	{ file: 'unit/pattern-source-unit.js', tags: ['effects', 'export'] },
 	{ file: 'unit/pattern-presets.js', tags: ['unit', 'effects'] },
 	{ file: 'parity/pattern-paint-parity.js', tags: ['effects', 'export'] },
@@ -117,10 +123,15 @@ function main() {
 		const url = new URL(process.env.GLITTER_URL || 'http://localhost/glitter/');
 		url.searchParams.set(require('../tools/script-manifest').bundleConfig.bundleParam, '1');
 		process.env.GLITTER_URL = url.href;
-		process.env.GLITTER_APP_URL = url.href;
 	}
 	const tag = readTag(process.argv.slice(2));
-	const selected = tag ? SUITES.filter((suite) => suite.tags.includes(tag)) : SUITES;
+	const argv = process.argv.slice(2);
+	const skipped = argv.flatMap((value, index) => {
+		if (value !== '--skip-tag') return [];
+		if (!argv[index + 1] || argv[index + 1].startsWith('--')) throw new Error('Expected a tag after --skip-tag');
+		return [argv[index + 1]];
+	});
+	const selected = SUITES.filter(suite => (!tag || suite.tags.includes(tag)) && !suite.tags.some(value => skipped.includes(value)));
 	if (!selected.length) {
 		throw new Error(`No test suites are tagged "${tag}"`);
 	}
@@ -147,9 +158,13 @@ function main() {
 	process.stdout.write(`\nPASS ${selected.length} suite${selected.length === 1 ? '' : 's'}\n`);
 }
 
-try {
-	main();
-} catch (error) {
-	process.stderr.write(`FAIL ${error.message}\n`);
-	process.exit(1);
+module.exports = { SUITES };
+
+if (require.main === module) {
+	try {
+		main();
+	} catch (error) {
+		process.stderr.write(`FAIL ${error.message}\n`);
+		process.exit(1);
+	}
 }

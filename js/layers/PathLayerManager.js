@@ -897,7 +897,7 @@ class PathLayerManager {
 	}
 
 	buildExportPlan(layer, context) {
-		return context.compositor._buildSlotStackExportPlan(layer);
+		return context.compositor.buildSlotStackExportPlan(layer);
 	}
 }
 

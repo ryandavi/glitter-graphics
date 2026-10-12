@@ -114,25 +114,6 @@
 	}
 }
 
-// A larger set of choices is a grid of separate buttons, not a wrapped
-// segmented control. auto-fill keeps empty tracks, so an incomplete last row
-// does not stretch its final option.
-.segmented-control.choice-grid {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(min(96px, 100%), 1fr));
-	gap: var(--spacing-xs);
-	height: auto;
-	border: 0;
-	border-radius: 0;
-	overflow: visible;
-
-	> .segmented-option {
-		height: var(--control-height);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-control);
-	}
-}
-
 // A segmented control sitting directly in a body or a set, not in a row,
 // takes the gutter itself because nothing else supplies it.
 .property-panel .property-set > .segmented-control {
