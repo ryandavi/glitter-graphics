@@ -73,7 +73,10 @@
 	// Shown on touch layouts only, where rows reorder by handle.
 	> .layer-drag-handle { display: none; }
 
-	> .layer-visibility.hidden { color: var(--color-text-secondary); }
+	> .layer-visibility {
+		touch-action: none;
+		&.hidden { color: var(--color-text-secondary); }
+	}
 
 	.list-row-action {
 		color: var(--color-text-primary);

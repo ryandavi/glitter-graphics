@@ -20,6 +20,8 @@ class LayerManager {
 		this.dropTargetId = null;
 		this.dropInsertAbove = false;
 		this.dragScrollInterval = null;
+		this.visibilityStroke = null;
+		this.suppressVisibilityClick = false;
 
 		// Touch drag state (mobile)
 		this.touchDragStartY = 0;
@@ -41,6 +43,7 @@ class LayerManager {
 	// ===== INITIALIZATION =====
 
 	setupContainerEvents() {
+		this.setupVisibilityEvents();
 		// Layer deselection when clicking empty space
 		this.layersListContainer.addEventListener('click', (e) => {
 			if (e.target === this.layersListContainer) {
@@ -282,23 +285,103 @@ class LayerManager {
 		this.deleteLayers([layerId], options);
 	}
 
-	toggleLayerVisibility(layerId) {
-		const layer = this.getLayerById(layerId);
-		if (!layer) return;
+	setupVisibilityEvents() {
+		const container = this.layersListContainer;
+		container.addEventListener('pointerdown', (event) => {
+			if (this.visibilityStroke || event.button !== 0 || !event.isPrimary) return;
+			this.suppressVisibilityClick = false;
+			const button = event.target.closest('.layer-visibility');
+			if (!button) return;
+			const layer = this.getLayerById(button.closest('.layer-item').dataset.layerId);
+			if (!layer) return;
+			event.preventDefault();
+			event.stopPropagation();
+			this.suppressVisibilityClick = true;
+			this.visibilityStroke = { pointerId: event.pointerId, visible: !layer.visible, lastY: event.clientY, changed: new Set() };
+			container.setPointerCapture(event.pointerId);
+			this.applyVisibilityStroke(event);
+		}, true);
+		container.addEventListener('pointermove', (event) => {
+			if (event.pointerId !== this.visibilityStroke?.pointerId) return;
+			event.preventDefault();
+			event.stopPropagation();
+			this.applyVisibilityStroke(event);
+		}, true);
+		const finish = (event) => {
+			if (event.pointerId !== this.visibilityStroke?.pointerId) return;
+			event.stopPropagation();
+			if (event.type === 'pointerup') this.applyVisibilityStroke(event);
+			this.finishVisibilityStroke();
+		};
+		container.addEventListener('pointerup', finish, true);
+		container.addEventListener('pointercancel', finish, true);
+		container.addEventListener('lostpointercapture', finish);
+		window.addEventListener('blur', () => this.finishVisibilityStroke());
+		container.addEventListener('click', (event) => {
+			if (!this.suppressVisibilityClick || event.detail === 0) return;
+			this.suppressVisibilityClick = false;
+			event.preventDefault();
+			event.stopPropagation();
+		}, true);
+		container.addEventListener('dragstart', (event) => {
+			if (this.visibilityStroke || event.target.closest('.layer-visibility')) event.preventDefault();
+		}, true);
+	}
 
-		layer.visible = !layer.visible;
+	applyVisibilityStroke(event) {
+		const stroke = this.visibilityStroke;
+		const bounds = this.layersListContainer.getBoundingClientRect();
+		const top = Math.max(bounds.top, Math.min(stroke.lastY, event.clientY));
+		const bottom = Math.min(bounds.bottom, Math.max(stroke.lastY, event.clientY));
+		this.layersListContainer.querySelectorAll('.layer-visibility').forEach((button) => {
+			const rect = button.getBoundingClientRect();
+			if (event.clientX < rect.left || event.clientX > rect.right || rect.bottom < top || rect.top > bottom) return;
+			const id = button.closest('.layer-item').dataset.layerId;
+			if (this.setLayerVisibility(id, stroke.visible)) stroke.changed.add(id);
+		});
+		stroke.lastY = event.clientY;
+	}
+
+	finishVisibilityStroke() {
+		const stroke = this.visibilityStroke;
+		if (!stroke) return;
+		this.visibilityStroke = null;
+		if (this.layersListContainer.hasPointerCapture(stroke.pointerId)) this.layersListContainer.releasePointerCapture(stroke.pointerId);
+		if (stroke.changed.size) {
+			this.editor.saveState(stroke.visible ? 'Show layers' : 'Hide layers');
+			this.editor.updateStatus(`${stroke.visible ? 'Shown' : 'Hidden'}: ${stroke.changed.size} layer${stroke.changed.size === 1 ? '' : 's'}`);
+		}
+	}
+
+	setLayerVisibility(layerId, visible) {
+		const layer = this.getLayerById(layerId);
+		if (!layer || layer.visible === visible) return false;
+		layer.visible = visible;
 		this.editor.pathEdit?.revalidate();
 
 		// Keep the live sticker DOM in sync with the layer visibility toggle.
 		const manager = getLayerManagerForType(this.editor, layer.type);
 		const element = manager?.layerElements?.get(layerId);
-		if (element) {
-			element.style.display = layer.visible ? 'block' : 'none';
-		}
+		if (element) element.style.display = visible ? 'block' : 'none';
 
-		this.renderLayersList();
-		this.editor.saveState(layer.visible ? 'Show layer' : 'Hide layer');
+		// Preserve the eye controls and pointer capture throughout a visibility stroke.
+		const row = this.layersListContainer.querySelector(`.layer-item[data-layer-id="${layerId}"]`);
+		const button = row?.querySelector('.layer-visibility');
+		row?.classList.toggle('is-hidden', !visible);
+		if (button) {
+			button.classList.toggle('hidden', !visible);
+			button.title = visible ? 'Hide layer' : 'Show layer';
+			button.querySelector('use').setAttribute('href', visible ? '#icon-eye' : '#icon-eye-slash');
+		}
 		this.editor.requestPreviewUpdate();
+		return true;
+	}
+
+	toggleLayerVisibility(layerId) {
+		const layer = this.getLayerById(layerId);
+		if (!layer) return;
+		this.setLayerVisibility(layerId, !layer.visible);
+		this.editor.saveState(layer.visible ? 'Show layer' : 'Hide layer');
 		this.editor.updateStatus(`${layer.visible ? 'Shown' : 'Hidden'}: ${layer.name || LAYER_UI_CONFIG[layer.type]?.displayName || 'Layer'}`);
 	}
 

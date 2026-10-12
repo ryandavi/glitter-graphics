@@ -3417,6 +3417,9 @@ body.is-resizing-panel canvas {
 .layer-item > .layer-drag-handle {
   display: none;
 }
+.layer-item > .layer-visibility {
+  touch-action: none;
+}
 .layer-item > .layer-visibility.hidden {
   color: var(--color-text-secondary);
 }
