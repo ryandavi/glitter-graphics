@@ -760,8 +760,7 @@ const CONFIG = deepFreeze({
 		library: {
 			recentCount: 12,
 			revealDeadlineMs: 300,
-			revealStepMs: 18,
-			revealMaxDelayMs: 90,
+			revealStepMs: 10,
 			overscanRows: 3,
 			pagingMarginPx: 200,
 			// Recent search chips under an empty Library search field.

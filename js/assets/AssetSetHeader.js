@@ -30,7 +30,7 @@ class AssetSetHeader {
 		this.element.replaceChildren();
 		this.element.hidden = !category;
 		if (!category) return;
-		const attr = Attribution.resolve(category.attribution);
+		const attributions = (category.attributions || [category.attribution]).map(attr => Attribution.resolve(attr)).filter(Boolean);
 		const line = AssetSetHeader.createTitleLine(category.name, items.length);
 		if (items.some(item => item.originalOrder != null)) {
 			const toggle = document.createElement('button');
@@ -47,10 +47,12 @@ class AssetSetHeader {
 		const heading = document.createElement('div');
 		heading.className = 'asset-set-header-heading';
 		heading.appendChild(line);
-		const credit = Attribution.buildCreditLine(attr);
-		if (credit) {
-			credit.classList.add('asset-set-header-meta');
-			heading.appendChild(credit);
+		for (const attribution of attributions) {
+			const credit = Attribution.buildCreditLine(attribution);
+			if (credit) {
+				credit.classList.add('asset-set-header-meta');
+				heading.appendChild(credit);
+			}
 		}
 		this.element.appendChild(heading);
 		const paragraph = (className, text) => {
@@ -60,7 +62,7 @@ class AssetSetHeader {
 			this.element.appendChild(node);
 		};
 		if (category.description) paragraph('asset-set-header-description', category.description);
-		if (attr?.notes) paragraph('asset-set-header-note', attr.notes);
+		for (const notes of new Set(attributions.map(attr => attr.notes).filter(Boolean))) paragraph('asset-set-header-note', notes);
 	}
 
 	// Items arrive in library order, which is the order to show. The toggle

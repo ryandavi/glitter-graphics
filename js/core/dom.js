@@ -84,8 +84,8 @@ async function loadImageElement(url) {
 
 const DECODED_THUMBNAILS = new Set();
 
-// The caller may hold a paged image until its batch is ready. Other thumbnail
-// hosts reveal themselves; successful decodes skip entrance on later visits.
+// The browser holds prefetched images until their visible batch is ready.
+// Other hosts reveal themselves and skip entrance for cached decodes.
 function createLoadingImage({ src, alt = '', placeholderColor }) {
 	const image = document.createElement('img');
 	image.alt = alt;
@@ -96,8 +96,11 @@ function createLoadingImage({ src, alt = '', placeholderColor }) {
 		const host = image.parentElement;
 		if (!host) return;
 		host.classList.add('loading-image-host');
+		host.classList.toggle('is-entry-reveal', Boolean(image.revealOnEntry));
+		host.classList.toggle('is-waiting-reveal', Boolean(image.holdLoadingReveal));
 		if (placeholderColor) host.style.setProperty('--tile-placeholder', placeholderColor);
-		for (const state of ['pending', 'ready', 'failed']) host.classList.toggle(`is-${state}`, image.loadingState === state || (state === 'ready' && image.loadingState === 'cached'));
+		const visibleState = image.holdLoadingReveal && image.loadingState !== 'failed' ? 'pending' : image.loadingState;
+		for (const state of ['pending', 'ready', 'failed']) host.classList.toggle(`is-${state}`, visibleState === state || (state === 'ready' && visibleState === 'cached'));
 		host.classList.toggle('is-cached', image.loadingState === 'cached');
 	};
 	image.loadingReady = new Promise(resolve => {

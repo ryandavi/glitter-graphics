@@ -3,6 +3,7 @@
 // Asset tiles: the option grid, tile marks, favourite and delete buttons.
 
 .loading-image-host {
+	&.is-waiting-reveal { opacity: 0; }
 	&.is-pending {
 		background: var(--tile-placeholder, var(--color-bg-tertiary));
 		animation: tile-pending 2s ease-in-out infinite;
@@ -16,9 +17,11 @@
 		>img { visibility: hidden; }
 		&.is-ready { background-image: var(--tile-preview-image); }
 	}
-	&.is-ready:not(.is-cached) {
-		&.is-tiled-preview, >img {
-			animation: tile-enter var(--transition-reveal) ease-out both;
+	&.is-ready {
+		&.is-entry-reveal,
+		&:not(.is-cached).is-tiled-preview,
+		&:not(.is-cached, .is-entry-reveal)>img {
+			animation: tile-enter var(--transition-reveal) ease-out backwards;
 			animation-delay: var(--tile-enter-delay, 0ms);
 		}
 	}
@@ -30,18 +33,18 @@
 
 @keyframes tile-enter {
 	from { opacity: 0; transform: scale(0.96); }
-	to { opacity: 1; transform: scale(1); }
+	to { opacity: 1; transform: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
 	.loading-image-host.is-pending,
-	.loading-image-host.is-ready:not(.is-cached).is-tiled-preview,
+	.loading-image-host.is-ready:is(.is-tiled-preview, .is-entry-reveal),
 	.loading-image-host.is-ready:not(.is-cached)>img { animation: none; }
 }
 
 :root[data-reduce-motion="true"] {
 	.loading-image-host.is-pending,
-	.loading-image-host.is-ready:not(.is-cached).is-tiled-preview,
+	.loading-image-host.is-ready:is(.is-tiled-preview, .is-entry-reveal),
 	.loading-image-host.is-ready:not(.is-cached)>img { animation: none; }
 }
 
@@ -236,7 +239,7 @@
 	height: var(--asset-mark-size, 18px);
 	border-radius: var(--radius-xs);
 	background: var(--color-overlay);
-	color: var(--color-text-on-accent);
+	color: var(--color-off-white);
 	>.icon { display: block; width: calc(var(--asset-mark-size, 18px) - 4px); height: calc(var(--asset-mark-size, 18px) - 4px); }
 }
 

@@ -110,6 +110,9 @@
   /* Range/switch track — must read against card AND panel backgrounds
      (recessed a step below --gray-800 so it never vanishes on cards) */
   --color-slider-track: #14161a;
+  --color-slider-tick: var(--gray-300);
+  --slider-thumb-size: 16px;
+  --slider-tick-size: 6px;
   /* Export progress sits on translucent mini-modal glass, so its empty track
      needs a dedicated recessed surface and a visible inner rim. */
   --progress-track: var(--gray-700);
@@ -275,6 +278,7 @@
   --scrollbar-min-thumb: 28px;
   /* Transitions */
   --transition-fast: 0.2s;
+  --transition-reveal: 0.16s;
   --transition-base: 0.3s;
   /* Sizes. Density is these four values and nothing else: the coarse-pointer
      block at the end of this file is the only place they change. */
@@ -1040,6 +1044,7 @@
      dark-on-dark */
   --swatch-empty-outline: var(--gray-400);
   --swatch-empty-bg: var(--gray-500);
+  --color-slider-tick: color-mix(in srgb, var(--color-slider-track), black 20%);
   --new-canvas-preview-bg: var(--color-bg-secondary);
   --color-off-white: var(--gray-100);
   --switch-knob-color: #fff;
@@ -1175,10 +1180,6 @@ body {
   margin: var(--spacing-sm) var(--spacing-md) 0;
   flex: 0 0 38px;
   background: var(--color-bg-secondary) !important;
-}
-.asset-list-filter::-moz-placeholder {
-  color: var(--color-text-tertiary);
-  opacity: 1;
 }
 .asset-list-filter::placeholder {
   color: var(--color-text-tertiary);
@@ -1466,8 +1467,7 @@ body {
   overflow: hidden;
 }
 .overview-strip .overview-item {
-  -moz-appearance: none;
-       appearance: none;
+  appearance: none;
   -webkit-appearance: none;
   display: flex;
   align-items: baseline;
@@ -1639,8 +1639,7 @@ body {
 .issue-preview img {
   width: 100%;
   height: 100%;
-  -o-object-fit: contain;
-     object-fit: contain;
+  object-fit: contain;
 }
 .issue-preview.preview-failed::after {
   content: "Preview unavailable";
@@ -1891,8 +1890,7 @@ body {
 }
 
 input[type=checkbox].field-switch {
-  -moz-appearance: none;
-       appearance: none;
+  appearance: none;
   -webkit-appearance: none;
   flex: 0 0 auto;
   width: 34px;
@@ -2026,9 +2024,7 @@ input[type=checkbox].field-switch:focus-visible {
   margin-bottom: var(--spacing-sm);
   padding: 0 var(--spacing-sm);
   cursor: pointer;
-  -webkit-user-select: none;
-     -moz-user-select: none;
-          user-select: none;
+  user-select: none;
   list-style: none;
   display: flex;
   align-items: center;
@@ -2198,9 +2194,7 @@ input[type=checkbox].field-switch:focus-visible {
   text-transform: uppercase;
   cursor: pointer;
   list-style: none;
-  -webkit-user-select: none;
-     -moz-user-select: none;
-          user-select: none;
+  user-select: none;
 }
 .admin-section-title::-webkit-details-marker {
   display: none;
@@ -2254,10 +2248,6 @@ textarea {
   font-size: var(--font-size-md);
   transition: background-color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
-input[type=text]::-moz-placeholder, input[type=number]::-moz-placeholder, input[type=url]::-moz-placeholder, input[type=search]::-moz-placeholder, input[type=password]::-moz-placeholder, select::-moz-placeholder, textarea::-moz-placeholder {
-  color: var(--color-text-tertiary);
-  opacity: 1;
-}
 input[type=text]::placeholder,
 input[type=number]::placeholder,
 input[type=url]::placeholder,
@@ -2300,8 +2290,7 @@ textarea:disabled {
 }
 
 select {
-  -moz-appearance: none;
-       appearance: none;
+  appearance: none;
   -webkit-appearance: none;
   padding-right: var(--spacing-xl);
   background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
@@ -2973,8 +2962,7 @@ input[type=checkbox] {
   display: block;
   width: 100%;
   height: 100%;
-  -o-object-fit: contain;
-     object-fit: contain;
+  object-fit: contain;
 }
 
 .tag-color-dot {
@@ -3271,8 +3259,7 @@ input[type=checkbox] {
 .ingest-preview img {
   width: 100%;
   height: 100%;
-  -o-object-fit: contain;
-     object-fit: contain;
+  object-fit: contain;
 }
 
 .ingest-actions {
@@ -3389,7 +3376,6 @@ input[type=checkbox] {
 }
 .slice-editor .slice-source {
   position: relative;
-  width: -moz-fit-content;
   width: fit-content;
   max-width: 100%;
   margin: 16px 0;
@@ -3466,8 +3452,7 @@ input[type=checkbox] {
   height: 100%;
   border: 0;
   border-radius: 0;
-  -o-object-fit: cover;
-     object-fit: cover;
+  object-fit: cover;
   pointer-events: none;
 }
 .arrange-tile:focus-visible {
@@ -3482,4 +3467,4 @@ input[type=checkbox] {
 }
 .arrange-tile.dragging {
   opacity: 0.4;
-}/*# sourceMappingURL=swatch_admin.css.map */
+}

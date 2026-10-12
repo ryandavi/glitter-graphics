@@ -44,11 +44,13 @@ class AssetBrowser {
 		// one"), then recents. One row, as many tiles as the panel width fits.
 		// The Library view menu shows or hides it (libraryQuickPicks).
 		this.shortcuts = document.createElement('div');
-		this.shortcuts.className = 'asset-browser-shortcuts';
+		this.shortcuts.className = 'asset-browser-shortcuts category-section';
 		this.shortcuts.hidden = true;
 		this.shortcutGrid = document.createElement('div');
 		this.shortcutGrid.className = 'asset-grid visible';
-		this.shortcuts.append(this.createHeading('Quick picks'), this.shortcutGrid);
+		const shortcutHeader = AssetSetHeader.createTitleLine('Quick picks');
+		shortcutHeader.classList.add('category-section-header');
+		this.shortcuts.append(shortcutHeader, this.shortcutGrid);
 		this.elements.categoryGrid.before(this.shortcuts);
 		new ResizeObserver(() => this._fitShortcutRow()).observe(this.shortcuts);
 		this.indexLead = document.createElement('div');
@@ -142,6 +144,19 @@ class AssetBrowser {
 	}
 
 	setupIntersectionObserver() {
+		this.revealTiles = new Set();
+		this.visibleRevealTiles = new Set();
+		this.revealRunning = false;
+		this.revealNextAt = 0;
+		this.revealObserver = new IntersectionObserver(entries => {
+			for (const entry of entries) {
+				if (!this.revealTiles.has(entry.target)) continue;
+				if (entry.isIntersecting && entry.intersectionRatio > 0) {
+					this.visibleRevealTiles.add(entry.target);
+				} else this.visibleRevealTiles.delete(entry.target);
+			}
+			this.revealBatch([...this.visibleRevealTiles], true);
+		}, { root: this.scrollContainer, threshold: 0 });
 		this.observer = new IntersectionObserver(
 			(entries) => {
 				if (entries[0].isIntersecting && this.hasView && this.scrollContainer.clientHeight && this.isPagedState()) {
@@ -217,6 +232,13 @@ class AssetBrowser {
 
 	render() {
 		if (!this.hasView) return;
+		this.revealNextAt = 0;
+		for (const tile of this.revealTiles) {
+			if (this.shortcutGrid.contains(tile)) continue;
+			this.revealObserver.unobserve(tile);
+			this.revealTiles.delete(tile);
+			this.visibleRevealTiles.delete(tile);
+		}
 		this.listingGroups = null;
 		this.listingItems = null;
 		// Narrowing is cross-library, regardless of the saved home or rail view.
@@ -298,6 +320,18 @@ class AssetBrowser {
 	// something to say for itself. A style whose shown tiles all come from one
 	// set carries that set's credit.
 	getHeaderCategory(selection, wall) {
+		if (this.browseView === 'creator') {
+			const creator = this.getCreators(wall).find(entry => entry.id === selection.root);
+			if (!creator) return null;
+			const attributions = [...new Map(wall.map(item => {
+				const attribution = this.getAssetAttribution(item);
+				return [JSON.stringify(attribution), attribution];
+			})).values()].filter(Boolean);
+			const set = this.catalog.getSharedSet(wall);
+			const style = selection.set && this.catalog.getCategoryById(selection.set);
+			return { id: creator.id, name: style ? `${creator.name} · ${style.name}` : creator.name,
+				description: set?.description, attributions };
+		}
 		const category = selection.set ? this.catalog.getCategoryById(selection.set)
 			: this.browseView === 'style' ? this.catalog.getCategoryById(selection.root) : null;
 		if (!category) return null;
@@ -321,8 +355,7 @@ class AssetBrowser {
 		const creators = this.browseView === 'creator';
 		const counts = this.getCategoryCounts(items);
 		const roots = creators ? this.getCreators(items).map(creator => ({
-			id: creator.id, name: creator.name, count: creator.items.length,
-			icon: creator.items[0]?.thumbnailUrl || creator.items[0]?.url
+			...creator, count: creator.items.length
 		})) : (categories || this.catalog.getRoots()).map(root => ({ ...root, count: this.getRootCount(root, counts) }));
 		roots.filter(root => root.count && (this.indexLead.hidden || root.id !== this.indexLead.firstElementChild?.dataset.categoryId)).forEach(root => {
 			this.elements.categoryGrid.appendChild(this.createCategoryCard(root, root.count, () => {
@@ -338,7 +371,8 @@ class AssetBrowser {
 	}
 
 	getCreatorGroups(items) {
-		return this.getCreators(items).map(creator => ({ id: creator.id, name: creator.name, items: this.sortItems(creator.items) }));
+		return this.getCreators(items).map(creator => ({ id: creator.id, name: creator.name, items: this.sortItems(creator.items),
+			category: this.getHeaderCategory({ root: creator.id }, creator.items) }));
 	}
 
 	sortItems(items) {
@@ -398,7 +432,6 @@ class AssetBrowser {
 	}
 
 	finishPage(tiles) {
-		this.revealBatch(tiles);
 		this.contentManager.updateSelection?.();
 		this.rearmPaging();
 	}
@@ -408,9 +441,13 @@ class AssetBrowser {
 		if (this.isPagedState() && this.currentOffset < this.getPagedItemCount()) this.observer.observe(this.elements.sentinel);
 	}
 
-	async revealBatch(tiles) {
-		const images = tiles.flatMap(tile => [...tile.querySelectorAll('img')]).filter(image => image.loadingReady && image.loadingState !== 'cached');
+	async revealBatch(tiles, visibleOnly = false) {
+		if (visibleOnly && this.revealRunning) return;
+		const sortTiles = list => [...list].sort((a, b) => a === b ? 0 : a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1);
+		tiles = sortTiles(tiles);
+		let images = tiles.flatMap(tile => [...tile.querySelectorAll('img')]).filter(image => image.loadingReady && (visibleOnly ? image.holdLoadingReveal : image.loadingState !== 'cached'));
 		if (!images.length) return;
+		if (visibleOnly) this.revealRunning = true;
 		images.forEach(image => { image.holdLoadingReveal = true; });
 		let timer;
 		await Promise.race([
@@ -418,12 +455,42 @@ class AssetBrowser {
 			new Promise(resolve => { timer = setTimeout(resolve, CONFIG.ui.library.revealDeadlineMs); })
 		]);
 		clearTimeout(timer);
+		if (visibleOnly) {
+			for (const tile of this.visibleRevealTiles) {
+				if (tile.isConnected) continue;
+				this.revealObserver.unobserve(tile);
+				this.revealTiles.delete(tile);
+				this.visibleRevealTiles.delete(tile);
+			}
+			// Decode order never lets a later visible tile pass an earlier one.
+			tiles = sortTiles([...this.visibleRevealTiles].filter(tile => this.revealTiles.has(tile) && tile.isConnected));
+			const now = performance.now();
+			let nextAt = Math.max(now, this.revealNextAt);
+			for (const tile of tiles) {
+				images = [...tile.querySelectorAll('img')].filter(image => image.loadingReady && image.holdLoadingReveal);
+				if (images.some(image => image.loadingState === 'pending')) break;
+				for (const image of images) {
+					image.parentElement.style.setProperty('--tile-enter-delay', `${Math.round(nextAt - now)}ms`);
+					image.holdLoadingReveal = false;
+					image.revealLoading();
+				}
+				if (images.length) nextAt += CONFIG.ui.library.revealStepMs;
+				this.revealObserver.unobserve(tile);
+				this.revealTiles.delete(tile);
+				this.visibleRevealTiles.delete(tile);
+			}
+			this.revealNextAt = nextAt;
+			this.revealRunning = false;
+			const remaining = sortTiles([...this.visibleRevealTiles].filter(tile => this.revealTiles.has(tile)));
+			if (remaining.length && ![...remaining[0].querySelectorAll('img')].some(image => image.loadingState === 'pending')) this.revealBatch(remaining, true);
+			return;
+		}
 		images.forEach(image => {
 			const host = image.parentElement;
 			if (!host) return;
 			const index = tiles.findIndex(tile => tile.contains(image));
 			host.style.setProperty('--tile-enter-index', index);
-			host.style.setProperty('--tile-enter-delay', `${Math.min(index * CONFIG.ui.library.revealStepMs, CONFIG.ui.library.revealMaxDelayMs)}ms`);
+			host.style.setProperty('--tile-enter-delay', `${index * CONFIG.ui.library.revealStepMs}ms`);
 			image.holdLoadingReveal = false;
 			image.revealLoading();
 			if (image.loadingState === 'pending') host.style.setProperty('--tile-enter-delay', '0ms');
@@ -624,7 +691,7 @@ class AssetBrowser {
 				img.style.imageRendering = item.isPixelated ? 'pixelated' : 'auto';
 				if (this.schema.tileCategoryIcon) {
 					cell.classList.add('is-tiled-preview');
-					cell.style.setProperty('--tile-preview-image', `url("${item.url}")`);
+					cell.style.setProperty('--tile-preview-image', `url("${new URL(item.url, document.baseURI).href}")`);
 					cell.style.imageRendering = img.style.imageRendering;
 				}
 				cell.appendChild(img);
@@ -643,6 +710,7 @@ class AssetBrowser {
 	}
 
 	getCategoryPreviewItems(category) {
+		if (category.items) return category.items.filter(item => !item.isLoading && !item.error).slice(0, 4);
 		const items = this.contentManager.getAllContent().filter(item => !item.isLoading && !item.error);
 		const previews = (category.previews || []).map(id => items.find(item => String(item.id) === String(id))).filter(Boolean);
 		const members = category.parent || this.catalog.isSet(category)
@@ -746,7 +814,12 @@ class AssetBrowser {
 				section = document.createElement('div');
 				section.className = 'category-section';
 				section.dataset.categoryId = group.id;
-				const header = AssetSetHeader.createTitleLine(group.name, group.items.length);
+				let header;
+				if (group.category) {
+					const creditHeader = new AssetSetHeader(() => this.refresh());
+					creditHeader.render(group.category, group.items);
+					header = creditHeader.element;
+				} else header = AssetSetHeader.createTitleLine(group.name, group.items.length);
 				header.classList.add('category-section-header');
 				const grid = document.createElement('div');
 				grid.className = 'asset-grid visible';
@@ -794,7 +867,7 @@ class AssetBrowser {
 	}
 
 	getCreators(items = this.getFilteredItems()) {
-		return this.catalog.getCreators(items);
+		return this.catalog.getCreators(items, { includeUnknown: false });
 	}
 
 	updateViewControl() {
@@ -838,6 +911,20 @@ class AssetBrowser {
 	}
 
 	createItemElement(item) {
-		return this.contentManager.createItemElement(item);
+		const tile = this.contentManager.createItemElement(item);
+		const images = [...tile.querySelectorAll('img')].filter(image => image.loadingReady);
+		if (images.length) {
+			images.forEach(image => {
+				image.holdLoadingReveal = true;
+				image.revealOnEntry = true;
+				image.revealLoading();
+			});
+			this.revealTiles.add(tile);
+			this.revealObserver.observe(tile);
+			Promise.all(images.map(image => image.loadingReady)).then(() => {
+				if (this.revealTiles.has(tile) && this.visibleRevealTiles.has(tile)) this.revealBatch([...this.visibleRevealTiles], true);
+			});
+		}
+		return tile;
 	}
 }

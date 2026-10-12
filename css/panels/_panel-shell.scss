@@ -53,6 +53,11 @@
 				flex-shrink: 0;
 			}
 
+			>.section-header-title-text,
+			>.section-header-title-detail {
+				align-self: baseline;
+			}
+
 			>.section-header-title-text {
 				@include truncate;
 			}

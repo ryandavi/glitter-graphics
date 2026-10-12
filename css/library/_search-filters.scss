@@ -68,15 +68,13 @@
 
 	> .search-controls > .search-chip-slot {
 		flex-shrink: 0;
-		// height: calc(var(--chip-height) + var(--spacing-md));
 		box-sizing: border-box;
+		&:not(:has(> :not([hidden]))) { display: none; }
 
 		> :is(.recent-searches, .active-filter-summary) {
 			display: flex;
 			align-items: center;
 			gap: var(--spacing-xs);
-			// The chip outline extends 4px beyond its border on every side.
-			// height: calc(var(--chip-height) + var(--spacing-xs) * 2);
 			box-sizing: border-box;
 			flex-wrap: nowrap;
 			overflow-x: auto;

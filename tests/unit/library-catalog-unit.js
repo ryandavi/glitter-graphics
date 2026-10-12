@@ -20,6 +20,7 @@ assert.strictEqual(catalog.getCreatorItems('alice', items).length, 3);
 assert.strictEqual(catalog.getCreatorItems('bob', items).length, 2);
 assert.strictEqual(catalog.getCreatorItems('__unknown', items).length, 7);
 assert.strictEqual(catalog.getCreators(items).at(-1).id, '__unknown');
+assert(plain(catalog.getCreators(items, { includeUnknown: false })).every(creator => creator.id !== '__unknown'));
 assert.deepStrictEqual(plain(catalog.getStylesByCreator('alice', items).map(style => style.id)), ['sparkle', 'ember']);
 assert.strictEqual(catalog.getSharedSet(catalog.getRootItems('sparkle', items)), null);
 

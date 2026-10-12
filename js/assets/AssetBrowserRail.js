@@ -39,7 +39,8 @@ class AssetBrowserRail {
 	// What a selection holds: everything at home, else its style or creator,
 	// narrowed to the picked set.
 	getItems(items, selection = this.selection, mode = this.mode) {
-		if (selection.root === LIBRARY_ALL_ID) return items;
+		if (selection.root === LIBRARY_ALL_ID) return mode === 'creator'
+			? this.catalog.getCreators(items, { includeUnknown: false }).flatMap(creator => creator.items) : items;
 		const wall = mode === 'creator' ? this.catalog.getCreatorItems(selection.root, items) : this.catalog.getRootItems(selection.root, items);
 		return selection.set ? this.catalog.getCategoryItems(selection.set, wall) : wall;
 	}
@@ -51,15 +52,15 @@ class AssetBrowserRail {
 		const creator = mode === 'creator';
 		const counts = this.catalog.getCategoryCounts(items);
 		const roots = creator
-			? this.catalog.getCreators(items).map(entry => ({ id: entry.id, name: entry.name, count: entry.items.length, icon: entry.items[0]?.thumbnailUrl || entry.items[0]?.url, items: entry.items }))
+			? this.catalog.getCreators(items, { includeUnknown: false }).map(entry => ({ id: entry.id, name: entry.name, count: entry.items.length, icon: entry.items[0]?.thumbnailUrl || entry.items[0]?.url, items: entry.items }))
 			: this.catalog.getRoots().map(root => ({ ...root, count: this.catalog.getRootCount(root, counts) })).filter(root => root.count);
 		const entries = [];
 		const single = [];
-		if (roots.length) entries.push({ root: LIBRARY_ALL_ID, set: null, name: creator ? 'All creators' : this.schema.browseLabel === 'Style' ? 'All styles' : 'All categories', count: items.length });
+		if (roots.length) entries.push({ root: LIBRARY_ALL_ID, set: null, name: creator ? 'All creators' : this.schema.browseLabel === 'Style' ? 'All styles' : 'All categories', count: creator ? roots.reduce((sum, root) => sum + root.count, 0) : items.length });
 		roots.forEach(root => {
 			const setCounts = creator ? this.catalog.getCategoryCounts(root.items) : this.catalog.getSetCounts(root.id, items);
 			const sets = (creator ? this.catalog.getStylesByCreator(root.id, items) : this.catalog.getSets(root.id)).filter(set => setCounts[set.id]);
-			const entry = { root: root.id, set: null, name: root.name, count: root.count, icon: root.icon };
+			const entry = { root: root.id, set: null, name: root.name, count: root.count, icon: root.icon, items: root.items };
 			// One narrowing that holds everything is no choice: the entry stands
 			// alone. A style keeps its own name; a nested collection is the entry.
 			const whole = sets.length === 1 && setCounts[sets[0].id] === root.count;
@@ -68,7 +69,8 @@ class AssetBrowserRail {
 			else if (whole) single.push(creator || this.catalog.isSet(sets[0]) ? entry : { ...entry, set: sets[0].id });
 			else {
 				entries.push({ ...entry, name: 'All ' + root.name, group: root.name });
-				sets.forEach(set => entries.push({ root: root.id, set: set.id, name: set.name, count: setCounts[set.id], icon: set.icon, group: root.name, child: true }));
+				sets.forEach(set => entries.push({ root: root.id, set: set.id, name: set.name, count: setCounts[set.id], icon: creator ? null : set.icon,
+					items: creator ? this.catalog.getCategoryItems(set.id, root.items) : undefined, group: root.name, child: true }));
 			}
 		});
 		// With nothing grouped above them, the single roots need no heading.
@@ -133,7 +135,9 @@ class AssetBrowserRail {
 			arrow.setAttribute('aria-hidden', 'true');
 			option.appendChild(arrow);
 		}
-		const preview = this.createPreview?.(this.catalog.getCategoryById(entry.set || entry.root));
+		const category = entry.items ? { id: entry.set || entry.root, name: entry.name, items: entry.items }
+			: this.catalog.getCategoryById(entry.set || entry.root);
+		const preview = this.createPreview?.(category);
 		if (preview) {
 			preview.classList.add('asset-browser-rail-preview');
 			preview.setAttribute('aria-hidden', 'true');

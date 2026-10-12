@@ -104,6 +104,60 @@ async function verifyImageLoadingAndPaging(page) {
 		document.getElementById('image-loading-test').remove();
 		delete document.documentElement.dataset.reduceMotion;
 	});
+	await page.evaluate(async () => {
+		const e = window.editor;
+		e.modalManager.closeAll({ force: true });
+		await e.loadBlankImage(240, 180, '#ffffff');
+		const layer = e.glitterManager.createLayer();
+		e.layerManager.insertLayer(layer);
+		e.layerManager.setActiveLayer(layer.id);
+		e.glitterManager.armPicker();
+		const b = e.glitterLibrary.browser;
+		b.navigateToCategory('sparkle');
+	});
+	await page.waitForFunction(() => window.editor.libraryWindow.isOpen && window.editor.glitterLibrary.browser.scrollContainer.clientHeight > 0);
+	await page.evaluate(async () => {
+		const b = window.editor.glitterLibrary.browser;
+		await createLoadingImage({ src: 'image-loading-test-viewport-0.gif' }).loadingReady;
+		const spacer = document.createElement('div');
+		spacer.id = 'viewport-reveal-spacer';
+		spacer.style.height = `${b.scrollContainer.clientHeight * 2}px`;
+		const grid = document.createElement('div');
+		grid.id = 'viewport-reveal-test';
+		grid.className = 'asset-grid visible';
+		grid.style.gridTemplateColumns = 'repeat(3, 60px)';
+		for (let index = 8; index >= 0; index--) grid.prepend(b.createItemElement({
+			...b.contentManager.content[0], id: `viewport-reveal-${index}`, url: `image-loading-test-viewport-${index}.gif`, thumbnailUrl: null
+		}));
+		b.scrollContainer.append(spacer, grid);
+		b.scrollContainer.scrollTop = 0;
+		if (![...grid.children].every(tile => getComputedStyle(tile).opacity === '0')) throw new Error('Tile or placeholder flashed before visibility was checked');
+	});
+	await page.waitForFunction(() => [...document.querySelectorAll('#viewport-reveal-test img')].every(image => ['ready', 'cached'].includes(image.loadingState)));
+	await page.waitForTimeout(250);
+	assert(await page.locator('#viewport-reveal-test').evaluate(grid => [...grid.children].every(tile => tile.classList.contains('is-pending'))), 'Offscreen tiles revealed before entering view');
+	assert(await page.locator('#viewport-reveal-test').evaluate(grid => [...grid.children].every(tile => getComputedStyle(tile).opacity === '0')), 'Loaded or cached offscreen tiles became visible');
+	await page.locator('#viewport-reveal-test').scrollIntoViewIfNeeded();
+	await page.waitForFunction(() => document.querySelectorAll('#viewport-reveal-test .is-ready').length === 9);
+	const revealDelays = await page.locator('#viewport-reveal-test > .asset-option').evaluateAll(tiles => tiles.map(tile => parseFloat(tile.style.getPropertyValue('--tile-enter-delay'))));
+	assert.deepStrictEqual(revealDelays.map(delay => delay - revealDelays[0]), Array.from({ length: 9 }, (_, index) => index * 10), 'Visible tiles did not stagger in grid order');
+	assert.equal(await page.locator('#viewport-reveal-test > .asset-option').last().evaluate(tile => getComputedStyle(tile).opacity), '0', 'Card background showed before its stagger delay');
+	await page.evaluate(() => {
+		const b = window.editor.glitterLibrary.browser;
+		const grid = document.getElementById('viewport-reveal-test');
+		grid.replaceChildren(...['image-loading-test-order-fast.gif', 'image-loading-test-order-slow.gif', 'image-loading-test-viewport-0.gif'].map((url, index) => b.createItemElement({
+			...b.contentManager.content[0], id: `ordered-loading-${index}`, url, thumbnailUrl: null
+		})));
+	});
+	await page.waitForFunction(() => document.querySelector('#viewport-reveal-test > .asset-option').classList.contains('is-ready'));
+	assert(await page.locator('#viewport-reveal-test > .asset-option').last().evaluate(tile => tile.classList.contains('is-waiting-reveal')), 'Cached tile jumped ahead of an earlier slow tile');
+	await page.waitForFunction(() => document.querySelectorAll('#viewport-reveal-test .is-ready').length === 3);
+	const orderedDelays = await page.locator('#viewport-reveal-test > .asset-option').evaluateAll(tiles => tiles.map(tile => parseFloat(tile.style.getPropertyValue('--tile-enter-delay'))));
+	assert.equal(orderedDelays[2] - orderedDelays[1], 10, 'Late tile restarted a separate reveal sequence');
+	await page.evaluate(() => {
+		document.getElementById('viewport-reveal-test').remove();
+		document.getElementById('viewport-reveal-spacer').remove();
+	});
 	await page.setViewportSize({ width: 1280, height: 900 });
 	await page.reload({ waitUntil: 'networkidle' });
 	await page.waitForFunction(() => window.editor);
@@ -319,12 +373,18 @@ async function main() {
 			return;
 		}
 		const { page, errors } = await openPage(browser);
-		await page.evaluate(() => {
+		await page.evaluate(async () => {
 			const b = window.editor.glitterLibrary.browser;
 			const ids = b.contentManager.content.slice(0, 4).map(item => item.id);
 			for (let count = 1; count <= 4; count++) {
 				const card = b.createCategoryCard({ id: 'sparkle', name: 'Preview', previews: ids.slice(0, count) }, count);
 				if (card.querySelectorAll('.category-card-preview').length !== count) throw new Error(`Preview count ${count} failed`);
+				b.elements.categoryGrid.appendChild(card);
+				await Promise.all([...card.querySelectorAll('img')].map(image => image.loadingReady));
+				for (const cell of card.querySelectorAll('.category-card-preview')) {
+					if (getComputedStyle(cell).backgroundImage !== `url("${cell.firstChild.src}")`) throw new Error('Tiled category preview URL differs from its decoded image');
+				}
+				card.remove();
 			}
 			const custom = b.createCategoryCard({ id: 'sparkle', name: 'Custom', icon: b.contentManager.content[0].url, previews: ids }, 4);
 			if (custom.querySelectorAll('.category-card-image > img').length !== 1 || custom.querySelector('.category-card-preview')) throw new Error('Custom path did not override previews');
@@ -413,14 +473,42 @@ async function main() {
 			b.setState('CATEGORY_LIST');
 			expect(!b.rail.element.hidden, 'Clearing search did not restore rails');
 			b.browseView = 'creator'; b.setState('CATEGORY_LIST');
-			expect(new Set([...b.rail.field.options].map(option => option.dataset.root)).size === 5, 'Expected All creators, three creators and Unknown');
+			expect(new Set([...b.rail.field.options].map(option => option.dataset.root)).size === 4, 'Expected All creators and three known creators');
+			expect(![...b.rail.field.options].some(option => option.dataset.root === '__unknown'), 'Unknown is visible in the creator picker');
+			expect(!b.getCreatorGroups(library.getAllContent()).some(group => group.id === '__unknown'), 'Unknown is visible in creator groups');
+			expect(!b.rail.getItems(library.getAllContent()).some(item => item.id === 9001), 'All creators includes unknown assets');
+			const previewItems = library.getAllContent().map(item => ({ ...item, thumbnailUrl: `${item.url}?creator-preview=${item.id}` }));
+			for (const entry of b.rail.getEntries(previewItems, 'creator')) {
+				if (entry.root === LIBRARY_ALL_ID) continue;
+				const creatorItems = b.catalog.getCreatorItems(entry.root, previewItems);
+				const members = entry.set ? b.catalog.getCategoryItems(entry.set, creatorItems) : creatorItems;
+				const image = b.rail.createOption(entry).querySelector('img');
+				expect(image && members.some(item => image.src === new URL(item.thumbnailUrl, document.baseURI).href), `Creator dropdown preview escaped ${entry.root}/${entry.set || 'all'}`);
+				expect(image.style.imageRendering === 'pixelated', 'Creator dropdown preview lost pixel rendering');
+			}
+			PREFERENCES.set('libraryHome', { ...PREFERENCES.get('libraryHome'), glitter: 'categories' });
+			b.render();
+			expect(!b.elements.categoryGrid.querySelector('[data-category-id="__unknown"]'), 'Unknown creator card is visible');
+			for (const card of b.elements.categoryGrid.children) {
+				expect(card.querySelector('.category-card-previews'), 'Creator card does not reuse category previews');
+				expect([...card.querySelectorAll('.category-card-preview img')].every(image => image.style.imageRendering === 'pixelated'), 'Creator preview is blurry');
+			}
+			PREFERENCES.set('libraryHome', { ...PREFERENCES.get('libraryHome'), glitter: 'everything' });
 			expect(b.rail.field.querySelectorAll('optgroup').length === 2 && b.rail.field.querySelector(':scope > option').value === '__all', 'Creator home must precede grouped creators');
 			choose(0, 'aylana');
 			expect(b.wallItems.length === 2, 'Creator All must cross styles');
+			expect(!b.setHeader.element.hidden && b.setHeader.element.textContent.includes('By Aylana'), 'Creator All lost attribution');
+			expect(b.setHeader.element.textContent.includes('Bring On The Glitter') && b.setHeader.element.textContent.includes('Second source'), 'Creator All omitted a source');
 			clickSet('sparkle');
 			expect(b.wallItems.length === 1 && b.setHeader.element.textContent.includes('Aylana'), 'Creator style must carry the set credit');
-			choose(0, '__unknown');
-			expect(b.wallItems.length === 1 && b.wallItems[0].id === 9001, 'Unknown leaked attributed tiles');
+			expect(b.catalog.getCreatorItems('__unknown', library.getAllContent()).length === 1, 'Unknown attribution data was removed');
+			choose(0, 'mica');
+			expect(b.setHeader.element.textContent.includes('By Mica') && b.setHeader.element.querySelector('.asset-collection-credit'), 'Single-source creator lost attribution');
+			choose(0, LIBRARY_ALL_ID);
+			while (b.currentOffset < b.getPagedItemCount()) b.loadNextBatch();
+			for (const section of b.elements.searchResults.querySelectorAll('.category-section')) {
+				expect(section.querySelector('.category-section-header .asset-collection-credit'), 'All creators group lost attribution');
+			}
 			b.browseView = 'style'; b.setState('CATEGORY_LIST');
 			PREFERENCES.set('libraryFavorites', { glitter: [9003] });
 			b.browseView = 'favorites'; b.setState('CATEGORY_LIST');
@@ -676,7 +764,8 @@ async function main() {
 				const cover = b.elements.categoryGrid.querySelector('.category-card');
 				const asset = b.shortcutGrid.querySelector('.asset-option');
 				if (cover.getBoundingClientRect().width <= asset.getBoundingClientRect().width) throw new Error(`${b.prefix}: category cover is not larger than assets`);
-				if (getComputedStyle(b.shortcuts).borderBottomStyle !== 'solid') throw new Error(`${b.prefix}: Quick picks lack a boundary`);
+				const shortcutsStyle = getComputedStyle(b.shortcuts);
+				if (shortcutsStyle.borderBottomWidth !== '0px' || shortcutsStyle.paddingBottom !== '0px') throw new Error(`${b.prefix}: Quick picks retain padding or a bottom border`);
 			}
 			const shape = e.shapeBrowserManager.browser;
 			for (const theme of ['dark', 'light']) {

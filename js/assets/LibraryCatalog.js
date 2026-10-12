@@ -59,11 +59,12 @@ class LibraryCatalog {
 		const id = items[0]?.set;
 		return id && items.every(item => item.set === id) ? this.getCategoryById(id) : null;
 	}
-	getCreators(items) {
+	getCreators(items, { includeUnknown = true } = {}) {
 		const creators = new Map();
 		items.forEach(item => {
 			const attr = this.getAssetAttribution(item);
 			const id = attr?.authorId || '__unknown';
+			if (!includeUnknown && id === '__unknown') return;
 			if (!creators.has(id)) creators.set(id, { id, name: id === '__unknown' ? 'Unknown' : (attr.author || id), items: [] });
 			creators.get(id).items.push(item);
 		});
