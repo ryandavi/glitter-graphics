@@ -98,6 +98,7 @@ const SUITES = [
 	{ file: 'ui/layer-reorder-transform-verify.js', tags: ['layers'] },
 	{ file: 'ui/layer-visibility-verify.js', tags: ['layers', 'touch'] },
 	{ file: 'ui/layer-selection-reveal-verify.js', tags: ['layers'] },
+	{ file: 'ui/multi-selection-actions-verify.js', tags: ['layers', 'panels', 'touch'] },
 	{ file: 'ui/fill-transform-verify.js', tags: ['layers', 'mask'] },
 	{ file: 'ui/manifest-library-browser.js', tags: ['assets'] },
 	{ file: 'ui/lazy-manifest-browser.js', tags: ['assets'] },

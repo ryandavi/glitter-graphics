@@ -170,9 +170,81 @@
 			"parent": "multiLayerSelectionGroup"
 		},
 		{
+			"id": "multiSelectionBlendMode",
+			"tag": "select",
+			"classes": "",
+			"parent": "multiLayerSelectionGroup"
+		},
+		{
+			"id": "multiSelectionShow",
+			"tag": "button",
+			"classes": "segmented-option",
+			"parent": "multiLayerSelectionGroup"
+		},
+		{
+			"id": "multiSelectionHide",
+			"tag": "button",
+			"classes": "segmented-option",
+			"parent": "multiLayerSelectionGroup"
+		},
+		{
+			"id": "multiSelectionLock",
+			"tag": "button",
+			"classes": "segmented-option",
+			"parent": "multiLayerSelectionGroup"
+		},
+		{
+			"id": "multiSelectionUnlock",
+			"tag": "button",
+			"classes": "segmented-option",
+			"parent": "multiLayerSelectionGroup"
+		},
+		{
+			"id": "multiSelectionSource",
+			"tag": "div",
+			"classes": "property-note",
+			"parent": "multiLayerSelectionGroup"
+		},
+		{
+			"id": "multiSelectionMatchWidth",
+			"tag": "button",
+			"classes": "segmented-option",
+			"parent": "multiLayerSelectionGroup"
+		},
+		{
+			"id": "multiSelectionMatchHeight",
+			"tag": "button",
+			"classes": "segmented-option",
+			"parent": "multiLayerSelectionGroup"
+		},
+		{
+			"id": "multiSelectionFlipX",
+			"tag": "button",
+			"classes": "segmented-option",
+			"parent": "multiLayerSelectionGroup"
+		},
+		{
+			"id": "multiSelectionFlipY",
+			"tag": "button",
+			"classes": "segmented-option",
+			"parent": "multiLayerSelectionGroup"
+		},
+		{
 			"id": "multiSelectionAlignScope",
 			"tag": "div",
 			"classes": "segmented-control",
+			"parent": "multiLayerSelectionGroup"
+		},
+		{
+			"id": "multiSelectionAppearanceSource",
+			"tag": "div",
+			"classes": "property-note",
+			"parent": "multiLayerSelectionGroup"
+		},
+		{
+			"id": "multiSelectionCopyAppearance",
+			"tag": "button",
+			"classes": "btn-flat",
 			"parent": "multiLayerSelectionGroup"
 		},
 		{
@@ -30016,7 +30088,19 @@
 				"resetPathAnimAnchorY": "shown",
 				"pathAnimSnapMode": "shown",
 				"pathAnimAdd": "shown",
-				"pathAnimRemove": "shown"
+				"pathAnimRemove": "shown",
+				"multiSelectionBlendMode": "shown",
+				"multiSelectionShow": "shown",
+				"multiSelectionHide": "shown",
+				"multiSelectionLock": "shown",
+				"multiSelectionUnlock": "shown",
+				"multiSelectionSource": "shown",
+				"multiSelectionMatchWidth": "shown",
+				"multiSelectionMatchHeight": "shown",
+				"multiSelectionFlipX": "shown",
+				"multiSelectionFlipY": "shown",
+				"multiSelectionAppearanceSource": "shown",
+				"multiSelectionCopyAppearance": "shown"
 			},
 			"slotSweep": {
 				"frameFillGlitter": {
@@ -45676,7 +45760,19 @@
 				"resetPathAnimAnchorY": "shown",
 				"pathAnimSnapMode": "shown",
 				"pathAnimAdd": "shown",
-				"pathAnimRemove": "shown"
+				"pathAnimRemove": "shown",
+				"multiSelectionBlendMode": "shown",
+				"multiSelectionShow": "shown",
+				"multiSelectionHide": "shown",
+				"multiSelectionLock": "shown",
+				"multiSelectionUnlock": "shown",
+				"multiSelectionSource": "shown",
+				"multiSelectionMatchWidth": "shown",
+				"multiSelectionMatchHeight": "shown",
+				"multiSelectionFlipX": "shown",
+				"multiSelectionFlipY": "shown",
+				"multiSelectionAppearanceSource": "shown",
+				"multiSelectionCopyAppearance": "shown"
 			},
 			"slotSweep": {
 				"frameFillGlitter": {
@@ -61336,7 +61432,19 @@
 				"resetPathAnimAnchorY": "shown",
 				"pathAnimSnapMode": "shown",
 				"pathAnimAdd": "shown",
-				"pathAnimRemove": "shown"
+				"pathAnimRemove": "shown",
+				"multiSelectionBlendMode": "shown",
+				"multiSelectionShow": "shown",
+				"multiSelectionHide": "shown",
+				"multiSelectionLock": "shown",
+				"multiSelectionUnlock": "shown",
+				"multiSelectionSource": "shown",
+				"multiSelectionMatchWidth": "shown",
+				"multiSelectionMatchHeight": "shown",
+				"multiSelectionFlipX": "shown",
+				"multiSelectionFlipY": "shown",
+				"multiSelectionAppearanceSource": "shown",
+				"multiSelectionCopyAppearance": "shown"
 			},
 			"slotSweep": {
 				"frameFillGlitter": {
@@ -76996,7 +77104,19 @@
 				"resetPathAnimAnchorY": "shown",
 				"pathAnimSnapMode": "shown",
 				"pathAnimAdd": "shown",
-				"pathAnimRemove": "shown"
+				"pathAnimRemove": "shown",
+				"multiSelectionBlendMode": "shown",
+				"multiSelectionShow": "shown",
+				"multiSelectionHide": "shown",
+				"multiSelectionLock": "shown",
+				"multiSelectionUnlock": "shown",
+				"multiSelectionSource": "shown",
+				"multiSelectionMatchWidth": "shown",
+				"multiSelectionMatchHeight": "shown",
+				"multiSelectionFlipX": "shown",
+				"multiSelectionFlipY": "shown",
+				"multiSelectionAppearanceSource": "shown",
+				"multiSelectionCopyAppearance": "shown"
 			},
 			"slotSweep": {
 				"frameFillGlitter": {
@@ -92656,7 +92776,19 @@
 				"resetPathAnimAnchorY": "shown",
 				"pathAnimSnapMode": "shown",
 				"pathAnimAdd": "shown",
-				"pathAnimRemove": "shown"
+				"pathAnimRemove": "shown",
+				"multiSelectionBlendMode": "shown",
+				"multiSelectionShow": "shown",
+				"multiSelectionHide": "shown",
+				"multiSelectionLock": "shown",
+				"multiSelectionUnlock": "shown",
+				"multiSelectionSource": "shown",
+				"multiSelectionMatchWidth": "shown",
+				"multiSelectionMatchHeight": "shown",
+				"multiSelectionFlipX": "shown",
+				"multiSelectionFlipY": "shown",
+				"multiSelectionAppearanceSource": "shown",
+				"multiSelectionCopyAppearance": "shown"
 			},
 			"slotSweep": {
 				"frameFillGlitter": {

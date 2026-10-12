@@ -491,7 +491,37 @@ isLayerContentLocked(layer) {
 				duplicate.title = gate.ok ? 'Duplicate selected layers' : gate.reason;
 			}
 			if (remove) remove.disabled = !canChangeLayers;
+			document.querySelectorAll('[data-multi-visible], [data-multi-lock]').forEach((button) => {
+				const visibility = button.dataset.multiVisible !== undefined;
+				const value = (visibility ? button.dataset.multiVisible : button.dataset.multiLock) === 'true';
+				const targets = visibility ? selectedLayers : selectedLayers.filter((layer) => !LAYER_UI_CONFIG[layer.type]?.protectedInStack);
+				const allMatch = targets.length > 0 && targets.every((layer) => (visibility ? layer.visible !== false : Boolean(layer.locked)) === value);
+				button.disabled = !targets.length;
+				button.classList.toggle('active', allMatch);
+				button.setAttribute('aria-pressed', String(allMatch));
+			});
+			const source = this.layerManager.getActiveLayer();
+			const sourceContext = this.getMovableLayerContext(source);
+			const sourceSize = sourceContext && this.getTransformSizeState(source, sourceContext.prefix);
+			document.querySelectorAll('[data-multi-size], [data-multi-flip]').forEach((button) => {
+				button.disabled = !canTransform || (button.dataset.multiSize !== undefined && !sourceSize?.visible);
+			});
+			const sourceNote = document.getElementById('multiSelectionSource');
+			if (sourceNote) sourceNote.textContent = `Size and appearance source: ${source?.name || LAYER_UI_CONFIG[source?.type]?.displayName || 'active layer'}`;
+			const copyAppearance = document.getElementById('multiSelectionCopyAppearance');
+			const appearanceTargets = this.getMultiSelectionAppearanceTargets();
+			const appearanceNote = document.getElementById('multiSelectionAppearanceSource');
+			if (appearanceNote) appearanceNote.textContent = appearanceTargets.length
+				? `From ${source.name || 'active layer'} to ${appearanceTargets.length} unlocked layer(s) of the same type. Image fills stay unchanged.`
+				: 'Copy appearance needs another unlocked layer of the same type as the active layer.';
+			if (copyAppearance) {
+				copyAppearance.disabled = !appearanceTargets.length;
+				copyAppearance.title = appearanceTargets.length
+					? `Copy paint and effects from ${source.name || 'active layer'} to ${appearanceTargets.length} unlocked layer(s) of the same type; image fills stay unchanged`
+					: 'Select another unlocked layer of the same type as the active layer';
+			}
 			this.syncMultiSelectionOpacity?.(selectedLayers);
+			this.syncMultiSelectionBlendMode?.(selectedLayers);
 			return;
 		}
 

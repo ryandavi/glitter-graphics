@@ -385,16 +385,22 @@ class LayerManager {
 		this.editor.updateStatus(`${layer.visible ? 'Shown' : 'Hidden'}: ${layer.name || LAYER_UI_CONFIG[layer.type]?.displayName || 'Layer'}`);
 	}
 
-	toggleLayerLock(layerId) {
+	setLayerLock(layerId, locked) {
 		const layer = this.getLayerById(layerId);
-		if (!layer || LAYER_UI_CONFIG[layer.type]?.protectedInStack) return;
-		layer.locked = !layer.locked;
+		if (!layer || LAYER_UI_CONFIG[layer.type]?.protectedInStack || Boolean(layer.locked) === locked) return false;
+		layer.locked = locked;
 		this.editor.pathEdit?.revalidate();
 		if (isLayerFullyLocked(layer) && this.activeLayerId === layer.id) {
 			this.editor.pickers.closeForLayer(layer.id);
 			this.editor.maskEditor?.releaseBrushTool?.({ commitStroke: true });
 			if (this.editor.currentTool === ToolType.GLITTER_FILL) this.editor.setTool(ToolType.SELECT);
 		}
+		return true;
+	}
+
+	toggleLayerLock(layerId) {
+		const layer = this.getLayerById(layerId);
+		if (!layer || !this.setLayerLock(layerId, !layer.locked)) return;
 		this.renderLayersList();
 		this.editor.syncTransformHandlesForActiveLayer?.();
 		this.editor.refreshInspector();

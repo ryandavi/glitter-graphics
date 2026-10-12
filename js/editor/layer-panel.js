@@ -209,6 +209,75 @@ setupLayerTypePickerListeners() {
 		reset.disabled = !editable || (!mixed && Number(input.value) === 100);
 	},
 
+	syncMultiSelectionBlendMode(layers = []) {
+		const control = document.getElementById('multiSelectionBlendMode');
+		if (!control) return;
+		const modes = layers.map((layer) => GlitterBlendModes.forLayer(layer));
+		const mixed = modes.some((mode) => mode !== modes[0]);
+		control.value = mixed ? '' : (modes[0] ?? CONFIG.layers.defaultBlendMode);
+		control.disabled = layers.length < 2 || !layers.every((layer) => canEditLayerInStack(layer) && LAYER_UI_CONFIG[layer.type]?.blendable);
+		syncPropertyReverts(control.closest('.property-row'));
+		const reset = control.closest('.property-row').querySelector('.property-option-revert');
+		if (reset && control.disabled) reset.disabled = true;
+	},
+
+	getMultiSelectionAppearanceTargets() {
+		const source = this.layerManager.getActiveLayer();
+		if (!source || !getLayerManagerForType(this, source.type)?.fieldHost) return [];
+		return this.layerManager.getSelectedLayers().filter((layer) => layer.id !== source.id && layer.type === source.type && canEditLayerInStack(layer));
+	},
+
+	async runMultiSelectionAction(label, action) {
+		if (this._multiSelectionActionActive) return;
+		this._multiSelectionActionActive = true;
+		const done = this.beginActivity('multi-selection', label);
+		try {
+			if (!await action()) return;
+			this.layerManager.renderLayersList();
+			this.syncTransformHandlesForActiveLayer();
+			this.refreshInspector();
+			this.updateActionButtons();
+			this.requestPreviewUpdate();
+			this.saveState(label);
+			this.updateStatus(label);
+		} catch (error) {
+			this.showError(`${label}: ${error.message}`);
+		} finally {
+			this._multiSelectionActionActive = false;
+			done();
+		}
+	},
+
+	async copyMultiSelectionAppearance() {
+		const source = this.layerManager.getActiveLayer();
+		const targets = this.getMultiSelectionAppearanceTargets();
+		if (!targets.length) return false;
+		const slots = getStylePresetSlotDefinitions(source.type).filter((definition) => readFieldPath(source, definition.pathKeys)?.mode !== 'image');
+		const values = slots.map((definition) => ({
+			definition,
+			value: structuredClone(readFieldPath(source, definition.pathKeys)),
+			enabled: definition.enabledKeys ? Boolean(readFieldPath(source, definition.enabledKeys)) : null
+		}));
+		const adjustments = LAYER_UI_CONFIG[source.type].fields.filter((binding) => binding.colorAdjust)
+			.map((binding) => ({ binding, value: readFieldPath(source, binding.pathKeys) }));
+		const host = getLayerManagerForType(this, source.type).fieldHost;
+		for (const layer of targets) {
+			await host.apply(layer, () => {
+				layer.opacity = source.opacity;
+				if (LAYER_UI_CONFIG[layer.type].blendable) layer.blendMode = GlitterBlendModes.forLayer(source);
+				adjustments.forEach(({ binding, value }) => writeFieldPath(layer, binding.pathKeys, value));
+				values.forEach(({ definition, value, enabled }) => {
+					if (readFieldPath(layer, definition.pathKeys)?.mode === 'image') return;
+					writeFieldPath(layer, definition.pathKeys, structuredClone(value));
+					if (definition.enabledKeys) writeFieldPath(layer, definition.enabledKeys, enabled);
+					const drafts = definition.draftKeys && readFieldPath(layer, definition.draftKeys.slice(0, -1));
+					if (drafts) delete drafts[definition.draftKeys.at(-1)];
+				});
+			}, { geometry: true, live: true });
+		}
+		return true;
+	},
+
 	setupLayerPanelListeners() {
 		// Add layer buttons - open layer type picker
 		['addLayerBtn'].forEach((id) => {
@@ -287,6 +356,61 @@ setupLayerTypePickerListeners() {
 		const multiDeleteBtn = document.getElementById('multiSelectionDeleteBtn');
 		const multiOpacity = document.getElementById('multiSelectionOpacity');
 		this.multiSelectionAlignScope = 'selection';
+		document.querySelectorAll('[data-multi-visible], [data-multi-lock]').forEach((button) => button.addEventListener('click', () => {
+			this.runMultiSelectionAction(button.dataset.multiVisible !== undefined
+				? (button.dataset.multiVisible === 'true' ? 'Show selected layers' : 'Hide selected layers')
+				: (button.dataset.multiLock === 'true' ? 'Lock selected layers' : 'Unlock selected layers'), () => {
+				const layers = this.layerManager.getSelectedLayers();
+				if (layers.length < 2) return false;
+				let changed = false;
+				layers.forEach((layer) => {
+					const didChange = button.dataset.multiVisible !== undefined
+						? this.layerManager.setLayerVisibility(layer.id, button.dataset.multiVisible === 'true')
+						: this.layerManager.setLayerLock(layer.id, button.dataset.multiLock === 'true');
+					changed = didChange || changed;
+				});
+				return changed;
+			});
+		}));
+		document.querySelectorAll('[data-multi-size]').forEach((button) => button.addEventListener('click', () => {
+			this.runMultiSelectionAction(`Match selected layer ${button.dataset.multiSize}`, async () => {
+				if (!this.layerManager.canTransformMultiSelection()) return false;
+				const source = this.layerManager.getActiveLayer();
+				const sourceContext = this.getMovableLayerContext(source);
+				const size = sourceContext && this.getTransformSizeState(source, sourceContext.prefix);
+				if (!size?.visible) return false;
+				let changed = false;
+				for (const layer of this.layerManager.getSelectedLayers()) {
+					if (layer.id === source.id) continue;
+					const { prefix, manager } = this.getMovableLayerContext(layer);
+					const axis = button.dataset.multiSize;
+					if (this.getTransformSizeState(layer, prefix)?.[axis] === size[axis]) continue;
+					const startScale = { ...getLayerTransform(layer).scale };
+					manager.renderLayer(layer);
+					if (this.applyTransformSizeFromPanel(prefix, layer, manager, axis, size[axis])) {
+						await manager.commitScale?.(layer, startScale);
+						this.redrawSettledScale(layer, manager);
+						changed = true;
+					}
+				}
+				return changed;
+			});
+		}));
+		document.querySelectorAll('[data-multi-flip]').forEach((button) => button.addEventListener('click', () => {
+			this.runMultiSelectionAction('Flip selected layers', () => {
+				if (!this.layerManager.canTransformMultiSelection()) return false;
+				const property = button.dataset.multiFlip;
+				this.layerManager.getSelectedLayers().forEach((layer) => {
+					const { manager } = this.getMovableLayerContext(layer);
+					manager.renderLayer(layer);
+					this.applyTransformEditWithAnchor(layer, manager, () => manager.updateTransform(layer.id, { [property]: !getLayerTransform(layer)[property] }));
+				});
+				return true;
+			});
+		}));
+		document.getElementById('multiSelectionCopyAppearance')?.addEventListener('click', () => {
+			this.runMultiSelectionAction('Copy selected layer appearance', () => this.copyMultiSelectionAppearance());
+		});
 
 		const applyMultiOpacity = (commit = false) => {
 			const layers = this.layerManager.getSelectedLayers();
@@ -299,6 +423,18 @@ setupLayerTypePickerListeners() {
 		};
 		multiOpacity?.addEventListener('input', () => applyMultiOpacity(false));
 		multiOpacity?.addEventListener('change', () => applyMultiOpacity(true));
+		const multiBlendMode = document.getElementById('multiSelectionBlendMode');
+		multiBlendMode?.addEventListener('change', () => {
+			const layers = this.layerManager.getSelectedLayers();
+			if (layers.length < 2 || !layers.every((layer) => canEditLayerInStack(layer) && LAYER_UI_CONFIG[layer.type]?.blendable)) return;
+			if (!CONFIG.layers.blendModes.includes(multiBlendMode.value)) return;
+			const mode = GlitterBlendModes.normalize(multiBlendMode.value);
+			if (layers.every((layer) => GlitterBlendModes.forLayer(layer) === mode)) return;
+			layers.forEach((layer) => { layer.blendMode = mode; });
+			this.syncMultiSelectionBlendMode(layers);
+			this.requestPreviewUpdate();
+			this.saveState('Change selected layer blend mode');
+		});
 		// The reset button (#resetMultiSelectionOpacity, stamped by buildSliderRow)
 		// is driven by the shared property-revert handler — it writes the slider
 		// default and fires input/change, which the listeners above pick up.

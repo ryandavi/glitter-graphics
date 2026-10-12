@@ -388,10 +388,36 @@ const PANEL_SCHEMAS = {
 			{ id: 'multiLayerSelectionGroup', hidden: true, groups: [
 				{ title: 'Appearance', sections: [
 					{ kind: 'section', title: 'Layers', sets: [
-						{ rows: [{ kind: 'slider', id: 'multiSelectionOpacity', slider: 'multiSelectionOpacity', label: 'Opacity' }] }
+						{ rows: [
+							{ kind: 'slider', id: 'multiSelectionOpacity', slider: 'multiSelectionOpacity', label: 'Opacity' },
+							{ kind: 'select', id: 'multiSelectionBlendMode', label: 'Blend', ariaLabel: 'Selected layer blend mode', revert: true, options: [
+								{ value: '', label: 'Mixed', disabled: true }, ...LAYER_BLEND_MODE_OPTIONS
+							] },
+							{ kind: 'segmented', label: 'Visibility', ariaLabel: 'Selected layer visibility', options: [
+								{ id: 'multiSelectionShow', label: 'Show', attrs: { 'data-multi-visible': 'true' } },
+								{ id: 'multiSelectionHide', label: 'Hide', attrs: { 'data-multi-visible': 'false' } }
+							] },
+							{ kind: 'segmented', label: 'Lock', ariaLabel: 'Selected layer lock', options: [
+								{ id: 'multiSelectionLock', label: 'Lock', attrs: { 'data-multi-lock': 'true' } },
+								{ id: 'multiSelectionUnlock', label: 'Unlock', attrs: { 'data-multi-lock': 'false' } }
+							] }
+						] }
 					] }
 				] },
 				{ title: 'Layout', sections: [
+					{ kind: 'section', title: 'Size and flip', sets: [
+						{ rows: [{ kind: 'note', id: 'multiSelectionSource' }] },
+						{ rows: [{ kind: 'segmented', label: 'Match size', options: [
+							{ id: 'multiSelectionMatchWidth', label: 'Width', attrs: { 'data-multi-size': 'width' } },
+							{ id: 'multiSelectionMatchHeight', label: 'Height', attrs: { 'data-multi-size': 'height' } }
+						] }] },
+						{ rows: [{ kind: 'note', text: 'Match size follows each layer’s aspect lock.' }] },
+						{ rows: [{ kind: 'segmented', label: 'Flip each', options: [
+							{ id: 'multiSelectionFlipX', label: 'Horizontal', attrs: { 'data-multi-flip': 'flipX' } },
+							{ id: 'multiSelectionFlipY', label: 'Vertical', attrs: { 'data-multi-flip': 'flipY' } }
+						] }] },
+						{ rows: [{ kind: 'note', text: 'Flips each layer in place.' }] }
+					] },
 					{ kind: 'section', title: 'Align', sets: [
 						{ rows: [
 							{ kind: 'segmented', id: 'multiSelectionAlignScope', label: 'Align to', ariaLabel: 'Alignment reference', options: [
@@ -417,7 +443,8 @@ const PANEL_SCHEMAS = {
 						] }
 					] }
 				] },
-				{ title: 'Actions', role: 'actions', actions: [
+				{ title: 'Actions', role: 'actions', note: { id: 'multiSelectionAppearanceSource' }, actions: [
+					{ actions: [{ id: 'multiSelectionCopyAppearance', label: 'Copy active layer appearance', title: 'Copy paint, outline, shadow, bevel, opacity and blend to unlocked layers of the same type' }] },
 					{ classes: 'multi-selection-actions', actions: [
 						{ id: 'multiSelectionDuplicateBtn', label: 'Duplicate' },
 						{ id: 'multiSelectionDeleteBtn', label: 'Delete' }
