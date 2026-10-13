@@ -268,6 +268,22 @@ function createShadowSectionSpec(idPrefix, { baseline = false } = {}) {
 	};
 }
 
+// One row per pose property a key can hold, hidden until the key holds it.
+// The revert on each stops keying that property at the selected key.
+function createKeyValueRows(id) {
+	return GlitterAnimation.POSE_PROPERTIES.map((property) => {
+		const name = `KeyProp${property.id.charAt(0).toUpperCase()}${property.id.slice(1)}`;
+		const channels = property.channels.map((channel) => GlitterAnimation.POSE_CHANNELS[channel]);
+		const unit = property.unit ?? FIELDS[channels[0].field].unit;
+		const shared = { label: property.label, rowId: id(`${name}Row`), hidden: true, resetTitle: `Stop keying ${property.label} here` };
+		if (property.control === 'pair') return { kind: 'numberPair', ...shared, resetId: id(`${name}Revert`), items: channels.map((channel, index) => ({
+			id: id(`${name}${'XY'[index]}`), mark: 'XY'[index], slider: channel.field, unit, label: channel.label
+		})) };
+		if (property.control === 'slider') return { kind: 'slider', ...shared, id: id(name), slider: channels[0].field, role: 'animKeyValue', revert: id(name) };
+		return { kind: 'field', type: 'number', ...FIELDS[channels[0].field], ...shared, id: id(name), unit, revert: id(name) };
+	});
+}
+
 function createAnimationSectionSpec(prefix) {
 	const id = (suffix) => `${prefix}Anim${suffix}`;
 	const sliders = (keys, hidden = false) => GlitterAnimation.ANIMATION_CONTROLS.filter((control) => keys.includes(control.key))
@@ -297,14 +313,20 @@ function createAnimationSectionSpec(prefix) {
 				...sliders(['gap'], true)
 			] },
 			{ id: id('KeySet'), label: 'Key', feature: 'timeline', hidden: true, rows: [
-				{ kind: 'select', id: id('KeySelect'), label: 'Key', options: [] },
-				{ kind: 'field', id: id('KeyPosition'), type: 'number', ...FIELDS.animKeyPosition },
-				{ kind: 'select', id: id('KeyEasing'), label: 'Outgoing easing', options: ANIMATION_EASING_OPTIONS },
-				...Object.values(GlitterAnimation.POSE_CHANNELS).map((channel) => ({
-					kind: 'field', id: id(`KeyValue${channel.id}`), type: 'number', ...FIELDS[channel.field], label: `${channel.label} (${FIELDS[channel.field].unit})`,
-					toggle: { id: id(`KeyUse${channel.id}`), label: `Key ${channel.label}` }
-				})),
-				{ kind: 'note', id: id('KeyNote'), text: 'Enable a value to key it. Other channels keep their own keys.' }
+				{ kind: 'select', id: id('KeySelect'), label: 'Key', options: [],
+					stepper: {
+						prev: { id: id('KeyPrev'), label: 'Previous key', icon: 'chevron-left', title: 'Previous key' },
+						next: { id: id('KeyNext'), label: 'Next key', icon: 'chevron-right', title: 'Next key' }
+					} },
+				{ kind: 'slider', id: id('KeyPosition'), slider: 'animKeyPosition' },
+				{ kind: 'select', id: id('KeyEasing'), label: 'Easing', hint: 'How it travels from this key to the next', options: ANIMATION_EASING_OPTIONS }
+			] },
+			{ id: id('KeyValues'), label: 'Values', feature: 'timeline', hidden: true, rows: [
+				...createKeyValueRows(id),
+				{ kind: 'note', id: id('KeyEmpty'), hidden: true, text: 'This key holds no values. Add one to pose the layer here.' }
+			] },
+			{ id: id('KeyValueActions'), feature: 'timeline', hidden: true, actions: [
+				{ id: id('KeyAddValue'), label: 'Add value', icon: 'plus', menu: true }
 			] },
 			{ id: id('KeyActions'), feature: 'timeline', hidden: true, actions: [
 				{ id: id('KeyRecord'), label: 'Edit keys', icon: 'timeline' },
@@ -313,6 +335,10 @@ function createAnimationSectionSpec(prefix) {
 			] },
 			{ id: id('ConvertActions'), feature: 'timeline', hidden: true, actions: [
 				{ id: id('Convert'), label: 'Convert to custom', icon: 'timeline' }
+			] },
+			{ classes: 'animation-stack-actions', actions: [
+				{ id: id('Add'), label: 'Add animation', icon: 'plus', menu: true },
+				{ id: id('Remove'), label: 'Remove', icon: 'trash' }
 			] }
 		],
 		advancedId: id('Advanced'),
@@ -343,10 +369,6 @@ function createAnimationSectionSpec(prefix) {
 				{ kind: 'select', id: id('SnapMode'), label: 'Motion', ariaLabel: 'Motion sampling', options: [
 					{ value: 'smooth', label: 'Smooth' }, { value: 'pixel-snap', label: 'Pixel snap' }, { value: 'step', label: 'Step' }
 				] }
-			] },
-			{ classes: 'animation-stack-actions', actions: [
-				{ id: id('Add'), label: 'Add animation', icon: 'plus', menu: true },
-				{ id: id('Remove'), label: 'Remove', icon: 'trash' }
 			] }
 		]
 	};

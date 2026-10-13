@@ -87,9 +87,26 @@ async function verifyTimelineDock() {
 		await page.keyboard.press('Escape');
 		await page.mouse.up();
 		assert.strictEqual(await page.locator('#timelineDock').evaluate(node => node.clientHeight), startHeight, 'Escape restores the starting height');
+		const zoomState = () => page.evaluate(() => { const dock = editor.timelineDock; return { out: dock.zoomOut.disabled, in: dock.zoomIn.disabled, fit: dock.zoomFit.disabled }; });
+		assert.deepStrictEqual(await zoomState(), { out: true, in: false, fit: true }, 'At fit there is nothing to zoom out to');
 		await page.click('[aria-label="Zoom timeline in"]');
 		assert.strictEqual(await page.evaluate(() => typeof PREFERENCES.get('timelineZoom')), 'number');
-		await page.evaluate(() => editor.timelineDock.setZoom('fit'));
+		assert.deepStrictEqual(await zoomState(), { out: false, in: false, fit: false });
+		await page.evaluate(() => editor.timelineDock.setZoom(CONFIG.ui.timeline.pxPerSecondStops.at(-1)));
+		assert.deepStrictEqual(await zoomState(), { out: false, in: true, fit: false }, 'The last stop has nothing to zoom in to');
+		assert(await page.evaluate(() => editor.timelineDock.showsFrames && !editor.timelineDock.show.frames), 'Close zoom draws frame ticks without the choice');
+		await page.evaluate(() => editor.timelineDock.zoomFit.click());
+		assert.strictEqual(await page.evaluate(() => PREFERENCES.get('timelineZoom')), 'fit', 'Zoom to fit returns to fit');
+		// A stored choice from before Next pass existed still shows the next pass.
+		await page.evaluate(() => PREFERENCES.set('timelineShow', { cycles: true, frames: false, details: true }));
+		assert(await page.evaluate(() => editor.timelineDock.show.nextLoop && editor.timelineDock.body.querySelectorAll('.timeline-bar-ghost').length > 0));
+		const fitWidth = await page.evaluate(() => editor.timelineDock.trackWidth);
+		await page.evaluate(() => editor.timelineDock.showItems.find(item => item.dataset.show === 'nextLoop').click());
+		assert.deepStrictEqual(await page.evaluate(() => { const dock = editor.timelineDock; return { ghosts: dock.body.querySelectorAll('.timeline-bar-ghost').length, share: dock.nextLoopShare, loopFills: Math.abs(TimelineView.timeToX(dock.model.loopMs, dock.scale) - dock.trackWidth) < 0.5 }; }),
+			{ ghosts: 0, share: 0, loopFills: true }, 'Next pass off ends the track at the loop line');
+		assert(Math.abs(await page.evaluate(() => editor.timelineDock.trackWidth) - fitWidth) < 1, 'Fit zoom uses the whole width either way');
+		await page.evaluate(() => { editor.applyDefaultPanelLayout(); });
+		assert(await page.evaluate(() => editor.timelineDock.show.nextLoop && editor.timelineDock.body.querySelectorAll('.timeline-bar-ghost').length > 0), 'Reset Panels restores the dock view choices');
 		await page.setViewportSize({ width: 1100, height: 900 });
 		await page.waitForTimeout(250);
 		if (process.env.GLITTER_TEST_CSS) {

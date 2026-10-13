@@ -35,8 +35,92 @@ const TimelineView = {
 	},
 	timeToX(ms, pxPerSecond) { return ms * pxPerSecond / 1000; },
 	xToTime(px, pxPerSecond) { return px * 1000 / pxPerSecond; },
-	keyToX(at, width, trackLength) { return at / trackLength * width; },
-	xToKey(x, width, trackLength) { return Math.max(0, Math.min(trackLength, x / width * trackLength)); },
+	// A bar's box on its track. A bar too short to hold its two grips and a
+	// body keeps the body: it is drawn at a least width and its grips sit
+	// outside its ends. The left grip stays inside where the track would clip it.
+	barBox(row, scale, config) {
+		const left = this.timeToX(row.startMs, scale);
+		const width = Math.max(config.barMinPx, this.timeToX(Math.max(0, row.endMs - row.startMs), scale));
+		const gripsOutside = width < 3 * config.gripPx;
+		return { left, width, gripsOutside, leftGripInside: gripsOutside && left < config.gripPx };
+	},
+	// What a press on a bar's body drags: a motion moves and Alt slips it, a
+	// source with only a start offset slips, anything else has no drag.
+	bodyDrag(row, alt) {
+		if (row.can.run) return alt && row.can.phase ? 'slip' : 'move';
+		return row.can.phase ? 'slip' : null;
+	},
+	seconds(ms) { return `${(ms / 1000).toFixed(2)} s`; },
+	// How many times a run plays its cycle; Infinity to the loop's end.
+	repeats(row, run = row.source.run) {
+		return run && Number.isFinite(run.end) ? (run.end - run.start) / row.cycleMs + row.phase : Infinity;
+	},
+	repeatsText(count) { return Number.isFinite(count) ? String(Number(count.toFixed(2))) : 'forever'; },
+	rowInfo(row) {
+		if (row.kind === 'authored') return `${row.frameCount} frames · ${this.seconds(row.cycleMs)}`;
+		const count = row.nonLooping ? this.repeats(row) : Infinity;
+		return Number.isFinite(count) ? `${this.seconds(row.cycleMs)} × ${this.repeatsText(count)}` : this.seconds(row.cycleMs);
+	},
+	// What a selected bar can do, for the status bar.
+	rowHint(row) {
+		const body = this.bodyDrag(row, false);
+		return [
+			body === 'move' ? 'Drag to move' : body === 'slip' ? 'Drag to slip' : null,
+			row.can.run ? 'edges trim' : null,
+			body === 'move' && row.can.phase ? 'Alt-drag slips' : null,
+			row.can.run || row.can.phase || row.can.period ? 'right-click for more' : null
+		].filter(Boolean).join(' · ');
+	},
+	SNAP_WORDS: { playhead: 'playhead', edge: 'another bar', cycle: 'whole cycle', loop: 'loop end', fit: 'fits the animations', frame: 'frame', period: 'fits the loop', phase: 'quarter', key: 'another key' },
+	// The words beside a drag: the value, what it was, and what it snapped to.
+	// `value` and `initial` are the drag's own: a run for an edge or a move, a
+	// fraction for a slip or a key, milliseconds for a cycle or the loop.
+	dragReadout(kind, row, value, initial, target) {
+		const percent = fraction => `${Number((fraction * 100).toFixed(1))}%`;
+		const start = run => this.seconds(run.start);
+		const [label, text] = {
+			left: ['Starts at', start], move: ['Starts at', start],
+			right: ['Repeats', run => this.repeatsText(this.repeats(row, run))],
+			slip: ['Start offset', percent], key: ['Key at', percent],
+			period: ['Cycle', ms => this.seconds(ms)], loop: ['Loop', ms => this.seconds(ms)]
+		}[kind];
+		const now = text(value), before = text(initial);
+		return `${label} ${now}${now === before ? '' : ` (was ${before})`}${target && this.SNAP_WORDS[target.kind] ? ` · ${this.SNAP_WORDS[target.kind]}` : ''}`;
+	},
+	// A key lives at a fraction of its motion's cycle; the lane draws it at the
+	// time the motion reaches that fraction in one cycle of the bar. A motion
+	// that steps has no such time, so its keys sit at their linear place.
+	keyDrawing(row) { return { ...row, cycleMs: row.exportCycleMs, endMs: Infinity }; },
+	keyEntry(row, entry) { return { ...entry, periodMs: row.exportCycleMs }; },
+	// The cycle the lane opens: the one a moment is in, or the first whole one.
+	keyCycle(row, ms) {
+		const inside = this.timeToCycle({ ...this.keyDrawing(row), endMs: row.endMs }, ms);
+		if (inside) return inside.index;
+		const first = Math.ceil(row.phase - 1e-9) + 0;
+		return row.startMs + (first + 1 - row.phase) * row.exportCycleMs <= (row.source.run?.end ?? Infinity) + 1e-6 ? first : Math.floor(row.phase);
+	},
+	cycleSpan(row, index) {
+		const start = row.startMs + (index - row.phase) * row.exportCycleMs;
+		return { start, end: start + row.exportCycleMs };
+	},
+	keyToTime(row, entry, at, index) {
+		const { start, end } = this.cycleSpan(row, index);
+		const runEnd = row.source.run?.end ?? Infinity;
+		// A moment inside both the cycle and the run, for the search to start from.
+		const reference = Math.max(row.startMs, Math.min((start + end) / 2, runEnd - 1e-6));
+		const timed = reference >= start && reference < end ? GlitterAnimation.timeAtProgress(this.keyEntry(row, entry), at, reference) : null;
+		if (timed != null) return { ms: Math.max(start, Math.min(end, timed)), untimed: false };
+		return { ms: this.cycleToTime(this.keyDrawing(row), index, at), untimed: true };
+	},
+	timeToKey(row, entry, ms, index) {
+		const { start, end } = this.cycleSpan(row, index);
+		const time = Math.max(start, Math.min(end - 1e-6, ms));
+		const data = this.keyEntry(row, entry);
+		const stepped = data.easing === 'steps' || data.snapMode === 'step';
+		const progress = stepped ? null : GlitterAnimation.cycleProgress(data, time, { fill: false });
+		const at = progress ? progress.eased : this.timeToCycle(this.keyDrawing(row), Math.max(row.startMs, time))?.progress ?? 0;
+		return Math.max(0, Math.min(1, ((at % 1) + 1) % 1));
+	},
 	snapTime(ms, targets, thresholdMs) {
 		const nearby = targets.filter(target => Math.abs(target.ms - ms) <= thresholdMs);
 		nearby.sort((a, b) => (a.exact === true ? 0 : 1) - (b.exact === true ? 0 : 1) || Math.abs(a.ms - ms) - Math.abs(b.ms - ms));
@@ -44,7 +128,7 @@ const TimelineView = {
 	},
 	snapTargets(model, row, kind, playheadMs) {
 		const target = (ms, kind) => ({ ms, kind });
-		if (kind === 'loop') return (model.loopFit?.candidates || []).map(candidate => ({ ms: candidate.duration, kind: 'loop', exact: candidate.exact }));
+		if (kind === 'loop') return (model.loopFit?.candidates || []).map(candidate => ({ ms: candidate.duration, kind: 'fit', exact: candidate.exact }));
 		if (kind === 'slip') return [0, 0.25, 0.5, 0.75, 1].map(ms => target(ms, 'phase'));
 		if (kind === 'period') {
 			const room = model.loopMs - row.startMs;

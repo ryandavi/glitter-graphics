@@ -1,5 +1,8 @@
 'use strict';
 
+// The selected Custom bar's keys, as a row under it: one cycle of the bar
+// opened up on the dock's own ruler. A key sits at the time the motion reaches
+// it in that cycle, so the dock's playhead crosses the lane where the pose is.
 class TimelineKeyLane {
 	constructor(dock) {
 		this.dock = dock;
@@ -25,22 +28,22 @@ class TimelineKeyLane {
 		this.row = row;
 		if (host !== this.host) {
 			this.host = host;
-			const heading = this.dock.element('timeline-key-heading');
-			this.heading = this.dock.element('', 'One cycle · 0% to 100%', 'span'); heading.append(this.heading);
-			const record = this.dock.button('btn-flat', 'Edit keys on the canvas', null, () => {
+			const action = 'btn-icon-simple icon-wrapper sm';
+			const label = this.dock.element('timeline-key-label');
+			this.record = this.dock.button(action, '', 'hand-pointer', () => {
 				const recording = this.dock.keyRecording;
 				if (recording.active) recording.end(); else recording.begin(this.layer, this.entry);
 			});
-			this.record = record; heading.append(record);
-			const add = this.dock.button('btn-flat', 'Add a key at the playhead', 'plus', () => this.panel.addKey(this.layer, this.entry));
-			add.append(document.createTextNode('Add key')); heading.append(add);
+			this.add = this.dock.button(action, 'Add a key at the playhead', 'plus', () => this.panel.addKey(this.layer, this.entry));
+			label.append(this.dock.element('timeline-key-name', 'Keys', 'span'), this.record, this.add);
+			const cell = this.dock.element('timeline-track timeline-key-cell');
+			// The cycle the keys are drawn in.
 			this.track = this.dock.element('timeline-key-track');
 			this.track.setAttribute('role', 'group'); this.track.setAttribute('aria-label', 'Motion keys inside one cycle');
 			this.track.addEventListener('pointerdown', event => this.begin(event));
-			this.marker = this.dock.element('timeline-key-playhead');
-			this.note = this.dock.element('property-note', 'Editing this motion; Done previews all animations.');
-			this.host.replaceChildren(heading, this.track, this.note);
-			this.add = add;
+			cell.appendChild(this.track);
+			this.cell = cell;
+			this.host.replaceChildren(label, cell);
 		}
 		this.refresh();
 	}
@@ -58,7 +61,6 @@ class TimelineKeyLane {
 			button.dataset.keyAt = key.at;
 			button.classList.toggle('active', index === selected);
 			button.setAttribute('aria-pressed', String(index === selected));
-			button.style.left = `${TimelineView.keyToX(key.at, 100, 1)}%`;
 			button.disabled = !this.editable;
 			button.addEventListener('keydown', event => {
 				if (!this.editable || event.ctrlKey || event.metaKey || event.altKey) return;
@@ -76,24 +78,47 @@ class TimelineKeyLane {
 			});
 			return button;
 		});
-		const zero = keys.find(key => key.at === 0);
-		const ghost = this.dock.element('timeline-key is-ghost', undefined, 'span');
-		ghost.style.left = '100%'; ghost.hidden = !zero; ghost.title = '100% repeats the key at 0%';
-		this.track.replaceChildren(this.marker, ...this.buttons, ghost);
+		this.ghost = this.dock.element('timeline-key is-ghost', undefined, 'span');
+		this.ghost.hidden = !keys.some(key => key.at === 0); this.ghost.title = '100% repeats the key at 0%';
+		this.track.replaceChildren(...this.buttons, this.ghost);
+		this.cycle = null;
 		if (focused) this.focusSelected();
 		this.paint(this.dock.editor.animationTicker.getPlayheadTime());
 	}
 
 	focusSelected() { this.buttons?.[this.panel.keyIndex(this.entry)]?.focus({ preventScroll: true }); }
 
+	// Where one key is drawn, from the start of the lane's cycle.
+	place(node, at) {
+		const { scale } = this.dock;
+		const time = TimelineView.keyToTime(this.row, this.entry, at, this.cycle);
+		node.style.left = `${TimelineView.timeToX(time.ms - TimelineView.cycleSpan(this.row, this.cycle).start, scale)}px`;
+		node.classList.toggle('is-untimed', time.untimed);
+		return time.ms;
+	}
+
+	layout() {
+		const { scale } = this.dock;
+		const span = TimelineView.cycleSpan(this.row, this.cycle);
+		this.track.style.left = `${TimelineView.timeToX(span.start, scale)}px`;
+		this.track.style.width = `${TimelineView.timeToX(span.end - span.start, scale)}px`;
+		for (const button of this.buttons) this.place(button, Number(button.dataset.keyAt));
+		// 100% is where the cycle ends: its right edge, or its left when reversed.
+		this.ghost.style.left = `${TimelineView.timeToX(TimelineView.cycleToTime(TimelineView.keyDrawing(this.row), this.cycle, 1) - span.start, scale)}px`;
+	}
+
 	paint(time) {
 		if (!this.host?.isConnected || this.host.hidden) return;
-		const recording = this.dock.keyRecording, active = recording?.active && recording.entry === this.entry;
-		this.record.textContent = active ? 'Done' : 'Edit keys'; this.record.disabled = !active && !recording?.canBegin(this.layer, this.entry);
-		this.heading.textContent = active ? 'Recording keys · one cycle' : 'One cycle · 0% to 100%'; this.note.hidden = !active;
-		const progress = GlitterAnimation.cycleProgress({ ...this.entry, periodMs: this.row.exportCycleMs }, time, { fill: false });
-		this.marker.hidden = !progress;
-		if (progress) this.marker.style.left = `${TimelineView.keyToX(((progress.eased % 1) + 1) % 1, 100, 1)}%`;
+		const recording = this.dock.keyRecording, active = Boolean(recording?.active && recording.entry === this.entry);
+		const title = active ? 'Done editing keys on the canvas' : 'Edit keys on the canvas';
+		this.record.title = title; this.record.setAttribute('aria-label', title);
+		this.record.classList.toggle('active', active); this.record.setAttribute('aria-pressed', String(active));
+		this.record.disabled = !active && !recording?.canBegin(this.layer, this.entry);
+		// The lane follows the playhead from cycle to cycle, and holds during a drag.
+		const cycle = this.drag ? this.cycle : TimelineView.keyCycle(this.row, time);
+		const layout = `${cycle}|${this.dock.scale}|${this.row.startMs}|${this.row.phase}|${this.row.exportCycleMs}|${this.entry.easing}|${this.entry.direction}`;
+		if (layout !== this.laidOut || this.cycle == null) { this.cycle = cycle; this.laidOut = layout; this.layout(); }
+		const progress = GlitterAnimation.cycleProgress(TimelineView.keyEntry(this.row, this.entry), time, { fill: false });
 		this.add.disabled = !this.editable || !progress || this.dock.host.classList.contains('is-stale');
 		const prefix = this.panel.prefixByType.get(this.layer?.type);
 		const add = prefix && this.panel._id(prefix, 'KeyAdd');
@@ -104,10 +129,9 @@ class TimelineKeyLane {
 		const button = event.target.closest('[data-key-at]');
 		if (event.button !== 0 || !button || !this.editable || this.dock.host.classList.contains('is-stale') || this.drag) return;
 		event.preventDefault(); event.stopPropagation();
-		const box = this.track.getBoundingClientRect();
 		const keys = GlitterAnimation.normalizeKeys(this.entry.keys);
 		const at = Number(button.dataset.keyAt);
-		this.drag = { pointerId: event.pointerId, x: event.clientX, box, keys, at, layer: this.layer, entry: this.entry, button, track: this.track, moved: false };
+		this.drag = { pointerId: event.pointerId, x: event.clientX, left: this.cell.getBoundingClientRect().left, keys, at, layer: this.layer, entry: this.entry, button, track: this.track, moved: false };
 		this.panel.selectKey(this.layer, this.entry, at);
 		for (const item of this.buttons) {
 			const selected = item === button;
@@ -123,29 +147,37 @@ class TimelineKeyLane {
 		if (!drag.moved && Math.abs(event.clientX - drag.x) < CONFIG.ui.timeline.dragThresholdPx) return;
 		if (!drag.moved) drag.track.setPointerCapture(event.pointerId);
 		drag.moved = true;
-		let at = TimelineView.xToKey(event.clientX - drag.box.left, drag.box.width, 1);
+		const { scale, editor } = this.dock;
+		const span = TimelineView.cycleSpan(this.row, this.cycle);
+		let ms = TimelineView.xToTime(event.clientX - drag.left, scale), target = null;
 		if (PREFERENCES.get('timelineSnap') && !event.altKey) {
-			const targets = [0, 1, ...drag.keys.filter(key => key.at !== drag.at).map(key => key.at)];
-			at = TimelineView.snapTime(at, targets.map(ms => ({ ms })), CONFIG.ui.timeline.snapPx / drag.box.width).ms;
+			const targets = [
+				{ ms: editor.animationTicker.getPlayheadTime(), kind: 'playhead' }, { ms: span.start, kind: 'cycle' }, { ms: span.end, kind: 'cycle' },
+				...drag.keys.filter(key => key.at !== drag.at).map(key => ({ ms: TimelineView.keyToTime(this.row, drag.entry, key.at, this.cycle).ms, kind: 'key' }))
+			].filter(entry => entry.ms >= span.start && entry.ms <= span.end);
+			({ ms, target } = TimelineView.snapTime(ms, targets, TimelineView.xToTime(CONFIG.ui.timeline.snapPx, scale)));
 		}
-		const next = this.panel.retimeKey(drag.layer, drag.entry, this.panel.keyIndex(drag.entry), at, { commit: false });
+		const wanted = TimelineView.timeToKey(this.row, drag.entry, ms, this.cycle);
+		const next = this.panel.retimeKey(drag.layer, drag.entry, this.panel.keyIndex(drag.entry), wanted, { commit: false });
 		if (next == null) return;
+		// Another key in the way moves this one off the snap.
+		if (Math.abs(next - wanted) > 1e-9) target = null;
 		drag.button.dataset.keyAt = next;
-		drag.button.style.left = `${TimelineView.keyToX(next, 100, 1)}%`;
+		const time = this.place(drag.button, next);
+		this.dock.paintDragFeedback(TimelineView.dragReadout('key', this.row, next, drag.at, target), time, this.host, target ? target.ms : null);
 	}
 
 	finish(cancel) {
 		const drag = this.drag;
 		if (!drag) return;
 		this.drag = null;
+		this.dock.clearDragFeedback();
 		if (drag.track.hasPointerCapture(drag.pointerId)) drag.track.releasePointerCapture(drag.pointerId);
 		if (!drag.moved) return;
-		if (drag.moved) {
-			this.suppressClick = true;
-			setTimeout(() => { this.suppressClick = false; }, 0);
-			if (cancel) this.panel.setKeys(drag.layer, drag.entry, drag.keys, { commit: false, rollback: true, at: drag.at });
-			else if (JSON.stringify(drag.keys) !== JSON.stringify(GlitterAnimation.normalizeKeys(drag.entry.keys))) this.dock.editor.saveState('Retime motion key');
-		}
+		this.suppressClick = true;
+		setTimeout(() => { this.suppressClick = false; }, 0);
+		if (cancel) this.panel.setKeys(drag.layer, drag.entry, drag.keys, { commit: false, rollback: true, at: drag.at });
+		else if (JSON.stringify(drag.keys) !== JSON.stringify(GlitterAnimation.normalizeKeys(drag.entry.keys))) this.dock.editor.saveState('Retime motion key');
 		this.refresh();
 	}
 }

@@ -27,21 +27,26 @@ async function verifyTimelineGestures(browser) {
 			return { delay: animation.delayMs, repeats: animation.iterations, phase: animation.phase, period: animation.periodMs, history: editor.historyManager.historyIndex, loop: editor.documentLoop.durationMs };
 		});
 		let liveDrag = false;
-		const drag = async (kind, time, { alt = false, cancel = false, delta = false, pointerCancel = false } = {}) => {
+		let feedback = null;
+		const drag = async (kind, time, { alt = false, cancel = false, delta = false, pointerCancel = false, grab = null } = {}) => {
 			await ready();
-			const points = await page.evaluate(({ kind, time, delta }) => {
+			const points = await page.evaluate(({ kind, time, delta, grab }) => {
 				const dock = editor.timelineDock;
 				const node = dock.body.querySelector(`[data-layer-id="${window.timelineFixtureId}"] .timeline-row`);
 				const track = (kind === 'loop' ? dock.rulerTrack : node.querySelector('.timeline-track')).getBoundingClientRect();
 				const target = (kind === 'loop' ? dock.rulerTrack.querySelector('.timeline-loop-end') : node.querySelector(kind === 'body' ? '.timeline-bar' : kind === 'period' ? '.timeline-period-notch' : `.timeline-bar-handle.is-${kind}`)).getBoundingClientRect();
-				const x = kind === 'body' ? target.left + Math.min(30, target.width / 2) : target.left + target.width / 2;
+				const x = kind === 'body' && !grab ? target.left + Math.min(30, target.width / 2) : target.left + target.width / 2;
 				return { x, y: target.top + target.height / 2, to: (delta ? x : track.left) + TimelineView.timeToX(time, dock.scale) };
-			}, { kind, time, delta });
+			}, { kind, time, delta, grab });
 			if (alt) await page.keyboard.down('Alt');
 			await page.mouse.move(points.x, points.y);
 			await page.mouse.down();
 			await page.mouse.move(points.to, points.y, { steps: 4 });
 			liveDrag = await page.evaluate(() => editor.timelineDock.frameView.canvas.hidden);
+			feedback = await page.evaluate(() => {
+				const dock = editor.timelineDock;
+				return { guide: dock.snapGuide.hidden ? null : new DOMMatrix(dock.snapGuide.style.transform).e, text: dock.dragReadout?.textContent, cursor: getComputedStyle(dock.stage).cursor };
+			});
 			if (cancel) await page.keyboard.press('Escape');
 			if (pointerCancel) await page.evaluate(() => editor.timelineDock.stage.dispatchEvent(new PointerEvent('pointercancel', { bubbles: true, pointerId: editor.timelineDock.drag.pointerId })));
 			await page.mouse.up();
@@ -51,9 +56,23 @@ async function verifyTimelineGestures(browser) {
 		await page.evaluate(() => { editor.animationPanel.setPaused(true); editor.animationTicker.seek(700); });
 		await page.waitForFunction(() => !editor.timelineDock.frameView.canvas.hidden);
 		let before = await state();
+		assert(await page.evaluate(() => editor.timelineDock.body.querySelector('.timeline-bar').classList.contains('is-movable')), 'A motion bar says its body moves');
+		await drag('body', 600, { delta: true });
+		let after = await state();
+		assert(after.delay > 500 && after.delay < 700 && after.repeats === Infinity && after.phase === before.phase, 'Dragging a full-length bar moves it and keeps it running to the loop end');
+		assert.equal(feedback.cursor, 'grabbing');
+		assert(/^Starts at 0\.\d\d s \(was 0\.00 s\)/.test(feedback.text), `A move says where it starts and where it was: ${feedback.text}`);
+		assert.equal(after.history, before.history + 1);
+		await page.evaluate(() => editor.historyManager.undo());
+		await ready();
+		assert.equal((await state()).delay, 0);
+		before = await state();
 		await drag('right', 2040);
 		assert(liveDrag, 'A timing drag exposes the live artwork instead of an older held frame');
-		let after = await state();
+		assert.equal(feedback.text, 'Repeats 2 (was forever) · whole cycle', 'The readout names the value, what it was and the snap');
+		assert(Math.abs(feedback.guide - await page.evaluate(() => TimelineView.timeToX(2000, editor.timelineDock.scale) - editor.timelineDock.body.scrollLeft)) < 0.5, 'A snapped drag draws its guide at the snap');
+		assert(await page.evaluate(() => editor.timelineDock.snapGuide.hidden && !editor.timelineDock.dragReadout), 'The guide and the readout leave with the drag');
+		after = await state();
 		assert.equal(after.repeats, 2, 'Right edge snaps to two cycles');
 		assert.equal(after.history, before.history + 1, 'A multi-step drag commits once');
 		await page.evaluate(() => editor.historyManager.undo());
@@ -61,6 +80,7 @@ async function verifyTimelineGestures(browser) {
 		assert.equal((await state()).repeats, Infinity, 'One Undo restores the drag');
 		await drag('right', 2040, { alt: true });
 		assert.equal((await state()).repeats, 2.04, 'Alt bypasses snapping');
+		assert.equal(feedback.guide, null, 'An unsnapped drag has no guide');
 		before = await state();
 		await drag('left', 600, { alt: true, cancel: true });
 		assert.deepEqual(await state(), before, 'Escape restores values without history');
@@ -112,6 +132,13 @@ async function verifyTimelineGestures(browser) {
 		await page.locator('#timelineDock .timeline-bar').first().focus();
 		await page.keyboard.press('ArrowRight');
 		assert.deepEqual(await state(), before, 'Locked bars reject keyboard editing');
+		assert(await page.evaluate(() => editor.timelineDock.body.querySelector(`[data-layer-id="${window.timelineFixtureId}"]`).classList.contains('is-locked')
+			&& getComputedStyle(editor.timelineDock.body.querySelector('.timeline-bar')).cursor === 'not-allowed'), 'A locked layer marks its bars');
+		await page.evaluate(() => { editor.notifications.errorText.textContent = ''; });
+		await drag('body', 400, { delta: true });
+		assert.deepEqual(await state(), before, 'Locked bars reject a drag');
+		assert.equal(await page.evaluate(() => editor.notifications.errorText.textContent), 'Unlock this layer to edit it', 'A locked bar says why it will not move');
+		await page.evaluate(() => editor.notifications.dismissError());
 		await page.evaluate(async () => {
 			const motion = editor.layerManager.getLayerById(window.timelineFixtureId);
 			motion.locked = false;
@@ -146,8 +173,40 @@ async function verifyTimelineGestures(browser) {
 		await page.getByRole('menuitem', { name: 'Reset timing', exact: true }).click();
 		await ready();
 		assert(await page.evaluate(() => editor.layerManager.getLayerById(window.timelineGifId).stickerData.gifCycleMs == null), 'Reset timing restores the cycle remembered by Fit');
+		// Arrows walk the bars, across layers; Enter opens the bar's menu.
+		const focusedLayer = () => page.evaluate(() => document.activeElement.closest('.timeline-group')?.dataset.layerId);
+		const fixtureId = await page.evaluate(() => window.timelineFixtureId);
+		await page.locator(`#timelineDock [data-layer-id="${fixtureId}"] .timeline-bar`).focus();
+		assert.equal(await page.evaluate(() => editor.notifications.statusText.textContent), 'Drag to move · edges trim · Alt-drag slips · right-click for more', 'A focused bar says what it can do');
+		await page.keyboard.press('Home');
+		assert.equal(await focusedLayer(), await page.evaluate(() => window.timelineGifId), 'Home reaches the first bar, in another layer');
+		await page.keyboard.press('End');
+		assert.equal(await focusedLayer(), fixtureId, 'End reaches the last bar');
+		await page.keyboard.press('ArrowUp');
+		assert.equal(await focusedLayer(), await page.evaluate(() => window.timelineGifId), 'Up moves to the bar above');
+		await page.keyboard.press('ArrowDown');
+		assert.equal(await focusedLayer(), fixtureId);
+		await page.keyboard.press('Enter');
+		assert(await page.getByRole('menuitem', { name: 'Reset timing', exact: true }).isVisible(), 'Enter opens the bar menu');
+		await page.keyboard.press('Escape');
+		// A one-cycle bar too short for its grips still moves by its body.
+		await page.evaluate(async () => {
+			const layer = editor.layerManager.getLayerById(window.timelineFixtureId);
+			Object.assign(layer.animations[0], { periodMs: 200, iterations: 1, delayMs: 1000, phase: 0 });
+			editor.shapeGlitterManager.renderLayer(layer); editor.saveState('Short bar fixture');
+			await editor.updateExportDuration();
+		});
+		await ready();
+		assert(await page.evaluate(() => {
+			const bar = editor.timelineDock.body.querySelector(`[data-layer-id="${window.timelineFixtureId}"] .timeline-bar`);
+			return bar.classList.contains('has-outside-grips') && bar.getBoundingClientRect().width >= CONFIG.ui.timeline.barMinPx;
+		}), 'A short bar keeps a body and wears its grips outside');
+		before = await state();
+		await drag('body', 500, { delta: true, grab: 'middle' });
+		after = await state();
+		assert(after.delay > before.delay + 400 && after.repeats === 1, 'A short bar moves by its body');
 		assert.deepEqual(errors, []);
-		console.log('PASS timeline gestures: snap/Alt, live trim, Undo, Escape, nudge burst, menu, cycle and loop length');
+		console.log('PASS timeline gestures: body move and slip, snap guide and readout, Alt, live trim, Undo, Escape, locked bars, nudge burst, arrow focus, menu, short bars, cycle and loop length');
 	} finally { await context.close(); }
 }
 

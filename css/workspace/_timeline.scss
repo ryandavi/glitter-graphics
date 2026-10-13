@@ -100,6 +100,7 @@
 	.timeline-stage {
 		--timeline-label-column: var(--timeline-label-width);
 		--timeline-info-column: 0px;
+		--timeline-columns: var(--timeline-label-column) var(--timeline-track-width) var(--timeline-info-column);
 		// Row labels start where the group name does: past the row's inset,
 		// the chevron, the eye, the thumbnail and the gap after each.
 		--timeline-label-inset: calc(var(--spacing-sm) + var(--font-size-md) + var(--control-height) + var(--timeline-group-media) + 5 * var(--spacing-xs));
@@ -136,13 +137,17 @@
 	}
 
 	// One line over the ruler and the rows, moved by a transform.
-	.timeline-playhead {
+	.timeline-playhead, .timeline-snap-guide {
 		position: absolute;
 		inset: 0 auto 0 var(--timeline-label-column);
 		z-index: 3;
 		width: 1px;
-		background: var(--color-accent);
 		pointer-events: none;
+	}
+	// Where a drag snapped.
+	.timeline-snap-guide { background: var(--color-text-primary); opacity: 0.5; }
+	.timeline-playhead {
+		background: var(--color-accent);
 
 		// The output frame it is in, marked on the ruler.
 		&::before {
@@ -179,7 +184,7 @@
 
 	.timeline-row, .timeline-group-header {
 		display: grid;
-		grid-template-columns: var(--timeline-label-column) var(--timeline-track-width) var(--timeline-info-column);
+		grid-template-columns: var(--timeline-columns);
 		width: calc(var(--timeline-label-column) + var(--timeline-track-width) + var(--timeline-info-column));
 		min-width: 100%;
 	}
@@ -253,6 +258,15 @@
 		&.active { background: linear-gradient(var(--color-accent-surface-strong), var(--color-accent-surface-strong)) var(--color-bg-secondary); }
 	}
 	.timeline-group-track { height: auto; }
+	// A hidden layer has no bars to draw.
+	.timeline-group-note {
+		position: absolute;
+		inset: 0 auto 0 var(--spacing-base);
+		display: flex;
+		align-items: center;
+		font-size: var(--font-size-xs);
+		color: var(--color-text-tertiary);
+	}
 	.timeline-group-span {
 		position: absolute;
 		top: 50%;
@@ -330,16 +344,20 @@
 		border: 0;
 		border-radius: var(--radius-sm);
 		padding: 0;
-		overflow: hidden;
 		transition: background-color var(--transition-fast);
 	}
+	.timeline-bar-ghost { overflow: hidden; }
+	// The cursor says what a press on the body would do.
 	.timeline-bar {
 		cursor: pointer;
 		touch-action: none;
 		&.is-authored { --timeline-bar-hue: var(--timeline-hue-authored); }
-		&.is-trimmed { cursor: grab; }
+		&.is-movable { cursor: grab; }
+		&.is-slippable { cursor: ew-resize; }
 		&:focus-visible { outline: none; box-shadow: inset var(--control-focus-ring); }
 	}
+	.timeline-group.is-locked .timeline-bar { cursor: not-allowed; }
+	&.is-stale .timeline-track { &, .timeline-bar { cursor: progress; } }
 	.timeline-row:is(:hover, :focus-within) .timeline-bar { --timeline-bar-strength: 50%; }
 	.timeline-row:is(.is-selected, .is-dragging) .timeline-bar {
 		--timeline-bar-strength: 78%;
@@ -351,7 +369,7 @@
 		position: absolute;
 		top: 0;
 		bottom: 0;
-		width: var(--spacing-base);
+		width: var(--timeline-grip);
 		cursor: ew-resize;
 		opacity: 0;
 		z-index: 1;
@@ -369,6 +387,16 @@
 	}
 	.timeline-bar-handle.is-left { left: 0; }
 	.timeline-bar-handle.is-right { right: 0; }
+	// A bar too short for its grips keeps its body: the grips sit past its ends.
+	.timeline-bar.has-outside-grips {
+		.timeline-bar-handle.is-left { left: calc(-1 * var(--timeline-grip)); }
+		.timeline-bar-handle.is-right { right: calc(-1 * var(--timeline-grip)); }
+		&.keeps-left-grip .timeline-bar-handle.is-left { left: 0; }
+	}
+	// Bars that take no drag show no grips.
+	.timeline-group.is-locked, &.is-stale {
+		.timeline-bar-handle, .timeline-period-notch { display: none; }
+	}
 	.timeline-period-notch { transform: translateX(-50%); cursor: col-resize; }
 	.timeline-row:is(:hover, :focus-within, .is-selected, .is-dragging) {
 		.timeline-bar-handle, .timeline-period-notch { opacity: 0.85; }
@@ -385,6 +413,8 @@
 	// Each repeat, as a gap cut into the bar.
 	.timeline-bar-marks {
 		@include cover;
+		overflow: hidden;
+		border-radius: inherit;
 		pointer-events: none;
 	}
 	&.shows-cycles .timeline-bar-marks {
@@ -392,6 +422,16 @@
 		background-position: var(--cycle-offset-px) 0;
 	}
 	.timeline-cycle-mark { position: absolute; top: 60%; bottom: 0; width: 1px; background: var(--timeline-row-bg); opacity: 0.7; }
+	// A keyed motion's keys, repeated in every cycle of its bar.
+	.timeline-key-dot {
+		position: absolute;
+		top: 50%;
+		width: var(--spacing-xs);
+		height: var(--spacing-xs);
+		transform: translate(-50%, -50%) rotate(45deg);
+		background: var(--color-text-primary);
+		opacity: 0.6;
+	}
 	.timeline-bar-seam {
 		position: absolute;
 		left: var(--timeline-loop-x);
@@ -401,49 +441,59 @@
 		pointer-events: auto;
 	}
 	.timeline-row-info { @include truncate; padding: 0 var(--spacing-base); font-size: var(--font-size-xs); font-variant-numeric: tabular-nums; color: var(--color-text-tertiary); }
+	// The selected Custom bar's keys: a row of its own under the bar, on the
+	// same columns, with one cycle of the bar opened up in its track.
 	.timeline-row-lane {
-		grid-column: 2;
-		width: min(var(--timeline-track-width), calc(100cqw - var(--timeline-label-column) - var(--timeline-info-column)));
-		padding: var(--spacing-xs) var(--spacing-md) var(--spacing-base);
+		grid-column: 1 / -1;
+		display: grid;
+		grid-template-columns: var(--timeline-columns);
+		align-items: center;
 		border-top: 1px solid var(--timeline-line);
+		&[hidden] { display: none; }
 	}
-	.timeline-key-heading {
+	.timeline-key-label {
+		position: sticky;
+		left: 0;
+		z-index: 1;
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
-		gap: var(--spacing-base);
-		color: var(--color-text-secondary);
-		font-size: var(--font-size-xs);
-	}
-	.timeline-key-track {
-		position: relative;
+		gap: var(--spacing-2xs);
 		height: var(--timeline-row-height);
-		margin-inline: var(--spacing-base);
-		touch-action: none;
+		padding: 0 var(--spacing-xs) 0 var(--timeline-label-inset);
+		border-right: 1px solid var(--timeline-line);
+		background: var(--timeline-row-bg);
+		color: var(--color-text-secondary);
+
+		> .active { background: var(--color-accent-surface-strong); color: var(--color-accent); }
+		> :disabled { opacity: var(--opacity-disabled); }
+	}
+	.timeline-key-name { @include truncate; flex: 1; min-width: 0; }
+	// Diamonds may hang past the cycle's ends, never past the track's.
+	.timeline-key-cell { touch-action: none; }
+	.timeline-key-track {
+		position: absolute;
+		inset-block: 0;
 		&::before {
 			content: '';
 			position: absolute;
 			inset: 50% 0 auto;
-			border-top: 1px solid var(--color-border);
+			border-top: 1px solid var(--color-border-hover);
 		}
 	}
 	.timeline-key {
 		position: absolute;
 		top: 50%;
-		width: var(--spacing-md);
-		height: var(--spacing-md);
+		width: var(--timeline-key-size);
+		height: var(--timeline-key-size);
+		min-width: 0;
+		padding: 0;
 		transform: translate(-50%, -50%) rotate(45deg);
 		border: 1px solid var(--color-text-secondary);
-		background: var(--color-bg-secondary);
+		background: var(--color-bg-primary);
 		border-radius: var(--radius-xs);
 		&.active { background: var(--color-accent); border-color: var(--color-accent); }
+		&.is-untimed { opacity: 0.6; }
 		&.is-ghost { opacity: var(--opacity-disabled); pointer-events: none; }
-	}
-	.timeline-key-playhead {
-		position: absolute;
-		inset: 0 auto 0;
-		border-left: 1px solid var(--color-accent);
-		pointer-events: none;
 	}
 
 	@container timeline (max-width: #{tokens.$timeline-narrow-width}) {
@@ -457,6 +507,15 @@
 		.timeline-group-header { display: block; position: sticky; left: 0; width: 100%; }
 		.timeline-group-track, .timeline-label-handle, .timeline-stage::before { display: none; }
 		.timeline-group-label { border-right: 0; }
+		// No label column: the lane's name and buttons sit on a line of their
+		// own at the track's left edge, clear of the keys under them.
+		.timeline-row-lane { display: block; }
+		.timeline-key-label {
+			width: max-content;
+			padding-left: var(--timeline-label-inset);
+			border-right: 0;
+			background: none;
+		}
 		// The label sits inside its bar, on the bar's own fill.
 		.timeline-row-label {
 			position: absolute;

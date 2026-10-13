@@ -5,16 +5,44 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 const root = path.resolve(__dirname, '../..');
-const context = vm.createContext({ isLayerFullyLocked: layer => layer.locked });
-for (const file of ['js/core/gif-decode.js', 'js/export/ExportTimeline.js', 'js/ui/timeline-view.js']) vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), context);
+const motion = { periodMs: 1000, easing: 'linear', amount: 10, direction: 'normal', iterations: Infinity };
+const context = vm.createContext({ isLayerFullyLocked: layer => layer.locked, CONFIG: { tools: { animation: { defaultType: 'pulse', presets: { pulse: motion, custom: motion }, jitterQuantMs: 60, keySeek: { samples: 128, iterations: 24, tolerance: 1e-7 } } } } });
+for (const file of ['js/core/gif-decode.js', 'js/export/ExportTimeline.js', 'js/core/math.js', 'js/effects/easing.js', 'js/effects/animation.js', 'js/ui/timeline-view.js']) vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), context);
 const { view, Authored, Procedural } = vm.runInContext('({ view: TimelineView, Authored: AuthoredAnimationSource, Procedural: ProceduralAnimationSource })', context);
 const json = value => JSON.parse(JSON.stringify(value));
-for (const length of [1, 2400]) for (const fraction of [0, 0.15, 0.5, 1]) {
-	assert.strictEqual(view.keyToX(length * fraction, 500, length), 500 * fraction);
-	assert.strictEqual(view.xToKey(500 * fraction, 500, length), length * fraction);
+// A key is drawn at the time its motion reaches it, in one cycle of the bar.
+const keyRow = (entry, run = { start: entry.delayMs || 0, end: Infinity }) => ({
+	startMs: run.start, endMs: Math.min(run.end, 4800), cycleMs: entry.periodMs, exportCycleMs: entry.periodMs,
+	phase: entry.phase || 0, direction: entry.direction || 'normal', source: { run }
+});
+const keyed = options => ({ type: 'custom', periodMs: 1600, keys: [{ at: 0, values: { tx: 0 } }, { at: 0.35, values: { tx: 40 } }], ...options });
+const plain = keyed({});
+assert(Math.abs(view.keyToTime(keyRow(plain), plain, 0.35, 0).ms - 560) < 0.001, 'A key at 35% of a 1.6 s cycle sits at 0.56 s');
+assert(Math.abs(view.keyToTime(keyRow(plain), plain, 0.35, 2).ms - 3760) < 0.001);
+assert.strictEqual(view.keyCycle(keyRow(plain), 2000), 1, 'The lane opens the cycle the playhead is in');
+assert.deepStrictEqual(json(view.cycleSpan(keyRow(plain), 1)), { start: 1600, end: 3200 });
+const trimmedMotion = keyed({ delayMs: 600, iterations: 2 });
+const trimmedRow = keyRow(trimmedMotion, { start: 600, end: 3800 });
+assert.strictEqual(view.keyCycle(trimmedRow, 100), 0, 'Outside the run the lane opens the first whole cycle');
+assert.strictEqual(view.keyCycle(trimmedRow, 4000), 0);
+assert.strictEqual(view.keyCycle(keyRow(keyed({ phase: 0.25 })), -1), 1);
+for (const [name, options] of Object.entries({
+	linear: {}, eased: { easing: 'easeInOut' }, alternate: { direction: 'alternate', easing: 'easeOut' }, reverse: { direction: 'reverse' },
+	phase: { phase: 0.25, easing: 'easeIn' }, trimmed: { delayMs: 600, iterations: 2, easing: 'ease' }
+})) {
+	const entry = keyed(options);
+	const row = keyRow(entry, { start: entry.delayMs || 0, end: Number.isFinite(entry.iterations) ? (entry.delayMs || 0) + entry.iterations * entry.periodMs : Infinity });
+	for (const index of [view.keyCycle(row, -1), view.keyCycle(row, -1) + 1]) for (const at of [0.1, 0.35, 0.5, 0.9]) {
+		const time = view.keyToTime(row, entry, at, index);
+		const span = view.cycleSpan(row, index);
+		assert(!time.untimed && time.ms >= span.start && time.ms <= span.end, `${name}: a key has a time inside its cycle`);
+		assert(Math.abs(view.timeToKey(row, entry, time.ms, index) - at) < 0.001, `${name}: draw and drag agree at ${at}`);
+	}
 }
-assert.strictEqual(view.xToKey(-10, 500, 2400), 0);
-assert.strictEqual(view.xToKey(510, 500, 2400), 2400);
+const stepped = keyed({ easing: 'steps', steps: 4 });
+assert.deepStrictEqual(json(view.keyToTime(keyRow(stepped), stepped, 0.35, 0)), { ms: 560, untimed: true }, 'A stepping motion draws its keys at their linear place');
+assert(Math.abs(view.timeToKey(keyRow(stepped), stepped, 560, 0) - 0.35) < 1e-9);
+assert.strictEqual(view.timeToKey(keyRow(plain), plain, -50, 0), 0, 'A drag stays inside the cycle');
 for (const ms of [-500, 0, 600, 4800]) assert.strictEqual(view.xToTime(view.timeToX(ms, 135), 135), ms);
 const row = { startMs: 0, endMs: 4800, cycleMs: 1400, phase: 0 };
 assert.deepStrictEqual(json(view.cycleStarts(row, 4800)), [1400, 2800, 4200]);
@@ -84,4 +112,32 @@ const gestureModel = { loopMs: 4800, groups: [{ rows: [trimmed] }], frameStarts:
 assert(view.snapTargets(gestureModel, trimmed, 'right', 70).some(target => target.ms === 2600 && target.kind === 'cycle'));
 assert(view.snapTargets(gestureModel, trimmed, 'left', 70).some(target => target.ms === 100 && target.kind === 'frame'));
 assert.equal(view.snapTargets(gestureModel, trimmed, 'loop')[0].exact, true);
-console.log('PASS timeline grouping, metadata, seams, geometry, cycle conversions, playhead and gesture math');
+assert.equal(view.snapTargets(gestureModel, trimmed, 'loop')[0].kind, 'fit');
+const config = { barMinPx: 12, gripPx: 8 };
+assert.deepStrictEqual(json(view.barBox({ startMs: 0, endMs: 4800 }, 100, config)), { left: 0, width: 480, gripsOutside: false, leftGripInside: false });
+assert.deepStrictEqual(json(view.barBox({ startMs: 1000, endMs: 1050 }, 100, config)), { left: 100, width: 12, gripsOutside: true, leftGripInside: false }, 'A short bar keeps a body and wears its grips outside');
+assert.strictEqual(view.barBox({ startMs: 0, endMs: 50 }, 100, config).leftGripInside, true);
+const can = (run, phase, period = false) => ({ can: { run, phase, period } });
+assert.strictEqual(view.bodyDrag(can(true, true), false), 'move');
+assert.strictEqual(view.bodyDrag(can(true, true), true), 'slip');
+assert.strictEqual(view.bodyDrag(can(true, false), true), 'move');
+assert.strictEqual(view.bodyDrag(can(false, true), false), 'slip');
+assert.strictEqual(view.bodyDrag(can(false, false), false), null);
+assert.strictEqual(view.rowHint(can(true, true)), 'Drag to move · edges trim · Alt-drag slips · right-click for more');
+assert.strictEqual(view.rowHint(can(false, true)), 'Drag to slip · right-click for more');
+assert.strictEqual(view.rowHint(can(false, false)), '');
+const full = { cycleMs: 1000, phase: 0, source: { run: { start: 0, end: Infinity } } };
+assert.strictEqual(view.dragReadout('move', full, { start: 600, end: Infinity }, { start: 0, end: Infinity }, null), 'Starts at 0.60 s (was 0.00 s)');
+assert.strictEqual(view.dragReadout('left', full, { start: 700, end: Infinity }, { start: 700, end: Infinity }, { kind: 'playhead' }), 'Starts at 0.70 s · playhead');
+assert.strictEqual(view.dragReadout('right', full, { start: 0, end: 2500 }, { start: 0, end: Infinity }, { kind: 'edge' }), 'Repeats 2.5 (was forever) · another bar');
+assert.strictEqual(view.dragReadout('right', full, { start: 0, end: Infinity }, { start: 0, end: 2000 }, { kind: 'loop' }), 'Repeats forever (was 2) · loop end');
+assert.strictEqual(view.dragReadout('right', full, { start: 0, end: 2000 }, { start: 0, end: 1000 }, { kind: 'cycle' }), 'Repeats 2 (was 1) · whole cycle');
+assert.strictEqual(view.dragReadout('slip', full, 0.25, 0, { kind: 'phase' }), 'Start offset 25% (was 0%) · quarter');
+assert.strictEqual(view.dragReadout('period', full, 1200, 1000, { kind: 'period' }), 'Cycle 1.20 s (was 1.00 s) · fits the loop');
+assert.strictEqual(view.dragReadout('loop', null, 4800, 4800, null), 'Loop 4.80 s');
+assert.strictEqual(view.dragReadout('move', full, { start: 100, end: Infinity }, { start: 0, end: Infinity }, { kind: 'frame' }), 'Starts at 0.10 s (was 0.00 s) · frame');
+assert.strictEqual(view.dragReadout('key', full, 0.35, 0.2, { kind: 'key' }), 'Key at 35% (was 20%) · another key');
+assert.strictEqual(view.rowInfo({ kind: 'authored', frameCount: 12, cycleMs: 960 }), '12 frames · 0.96 s');
+assert.strictEqual(view.rowInfo({ kind: 'procedural', cycleMs: 1000, phase: 0, nonLooping: true, source: { run: { start: 0, end: 2000 } } }), '1.00 s × 2');
+assert.strictEqual(view.rowInfo({ kind: 'procedural', cycleMs: 1200, phase: 0, source: { run: { start: 0, end: Infinity } } }), '1.20 s');
+console.log('PASS timeline grouping, metadata, seams, geometry, cycle and key conversions, playhead, gesture math and drag words');

@@ -768,6 +768,8 @@ async resetPanelLayout() {
 
 applyDefaultPanelLayout() {
 	resetPanelCardStates();
+	// The dock listens for these and lays itself out again.
+	['timelineShow', 'timelineLabelWidth', 'timelineHeight'].forEach((key) => PREFERENCES.reset(key));
 },
 
 async resetAllSettings() {

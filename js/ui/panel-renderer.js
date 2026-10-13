@@ -226,7 +226,8 @@ function syncPropertyRevert(slider) {
 	const fallback = panelSliderDefault(slider.id);
 	if (fallback === undefined) return;
 	const button = document.getElementById(`reset${slider.id.charAt(0).toUpperCase()}${slider.id.slice(1)}`);
-	if (!button) return;
+	// A revert its manager owns (a schema `revert` id) is lit by that manager.
+	if (!button || button.dataset.revertFor !== undefined) return;
 	button.disabled = readSliderValue(slider) === Number(fallback);
 }
 
@@ -492,6 +493,13 @@ function buildSliderRow(options) {
 	const reset = row.querySelector('button');
 	reset.id = `reset${panelCap(options.id)}`;
 	reset.dataset.role = `${options.role || options.slider}-reset`;
+	// `revert`, an id: the owning manager binds and lights the revert, and
+	// `resetTitle` says what it does there.
+	if (typeof options.revert === 'string') {
+		reset.dataset.revertFor = options.revert;
+		reset.dataset.revertBound = '';
+	}
+	if (options.resetTitle) { reset.title = options.resetTitle; reset.setAttribute('aria-label', options.resetTitle); }
 	// R2: precision controls keep a full-width track instead of sharing the
 	// row with the label. Declared per slider, never inferred.
 	if (options.wide) row.classList.add('is-stacked');
@@ -605,6 +613,7 @@ function buildColorListRow({ id, label, coverage, value }) {
 function buildNumberFieldPair(options) {
 	const row = panelDiv('property-row is-pair transform-pair-row');
 	if (options.rowId) row.id = options.rowId;
+	if (options.hidden) row.hidden = true;
 	const label = document.createElement('span');
 	label.className = 'property-label';
 	label.textContent = options.label;
@@ -1594,7 +1603,11 @@ function buildPanelItemContent(item, schema) {
 				row.appendChild(input);
 			}
 			if (item.revert === true) row.appendChild(buildFieldRevert(item.id, item.value ?? ''));
-			else if (item.revert) row.appendChild(buildFieldRevert(item.revert));
+			else if (item.revert) {
+				const revert = buildFieldRevert(item.revert);
+				if (item.resetTitle) { revert.title = item.resetTitle; revert.setAttribute('aria-label', item.resetTitle); }
+				row.appendChild(revert);
+			}
 			return row;
 		}
 		// A label paired with one arbitrary built control, using the same

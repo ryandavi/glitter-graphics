@@ -279,6 +279,8 @@ const LAYER_SETUPS = {
 			animationEnabled.checked = true;
 			animationEnabled.dispatchEvent(new Event('change', { bubbles: true }));
 			document.getElementById('shapeAnimAdd').click();
+			// Where the timeline is available the button lists the kinds of motion.
+			document.getElementById('shapeAnimAdd').closest('.app-menu').querySelector('.app-menu-item')?.click();
 			if (layer.animations?.length !== 2) throw new Error('Add animation did not append a stack entry');
 			if (document.getElementById('shapeAnimStack').hidden) throw new Error('Animation stack picker stayed hidden');
 			const type = document.getElementById('shapeAnimType');
@@ -288,7 +290,11 @@ const LAYER_SETUPS = {
 			const stacked = await editor.layerManager.deserializeLayer(editor.layerManager.serializeLayer(layer));
 			if (stacked.animations?.map((animation) => animation.type).join(',') !== 'pulse,rainbow') throw new Error('Animation stack did not survive serialization');
 			document.getElementById('shapeAnimAdd').click();
+			// Where the timeline is available the button lists the kinds of motion.
+			document.getElementById('shapeAnimAdd').closest('.app-menu').querySelector('.app-menu-item')?.click();
 			document.getElementById('shapeAnimAdd').click();
+			// Where the timeline is available the button lists the kinds of motion.
+			document.getElementById('shapeAnimAdd').closest('.app-menu').querySelector('.app-menu-item')?.click();
 			if (layer.animations?.length !== CONFIG.tools.animation.maxStackSize) throw new Error('Animation stack exceeded its configured limit');
 			if (!document.getElementById('shapeAnimAdd').disabled) throw new Error('Add animation stayed enabled at the configured limit');
 			document.getElementById('shapeAnimRemove').click();

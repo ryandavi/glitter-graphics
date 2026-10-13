@@ -30,7 +30,8 @@ const { openApp } = require('../lib/app');
 		});
 		const change = (id, value) => page.evaluate(({ id, value }) => {
 			const input = document.getElementById(id);
-			if (input.type === 'checkbox') input.checked = value; else input.value = value;
+			input.value = value;
+			if (input.type === 'range') input.dispatchEvent(new Event('input', { bubbles: true }));
 			input.dispatchEvent(new Event('change', { bubbles: true }));
 		}, { id, value });
 		await ready();
@@ -84,14 +85,40 @@ const { openApp } = require('../lib/app');
 		assert.strictEqual((await state()).history, menuBefore.history + 1);
 		await page.evaluate(() => editor.historyManager.undo()); await ready();
 		assert.strictEqual(await page.locator('.timeline-row-lane:not([hidden]) .timeline-key[data-key-at]').count(), 2);
-		assert(await page.evaluate(() => document.getElementById('shapeAnimKeyValuety').disabled));
+		const shown = () => page.evaluate(() => ['Position', 'Rotation', 'Scale', 'Skew', 'Opacity', 'Hue'].filter(name => !document.getElementById(`shapeAnimKeyProp${name}Row`).hidden));
+		assert.deepStrictEqual(await shown(), ['Position', 'Scale', 'Opacity'], 'The Values set lists what the key holds');
+		assert(await page.evaluate(() => !document.querySelector('#shapeAnimKeySet input[type="checkbox"], #shapeAnimKeyValues input[type="checkbox"]')
+			&& [...document.querySelectorAll('#shapeAnimKeyValues .property-label')].every(label => !/[(°%]|px/.test(label.textContent))), 'No switch and no unit in a label');
+		assert.deepStrictEqual(await page.evaluate(() => [...document.getElementById('shapeAnimKeySelect').options].map(option => option.textContent)), ['1 · 0%', '2 · 50%']);
 		const initial = await state();
-		await change('shapeAnimKeyUsehue', true); await ready();
+		const addValue = name => page.evaluate(name => {
+			const trigger = document.getElementById('shapeAnimKeyAddValue'); trigger.click();
+			const items = [...trigger.closest('.app-menu').querySelectorAll('.app-menu-item')];
+			const labels = items.map(item => item.textContent);
+			items.find(item => item.textContent === name).click();
+			return labels;
+		}, name);
+		assert.deepStrictEqual(await addValue('Hue'), ['Rotation', 'Skew', 'Hue'], 'Add value lists what the key does not hold'); await ready();
 		assert.strictEqual((await state()).history, initial.history + 1);
-		await change('shapeAnimKeyValuehue', 90); await ready();
+		assert.strictEqual((await state()).keys[0].values.hue, 0, 'A value is added where the motion has it');
+		await change('shapeAnimKeyPropHue', 90); await ready();
 		assert.strictEqual((await state()).keys[0].values.hue, 90);
-		await change('shapeAnimKeyUsehue', false); await ready();
-		assert(!Object.hasOwn((await state()).keys[0].values, 'hue'));
+		assert.deepStrictEqual(await shown(), ['Position', 'Scale', 'Opacity', 'Hue']);
+		await page.evaluate(() => document.querySelector('#shapeAnimKeyPropHueRow .property-revert').click()); await ready();
+		assert(!Object.hasOwn((await state()).keys[0].values, 'hue'), 'A row revert stops keying its value');
+		assert.strictEqual(await page.evaluate(() => document.querySelector('#shapeAnimKeyPropHueRow .property-revert').title), 'Stop keying Hue here');
+		await change('shapeAnimKeyPropPositionY', 12); await ready();
+		assert.deepStrictEqual(await page.evaluate(() => { const { tx, ty } = editor.layerManager.getActiveLayer().animations[0].keys[0].values; return { tx, ty }; }), { tx: 0, ty: 12 }, 'Editing one field of a pair keys the other where it is');
+		await page.evaluate(() => editor.historyManager.undo()); await ready();
+		await change('shapeAnimKeyPropScaleX', 150); await ready();
+		assert.deepStrictEqual(await page.evaluate(() => { const { scaleX, scaleY } = editor.layerManager.getActiveLayer().animations[0].keys[0].values; return { scaleX, scaleY }; }), { scaleX: 1.5, scaleY: 1 });
+		await page.evaluate(() => editor.historyManager.undo()); await ready();
+		await page.evaluate(() => document.getElementById('shapeAnimKeyNext').click()); await ready();
+		assert.strictEqual(await page.evaluate(() => document.getElementById('shapeAnimKeySelect').value), '0.5', 'The stepper selects the next key');
+		assert(await page.evaluate(() => Math.abs(editor.animationTicker.getPlayheadTime() - 500) < 0.01), 'Stepping seeks as picking does');
+		await page.evaluate(() => document.getElementById('shapeAnimKeyNext').click()); await ready();
+		assert.strictEqual(await page.evaluate(() => document.getElementById('shapeAnimKeySelect').value), '0', 'The stepper wraps');
+		await page.evaluate(() => editor.animationTicker.seek(250)); await ready();
 		await change('shapeAnimKeyEasing', 'easeIn'); await ready();
 		assert.strictEqual((await state()).keys[0].easing, 'easeIn');
 		await page.evaluate(() => document.getElementById('shapeAnimKeyAdd').click()); await ready();
@@ -104,13 +131,15 @@ const { openApp } = require('../lib/app');
 		await page.evaluate(() => editor.historyManager.redo()); await ready();
 		assert.deepStrictEqual((await state()).keys.map(key => key.at), [0, 0.25, 0.5]);
 
-		const drag = async (at, next, cancel = null) => {
+		let feedback = null;
+		const drag = async (at, next, cancel = null, alt = true) => {
 			const node = page.locator(`.timeline-row-lane:not([hidden]) [data-key-at="${at}"]`);
 			const box = await node.boundingBox();
 			const track = await page.locator('.timeline-row-lane:not([hidden]) .timeline-key-track').boundingBox();
-			await page.keyboard.down('Alt');
+			if (alt) await page.keyboard.down('Alt');
 			await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2); await page.mouse.down();
 			await page.mouse.move(track.x + next * track.width, track.y + track.height / 2, { steps: 5 });
+			feedback = await page.evaluate(() => ({ text: editor.timelineDock.dragReadout?.textContent, guide: !editor.timelineDock.snapGuide.hidden }));
 			if (cancel === 'escape') await page.keyboard.press('Escape');
 			if (cancel === 'pointer') await page.evaluate(() => {
 				const lane = editor.timelineDock.keyLane;
@@ -119,8 +148,14 @@ const { openApp } = require('../lib/app');
 			await page.mouse.up(); await page.keyboard.up('Alt'); await ready();
 		};
 		let before = await state();
-		await change('shapeAnimKeyPosition', '');
-		assert.deepStrictEqual(await state(), before, 'An empty position field does not retime a key');
+		assert(await page.evaluate(() => {
+			const lane = document.querySelector('.timeline-row-lane:not([hidden])'), track = lane.querySelector('.timeline-key-track').getBoundingClientRect();
+			const origin = lane.querySelector('.timeline-key-cell').getBoundingClientRect().left, scale = editor.timelineDock.scale;
+			const key = lane.querySelector('[data-key-at="0.5"]').getBoundingClientRect();
+			return Math.abs(track.left - origin) < 0.5 && Math.abs(track.width - TimelineView.timeToX(1000, scale)) < 0.5
+				&& Math.abs(key.left + key.width / 2 - origin - TimelineView.timeToX(500, scale)) < 0.5
+				&& !lane.closest('.timeline-stage').querySelector('.btn-flat, .timeline-key-playhead, .timeline-key-heading');
+		}), 'The lane is one cycle of the bar on the dock ruler, without a heading, a boxed button or a playhead of its own');
 		await drag(0.5, 0.75);
 		after = await state();
 		assert(Math.abs(after.keys.at(-1).at - 0.75) < 0.005);
@@ -130,12 +165,30 @@ const { openApp } = require('../lib/app');
 		before = await state();
 		await drag(0.5, 0.8, 'escape'); assert.deepStrictEqual(await state(), before);
 		await drag(0.5, 0.8, 'pointer'); assert.deepStrictEqual(await state(), before);
+		await page.evaluate(() => editor.animationTicker.seek(600)); await ready();
+		await drag(0.5, 0.605, 'escape', false);
+		assert.deepStrictEqual(feedback, { text: 'Key at 60% (was 50%) · playhead', guide: true }, 'A key dragged to the playhead snaps there and says so');
+		assert.deepStrictEqual(await state(), before);
 		await page.locator('.timeline-row-lane:not([hidden]) [data-key-at="0.5"]').click();
 		assert(await page.evaluate(() => Math.abs(editor.animationTicker.getPlayheadTime() - 500) < 0.01), 'A diamond click seeks to its intrinsic position');
+		assert(await page.evaluate(() => {
+			const key = document.querySelector('.timeline-row-lane:not([hidden]) [data-key-at="0.5"]').getBoundingClientRect();
+			return Math.abs(key.left + key.width / 2 - editor.timelineDock.playhead.getBoundingClientRect().left) < 1;
+		}), 'The selected key sits under the dock playhead after a click');
 		await change('shapeAnimKeyPosition', 25); await ready();
 		after = await state();
 		assert.strictEqual(after.keys.length, 3, 'Retime collision does not delete another key');
 		assert(after.keys.every((key, index, list) => index === 0 || key.at - list[index - 1].at >= CONFIG_TOLERANCE));
+		before = await state();
+		await page.evaluate(() => {
+			const slider = document.getElementById('shapeAnimKeyPosition');
+			for (const value of [30, 40, 60]) { slider.value = value; slider.dispatchEvent(new Event('input', { bubbles: true })); }
+			slider.dispatchEvent(new Event('change', { bubbles: true }));
+		}); await ready();
+		after = await state();
+		assert(after.keys.some(key => Math.abs(key.at - 0.6) < 1e-8) && after.history === before.history + 1, 'A Position slider drag retimes the key in one history entry');
+		await page.evaluate(() => editor.historyManager.undo()); await ready();
+		assert.deepStrictEqual((await state()).keys, before.keys);
 
 		await page.evaluate(() => {
 			const lane = editor.timelineDock.keyLane;
@@ -160,7 +213,7 @@ const { openApp } = require('../lib/app');
 		assert.deepStrictEqual(serialized.original, serialized.restored); assert.strictEqual(serialized.shared, false);
 		await page.evaluate(() => { PREFERENCES.set('timelineOpen', false); });
 		before = await state();
-		await change('shapeAnimKeyValueopacity', 60);
+		await change('shapeAnimKeyPropOpacity', 60);
 		assert.strictEqual((await state()).history, before.history + 1, 'Selected-key fields work with the dock closed');
 		assert.strictEqual((await state()).rest, initial.rest);
 		await page.evaluate(() => PREFERENCES.set('timelineOpen', true)); await ready();
@@ -172,7 +225,7 @@ const { openApp } = require('../lib/app');
 		await page.evaluate(() => document.getElementById('shapeAnimKeyAdd').click()); await ready();
 		assert.strictEqual((await state()).keys.length, 1, 'Deleting the last key keeps an editable identity motion');
 		assert.deepStrictEqual(errors, []);
-		console.log('PASS Custom key fields, diamond retiming, collisions, cancellation, seeking, history, serialization and rest-transform preservation');
+		console.log('PASS Custom key values, stepper, Position slider, diamond retiming, collisions, cancellation, seeking, history, serialization and rest-transform preservation');
 	} finally { await browser.close(); }
 
 	for (const phone of [false, true]) {

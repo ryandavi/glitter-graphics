@@ -122,6 +122,13 @@ const GlitterAnimation = (() => {
 		['skewX', 'Skew X', '°', 0, 'angle', 'matrix', 'animKeySkew'], ['skewY', 'Skew Y', '°', 0, 'angle', 'matrix', 'animKeySkew'],
 		['opacity', 'Opacity', '', 1, 'number', 'multiply', 'layerOpacity', 100], ['hue', 'Hue', '°', 0, 'angle', 'add', 'animKeyAngle']
 	].map(([id, label, unit, rest, interpolation, composition, field, displayScale = 1]) => [id, Object.freeze({ id, label, unit, rest, interpolation, composition, field, displayScale })])));
+	// What a person poses: each property writes one or two channels through one
+	// control. Panels iterate this; a key still stores its channels sparsely.
+	const POSE_PROPERTIES = Object.freeze([
+		['position', 'Position', ['tx', 'ty'], 'pair', ''], ['rotation', 'Rotation', ['rotate'], 'number'],
+		['scale', 'Scale', ['scaleX', 'scaleY'], 'pair'], ['skew', 'Skew', ['skewX', 'skewY'], 'pair'],
+		['opacity', 'Opacity', ['opacity'], 'slider'], ['hue', 'Hue', ['hue'], 'number']
+	].map(([id, label, channels, control, unit]) => Object.freeze({ id, label, channels: Object.freeze(channels), control, ...(unit == null ? {} : { unit }) })));
 	const IDENTITY = Object.freeze({
 		...Object.fromEntries(Object.entries(POSE_CHANNELS).filter(([id]) => id !== 'hue').map(([id, channel]) => [id, channel.rest])),
 		originX: 0.5, originY: 0.5, hue: POSE_CHANNELS.hue.rest
@@ -234,6 +241,11 @@ const GlitterAnimation = (() => {
 			byPosition.set(at, { at, easing, values });
 		});
 		return [...byPosition.values()].sort((a, b) => a.at - b.at);
+	}
+
+	// The pose a keyed motion has at one of its positions, before timing.
+	function keyRestSample(value, at) {
+		return sampleAt({ ...value, phase: at, easing: 'linear', snapMode: 'smooth', delayMs: 0, direction: 'normal', iterations: Infinity }, 0);
 	}
 
 	function interpolateChannel(channel, from, to, progress) {
@@ -607,7 +619,7 @@ const GlitterAnimation = (() => {
 	}
 
 	return {
-		ANIMATION_TYPES, MOTION_REGISTRY, ANIMATION_CONTROLS, POSE_CHANNELS, normalizeAnimation, normalizeAnimations, normalizeKeys, interpolateChannel, cycleProgress, timeAtProgress, convertToKeys, isActive, includesOffCanvas, summaryText, loopDurationMs,
+		ANIMATION_TYPES, MOTION_REGISTRY, ANIMATION_CONTROLS, POSE_CHANNELS, POSE_PROPERTIES, keyRestSample, normalizeAnimation, normalizeAnimations, normalizeKeys, interpolateChannel, cycleProgress, timeAtProgress, convertToKeys, isActive, includesOffCanvas, summaryText, loopDurationMs,
 		isSeamlessLoop, runTiming, iterationsForRun, travelSpeed, sampleAt, composeSamples, seededRandom01, domTransformString, applyToContext, resolveOrigin,
 		hashString, mulberry32, createSamplingContext, splitSample, sampleMatrix, multiplyMatrices, wrap, reflect
 	};

@@ -46,7 +46,7 @@ const FIELDS = Object.freeze({
 	animPhase: { label: 'Start offset', unit: '%', min: 0, max: 100, step: 1, value: 0 },
 	animAnchorX: { label: 'Anchor X', unit: '%', min: 0, max: 100, step: 1, value: 50 },
 	animAnchorY: { label: 'Anchor Y', unit: '%', min: 0, max: 100, step: 1, value: 50 },
-	animKeyPosition: { label: 'Position', unit: '%', min: 0, max: 100, step: 0.1, value: 0 },
+	animKeyPosition: { label: 'Position', unit: '%', min: 0, max: 100, step: 0.1, value: 0, cost: 'style' },
 	animKeyOffset: { label: 'Offset', unit: 'px', min: -4096, max: 4096, step: 1, value: 0 },
 	animKeyAngle: { label: 'Angle', unit: '°', min: -1440, max: 1440, step: 1, value: 0 },
 	animKeyScale: { label: 'Scale', unit: '%', min: -500, max: 500, step: 1, value: 100 },
