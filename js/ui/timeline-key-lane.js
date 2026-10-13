@@ -7,16 +7,13 @@ class TimelineKeyLane {
 	constructor(dock) {
 		this.dock = dock;
 		this.panel = dock.editor.animationPanel;
-		window.addEventListener('pointermove', event => this.move(event));
-		for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) window.addEventListener(type, event => {
-			if (event.pointerId === this.drag?.pointerId) this.finish(type !== 'pointerup');
+		this.pointerDrag = bindPointerDrag(null, {
+			bindPress: false, threshold: dock.config.dragThresholdPx, axis: 'x', clickHost: dock.stage,
+			capture: () => this.drag.track, start: event => this.start(event),
+			move: event => { this.move(event); if (this.drag) dock.trackEdgePointer(event); },
+			end: cancelled => this.finish(cancelled)
 		});
-		window.addEventListener('blur', () => this.finish(true));
 		window.addEventListener('resize', () => { if (!this.dock.available) this.finish(true); });
-		document.addEventListener('keydown', event => {
-			if (event.key !== 'Escape' || !this.drag) return;
-			event.preventDefault(); event.stopImmediatePropagation(); this.finish(true);
-		}, true);
 	}
 
 	get layer() { return this.dock.editor.layerManager.getLayerById(this.row?.layerId); }
@@ -28,6 +25,8 @@ class TimelineKeyLane {
 		this.row = row;
 		if (host !== this.host) {
 			this.host = host;
+			this.buttons = [];
+			this.ghost = null;
 			const action = 'btn-icon-simple icon-wrapper sm';
 			const label = this.dock.element('timeline-key-label');
 			this.record = this.dock.button(action, '', 'hand-pointer', () => {
@@ -53,37 +52,48 @@ class TimelineKeyLane {
 		const keys = GlitterAnimation.normalizeKeys(this.entry.keys);
 		const focused = Boolean(document.activeElement?.closest('.timeline-key-track'));
 		const selected = this.panel.keyIndex(this.entry);
-		this.buttons = keys.map((key, index) => {
-			const label = `Key at ${Number((key.at * 100).toFixed(1))}%, ${key.easing} outgoing easing`;
-			const button = this.dock.button('timeline-key btn-icon-simple', label, null, () => {
-				if (!this.suppressClick) this.panel.selectKey(this.layer, this.entry, key.at, { seek: true });
-			});
+		if (keys.length !== this.buttons.length || !this.ghost) {
+			this.buttons = keys.map(() => this.buildKey());
+			this.ghost = this.dock.element('timeline-key is-ghost', undefined, 'span');
+			this.ghost.title = '100% repeats the key at 0%';
+			this.track.replaceChildren(...this.buttons, this.ghost);
+		}
+		keys.forEach((key, index) => {
+			const easing = ANIMATION_EASING_OPTIONS.find(option => option.value === key.easing).label;
+			const label = `Key at ${Number((key.at * 100).toFixed(1))}%, ${easing} outgoing easing`;
+			const button = this.buttons[index];
+			button.title = label; button.setAttribute('aria-label', label);
 			button.dataset.keyAt = key.at;
 			button.classList.toggle('active', index === selected);
 			button.setAttribute('aria-pressed', String(index === selected));
 			button.disabled = !this.editable;
-			button.addEventListener('keydown', event => {
-				if (!this.editable || event.ctrlKey || event.metaKey || event.altKey) return;
-				if (!['Delete', 'Backspace', 'ArrowLeft', 'ArrowRight'].includes(event.key)) return;
-				event.preventDefault(); event.stopPropagation();
-				if (this.drag) return;
-				this.panel.selectedKeys.set(this.entry, Number(button.dataset.keyAt));
-				const current = this.panel.keyIndex(this.entry);
-				if (event.key === 'Delete' || event.key === 'Backspace') this.panel.deleteKey(this.layer, this.entry, current);
-				else {
-					const step = event.shiftKey ? CONFIG.ui.timeline.keyFastNudgeStep : CONFIG.ui.timeline.keyNudgeStep;
-					const coalesceKey = this.dock.editor.historyManager.burstCoalesceKey(`motion-key-nudge:${this.row.layerId}`);
-					this.panel.retimeKey(this.layer, this.entry, current, Number(button.dataset.keyAt) + (event.key === 'ArrowRight' ? step : -step), { coalesceKey });
-				}
-			});
-			return button;
 		});
-		this.ghost = this.dock.element('timeline-key is-ghost', undefined, 'span');
-		this.ghost.hidden = !keys.some(key => key.at === 0); this.ghost.title = '100% repeats the key at 0%';
-		this.track.replaceChildren(...this.buttons, this.ghost);
-		this.cycle = null;
+		this.ghost.hidden = !keys.some(key => key.at === 0);
+		this.cycle = TimelineView.keyCycle(this.row, this.dock.editor.animationTicker.getPlayheadTime());
+		this.layout();
 		if (focused) this.focusSelected();
-		this.paint(this.dock.editor.animationTicker.getPlayheadTime());
+		this.syncState();
+	}
+
+	buildKey() {
+		const button = this.dock.button('timeline-key btn-icon-simple', '', null, () => {
+			this.panel.selectKey(this.layer, this.entry, Number(button.dataset.keyAt), { seek: true });
+		});
+		button.addEventListener('keydown', event => {
+			if (!this.editable || event.ctrlKey || event.metaKey || event.altKey) return;
+			if (!['Delete', 'Backspace', 'ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+			event.preventDefault(); event.stopPropagation();
+			if (this.drag) return;
+			this.panel.setKeySelection(this.entry, Number(button.dataset.keyAt));
+			const current = this.panel.keyIndex(this.entry);
+			if (event.key === 'Delete' || event.key === 'Backspace') this.panel.deleteKey(this.layer, this.entry, current);
+			else {
+				const step = event.shiftKey ? CONFIG.ui.timeline.keyFastNudgeStep : CONFIG.ui.timeline.keyNudgeStep;
+				const coalesceKey = this.dock.editor.historyManager.burstCoalesceKey(`motion-key-nudge:${this.row.layerId}`);
+				this.panel.retimeKey(this.layer, this.entry, current, Number(button.dataset.keyAt) + (event.key === 'ArrowRight' ? step : -step), { coalesceKey });
+			}
+		});
+		return button;
 	}
 
 	focusSelected() { this.buttons?.[this.panel.keyIndex(this.entry)]?.focus({ preventScroll: true }); }
@@ -107,31 +117,41 @@ class TimelineKeyLane {
 		this.ghost.style.left = `${TimelineView.timeToX(TimelineView.cycleToTime(TimelineView.keyDrawing(this.row), this.cycle, 1) - span.start, scale)}px`;
 	}
 
-	paint(time) {
+	syncState() {
 		if (!this.host?.isConnected || this.host.hidden) return;
 		const recording = this.dock.keyRecording, active = Boolean(recording?.active && recording.entry === this.entry);
 		const title = active ? 'Done editing keys on the canvas' : 'Edit keys on the canvas';
 		this.record.title = title; this.record.setAttribute('aria-label', title);
 		this.record.classList.toggle('active', active); this.record.setAttribute('aria-pressed', String(active));
 		this.record.disabled = !active && !recording?.canBegin(this.layer, this.entry);
-		// The lane follows the playhead from cycle to cycle, and holds during a drag.
-		const cycle = this.drag ? this.cycle : TimelineView.keyCycle(this.row, time);
-		const layout = `${cycle}|${this.dock.scale}|${this.row.startMs}|${this.row.phase}|${this.row.exportCycleMs}|${this.entry.easing}|${this.entry.direction}`;
-		if (layout !== this.laidOut || this.cycle == null) { this.cycle = cycle; this.laidOut = layout; this.layout(); }
-		const progress = GlitterAnimation.cycleProgress(TimelineView.keyEntry(this.row, this.entry), time, { fill: false });
-		this.add.disabled = !this.editable || !progress || this.dock.host.classList.contains('is-stale');
-		const prefix = this.panel.prefixByType.get(this.layer?.type);
-		const add = prefix && this.panel._id(prefix, 'KeyAdd');
-		if (add) add.disabled = this.add.disabled;
+		this.add.disabled = this.panel.syncKeyAdd(this.layer, this.entry);
+		const time = this.dock.editor.animationTicker.getPlayheadTime();
+		this.inside = time >= this.row.startMs && time < (this.row.source.run?.end ?? Infinity);
 	}
 
-	begin(event) {
+	paint(time) {
+		if (!this.host?.isConnected || this.host.hidden || this.host.closest('.is-collapsed')) return;
+		// The lane follows the playhead from cycle to cycle, and holds during a drag.
+		const cycle = this.drag ? this.cycle : TimelineView.keyCycle(this.row, time);
+		if (cycle !== this.cycle) { this.cycle = cycle; this.layout(); }
+		const inside = time >= this.row.startMs && time < (this.row.source.run?.end ?? Infinity);
+		if (inside !== this.inside) this.syncState();
+	}
+
+	begin(event) { return this.pointerDrag.begin(event); }
+
+	start(event) {
 		const button = event.target.closest('[data-key-at]');
-		if (event.button !== 0 || !button || !this.editable || this.dock.host.classList.contains('is-stale') || this.drag) return;
+		if (!button || !this.editable || this.dock.stale || this.drag) return false;
 		event.preventDefault(); event.stopPropagation();
 		const keys = GlitterAnimation.normalizeKeys(this.entry.keys);
 		const at = Number(button.dataset.keyAt);
 		this.drag = { pointerId: event.pointerId, x: event.clientX, left: this.cell.getBoundingClientRect().left, scrollLeft: this.dock.body.scrollLeft, keys, at, layer: this.layer, entry: this.entry, button, track: this.track, moved: false };
+		const span = TimelineView.cycleSpan(this.row, this.cycle);
+		this.drag.targets = [
+			{ ms: this.dock.editor.animationTicker.getPlayheadTime(), kind: 'playhead' }, { ms: span.start, kind: 'cycle' }, { ms: span.end, kind: 'cycle' },
+			...keys.filter(key => key.at !== at).map(key => ({ ms: TimelineView.keyToTime(this.row, this.entry, key.at, this.cycle).ms, kind: 'key' }))
+		];
 		this.panel.selectKey(this.layer, this.entry, at);
 		for (const item of this.buttons) {
 			const selected = item === button;
@@ -144,17 +164,13 @@ class TimelineKeyLane {
 		const drag = this.drag;
 		if (!drag || event.pointerId !== drag.pointerId) return;
 		if (!this.editable) { this.finish(true); return; }
-		if (!drag.moved && Math.abs(event.clientX - drag.x) < CONFIG.ui.timeline.dragThresholdPx) return;
-		if (!drag.moved) drag.track.setPointerCapture(event.pointerId);
 		drag.moved = true;
 		const { scale, editor } = this.dock;
 		const span = TimelineView.cycleSpan(this.row, this.cycle);
 		let ms = TimelineView.xToTime(event.clientX - drag.left + this.dock.body.scrollLeft - drag.scrollLeft, scale), target = null;
 		if (PREFERENCES.get('timelineSnap') && !event.altKey) {
-			const targets = [
-				{ ms: editor.animationTicker.getPlayheadTime(), kind: 'playhead' }, { ms: span.start, kind: 'cycle' }, { ms: span.end, kind: 'cycle' },
-				...drag.keys.filter(key => key.at !== drag.at).map(key => ({ ms: TimelineView.keyToTime(this.row, drag.entry, key.at, this.cycle).ms, kind: 'key' }))
-			].filter(entry => entry.ms >= span.start && entry.ms <= span.end);
+			for (const target of drag.targets) if (target.kind === 'playhead') target.ms = editor.animationTicker.getPlayheadTime();
+			const targets = drag.targets.filter(entry => entry.ms >= span.start && entry.ms <= span.end);
 			({ ms, target } = TimelineView.snapTime(ms, targets, TimelineView.xToTime(CONFIG.ui.timeline.snapPx, scale)));
 		}
 		const wanted = TimelineView.timeToKey(this.row, drag.entry, ms, this.cycle);
@@ -168,16 +184,16 @@ class TimelineKeyLane {
 	}
 
 	finish(cancel) {
+		if (this.pointerDrag.active) { this.pointerDrag.finish(cancel); return; }
 		const drag = this.drag;
 		if (!drag) return;
 		this.drag = null;
+		this.dock.stopEdgeScroll();
 		this.dock.clearDragFeedback();
-		if (drag.track.hasPointerCapture(drag.pointerId)) drag.track.releasePointerCapture(drag.pointerId);
-		if (!drag.moved) return;
-		this.suppressClick = true;
-		setTimeout(() => { this.suppressClick = false; }, 0);
+		if (!drag.moved) { if (this.dock.syncPending) this.dock.resync(); return; }
 		if (cancel) this.panel.setKeys(drag.layer, drag.entry, drag.keys, { commit: false, rollback: true, at: drag.at });
 		else if (JSON.stringify(drag.keys) !== JSON.stringify(GlitterAnimation.normalizeKeys(drag.entry.keys))) this.dock.editor.saveState('Retime motion key');
 		this.refresh();
+		if (this.dock.syncPending) this.dock.resync();
 	}
 }

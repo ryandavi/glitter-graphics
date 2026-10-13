@@ -241,6 +241,8 @@ $timeline-compact-width: 900px;
 
 	--opacity-disabled: .4;
 	--opacity-dragging: .5;
+	--opacity-muted: .6;
+	--opacity-soft: .7;
 
 	/* Spacing: one scale. Every gap, inset and margin is a step of it. */
 	--spacing-2xs: 2px;
@@ -371,6 +373,7 @@ $timeline-compact-width: 900px;
 	   10, 20, 30, 100...) inside a single element's own children is NOT part
 	   of this scale and stays literal at its use site. */
 	--z-canvas-chrome: 10;
+	--z-timeline-frame: 19;
 	/* floating UI over the canvas, inside the preview column: context bars */
 	--z-canvas-chrome-raised: 21;
 	/* the top zone (view toggles, activity pill, export, hint) — above context bars */

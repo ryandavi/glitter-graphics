@@ -750,20 +750,20 @@ const CONFIG = deepFreeze({
 	ui: {
 		timeline: {
 			defaultHeight: 280, minHeight: 140, maxHeightFraction: 0.6,
-			rowHeight: 28, groupHeight: 32, groupMedia: 20, rulerHeight: 28, infoWidth: 120,
+			rulerHeight: 28,
 			// The label column: its default, and how far its handle drags.
 			labelWidth: 220, labelMinWidth: 140, labelMaxFraction: 0.5,
 			pxPerSecondStops: [40, 60, 90, 135, 200, 300, 450, 680, 1000],
 			minPxPerSecond: 40,
 			followMarginPx: 24, edgeScrollPx: 24, edgeScrollPxPerSecond: 240,
 			defaultZoom: 'fit', minTickPx: 4, maxMarksPerBar: 600, nextLoopFraction: 0.25,
+			tickLabelMinPx: 110, tickSteps: [100, 200, 500, 1000, 2000, 5000],
+			rulerTextInsetPx: 4, minorTickHeight: 4, outputFrameStripHeight: 4, wheelLinePx: 28,
 			// A bar is never drawn narrower than this; a grip is this wide to the pointer.
-			barMinPx: 12, gripPx: 8, keySize: 10,
-			// Output frames this wide are drawn whether or not Frame ticks is on.
-			frameTickAutoPx: 12,
+			barMinPx: 12, gripPx: 8,
 			// What the rows draw besides their bars, as the options menu lists it.
 			show: { cycles: true, frames: false, details: true, nextLoop: true },
-			showLabels: { cycles: 'Cycle marks', frames: 'Frame ticks', details: 'Details column', nextLoop: 'Next pass' },
+			showLabels: { cycles: 'Cycle marks', frames: 'Output frames', details: 'Details column', nextLoop: 'Next pass' },
 			snapPx: 8, dragThresholdPx: 3,
 			keyPositionTolerance: 0.001, keyNudgeStep: 0.01, keyFastNudgeStep: 0.05,
 			keySingularTolerance: 1e-8,

@@ -299,20 +299,20 @@
 	}
 
 	&:not(:disabled):hover {
-		background: var(--color-bg-tertiary);
+		&:not(.lock.active) { background: var(--color-bg-tertiary); }
 		border-color: var(--color-border-hover);
 		color: var(--color-text-primary);
 	}
 
 	&:active {
-		background: var(--color-bg-tertiary);
+		&:not(.lock.active) { background: var(--color-bg-tertiary); }
 		border-color: var(--color-border-hover);
 		color: var(--color-text-primary);
 	}
 
 	&.active {
 		color: var(--color-text-primary);
-		background: var(--color-accent);
+		&:not(.lock) { background: var(--color-accent); }
 		border-color: var(--color-accent-hover);
 	}
 

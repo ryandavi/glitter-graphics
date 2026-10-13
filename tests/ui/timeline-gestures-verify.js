@@ -23,13 +23,18 @@ async function verifyTimelineGestures(browser) {
 		const ready = () => page.waitForFunction(() => editor.timelineDock?.model?.groups.some(group => group.layerId === window.timelineFixtureId) && !editor.timelineDock.host.classList.contains('is-stale'));
 		await ready();
 		const state = () => page.evaluate(() => {
-			const animation = editor.layerManager.getLayerById(window.timelineFixtureId).animations[0];
-			return { delay: animation.delayMs, repeats: animation.iterations, phase: animation.phase, period: animation.periodMs, history: editor.historyManager.historyIndex, loop: editor.documentLoop.durationMs };
+			const layer = editor.layerManager.getLayerById(window.timelineFixtureId), animation = layer.animations[0];
+			return { delay: animation.delayMs, repeats: animation.iterations, phase: animation.phase, period: animation.periodMs,
+				originals: structuredClone(layer.loopOriginalPeriods ?? null), history: editor.historyManager.historyIndex, loop: editor.documentLoop.durationMs };
 		});
 		let liveDrag = false;
 		let feedback = null;
 		const drag = async (kind, time, { alt = false, shift = false, cancel = false, delta = false, pointerCancel = false, grab = null } = {}) => {
 			await ready();
+			await page.evaluate(() => {
+				window.timelineTargetCalls = 0; window.timelineOriginalTargets = TimelineView.snapTargets;
+				TimelineView.snapTargets = function (...args) { window.timelineTargetCalls++; return timelineOriginalTargets.apply(this, args); };
+			});
 			const points = await page.evaluate(({ kind, time, delta, grab }) => {
 				const dock = editor.timelineDock;
 				const node = dock.body.querySelector(`[data-layer-id="${window.timelineFixtureId}"] .timeline-row`);
@@ -48,11 +53,19 @@ async function verifyTimelineGestures(browser) {
 				const dock = editor.timelineDock;
 				return { guide: dock.snapGuide.hidden ? null : new DOMMatrix(dock.snapGuide.style.transform).e, text: dock.dragReadout?.textContent, cursor: getComputedStyle(dock.stage).cursor };
 			});
+			if (kind === 'period' || (kind === 'body' && alt)) assert(await page.evaluate(() => {
+				const node = editor.timelineDock.drag?.node;
+				return !node || [...node.querySelectorAll('.timeline-period-notch')].every(notch => getComputedStyle(notch).display === 'none');
+			}), 'Cycle notches hide while their boundaries change');
 			if (cancel) await page.keyboard.press('Escape');
 			if (pointerCancel) await page.evaluate(() => editor.timelineDock.stage.dispatchEvent(new PointerEvent('pointercancel', { bubbles: true, pointerId: editor.timelineDock.drag.pointerId })));
 			await page.mouse.up();
 			if (alt) await page.keyboard.up('Alt');
 			if (shift) await page.keyboard.up('Shift');
+			assert(await page.evaluate(() => {
+				TimelineView.snapTargets = timelineOriginalTargets;
+				return timelineTargetCalls <= 1;
+			}), 'A timing drag computes static snap targets at most once');
 			await ready();
 		};
 		await page.evaluate(() => { editor.animationPanel.setPaused(true); editor.animationTicker.seek(700); });
@@ -70,6 +83,44 @@ async function verifyTimelineGestures(browser) {
 		assert.equal((await state()).delay, 0);
 		before = await state();
 		await drag('right', 2040);
+		after = await state();
+		assert.equal(after.repeats, 5, 'A forever bar takes the nearest whole repeat count on its first duration drag');
+		assert.deepEqual(Object.values(after.originals), [1000], 'A committed duration drag remembers the original speed');
+		assert(Math.abs(after.period - 400) < 0.01, 'The new cycle distributes those repeats inside the ruler-snapped length');
+		assert.equal(feedback.text, 'Lasts 2.00 s · 5 × 0.40 s (was forever) · 2.00 s');
+		assert.equal(after.history, before.history + 1);
+		assert.equal(await page.evaluate(() => editor.historyManager.history[editor.historyManager.historyIndex].label), 'Change animation length');
+		await page.evaluate(() => editor.historyManager.undo()); await ready();
+		assert.deepEqual(await state(), before, 'One Undo restores the forever run and its speed');
+		const frameTarget = await page.evaluate(() => {
+			const dock = editor.timelineDock; dock.setZoom(300);
+			return dock.model.frameStarts.find(ms => ms > 250 && ms < 600 && ms % 100 >= 35 && ms % 100 <= 65);
+		});
+		assert.equal(typeof frameTarget, 'number', 'The fixture has an output frame between ruler snap ranges');
+		await drag('left', frameTarget + 1);
+		assert(Math.abs((await state()).delay - frameTarget - 1) < 0.01, 'Hidden output frames do not catch a left edge');
+		assert.equal(feedback.guide, null);
+		await page.evaluate(() => editor.historyManager.undo()); await ready();
+		await page.evaluate(() => editor.timelineDock.showItems.find(item => item.dataset.show === 'frames').click());
+		await drag('left', frameTarget + 1);
+		assert(Math.abs((await state()).delay - frameTarget) < 0.01, 'Output frames on makes the same left edge snap to a frame');
+		assert.match(feedback.text, / · frame$/);
+		await page.evaluate(() => {
+			editor.historyManager.undo();
+			editor.timelineDock.showItems.find(item => item.dataset.show === 'frames').click();
+			editor.timelineDock.setZoom('fit');
+		});
+		await ready();
+		await drag('right', await page.evaluate(() => {
+			const dock = editor.timelineDock;
+			return dock.model.loopMs - TimelineView.xToTime(dock.config.snapPx - 0.25, dock.scale);
+		}));
+		assert.equal((await state()).repeats, 5);
+		assert(Math.abs((await state()).period - 960) < 0.01, 'A duration edge snaps to the loop end without becoming an infinite run');
+		assert.match(feedback.text, /^Lasts 4\.80 s · 5 × 0\.96 s .*loop end$/);
+		await page.evaluate(() => editor.historyManager.undo()); await ready();
+		before = await state();
+		await drag('right', 2040, { shift: true });
 		assert(liveDrag, 'A timing drag exposes the live artwork instead of an older held frame');
 		assert.equal(feedback.text, 'Repeats 2 (was forever) · whole cycle', 'The readout names the value, what it was and the snap');
 		assert(Math.abs(feedback.guide - await page.evaluate(() => TimelineView.timeToX(2000, editor.timelineDock.scale) - editor.timelineDock.body.scrollLeft)) < 0.5, 'A snapped drag draws its guide at the snap');
@@ -80,7 +131,7 @@ async function verifyTimelineGestures(browser) {
 		await page.evaluate(() => editor.historyManager.undo());
 		await ready();
 		assert.equal((await state()).repeats, Infinity, 'One Undo restores the drag');
-		await drag('right', 2040, { alt: true });
+		await drag('right', 2040, { alt: true, shift: true });
 		assert.equal((await state()).repeats, 2.04, 'Alt bypasses snapping');
 		assert.equal(feedback.guide, null, 'An unsnapped drag has no guide');
 		before = await state();
@@ -104,6 +155,12 @@ async function verifyTimelineGestures(browser) {
 		const bar = page.locator('#timelineDock .timeline-bar').first();
 		await bar.focus();
 		before = await state();
+		assert(await bar.evaluate(button => {
+			const dock = editor.timelineDock, node = button.closest('.timeline-row'), row = dock.rowFor(node);
+			const left = button.style.left;
+			button.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }));
+			return button.style.left !== left && Math.abs(parseFloat(button.style.left) - TimelineView.timeToX(row.startMs, dock.scale)) < 0.01;
+		}), 'A keyboard nudge places the bar before the delayed estimate arrives');
 		await page.keyboard.press('ArrowRight');
 		await page.keyboard.press('ArrowRight');
 		after = await state();
@@ -120,6 +177,11 @@ async function verifyTimelineGestures(browser) {
 		assert.equal((await state()).phase, 0, 'Reset timing restores the phase');
 		await drag('period', 1200, { alt: true });
 		assert.equal(Math.round((await state()).period), 1200, 'A cycle notch writes duration');
+		await bar.click({ button: 'right' });
+		await page.getByRole('menuitem', { name: 'Reset timing', exact: true }).click(); await ready();
+		assert.equal((await state()).period, 1000, 'Reset timing restores the speed remembered by a notch drag');
+		assert.equal((await state()).originals, null, 'Reset consumes the saved original speed');
+		await drag('period', 1200, { alt: true });
 		await drag('loop', 3600, { alt: true });
 		assert.equal((await state()).loop, 3600, 'Loop-end drag writes document duration');
 		await page.locator('#timelineDock .timeline-loop-end').dblclick();
@@ -167,7 +229,7 @@ async function verifyTimelineGestures(browser) {
 		await page.getByRole('menuitem', { name: 'Match cycle to...', exact: true }).click();
 		assert(Math.abs((await page.locator('.app-menu-panel.is-fixed-menu:visible').boundingBox()).x - menuBox.x) < 1, 'Nested choices retain the right-click anchor');
 		await page.keyboard.press('Escape');
-		await gifBar.focus(); await page.keyboard.press('Enter');
+		await gifBar.focus(); await page.keyboard.press('Shift+F10');
 		assert(Math.abs((await page.locator('.app-menu-panel.is-fixed-menu:visible').boundingBox()).x - menuBar.x) < 1, 'Keyboard menus anchor at the visible start of the bar');
 		await page.keyboard.press('Escape');
 		await page.evaluate(() => editor.timelineDock.setZoom('fit'));
@@ -176,6 +238,10 @@ async function verifyTimelineGestures(browser) {
 		await page.getByRole('menuitem', { name: /1\.20 s/ }).click();
 		await ready();
 		assert.equal(await page.evaluate(() => editor.layerManager.getLayerById(window.timelineGifId).stickerData.gifCycleMs), 1200, 'GIF menu matches another source cycle');
+		assert.equal(await page.evaluate(() => editor.historyManager.history[editor.historyManager.historyIndex].label), 'Match cycle', 'A cycle choice commits its parent action label');
+		await gifBar.click({ button: 'right' });
+		await page.getByRole('menuitem', { name: 'Reset timing', exact: true }).click(); await ready();
+		assert(await page.evaluate(() => editor.layerManager.getLayerById(window.timelineGifId).stickerData.gifCycleMs == null), 'Reset timing also restores the speed remembered by Match cycle');
 		await gifBar.click({ button: 'right' });
 		await page.getByRole('menuitem', { name: 'Reset speed', exact: true }).click();
 		await ready();
@@ -188,11 +254,11 @@ async function verifyTimelineGestures(browser) {
 		await page.getByRole('menuitem', { name: 'Reset timing', exact: true }).click();
 		await ready();
 		assert(await page.evaluate(() => editor.layerManager.getLayerById(window.timelineGifId).stickerData.gifCycleMs == null), 'Reset timing restores the cycle remembered by Fit');
-		// Arrows walk the bars, across layers; Enter opens the bar's menu.
+		// Arrows walk the bars, across layers; Enter selects and Shift+F10 opens the menu.
 		const focusedLayer = () => page.evaluate(() => document.activeElement.closest('.timeline-group')?.dataset.layerId);
 		const fixtureId = await page.evaluate(() => window.timelineFixtureId);
 		await page.locator(`#timelineDock [data-layer-id="${fixtureId}"] .timeline-bar`).focus();
-		assert.equal(await page.evaluate(() => editor.notifications.statusText.textContent), 'Drag to move · left edge changes start · right edge trims repeats · Shift-edge stretches cycles · Alt-drag slips · right-click for more', 'A focused bar says what it can do');
+		assert.equal(await page.evaluate(() => editor.notifications.statusText.textContent), 'Drag to move · left edge changes start · right edge sets length · Shift-edge changes repeats · Alt-drag slips · Enter selects · right-click or Shift+F10 for more', 'A focused bar says what it can do');
 		await page.keyboard.press('Home');
 		assert.equal(await focusedLayer(), await page.evaluate(() => window.timelineGifId), 'Home reaches the first bar, in another layer');
 		await page.keyboard.press('End');
@@ -202,7 +268,9 @@ async function verifyTimelineGestures(browser) {
 		await page.keyboard.press('ArrowDown');
 		assert.equal(await focusedLayer(), fixtureId);
 		await page.keyboard.press('Enter');
-		assert(await page.getByRole('menuitem', { name: 'Reset timing', exact: true }).isVisible(), 'Enter opens the bar menu');
+		assert.equal(await page.evaluate(() => editor.timelineDock.selectedKey), await page.locator(`#timelineDock [data-layer-id="${fixtureId}"] .timeline-row`).getAttribute('data-source-key'), 'Enter selects the focused bar');
+		await page.keyboard.press('Shift+F10');
+		assert(await page.getByRole('menuitem', { name: 'Reset timing', exact: true }).isVisible(), 'Shift+F10 opens the bar menu');
 		await page.keyboard.press('Escape');
 		// A one-cycle bar too short for its grips still moves by its body.
 		await page.evaluate(async () => {
@@ -222,14 +290,44 @@ async function verifyTimelineGestures(browser) {
 		assert(after.delay > before.delay + 400 && after.repeats === 1, 'A short bar moves by its body');
 		await drag('right', after.delay + 400, { alt: true });
 		assert(Math.abs((await state()).period - 400) < 0.01 && (await state()).repeats === 1, 'A one-cycle right edge stretches duration and keeps one repeat');
-		assert.match(feedback.text, /^Cycle 0\.40 s \(was 0\.20 s\)/);
+		assert.equal(feedback.text, 'Lasts 0.40 s · 1 × 0.40 s (was 0.20 s · 1 × 0.20 s)');
 		await page.evaluate(() => editor.historyManager.undo()); await ready();
 		after = await state();
 		await drag('right', after.delay + 400, { alt: true, shift: true });
 		assert(Math.abs((await state()).period - 200) < 0.01 && Math.abs((await state()).repeats - 2) < 0.01, 'Shift on a one-cycle edge adds repeats');
 		after = await state();
-		await drag('right', after.delay + 800, { alt: true, shift: true });
-		assert(Math.abs((await state()).period - 400) < 0.01 && Math.abs((await state()).repeats - 2) < 0.01, 'Shift on a repeating edge stretches duration and keeps its count');
+		await drag('right', after.delay + 800, { alt: true });
+		assert(Math.abs((await state()).period - 400) < 0.01 && Math.abs((await state()).repeats - 2) < 0.01, 'An ordinary repeating edge sets length and keeps its count');
+		after = await state();
+		await drag('right', after.delay + 1200, { alt: true, shift: true });
+		assert.equal((await state()).repeats, 3, 'Shift on a repeating edge changes the count');
+		assert(Math.abs((await state()).period - 400) < 0.01);
+		await page.evaluate(async () => {
+			const layer = editor.layerManager.getLayerById(window.timelineFixtureId);
+			Object.assign(layer.animations[0], { periodMs: 500, iterations: 2, delayMs: 0, phase: 0.25 });
+			editor.shapeGlitterManager.renderLayer(layer); editor.saveState('Offset duration fixture'); await editor.updateExportDuration();
+		}); await ready();
+		before = await state();
+		await drag('right', 1400, { alt: true, cancel: true });
+		assert.deepEqual(await state(), before, 'Escape restores both period and run from a duration drag');
+		await drag('right', 1400, { alt: true, pointerCancel: true });
+		assert.deepEqual(await state(), before, 'Pointer cancellation restores both period and run');
+		await drag('right', 1400, { alt: true });
+		after = await state();
+		assert.equal(after.repeats, 2); assert.equal(after.phase, 0.25);
+		assert(Math.abs(after.period - 800) < 0.01, 'Duration preserves repeat count and Start offset');
+		assert.equal(after.history, before.history + 1);
+		await page.evaluate(() => editor.historyManager.undo()); await ready();
+		assert.deepEqual(await state(), before);
+		await page.evaluate(async () => {
+			const layer = editor.layerManager.getLayerById(window.timelineFixtureId);
+			Object.assign(layer.animations[0], { periodMs: 1000, iterations: 2, delayMs: 0, phase: 0 });
+			editor.shapeGlitterManager.renderLayer(layer); editor.saveState('Duration limit fixture'); await editor.updateExportDuration();
+		}); await ready();
+		await drag('right', 50);
+		assert.equal((await state()).repeats, 2, 'A cycle limit never turns the duration edge into a trim');
+		assert.equal((await state()).period, 100);
+		assert.equal(feedback.guide, null, 'A clamped duration edge drops the snap');
 
 		await page.evaluate(async () => {
 			editor.animationPanel.setPaused(true);
@@ -266,9 +364,10 @@ async function verifyTimelineGestures(browser) {
 		assert(await page.evaluate(() => {
 			const dock = editor.timelineDock;
 			dock.setZoom(dock.config.pxPerSecondStops.at(-1));
+			const row = dock.body.querySelector('.timeline-row'), ruler = dock.rulerTrack;
 			const scale = dock.scale;
 			const consumed = !dock.header.dispatchEvent(new WheelEvent('wheel', { bubbles: true, cancelable: true, ctrlKey: true, deltaY: -100 }));
-			return consumed && dock.scale === scale;
+			return consumed && dock.scale === scale && row === dock.body.querySelector('.timeline-row') && ruler === dock.rulerTrack;
 		}), 'Ctrl-wheel remains consumed at the timeline zoom limit');
 		await page.evaluate(() => { editor.timelineDock.setZoom(300); editor.timelineDock.scrollToTimeX(0); });
 		await page.mouse.move(bodyBox.x + bodyBox.width - 40, bodyBox.y + 30);
@@ -356,6 +455,64 @@ async function verifyTimelineGestures(browser) {
 		assert(await body.evaluate(node => node.scrollLeft) > barEdgeBefore + 20, 'A bar held beyond the edge uses the shared scroll clock');
 		await page.keyboard.press('Escape'); await page.mouse.up(); await ready();
 		assert.deepEqual(await state(), before, 'Cancelling an edge-scrolling bar restores timing without history');
+		assert(await page.evaluate(() => {
+			const dock = editor.timelineDock, bar = dock.body.querySelector(`[data-layer-id="${window.timelineFixtureId}"] .timeline-bar`), box = bar.getBoundingClientRect();
+			bar.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerId: 81, clientX: box.left + 30, clientY: box.top + box.height / 2 }));
+			if (!dock.drag) return false;
+			const estimate = { ...editor.loopEstimate, renderClock: { ...editor.loopEstimate.renderClock, frameCount: 123 } };
+			editor.loopEstimate = estimate; dock.sync(estimate);
+			window.dispatchEvent(new PointerEvent('pointerup', { pointerId: 81 }));
+			return !dock.drag && !dock.syncPending && dock.model.frameCount === 123;
+		}), 'An estimate arriving during an unmoved bar press is replayed on release');
+		assert(await page.evaluate(() => {
+			const dock = editor.timelineDock, model = dock.model, theme = editor.interfaceTheme;
+			editor.interfaceTheme = theme === 'light' ? 'dark' : 'light'; editor.applyInterfaceTheme();
+			const matches = dock.rulerTicks.text === getComputedStyle(dock.host).getPropertyValue('--color-text-secondary') && dock.model === model;
+			editor.interfaceTheme = theme; editor.applyInterfaceTheme();
+			return matches;
+		}), 'A theme change refreshes ruler colors without rebuilding rows');
+		assert(await page.evaluate(() => {
+			const dock = editor.timelineDock, layer = editor.layerManager.getLayerById(window.timelineFixtureId);
+			const row = dock.model.groups.find(group => group.layerId === layer.id).rows[0];
+			const delay = layer.animations[0].delayMs, history = editor.historyManager.historyIndex;
+			dock.markStale(); dock.nudgeRow(row, { key: 'ArrowRight', shiftKey: false });
+			const held = dock.stale && dock.host.classList.contains('is-stale') && !dock.canEdit(row)
+				&& layer.animations[0].delayMs === delay && editor.historyManager.historyIndex === history;
+			dock.resync();
+			return held && !dock.stale;
+		}), 'A stale model rejects nudges until a resync clears its state');
+		assert(await page.evaluate(() => {
+			const dock = editor.timelineDock, row = dock.model.groups.find(group => group.layerId === window.timelineFixtureId).rows[0];
+			const drawing = { ...row, exportCycleMs: 1000, cycleMarks: [0.5], source: { ...row.source, keyTrack: {} } };
+			const marks = dock.buildMarks(drawing, 0, 3000), children = [...marks.children];
+			dock.buildMarks({ ...drawing, phase: 0.1 }, 0, 3000, marks);
+			return children.length > 0 && children.every((node, index) => marks.children[index] === node);
+		}), 'Moving cycle marks retains the existing mark nodes');
+		await page.evaluate(async () => {
+			const layer = editor.layerManager.getLayerById(window.timelineFixtureId);
+			Object.assign(layer.animations[0], { periodMs: 100, delayMs: 0 });
+			editor.setDocumentLoop({ mode: 'set', durationMs: 10000 }, { commit: false });
+			editor.timelineDock.setZoom('fit'); await editor.updateExportDuration();
+		}); await ready();
+		assert.equal(await page.locator(`[data-layer-id="${fixtureId}"] .timeline-period-notch`).count(), 0, 'Dense cycles leave the bar body available to drag');
+		await page.getByRole('button', { name: 'Timeline options', exact: true }).click();
+		assert(await page.getByRole('menuitem', { name: 'Zoom to fit', exact: true }).isVisible());
+		const output = page.getByRole('menuitemcheckbox', { name: 'Output frames', exact: true });
+		const cycles = page.getByRole('menuitemcheckbox', { name: 'Cycle marks', exact: true });
+		await output.click();
+		assert(await output.isVisible() && await output.isChecked(), 'An Output frames checkbox remains open and exposes its checked state');
+		await cycles.click();
+		assert(await cycles.isVisible() && !await cycles.isChecked(), 'Several Show choices can change in one open menu');
+		await output.click(); await cycles.click();
+		await page.keyboard.press('Escape');
+		assert(!(await output.isVisible()), 'Escape still closes the options menu');
+		await page.evaluate(() => editor.timelineDock.setZoom(300));
+		await page.getByRole('button', { name: 'Timeline options', exact: true }).click();
+		await page.getByRole('menuitem', { name: 'Zoom to fit', exact: true }).click();
+		assert(!(await output.isVisible()), 'An ordinary menu action still closes the menu');
+		await page.getByRole('button', { name: 'Timeline options', exact: true }).click();
+		await page.evaluate(() => editor.timelineDock.close());
+		assert.equal(await page.getByRole('menuitem', { name: 'Zoom to fit', exact: true }).isVisible(), false, 'Closing the dock closes its portaled options menu');
 		assert.deepEqual(errors, []);
 		console.log('PASS timeline gestures: body move and slip, snap guide and readout, Alt, live trim, Undo, Escape, locked bars, nudge burst, arrow focus, menu, short bars, cycle and loop length');
 	} finally { await context.close(); }

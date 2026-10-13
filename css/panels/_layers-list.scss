@@ -81,10 +81,6 @@
 	.list-row-action {
 		color: var(--color-text-primary);
 
-		&.lock.active {
-			background: none;
-		}
-
 		&.lock.permanent {
 			opacity: 0.65;
 			cursor: help;

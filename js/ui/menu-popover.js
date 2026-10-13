@@ -1,13 +1,35 @@
 'use strict';
 
+function buildMenuItem({ label, run = null, title = '', role = 'menuitem', current = false }) {
+	const button = document.createElement('button');
+	button.type = 'button'; button.className = 'app-menu-item';
+	button.setAttribute('role', role);
+	if (title) button.title = title;
+	if (run) button.addEventListener('click', run);
+	else button.disabled = true;
+	if (current) {
+		const text = document.createElement('span'); text.className = 'app-menu-item-label'; text.textContent = label;
+		const check = document.createElement('span'); check.className = 'app-menu-item-current';
+		check.setAttribute('aria-hidden', 'true'); check.appendChild(createIcon('check'));
+		button.append(text, check);
+	} else button.textContent = label;
+	return button;
+}
+
 // `liftHost` is a bar that forms its own stacking context: it carries
 // `.has-open-menu` while the panel is open so the menu can rise above its
 // neighbours.
-function setupMenuPopover({ root, trigger, panel, liftHost = null, fixed = false, beforeOpen = null, itemSelector = '.app-menu-item:not([disabled])', bindTrigger = true }) {
+function setupMenuPopover({
+	root, trigger, panel, liftHost = null, fixed = false, beforeOpen = null,
+	itemSelector = '.app-menu-item:not([disabled])', bindTrigger = true, keepOpenSelector = null
+}) {
 	if (!root || !trigger || !panel) return null;
 	const panelParent = panel.parentElement;
 	const panelNext = panel.nextSibling;
-	const closeOnViewportChange = () => close();
+	const closeOnViewportChange = event => {
+		if (event.type === 'scroll' && !event.target.contains?.(trigger)) return;
+		close();
+	};
 	const isOpen = () => !panel.hidden;
 	const close = ({ focusTrigger = false } = {}) => {
 		if (!isOpen()) return;
@@ -73,7 +95,8 @@ function setupMenuPopover({ root, trigger, panel, liftHost = null, fixed = false
 	}
 	if (bindTrigger) trigger.addEventListener('click', () => (isOpen() ? close() : open()));
 	panel.addEventListener('click', (event) => {
-		if (event.target.closest('.app-menu-item')) close();
+		const item = event.target.closest('.app-menu-item');
+		if (item && (!keepOpenSelector || !item.matches(keepOpenSelector))) close();
 	});
 	return { open, close, isOpen };
 }

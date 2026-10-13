@@ -111,6 +111,16 @@ function createRegistryOptionEntries(name, idPrefix) {
 	}));
 }
 
+// The speed of an animated GIF source (glitter, sticker or image), a set under
+// its section's Advanced. The loop estimate shows it for a GIF that can be
+// stretched (syncGifCycleControls).
+function createGifCycleSet(idPrefix) {
+	return {
+		feature: 'gifCycle', label: 'Animation', hidden: true, attrs: { 'data-gif-cycle-set': '' },
+		rows: [{ kind: 'slider', id: `${idPrefix}GifCycle`, slider: 'gifCycle' }]
+	};
+}
+
 // Everything behind a Sparkles section's presets, under its Advanced. Control
 // ids are the slot's panelPrefix + the suffixes the binder reads
 // (ui/paint-slot-controls.js). Sets marked data-sparkle-emitter show only for
@@ -305,8 +315,13 @@ function createAnimationSectionSpec(prefix) {
 				{ kind: 'note', id: id('LoopHint'), classes: 'animation-loop-hint' }
 			] },
 			{ label: 'Movement', rows: [
+				// Repeats follows Duration: one cycle's length, then how many.
 				...GlitterAnimation.ANIMATION_CONTROLS.filter((control) => control.field && !['gap', 'delayMs', 'phase', 'anchorX', 'anchorY'].includes(control.key))
-					.map((control) => ({ kind: 'slider', id: id(control.suffix), slider: control.field, rowId: id(`${control.suffix}Row`) })),
+					.flatMap((control) => [
+						{ kind: 'slider', id: id(control.suffix), slider: control.field, rowId: id(`${control.suffix}Row`) },
+						...(control.key === 'periodMs' ? [{ kind: 'field', id: id('Iterations'), type: 'number', ...FIELDS.animIterations,
+							toggle: { id: id('IterationsForever'), label: 'Repeat forever', title: 'Repeat forever' } }] : [])
+					]),
 				{ kind: 'select', id: id('Repeat'), label: 'Repeat', rowId: id('RepeatRow'), hidden: true,
 					hint: 'None leaves the canvas before it returns. Wrap enters the opposite edge as it leaves. Tile fills the canvas with copies.',
 					options: [{ value: 'none', label: 'None' }, { value: 'wrap', label: 'Wrap' }, { value: 'tile', label: 'Tile' }] },
@@ -349,9 +364,7 @@ function createAnimationSectionSpec(prefix) {
 				{ kind: 'select', id: id('Direction'), label: 'Direction', options: [
 					{ value: 'normal', label: 'Normal' }, { value: 'reverse', label: 'Reverse' },
 					{ value: 'alternate', label: 'Alternate' }, { value: 'alternate-reverse', label: 'Alternate reverse' }
-				] },
-				{ kind: 'field', id: id('Iterations'), type: 'number', ...FIELDS.animIterations,
-					toggle: { id: id('IterationsForever'), label: 'Repeat forever', title: 'Repeat forever' } }
+				] }
 			] },
 			{ label: 'Start', rows: [
 				...sliders(['delayMs', 'phase']),
@@ -638,8 +651,7 @@ const PANEL_SCHEMAS = {
 						{ kind: 'assetInfo', info: 'frameImageInfo', thumbnail: 'frameImageThumbnail', name: 'frameImageName', badges: 'frameImageBadges', change: 'frameImageChange', compact: true, hidden: true, title: 'Choose another frame image' }
 					] },
 					{ attrs: { 'data-frame-kind': 'image', hidden: 'hidden' }, rows: [
-						{ kind: 'segmented', label: 'Fit', get options() { return createRegistryOptionEntries('frameFit', 'frameFit'); } },
-						{ kind: 'slider', id: 'frameGifCycle', slider: 'gifCycle', feature: 'gifCycle', hidden: true }
+						{ kind: 'segmented', label: 'Fit', get options() { return createRegistryOptionEntries('frameFit', 'frameFit'); } }
 					] },
 					// Fit to canvas leads the set: it decides whether the sizes
 					// under it follow the canvas or the frame's own box.
@@ -650,7 +662,7 @@ const PANEL_SCHEMAS = {
 						{ kind: 'slider', id: 'frameRadius', slider: 'frameRadius', rowId: 'frameRadiusRow' },
 						{ kind: 'slider', id: 'frameInset', slider: 'frameInset', rowId: 'frameInsetRow' }
 					] }
-				] }
+				], advanced: [createGifCycleSet('frame')] }
 			] },
 			{ title: 'Appearance', sections: [
 				createLayerSectionSpec('frameLayerOpacity', 'frameLayerBlendMode'),
@@ -850,8 +862,7 @@ const PANEL_SCHEMAS = {
 						{ kind: 'assetInfo', info: 'stickerAssetInfo', thumbnail: 'stickerAssetThumbnail',
 							name: 'stickerAssetName', badges: 'stickerAssetBadges', change: 'stickerAssetChange',
 							size: 'stickerAssetSize', frames: 'stickerAssetFrames', title: 'Choose another sticker' },
-						{ kind: 'toggle', id: 'stickerSliceEnabled', label: 'Smart stretch', checked: true },
-						{ kind: 'slider', id: 'stickerGifCycle', slider: 'gifCycle', feature: 'gifCycle', hidden: true }
+						{ kind: 'toggle', id: 'stickerSliceEnabled', label: 'Smart stretch', checked: true }
 					] },
 					{ actions: [{ id: 'stickerRemoveBackground', label: 'Remove background', icon: 'eraser' }] }
 				], advanced: [
@@ -859,7 +870,8 @@ const PANEL_SCHEMAS = {
 						{ kind: 'slider', id: 'stickerHue', slider: 'hue' },
 						{ kind: 'slider', id: 'stickerSaturation', slider: 'saturation' },
 						{ kind: 'slider', id: 'stickerBrightness', slider: 'brightness' }
-					] }
+					] },
+					createGifCycleSet('sticker')
 				] }
 			] },
 			{ title: 'Appearance', sections: [

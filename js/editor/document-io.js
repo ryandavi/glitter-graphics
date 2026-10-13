@@ -2,7 +2,7 @@
 
 const EDITOR_DOCUMENT_IO_METHODS = {
 	beginDocumentReplace() {
-		PREFERENCES.reset('timelineCollapsed');
+		this.timelineDock?.resetDocumentView();
 		// Session teardown can commit edits, so it precedes resource release and history reset.
 		getSessionDefinition(this)?.end?.(this);
 		TOOLS[this.currentTool]?.onDeactivate?.(this, this.currentTool, { commitStroke: false });

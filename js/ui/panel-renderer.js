@@ -1071,13 +1071,8 @@ function buildGlitterAdvancedSets(slot, options = {}) {
 	return [colorSet, textureSet];
 }
 
-// The speed of an animated GIF source (glitter or image). The loop estimate
-// shows it for a slot whose GIF can be stretched (syncGifCycleControls).
 function buildGifCycleSet(slot, schema) {
-	return buildPanelSet({
-		feature: 'gifCycle', label: 'Animation', hidden: true, attrs: { 'data-gif-cycle-set': '' },
-		rows: [{ kind: 'slider', id: `${slot.idPrefix}GifCycle`, slider: 'gifCycle' }]
-	}, schema);
+	return buildPanelSet(createGifCycleSet(slot.idPrefix), schema);
 }
 
 // The one disclosure a section may end with, always labelled "Advanced". It

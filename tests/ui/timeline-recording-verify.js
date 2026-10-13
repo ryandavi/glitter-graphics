@@ -23,7 +23,7 @@ const { openApp } = require('../lib/app');
 			return { rest: JSON.stringify(layer.transform), geometry: JSON.stringify({ width: layer.shapeData.width, height: layer.shapeData.height, radius: layer.shapeData.cornerRadiusPx }), keys: layer.animations[0].keys, history: editor.historyManager.historyIndex };
 		});
 		const arm = async () => { await ready(); await page.evaluate(() => { const layer = editor.layerManager.getActiveLayer(); editor.viewport.setZoom(1, null, null, { animate: false }); editor.timelineKeyRecording.begin(layer, layer.animations[0]); }); await page.waitForTimeout(100); };
-		const drag = async (kind, dx, dy, { escape = false, cancel = false, shift = false } = {}) => {
+		const drag = async (kind, dx, dy, { escape = false, cancel = false, blur = false, shift = false } = {}) => {
 			const selector = kind === 'move' ? '.is-recording-keys .transform-bounding-box' : `.is-recording-keys [data-handle-type="${kind}"]`;
 			await page.locator(selector).waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
 			const box = await page.locator(selector).boundingBox();
@@ -41,6 +41,7 @@ const { openApp } = require('../lib/app');
 			assert(await page.evaluate(() => Boolean(editor.timelineKeyRecording.drag?.moved && editor.timelineKeyRecording.active)), 'The recording transaction stays active during movement');
 			assert(await page.evaluate(() => JSON.stringify(editor.layerManager.getActiveLayer().transform) === editor.timelineKeyRecording.restToken), 'A live gesture never writes the rest transform');
 			if (escape) await page.keyboard.press('Escape');
+			if (blur) await page.evaluate(() => window.dispatchEvent(new Event('blur')));
 			if (cancel) await page.evaluate(() => {
 				const record = editor.timelineKeyRecording;
 				record.drag.handle.dispatchEvent(new PointerEvent('pointercancel', { pointerId: record.drag.pointerId, bubbles: true }));
@@ -55,6 +56,18 @@ const { openApp } = require('../lib/app');
 			preview: editor.timelineDock.frameView.params.visibleLayers.find(layer => layer.id === editor.activeLayerId).animations.length,
 			label: document.getElementById('canvasActivityModeLabel').textContent }));
 		assert.deepStrictEqual(isolated, { original: 2, preview: 1, label: 'Recording keys' });
+		const scrubWork = await page.evaluate(() => {
+			const record = editor.timelineKeyRecording, lane = editor.timelineDock.keyLane;
+			const buttons = [...lane.buttons], validate = record.validate, refresh = lane.refresh;
+			let validations = 0, refreshes = 0;
+			record.validate = function (...args) { validations++; return validate.apply(this, args); };
+			lane.refresh = function (...args) { refreshes++; return refresh.apply(this, args); };
+			for (let ms = 260; ms <= 350; ms += 10) editor.animationTicker.seek(ms);
+			record.validate = validate; lane.refresh = refresh;
+			return { validations, refreshes, same: buttons.every((button, index) => button === lane.buttons[index]) };
+		});
+		assert.deepStrictEqual(scrubWork, { validations: 0, refreshes: 0, same: true }, 'Recording scrubs update the pose without validation or key-button rebuilds');
+		await page.evaluate(() => editor.animationTicker.seek(250));
 		let before = await state();
 		await drag('move', 30, 12);
 		let after = await state();
@@ -69,6 +82,9 @@ const { openApp } = require('../lib/app');
 		await drag('move', 50, 20, { escape: true }); assert.deepStrictEqual(await state(), before);
 		assert(await page.evaluate(() => editor.timelineKeyRecording.active), 'First Escape cancels the gesture');
 		await drag('move', 50, 20, { cancel: true }); assert.deepStrictEqual(await state(), before);
+		await drag('move', 50, 20, { blur: true }); assert.deepStrictEqual(await state(), before);
+		assert(await page.evaluate(() => editor.timelineKeyRecording.active && !editor.timelineKeyRecording.drag
+			&& document.querySelector('[data-transform-prefix="shape"] input').disabled), 'Blur rolls back the gesture and retains the recording session');
 		await page.keyboard.press('Escape'); assert(!(await page.evaluate(() => editor.timelineKeyRecording.active)), 'Second Escape exits recording');
 		await arm(); before = await state();
 		const fixedBefore = await page.evaluate(() => PoseGeometry.frame(editor, editor.timelineKeyRecording.transform, editor.timelineKeyRecording.pose()).corners[0]);

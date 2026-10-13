@@ -3,6 +3,10 @@ function formatUnit(value, unit) {
 	return `${value}<span class="setting-unit">${unit}</span>`;
 }
 
+function formatSeconds(ms, { unit = true } = {}) {
+	return `${(ms / 1000).toFixed(2)}${unit ? ' s' : ''}`;
+}
+
 function formatDimensions(width, height, unit = 'px') {
 	return `${width}<span class="setting-separator"> × </span>${height}<span class="setting-unit">${unit}</span>`;
 }

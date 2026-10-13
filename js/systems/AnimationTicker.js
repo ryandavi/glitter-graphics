@@ -4,6 +4,8 @@ class AnimationTicker {
 	constructor(editor) {
 		this.editor = editor;
 		this.targets = new Map();
+		this.tickListeners = new Set();
+		this.seekListeners = new Set();
 		this.frameRequest = null;
 		this.paused = false;
 		this.timelineStartedAt = null;
@@ -66,8 +68,7 @@ class AnimationTicker {
 	// Moves the playhead. Frozen, every target is repainted there; playing,
 	// the clock carries on from there.
 	seek(ms) {
-		if (this.editor.timelineKeyRecording?.drag) this.editor.timelineKeyRecording.finish(true);
-		if (isFeatureAvailable('timeline')) this.editor.timelineDock?.frameView?.seek();
+		for (const listener of this.seekListeners) listener();
 		this.heldMs = this._wrap(Number(ms) || 0);
 		if (!this._isPreviewPaused() && this.timelineStartedAt != null) this.timelineStartedAt = performance.now() - this.heldMs;
 		this.refresh();
@@ -93,10 +94,20 @@ class AnimationTicker {
 		return this._isPreviewPaused() ? this.heldMs : this._elapsedAt(now);
 	}
 
-	// The playhead needs the clock even when nothing on the canvas is driven
-	// from it (a document of GIFs only).
+	subscribeTick(listener) {
+		this.tickListeners.add(listener);
+		this.refresh();
+		return () => { this.tickListeners.delete(listener); if (!this._hasWork()) this.stop(); };
+	}
+
+	subscribeSeek(listener) {
+		this.seekListeners.add(listener);
+		return () => this.seekListeners.delete(listener);
+	}
+
+	// Display subscribers can need a clock without a procedural preview target.
 	_hasWork() {
-		return this.targets.size > 0 || Boolean(isFeatureAvailable('timeline') && this.editor.timelineDock?.isOpen);
+		return this.targets.size > 0 || this.tickListeners.size > 0;
 	}
 
 	_elapsedAt(now) {
@@ -154,7 +165,8 @@ class AnimationTicker {
 	_paint(now) {
 		const time = this._timeAt(now);
 		this.targets.forEach((entry, layerId) => this._paintEntry(layerId, entry, time));
-		if (isFeatureAvailable('timeline')) this.editor.timelineDock?.paintPlayhead(this.getPlayheadTime(now));
+		const playhead = this.getPlayheadTime(now);
+		for (const listener of this.tickListeners) listener(playhead);
 	}
 
 	_paintEntry(layerId, entry, time) {

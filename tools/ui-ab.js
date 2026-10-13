@@ -5,7 +5,7 @@
 // SAME DOM and reports each element whose computed style or box differs.
 //
 //   npx sass css/style.scss <scratch>/b.css --no-source-map
-//   node tools/ui-ab.js <a.css> <b.css> [--only name] [--max N] [--agg] [--rects] [--allow file.json]
+//   node tools/ui-ab.js <a.css> <b.css> [--only name] [--max N] [--agg] [--rects] [--allow file.json] [--before-inline file.json]
 //
 // A is usually a compile of the commit being changed; B is the candidate.
 // `--allow` names a JSON list of accepted differences, each
@@ -13,7 +13,7 @@
 // label, the property and "old -> new". Exit code 1 when anything differs.
 
 const fs = require('fs');
-const { chromium, VIEWPORTS, boot, wait, desktopStates, phoneStates, recolorStates } = require('./ui-states');
+const { chromium, VIEWPORTS, boot, wait, desktopStates, phoneStates, recolorStates, timelineStates } = require('./ui-states');
 
 const args = process.argv.slice(2);
 const flag = (name) => args.includes(name);
@@ -26,6 +26,8 @@ if (!A || !B || A.startsWith('--') || B.startsWith('--')) {
 const only = option('--only');
 const MAX = Number(option('--max') || 25);
 const css = { a: fs.readFileSync(A), b: fs.readFileSync(B) };
+// Moving JS-owned sizes to CSS needs the old inline values on the A side.
+const beforeInline = option('--before-inline') ? JSON.parse(fs.readFileSync(option('--before-inline'), 'utf8')) : [];
 const allowFile = option('--allow');
 const allow = allowFile
 	? JSON.parse(fs.readFileSync(allowFile, 'utf8')).map((r) => ({ el: new RegExp(r.el), prop: new RegExp(r.prop), val: r.val ? new RegExp(r.val) : null }))
@@ -36,6 +38,19 @@ const allow = allowFile
 const IGNORE = /^(border-block|border-inline|column-rule|outline-color|row-rule|text-decoration-color|text-emphasis|-webkit-text-fill|-webkit-text-stroke|margin-inline|margin-block|padding-inline|padding-block|caret-color|min-block|max-block|scroll-|transition|animation|-webkit-transition|-webkit-animation|will-change|perspective-origin|transform-origin|inline-size|block-size|width|height|inset|top|left|right|bottom|min-inline|max-inline)/;
 
 async function useCss(page, which) {
+	await page.evaluate(({ which, overrides }) => {
+		if (which === 'a') {
+			window.__abInline = [];
+			for (const { selector, properties } of overrides) for (const node of document.querySelectorAll(selector)) {
+				for (const [property, value] of Object.entries(properties)) {
+					window.__abInline.push({ node, property, value: node.style.getPropertyValue(property) });
+					node.style.setProperty(property, value);
+				}
+			}
+		} else for (const { node, property, value } of window.__abInline || []) {
+			if (value) node.style.setProperty(property, value); else node.style.removeProperty(property);
+		}
+	}, { which, overrides: beforeInline });
 	await page.evaluate((w) => new Promise((resolve) => {
 		const link = document.querySelector('link[data-ab]') || document.querySelector('link[rel="stylesheet"][href*="css/style.css"]');
 		const next = link.cloneNode();
@@ -110,6 +125,7 @@ const summary = [];
 
 const comparer = (page) => async (name) => {
 	if (only && !name.includes(only)) return;
+	if (only === 'timeline') await page.evaluate(() => editor.animationPanel.setPaused(true));
 	await useCss(page, 'a');
 	await snap(page, 'a');
 	await useCss(page, 'b');
@@ -153,7 +169,8 @@ const comparer = (page) => async (name) => {
 		const errors = [];
 		page.on('pageerror', (e) => errors.push(e.message));
 		await boot(page, css);
-		if (only === 'recolor') await recolorStates(page, comparer(page), phone ? 'phone' : 'desk');
+		if (only === 'timeline') await timelineStates(page, comparer(page), phone ? 'phone' : 'desk');
+		else if (only === 'recolor') await recolorStates(page, comparer(page), phone ? 'phone' : 'desk');
 		else if (only === 'exportPreviewModal') {
 			await page.evaluate(() => editor.modalManager.open('exportPreviewModal'));
 			await wait(page, 350);

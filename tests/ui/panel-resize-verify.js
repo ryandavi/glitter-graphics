@@ -8,7 +8,9 @@ async function main() {
 	try {
 		await page.evaluate(async () => {
 			editor.modalManager.closeAll({ force: true });
-			PREFERENCES.set('reduceMotion', true);
+			// The global Reduce Motion duration also creates width transitions on
+			// otherwise nontransitioning panels; exercise separator resizing without it.
+			PREFERENCES.set('reduceMotion', false);
 			PREFERENCES.set('showHints', false);
 			await editor.loadBlankImage(500, 400, '#ffffff');
 		});
@@ -62,7 +64,23 @@ async function main() {
 		assert(Math.abs((await frame()).dx) < 1, 'Switching balance off during a drag retains centering');
 		await page.locator('[data-panel-resize="layers"]').focus();
 		await page.keyboard.press('Shift+ArrowRight');
+		await settle();
 		assert(Math.abs((await frame()).dx) < 1, 'Keyboard resizing retains centering');
+		await page.waitForFunction(() => getPanelWidth('layers') === parseFloat(document.documentElement.style.getPropertyValue('--layer-panel-width')));
+		for (const cancel of ['Escape', 'blur']) {
+			const width = await page.evaluate(() => getPanelWidth('layers'));
+			const handle = page.locator('[data-panel-resize="layers"]'), box = await handle.boundingBox();
+			await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2); await page.mouse.down();
+			await page.mouse.move(box.x + box.width / 2 - 40, box.y + box.height / 2);
+			assert.notEqual(await page.evaluate(() => getPanelWidth('layers')), width, 'A separator changes width while pressed');
+			if (cancel === 'Escape') await page.keyboard.press('Escape');
+			else await page.evaluate(() => window.dispatchEvent(new Event('blur')));
+			await page.mouse.up(); await settle();
+			assert.equal(await page.evaluate(() => getPanelWidth('layers')), width, `${cancel} restores a separator's original width`);
+			assert.equal(await handle.evaluate(node => node.classList.contains('is-dragging')), false);
+		}
+		await page.locator('[data-panel-resize="layers"]').dblclick(); await settle();
+		assert(await page.evaluate(() => !Object.hasOwn(readPanelWidths(), 'layers')), 'Double-click resets the stored separator width');
 
 		await page.evaluate(() => {
 			window.historyPlacementSamples = [];

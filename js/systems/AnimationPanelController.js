@@ -168,6 +168,47 @@ class AnimationPanelController {
 		return this._animations(layer)[this._selectedIndex(layer)] || null;
 	}
 
+	selectedMotion(layer) { return this._selected(layer); }
+	selectedMotionIndex(layer) { return this._selectedIndex(layer); }
+	selectMotion(layer, index) { this.selectedByLayer.set(layer.id, index); }
+	setKeySelection(animation, at) { this.selectedKeys.set(animation, at); }
+	keyAddControl(layer) {
+		const prefix = this.prefixByType.get(layer?.type);
+		return prefix ? this._id(prefix, 'KeyAdd') : null;
+	}
+	syncKeyAdd(layer = this.editor.layerManager.getActiveLayer(), animation = this.selectedMotion(layer)) {
+		if (!layer || !GlitterAnimation.MOTION_REGISTRY[animation?.type]?.keyed) { this.keyAddContext = null; return true; }
+		const dock = this.editor.timelineDock;
+		const progress = this.keyProgress(layer, animation);
+		const disabled = !this.canEditKeys(layer, animation) || !dock?.available || dock.stale || !progress;
+		const add = this.keyAddControl(layer);
+		if (add) {
+			add.disabled = disabled;
+			add.title = disabled ? 'Open the timeline and move the playhead inside this animation' : 'Add a key at the playhead';
+		}
+		const run = GlitterAnimation.runTiming({ ...animation, periodMs: this.keyPeriod(layer, animation) });
+		this.keyAddContext = { layer, animation, run, disabled, inside: Boolean(progress) };
+		return disabled;
+	}
+	paintKeyAdd(time) {
+		const context = this.keyAddContext;
+		if (!context || context.layer !== this.editor.layerManager.getActiveLayer()) return;
+		const inside = time >= context.run.start && time < context.run.end;
+		if (inside !== context.inside) this.syncKeyAdd(context.layer, context.animation);
+	}
+	ownsKeyControl(layer, control) {
+		const prefix = this.prefixByType.get(layer?.type);
+		return Boolean(prefix && control.id?.startsWith(`${prefix}AnimKey`));
+	}
+	transformControls(layer) {
+		const prefix = this.prefixByType.get(layer?.type);
+		if (!prefix) return [];
+		return [
+			document.querySelector(`[data-transform-prefix="${prefix}"]`),
+			document.getElementById(`${prefix}LayerOpacity`)?.closest('.property-row')
+		];
+	}
+
 	canEditKeys(layer, animation) {
 		return isFeatureAvailable('timeline') && this.editor.layers.includes(layer)
 			&& layer.animations?.includes(animation) && GlitterAnimation.MOTION_REGISTRY[animation?.type]?.keyed
@@ -185,7 +226,7 @@ class AnimationPanelController {
 		this.selectedKeys.set(animation, at);
 		this.selectedByLayer.set(layer.id, layer.animations.indexOf(animation));
 		this.editor.timelineDock?.selectMotion(layer.id, this._selectedIndex(layer));
-		if (seek && this.editor.timelineDock?.available && !this.editor.timelineDock.host.classList.contains('is-stale')) {
+		if (seek && this.editor.timelineDock?.available && !this.editor.timelineDock.stale) {
 			const ticker = this.editor.animationTicker;
 			const time = GlitterAnimation.timeAtProgress({ ...animation, periodMs: this.keyPeriod(layer, animation) }, at, ticker.getPlayheadTime());
 			if (time != null) { this.setPaused(true); ticker.seek(time); }
@@ -239,7 +280,7 @@ class AnimationPanelController {
 	}
 
 	addKey(layer, animation) {
-		if (!this.canEditKeys(layer, animation) || !this.editor.timelineDock?.available || this.editor.timelineDock.host.classList.contains('is-stale')) return;
+		if (!this.canEditKeys(layer, animation) || !this.editor.timelineDock?.available || this.editor.timelineDock.stale) return;
 		const progress = this.keyProgress(layer, animation);
 		if (!progress) return;
 		const at = ((progress.eased % 1) + 1) % 1;
@@ -304,7 +345,7 @@ class AnimationPanelController {
 			const node = this._id(prefix, suffix);
 			if (node) node.hidden = !visible;
 		}
-		if (!keyed) return;
+		if (!keyed) { this.keyAddContext = null; return; }
 		const select = this._id(prefix, 'KeySelect');
 		if (select) {
 			select.replaceChildren(...keys.map((entry, index) => {
@@ -342,8 +383,8 @@ class AnimationPanelController {
 		if (empty) empty.hidden = !key || properties.some(held);
 		const addValue = this._id(prefix, 'KeyAddValue');
 		if (addValue) addValue.disabled = !editable;
-		const add = this._id(prefix, 'KeyAdd'), remove = this._id(prefix, 'KeyDelete');
-		if (add) { add.disabled = !editable || !this.editor.timelineDock?.available || !this.keyProgress(layer, animation); add.title = add.disabled ? 'Open the timeline and move the playhead inside this animation' : 'Add a key at the playhead'; }
+		const remove = this._id(prefix, 'KeyDelete');
+		this.syncKeyAdd(layer, animation);
 		if (remove) remove.disabled = !editable || !key;
 		const record = this._id(prefix, 'KeyRecord'), recording = this.editor.timelineKeyRecording;
 		if (record) {

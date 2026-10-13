@@ -702,6 +702,7 @@ initializeExportSettings() {
 
 	applyInterfaceTheme() {
 		document.documentElement.dataset.theme = this.interfaceTheme;
+		window.dispatchEvent(new Event('interfaceThemeChanged'));
 		try {
 			writeStored(STORAGE_KEYS.theme.key, this.interfaceTheme);
 		} catch (error) {

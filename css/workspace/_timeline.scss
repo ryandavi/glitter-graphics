@@ -6,7 +6,7 @@
 	inset: 0;
 	width: 100%;
 	height: 100%;
-	z-index: 19;
+	z-index: var(--z-timeline-frame);
 	pointer-events: none;
 }
 
@@ -15,6 +15,11 @@
 }
 
 .timeline-dock {
+	--timeline-row-height: 28px;
+	--timeline-group-height: 32px;
+	--timeline-group-media: 20px;
+	--timeline-info-width: 120px;
+	--timeline-key-size: 10px;
 	container: timeline / inline-size;
 	position: relative;
 	flex: 0 0 auto;
@@ -45,8 +50,6 @@
 		font-size: var(--font-size-sm);
 	}
 
-	.section-header-action:disabled { opacity: var(--opacity-disabled); }
-
 	// Name, transport, what the export would write, then the view actions.
 	// Only the chevron folds the dock; transport stays clear of the toggle.
 	> .timeline-section > .section-header {
@@ -56,7 +59,6 @@
 		> .section-header-title { flex: 0 0 auto; }
 		> .section-header-actions { gap: var(--spacing-2xs); }
 	}
-	.section-header-action.collapsed .icon { transform: rotate(-90deg); }
 	.timeline-window-actions { display: flex; gap: var(--spacing-2xs); margin-left: var(--spacing-base); }
 	.timeline-summary {
 		display: flex;
@@ -74,7 +76,7 @@
 		display: flex;
 		align-items: center;
 		gap: var(--spacing-xs);
-		padding: 2px var(--spacing-sm);
+		padding: var(--spacing-2xs) var(--spacing-sm);
 		border: 1px solid transparent;
 		border-radius: var(--radius-xs);
 		background: none;
@@ -162,7 +164,7 @@
 		pointer-events: none;
 	}
 	// Where a drag snapped.
-	.timeline-snap-guide { background: var(--color-text-primary); opacity: 0.5; }
+	.timeline-snap-guide { background: var(--color-text-primary); opacity: var(--opacity-dragging); }
 	.timeline-playhead {
 		background: var(--color-accent);
 
@@ -228,7 +230,7 @@
 			width: var(--timeline-loop-x);
 			height: var(--spacing-2xs);
 			background: var(--color-accent);
-			opacity: 0.6;
+			opacity: var(--opacity-muted);
 		}
 	}
 	.timeline-ruler-ticks { display: block; }
@@ -258,16 +260,18 @@
 		border-bottom: 1px solid var(--timeline-line);
 		background: var(--color-bg-secondary);
 	}
-	.timeline-group-label {
-		--list-row-media: var(--timeline-group-media);
+	.timeline-group-label, .timeline-row-label, .timeline-key-label {
 		position: sticky;
 		left: 0;
 		z-index: 1;
+		border-right: 1px solid var(--timeline-line);
+	}
+	.timeline-group-label {
+		--list-row-media: var(--timeline-group-media);
 		min-width: 0;
 		min-height: var(--timeline-group-height);
 		padding-block: var(--spacing-2xs);
 		gap: var(--spacing-xs);
-		border-right: 1px solid var(--timeline-line);
 		// Opaque: it stays put while the tracks scroll under it.
 		background: var(--color-bg-secondary);
 
@@ -300,10 +304,9 @@
 		background: none;
 		cursor: pointer;
 	}
-	.timeline-group-lock.active { background: none; }
 	// Visibility dims the preview, never the row's controls.
 	.timeline-group.is-hidden {
-		.layer-swatch { opacity: 0.35; }
+		.layer-swatch { opacity: var(--opacity-disabled); }
 		.timeline-group-name { color: var(--color-text-tertiary); }
 	}
 	.timeline-group-name {
@@ -324,13 +327,9 @@
 	}
 	.timeline-row-label {
 		@include truncate;
-		position: sticky;
-		left: 0;
-		z-index: 1;
 		text-align: left;
 		padding: 0 var(--spacing-base) 0 var(--timeline-label-inset);
 		height: var(--timeline-row-height);
-		border-right: 1px solid var(--timeline-line);
 		background: var(--timeline-row-bg);
 		color: var(--color-text-secondary);
 		font-weight: var(--font-weight-normal);
@@ -363,7 +362,7 @@
 		padding: 0;
 		transition: background-color var(--transition-fast);
 	}
-	.timeline-bar-ghost { overflow: hidden; }
+	.timeline-bar-ghost { overflow: hidden; --timeline-bar-strength: 22%; pointer-events: none; }
 	// The cursor says what a press on the body would do.
 	.timeline-bar {
 		cursor: pointer;
@@ -414,9 +413,10 @@
 	.timeline-group.is-locked, &.is-stale {
 		.timeline-bar-handle, .timeline-period-notch { display: none; }
 	}
+	.timeline-row.is-changing-cycles .timeline-period-notch { display: none; }
 	.timeline-period-notch { transform: translateX(-50%); cursor: col-resize; }
 	.timeline-row:is(:hover, :focus-within, .is-selected, .is-dragging) {
-		.timeline-bar-handle, .timeline-period-notch { opacity: 0.85; }
+		.timeline-bar-handle, .timeline-period-notch { opacity: var(--btn-icon-opacity); }
 	}
 	// One cursor for the whole of a drag, whatever it passes over.
 	&[data-dragging] {
@@ -426,7 +426,6 @@
 		&, .timeline-bar, .timeline-stage { cursor: grabbing; }
 	}
 	.timeline-drag-readout { position: absolute; z-index: 5; pointer-events: none; font-variant-numeric: tabular-nums; }
-	.timeline-bar-ghost { --timeline-bar-strength: 22%; pointer-events: none; }
 	// Each repeat, as a gap cut into the bar.
 	.timeline-bar-marks {
 		@include cover;
@@ -440,7 +439,7 @@
 		background-image: repeating-linear-gradient(to right, var(--timeline-row-bg) 0 1px, transparent 1px var(--cycle-px));
 		background-position: var(--cycle-offset-px) 0;
 	}
-	.timeline-cycle-mark { position: absolute; top: 60%; bottom: 0; width: 1px; background: var(--timeline-row-bg); opacity: 0.7; }
+	.timeline-cycle-mark { position: absolute; top: 60%; bottom: 0; width: 1px; background: var(--timeline-row-bg); opacity: var(--opacity-soft); }
 	// A keyed motion's keys, repeated in every cycle of its bar.
 	.timeline-key-dot {
 		position: absolute;
@@ -449,7 +448,7 @@
 		height: var(--spacing-xs);
 		transform: translate(-50%, -50%) rotate(45deg);
 		background: var(--color-text-primary);
-		opacity: 0.6;
+		opacity: var(--opacity-muted);
 	}
 	.timeline-bar-seam {
 		position: absolute;
@@ -468,23 +467,17 @@
 		grid-template-columns: var(--timeline-columns);
 		align-items: center;
 		border-top: 1px solid var(--timeline-line);
-		&[hidden] { display: none; }
 	}
 	.timeline-key-label {
-		position: sticky;
-		left: 0;
-		z-index: 1;
 		display: flex;
 		align-items: center;
 		gap: var(--spacing-2xs);
 		height: var(--timeline-row-height);
 		padding: 0 var(--spacing-xs) 0 var(--timeline-label-inset);
-		border-right: 1px solid var(--timeline-line);
 		background: var(--timeline-row-bg);
 		color: var(--color-text-secondary);
 
 		> .active { background: var(--color-accent-surface-strong); color: var(--color-accent); }
-		> :disabled { opacity: var(--opacity-disabled); }
 	}
 	.timeline-key-name { @include truncate; flex: 1; min-width: 0; }
 	// Diamonds may hang past the cycle's ends, never past the track's.
@@ -511,7 +504,7 @@
 		background: var(--color-bg-primary);
 		border-radius: var(--radius-xs);
 		&.active { background: var(--color-accent); border-color: var(--color-accent); }
-		&.is-untimed { opacity: 0.6; }
+		&.is-untimed { opacity: var(--opacity-muted); }
 		&.is-ghost { opacity: var(--opacity-disabled); pointer-events: none; }
 	}
 

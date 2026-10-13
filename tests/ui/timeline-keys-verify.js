@@ -35,6 +35,30 @@ const { openApp } = require('../lib/app');
 			input.dispatchEvent(new Event('change', { bubbles: true }));
 		}, { id, value });
 		await ready();
+		await page.evaluate(() => { editor.timelineDock.selectedKey = null; editor.timelineDock.syncSelection(); });
+		await page.locator('.timeline-bar').first().focus(); await page.keyboard.press('Enter'); await ready();
+		assert(await page.locator('.timeline-row-lane:not([hidden])').isVisible(), 'Enter selects a Custom bar and opens its key lane');
+		assert(await page.evaluate(() => {
+			const dock = editor.timelineDock, lane = dock.keyLane, buttons = [...lane.buttons];
+			const record = lane.record, observer = new MutationObserver(() => {});
+			observer.observe(record, { attributes: true });
+			for (let ms = 260; ms < 500; ms += 10) dock.paintPlayhead(ms);
+			const unchanged = observer.takeRecords().length === 0; observer.disconnect();
+			const before = buttons[1].style.left;
+			editor.animationPanel.setKeySelection(lane.entry, Number(buttons[1].dataset.keyAt)); dock.syncKeys();
+			return unchanged && buttons.every((button, index) => button === lane.buttons[index])
+				&& lane.buttons[1].style.left === before && lane.buttons[1].getAttribute('aria-pressed') === 'true';
+		}), 'Playback and selection keep key buttons intact and avoid repeated record-control writes');
+		assert(await page.evaluate(() => {
+			const dock = editor.timelineDock, button = dock.keyLane.buttons[0], box = button.getBoundingClientRect();
+			button.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerId: 82, clientX: box.left + box.width / 2, clientY: box.top + box.height / 2 }));
+			if (!dock.keyLane.drag) return false;
+			const estimate = { ...editor.loopEstimate, renderClock: { ...editor.loopEstimate.renderClock, frameCount: 123 } };
+			editor.loopEstimate = estimate; dock.sync(estimate);
+			window.dispatchEvent(new PointerEvent('pointerup', { pointerId: 82 }));
+			return !dock.keyLane.drag && !dock.syncPending && dock.model.frameCount === 123;
+		}), 'An estimate arriving during an unmoved key press is replayed on release');
+		await page.evaluate(() => editor.updateExportDuration()); await ready();
 		await page.waitForFunction(() => !editor.timelineDock.frameView.canvas.hidden && !editor.timelineDock.frameView.scrubbing);
 		const twin = await page.evaluate(async () => {
 			const layer = editor.layerManager.getActiveLayer(), view = editor.timelineDock.frameView;
@@ -121,6 +145,7 @@ const { openApp } = require('../lib/app');
 		await page.evaluate(() => editor.animationTicker.seek(250)); await ready();
 		await change('shapeAnimKeyEasing', 'easeIn'); await ready();
 		assert.strictEqual((await state()).keys[0].easing, 'easeIn');
+		assert(await page.locator('.timeline-key-track button').first().getAttribute('title') === 'Key at 0%, Ease in outgoing easing', 'Key tooltips use the easing display name');
 		await page.evaluate(() => document.getElementById('shapeAnimKeyAdd').click()); await ready();
 		let after = await state();
 		assert.deepStrictEqual(after.keys.map(key => key.at), [0, 0.25, 0.5]);
@@ -212,6 +237,7 @@ const { openApp } = require('../lib/app');
 		});
 		assert.deepStrictEqual(serialized.original, serialized.restored); assert.strictEqual(serialized.shared, false);
 		await page.evaluate(() => { PREFERENCES.set('timelineOpen', false); });
+		assert(await page.evaluate(() => document.getElementById('shapeAnimKeyAdd').disabled), 'Closing the dock immediately disables Add key in the inspector');
 		before = await state();
 		await change('shapeAnimKeyPropOpacity', 60);
 		assert.strictEqual((await state()).history, before.history + 1, 'Selected-key fields work with the dock closed');

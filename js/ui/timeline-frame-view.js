@@ -31,6 +31,7 @@ class TimelineFrameView {
 		this.params = null;
 		this.lastTime = null;
 		this.exact = null;
+		this.dock.syncClock();
 		this.frames.forEach(frame => frame.close());
 		this.frames = [];
 		this.done?.(); this.done = null;
@@ -59,7 +60,7 @@ class TimelineFrameView {
 			this.lastTime = null;
 			return;
 		}
-		if (this.lastTime === ms || (this.dock.host.classList.contains('is-stale') && !this.editor.timelineKeyRecording?.active)) return;
+		if (this.lastTime === ms || (this.dock.stale && !this.editor.timelineKeyRecording?.active)) return;
 		this.lastTime = ms;
 		this.pending = { ms, generation: this.generation };
 		if (this.scrubbing) return;
@@ -97,7 +98,7 @@ class TimelineFrameView {
 				const frame = await this.compositor.composeFrameAt({ ...this.params, preparedContext: this.prepared, timestamp: ms });
 				const ticker = this.editor.animationTicker;
 				if (generation !== this.generation || this.pending || !this.dock.available || !ticker.paused || !ticker.holding || ticker.getCurrentTime() !== ms || (ms === 0 && !this.editor.timelineKeyRecording?.active) || this.blocked) continue;
-				this.canvas.width = frame.width; this.canvas.height = frame.height;
+				this.resize(frame.width, frame.height);
 				this.canvas.getContext('2d').putImageData(frame.imageData, 0, 0);
 				this.canvas.hidden = false;
 				this.editor.previewWrapper.classList.add('timeline-frame-active');
@@ -112,10 +113,17 @@ class TimelineFrameView {
 	}
 
 	draw(frame) {
-		this.canvas.width = frame.width; this.canvas.height = frame.height;
-		this.canvas.getContext('2d').drawImage(frame, 0, 0);
+		this.resize(frame.width, frame.height);
+		const ctx = this.canvas.getContext('2d');
+		ctx.clearRect(0, 0, frame.width, frame.height);
+		ctx.drawImage(frame, 0, 0);
 		this.canvas.hidden = false;
 		this.editor.previewWrapper.classList.add('timeline-frame-active');
+	}
+
+	resize(width, height) {
+		if (this.canvas.width !== width) this.canvas.width = width;
+		if (this.canvas.height !== height) this.canvas.height = height;
 	}
 
 	hide() {
@@ -126,7 +134,7 @@ class TimelineFrameView {
 	playExact() {
 		this.editor.timelineKeyRecording?.end();
 		if (this.exact || this.done) { this.invalidate(); return; }
-		if (!this.dock.available || this.dock.host.classList.contains('is-stale')) return;
+		if (!this.dock.available || this.dock.stale) return;
 		this.invalidate();
 		this.blocked = false;
 		const generation = this.generation;
@@ -158,6 +166,7 @@ class TimelineFrameView {
 				this.frames = frames.splice(0);
 				let start = 0;
 				this.exact = { totalDuration: plan.totalDuration, entries: plan.entries.map(entry => { const item = { start, timestamp: entry.timestamp }; start += entry.duration; return item; }) };
+				this.dock.syncClock();
 				this.drawnIndex = null;
 				this.dock.exact.classList.add('active');
 				this.normalLoopMs = this.editor.animationTicker.loopMs;

@@ -491,6 +491,7 @@ async function timelineStates(page, visit, viewport) {
 	});
 	await wait(page);
 	await visit(`${viewport} timeline empty`, { shot: '#timelineDock' });
+	if (!await page.evaluate(() => editor.timelineDock.available)) return;
 	await page.evaluate(async () => {
 		const circle = editor.shapeGlitterManager.createLayer({ shapeId: 'circle', width: 40, height: 40, position: { x: 40, y: 40 } });
 		getLayerFillSlot(circle).mode = 'solid';
@@ -510,6 +511,20 @@ async function timelineStates(page, visit, viewport) {
 	await wait(page);
 	await page.locator('.timeline-bar').first().focus();
 	await visit(`${viewport} timeline`, { shot: '#timelineDock' });
+	await page.evaluate(() => {
+		PREFERENCES.set('timelineShow', { ...editor.timelineDock.show, frames: true });
+	});
+	await wait(page);
+	await visit(`${viewport} timeline output frames`, { shot: '#timelineDock' });
+	await page.evaluate(() => {
+		editor.timelineDock.setZoom(1000);
+	});
+	await wait(page);
+	await visit(`${viewport} timeline output frames close`, { shot: '#timelineDock' });
+	await page.evaluate(() => {
+		PREFERENCES.set('timelineShow', { ...editor.timelineDock.show, frames: false });
+		editor.timelineDock.setZoom('fit');
+	});
 	await page.evaluate(() => { editor.timelineDock.host.style.width = '480px'; editor.timelineDock.resync(); });
 	await wait(page);
 	await visit(`${viewport} timeline narrow`, { shot: '#timelineDock' });
@@ -557,6 +572,22 @@ async function timelineStates(page, visit, viewport) {
 	});
 	await wait(page);
 	await visit(`${viewport} timeline key fields`, { shot: '#flyoutSection', tall: true });
+	await page.evaluate(async () => {
+		const layer = editor.layerManager.getActiveLayer();
+		editor.layerManager.pressLayerLock(layer);
+		await editor.updateExportDuration();
+	});
+	await wait(page);
+	await visit(`${viewport} timeline locked`, { shot: '#timelineDock' });
+	await page.evaluate(async () => {
+		editor.layerManager.toggleLayerVisibility(editor.activeLayerId);
+		await editor.updateExportDuration();
+	});
+	await wait(page);
+	await visit(`${viewport} timeline hidden`, { shot: '#timelineDock' });
+	await page.evaluate(() => editor.timelineDock.minimize.click());
+	await wait(page);
+	await visit(`${viewport} timeline minimized`, { shot: '#timelineDock' });
 }
 
 module.exports = { routeSourceSnapshot, chromium, URL, VIEWPORTS, boot, wait, desktopStates, phoneStates, recolorStates, backgroundRemovalStates, animatedFilterStates, patternStates, creationStates, clippingStates, timelineStates };

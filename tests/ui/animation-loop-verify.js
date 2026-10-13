@@ -31,6 +31,7 @@ async function verifyTimelineDock() {
 		await page.waitForTimeout(200);
 		await page.evaluate(() => editor.updateExportDuration());
 		assert(await page.locator('#timelineDock .property-empty').isVisible(), 'A document with nothing animated must say so');
+		assert(await page.evaluate(() => editor.animationTicker.tickListeners.size === 0 && editor.animationTicker.frameRequest == null), 'An empty dock does not keep the ticker running');
 		assert(await page.locator('#timelineDock .property-empty').evaluate(node => !node.dispatchEvent(new WheelEvent('wheel', { bubbles: true, cancelable: true, ctrlKey: true, deltaY: -100 }))), 'An empty timeline also consumes Ctrl-wheel to prevent page zoom');
 		assert((await page.locator('#previewContainer').evaluate(node => node.clientHeight)) < fullHeight);
 		assert.strictEqual(await page.evaluate(() => editor.viewport.lastViewportHeight), await page.locator('#previewContainer').evaluate(node => node.clientHeight), 'Opening must use the viewport resize path');
@@ -57,9 +58,14 @@ async function verifyTimelineDock() {
 		assert((await page.locator('.timeline-bar-marks').count()) >= sources.count);
 		await page.locator('.timeline-bar').first().click();
 		assert.strictEqual(await page.evaluate(() => editor.activeLayerId), sources.textId);
+		await page.evaluate(() => { window.collapseRow = editor.timelineDock.body.querySelector('.timeline-row'); });
 		await page.locator('.timeline-group-header button[aria-expanded]').first().click();
+		assert(await page.evaluate(() => collapseRow === editor.timelineDock.body.querySelector('.timeline-row')), 'Collapse preserves the existing row nodes');
 		await page.evaluate(() => editor.updateExportDuration());
 		assert(await page.locator('.timeline-group').first().evaluate(node => node.classList.contains('is-collapsed')));
+		assert(await page.evaluate(() => !Object.hasOwn(PREFERENCES.schema, 'timelineCollapsed')), 'Collapse state is not a user preference');
+		await page.evaluate(() => { editor.timelineDock.close(); editor.timelineDock.open(); });
+		assert(await page.locator('.timeline-group').first().evaluate(node => node.classList.contains('is-collapsed')), 'Collapse state survives closing and reopening this document');
 		await page.locator('.timeline-group-header button[aria-expanded]').first().click();
 		const gif = await page.locator('.timeline-readout').textContent();
 		await page.evaluate(async () => { editor.exportSettings.animationFormat = 'mp4'; editor.exportSettings.type = 'animation'; await editor.updateExportDuration(); });
@@ -88,6 +94,18 @@ async function verifyTimelineDock() {
 		await page.keyboard.press('Escape');
 		await page.mouse.up();
 		assert.strictEqual(await page.locator('#timelineDock').evaluate(node => node.clientHeight), startHeight, 'Escape restores the starting height');
+		await page.setViewportSize({ width: 2300, height: 900 });
+		const labels = page.locator('.timeline-label-handle');
+		await labels.waitFor({ state: 'visible' });
+		await labels.focus();
+		const labelWidth = Number(await labels.getAttribute('aria-valuenow'));
+		await page.keyboard.press('ArrowRight');
+		assert.equal(Number(await labels.getAttribute('aria-valuenow')), labelWidth + await page.evaluate(() => CONFIG.ui.panelResize.keyStep));
+		await labels.focus();
+		await page.keyboard.press('Home');
+		assert.equal(Number(await labels.getAttribute('aria-valuenow')), await page.evaluate(() => CONFIG.ui.timeline.labelWidth), 'The shared label separator resets and announces its width');
+		await page.setViewportSize({ width: 1600, height: 900 });
+		await page.waitForTimeout(250);
 		const zoomState = () => page.evaluate(() => { const dock = editor.timelineDock; return { out: dock.zoomOut.disabled, in: dock.zoomIn.disabled, fit: dock.zoomFit.disabled }; });
 		assert.deepStrictEqual(await zoomState(), { out: true, in: false, fit: true }, 'At fit there is nothing to zoom out to');
 		await page.click('[aria-label="Zoom timeline in"]');
@@ -95,7 +113,37 @@ async function verifyTimelineDock() {
 		assert.deepStrictEqual(await zoomState(), { out: false, in: false, fit: false });
 		await page.evaluate(() => editor.timelineDock.setZoom(CONFIG.ui.timeline.pxPerSecondStops.at(-1)));
 		assert.deepStrictEqual(await zoomState(), { out: false, in: true, fit: false }, 'The last stop has nothing to zoom in to');
-		assert(await page.evaluate(() => editor.timelineDock.showsFrames && !editor.timelineDock.show.frames), 'Close zoom draws frame ticks without the choice');
+		assert(await page.evaluate(() => !editor.timelineDock.showsFrames && !editor.timelineDock.show.frames), 'Close zoom leaves Output frames off');
+		await page.evaluate(() => editor.timelineDock.showItems.find(item => item.dataset.show === 'frames').click());
+		assert(await page.evaluate(() => editor.timelineDock.showsFrames && editor.timelineDock.body.querySelector('.timeline-cycle-mark')), 'Output frames enables both ruler cells and in-bar marks');
+		await page.evaluate(() => editor.timelineDock.showItems.find(item => item.dataset.show === 'frames').click());
+		assert(await page.evaluate(() => !editor.timelineDock.showsFrames && !editor.timelineDock.body.querySelector('.timeline-cycle-mark')), 'Turning Output frames off removes the marks at close zoom');
+		const ruler = await page.evaluate(() => {
+			const dock = editor.timelineDock, probe = Object.create(dock);
+			const canvas = document.createElement('canvas'), ctx = canvas.getContext('2d');
+			probe.rulerTicks = { ...dock.rulerTicks, canvas };
+			probe.scale = 300; probe.trackWidth = 1440;
+			probe.body = { scrollLeft: 0 }; probe.ruler = { clientWidth: 600 + dock.labelColumn };
+			probe.model = { ...dock.model, loopMs: 4800, frameStarts: [0, 10, 20, 200, 400] };
+			let frames = false;
+			Object.defineProperty(probe, 'show', { get: () => ({ frames, nextLoop: false }) });
+			let rectangles = [], labels = [];
+			const fillRect = ctx.fillRect.bind(ctx), fillText = ctx.fillText.bind(ctx);
+			ctx.fillRect = (...args) => { rectangles.push({ args, color: ctx.fillStyle }); fillRect(...args); };
+			ctx.fillText = (...args) => { labels.push(args); fillText(...args); };
+			probe.paintRuler();
+			const off = { rectangles, labels };
+			frames = true; rectangles = []; labels = []; probe.paintRuler();
+			return { off, on: { rectangles, labels } };
+		});
+		assert.deepEqual(ruler.off.rectangles.slice(0, 6).map(rect => rect.args), [
+			[0, 0, 1, 28], [30, 24, 1, 4], [60, 24, 1, 4], [90, 24, 1, 4], [120, 24, 1, 4], [150, 0, 1, 28]
+		], 'Ruler minor ticks divide the labeled half-second evenly');
+		assert.deepEqual(ruler.off.labels.slice(0, 3).map(label => label[0]), ['0 s', '0.5 s', '1 s']);
+		assert(ruler.off.rectangles.every(rect => rect.args[2] === 1), 'Output frames off leaves only tick lines');
+		const cells = ruler.on.rectangles.filter(rect => rect.args[1] === 24);
+		assert.deepEqual(cells.slice(-4).map(rect => rect.args), [[0, 24, 6, 4], [6, 24, 54, 4], [60, 24, 60, 4], [120, 24, 1320, 4]], 'Narrow consecutive frames merge into one plain cell');
+		assert.notEqual(cells.at(-3).color, cells.at(-2).color, 'Readable output frame cells alternate');
 		await page.evaluate(() => editor.timelineDock.zoomFit.click());
 		assert.strictEqual(await page.evaluate(() => PREFERENCES.get('timelineZoom')), 'fit', 'Zoom to fit returns to fit');
 		const oldLoop = await page.evaluate(() => ({ ...editor.documentLoop }));
@@ -107,6 +155,41 @@ async function verifyTimelineDock() {
 		await page.evaluate(() => { window.timelineResizeRow = editor.timelineDock.body.querySelector('.timeline-row'); editor.timelineDock.applyHeight(240); });
 		await page.waitForTimeout(100);
 		assert(await page.evaluate(() => window.timelineResizeRow === editor.timelineDock.body.querySelector('.timeline-row')), 'Height-only resizing keeps the row nodes');
+		const minimized = await page.evaluate(() => {
+			const dock = editor.timelineDock, row = dock.body.querySelector('.timeline-row'), estimate = editor.loopEstimate;
+			dock.minimize.click();
+			dock.sync({ ...estimate, renderClock: { ...estimate.renderClock, frameCount: 83 } });
+			const result = { same: row === dock.body.querySelector('.timeline-row'), pending: dock.rowsPending,
+				readout: dock.readout.textContent, ticks: editor.animationTicker.tickListeners.size };
+			dock.minimize.click();
+			result.expanded = !dock.rowsPending && row !== dock.body.querySelector('.timeline-row');
+			dock.close(); result.closedTicks = editor.animationTicker.tickListeners.size;
+			dock.open();
+			return result;
+		});
+		assert.deepEqual(minimized, { same: true, pending: true, readout: '83 frames · GIF', ticks: 0, expanded: true, closedTicks: 0 }, 'Minimized estimates update the header, defer rows until expand, and release the display clock');
+		const resizing = await page.evaluate(async () => {
+			const dock = editor.timelineDock, sync = dock.sync;
+			let calls = 0; dock.sync = function (...args) { calls++; return sync.apply(this, args); };
+			for (let i = 0; i < 10; i++) dock.requestResync();
+			const immediate = calls;
+			await new Promise(resolve => requestAnimationFrame(resolve));
+			dock.sync = sync; return { immediate, calls };
+		});
+		assert.deepEqual(resizing, { immediate: 0, calls: 1 }, 'Repeated width refits coalesce into one rebuild per frame');
+		const canvasResets = await page.evaluate(() => {
+			const dock = editor.timelineDock, canvas = dock.rulerTicks.canvas;
+			let resets = 0;
+			for (const property of ['width', 'height']) {
+				const descriptor = Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype, property);
+				Object.defineProperty(canvas, property, { configurable: true,
+					get() { return descriptor.get.call(this); }, set(value) { resets++; descriptor.set.call(this, value); } });
+			}
+			dock.paintRuler(); dock.paintRuler();
+			delete canvas.width; delete canvas.height;
+			return resets;
+		});
+		assert.equal(canvasResets, 0, 'Repainting the same ruler viewport does not reallocate the canvas');
 		await page.locator('#timelineDock .section-header-title').click();
 		assert(await page.evaluate(() => !PREFERENCES.get('timelineMinimized')), 'The header title leaves transport expanded');
 		await page.click('[aria-label="Timeline options"]');
@@ -162,6 +245,8 @@ async function verifyTimelineDock() {
 		await page.waitForTimeout(200);
 		assert.strictEqual(await page.locator('#previewContainer').evaluate(node => node.clientHeight), fullHeight);
 		assert.strictEqual(await page.evaluate(() => editor.viewport.lastViewportHeight), fullHeight, 'Closing must use the viewport resize path');
+		await page.evaluate(() => editor.loadBlankImage(32, 24, '#ffffff'));
+		assert.equal(await page.evaluate(() => editor.timelineDock.collapsed.size), 0, 'A replacement document clears collapse state');
 		assert.deepStrictEqual(errors, []);
 	} finally { await browser.close(); }
 
@@ -322,7 +407,7 @@ async function verifyGifCycle() {
 			return {
 				id: sticker.id, assetId: asset.id, url: sticker.stickerData.url, kind: source.kind, native: source.cycleDuration, file: source.fileCycleDuration,
 				range: source.periodRange, settable: typeof source.setPeriod === 'function',
-				row: !slider.closest('.property-row').hidden,
+				row: !slider.closest('[data-gif-cycle-set]').hidden,
 				slider: { min: Number(slider.min), max: Number(slider.max), value: Number(slider.value) }
 			};
 		});

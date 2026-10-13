@@ -148,52 +148,110 @@ function writeLibrarySplit(share) {
 	writePanelWidths(widths);
 }
 
-// The one pointer drag behind every resize separator. `move` receives each
-// pointer event of the drag; `end` receives true when the drag was abandoned
-// (Escape, a cancelled pointer, the window losing focus) and the size it
-// started from must come back.
-function bindResizeHandleDrag(handle, { canStart = () => true, bodyClass = null, start = () => {}, move, end = () => {} }) {
-	let pointerId = null;
-	const onMove = (event) => {
-		if (event.pointerId === pointerId) move(event);
+// Window listeners belong to a press, including the interval before its
+// threshold. Callers restore their own values when `end` receives true.
+function bindPointerDrag(handle, {
+	canStart = () => true, start = () => {}, activate = () => {}, move, end = () => {},
+	threshold = 0, axis = null, capture = () => handle, bodyClass = null,
+	bindPress = true, suppress = () => {}, clickHost = handle
+}) {
+	let press = null, suppressClick = false;
+	const activatePress = event => {
+		press.moved = true;
+		press.capture = capture();
+		press.capture?.setPointerCapture(event.pointerId);
+		if (bodyClass) document.body.classList.add(bodyClass);
+		activate(event);
 	};
-	const finish = (cancelled) => {
-		if (pointerId === null) return;
-		try { handle.releasePointerCapture(pointerId); } catch (error) { /* already released */ }
-		pointerId = null;
-		handle.classList.remove('is-dragging');
-		if (bodyClass) document.body.classList.remove(bodyClass);
+	const finish = cancelled => {
+		if (!press) return;
+		const previous = press;
+		press = null;
 		window.removeEventListener('pointermove', onMove);
 		window.removeEventListener('pointerup', onUp);
 		window.removeEventListener('pointercancel', onCancel);
-		window.removeEventListener('blur', onCancel);
+		window.removeEventListener('lostpointercapture', onLost);
+		window.removeEventListener('blur', onBlur);
 		document.removeEventListener('keydown', onKey, true);
-		end(cancelled);
+		if (previous.capture?.hasPointerCapture(previous.pointerId)) previous.capture.releasePointerCapture(previous.pointerId);
+		if (bodyClass) document.body.classList.remove(bodyClass);
+		if (previous.moved || cancelled) {
+			suppressClick = true;
+			suppress();
+			setTimeout(() => { suppressClick = false; }, 0);
+		}
+		end(cancelled, previous);
 	};
-	const onUp = (event) => {
-		if (event.pointerId === pointerId) finish(false);
+	const onMove = event => {
+		if (!press || event.pointerId !== press.pointerId) return;
+		if (!press.moved) {
+			const dx = event.clientX - press.x, dy = event.clientY - press.y;
+			const distance = axis === 'x' ? Math.abs(dx) : axis === 'y' ? Math.abs(dy) : Math.hypot(dx, dy);
+			if (distance < threshold) return;
+			activatePress(event);
+		}
+		move(event);
 	};
-	const onCancel = () => finish(true);
-	const onKey = (event) => {
+	const onUp = event => { if (event.pointerId === press?.pointerId) finish(false); };
+	const onCancel = event => { if (event.pointerId === press?.pointerId) finish(true); };
+	const onLost = event => { if (event.target === press?.capture) onCancel(event); };
+	const onBlur = () => finish(true);
+	const onKey = event => {
 		if (event.key !== 'Escape') return;
-		event.preventDefault();
-		event.stopPropagation();
+		event.preventDefault(); event.stopImmediatePropagation();
 		finish(true);
 	};
-	handle.addEventListener('pointerdown', (event) => {
-		if (event.button !== 0 || pointerId !== null || !canStart(event)) return;
+	const begin = event => {
+		if (event.button !== 0 || press || !canStart(event)) return false;
+		if (start(event) === false) return false;
 		event.preventDefault();
-		pointerId = event.pointerId;
-		handle.setPointerCapture(pointerId);
-		handle.classList.add('is-dragging');
-		if (bodyClass) document.body.classList.add(bodyClass);
-		start(event);
+		press = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, moved: false };
 		window.addEventListener('pointermove', onMove);
 		window.addEventListener('pointerup', onUp);
 		window.addEventListener('pointercancel', onCancel);
-		window.addEventListener('blur', onCancel);
+		window.addEventListener('lostpointercapture', onLost);
+		window.addEventListener('blur', onBlur);
 		document.addEventListener('keydown', onKey, true);
+		if (!threshold) activatePress(event);
+		return true;
+	};
+	if (bindPress) handle.addEventListener('pointerdown', begin);
+	clickHost?.addEventListener('click', event => {
+		if (suppressClick) { event.preventDefault(); event.stopImmediatePropagation(); }
+	}, true);
+	return { begin, finish, get active() { return Boolean(press); } };
+}
+
+function bindResizeHandleDrag(handle, options) {
+	return bindPointerDrag(handle, {
+		...options,
+		activate: () => handle.classList.add('is-dragging'),
+		end: cancelled => { handle.classList.remove('is-dragging'); options.end?.(cancelled); }
 	});
+}
+
+function bindSeparator(handle, {
+	orientation, label, canUse = () => true, change, reset,
+	keyStep = CONFIG.ui.panelResize.keyStep, fastKeyStep = CONFIG.ui.panelResize.fastKeyStep
+}) {
+	handle.tabIndex = 0;
+	handle.setAttribute('role', 'separator');
+	handle.setAttribute('aria-orientation', orientation);
+	handle.setAttribute('aria-label', label);
+	handle.addEventListener('dblclick', () => { if (canUse()) reset(); });
+	handle.addEventListener('keydown', event => {
+		if (!canUse()) return;
+		const [back, forward] = orientation === 'horizontal' ? ['ArrowUp', 'ArrowDown'] : ['ArrowLeft', 'ArrowRight'];
+		if (![back, forward, 'Home', 'Escape'].includes(event.key)) return;
+		event.preventDefault(); event.stopPropagation();
+		if (event.key === 'Home' || event.key === 'Escape') reset();
+		else change((event.key === forward ? 1 : -1) * (event.shiftKey ? fastKeyStep : keyStep));
+	});
+	return (min, max, value) => {
+		handle.setAttribute('aria-valuemin', String(min));
+		handle.setAttribute('aria-valuemax', String(max));
+		handle.setAttribute('aria-valuenow', String(value));
+	};
 }
 
 function buildPanelResizeHandle(key) {
@@ -203,10 +261,6 @@ function buildPanelResizeHandle(key) {
 	handle.dataset.panelResize = key;
 	// A separator, not a slider: it divides two regions and the useful
 	// announcement is the panel width it controls.
-	handle.setAttribute('role', 'separator');
-	handle.setAttribute('tabindex', '0');
-	handle.setAttribute('aria-orientation', 'vertical');
-	handle.setAttribute('aria-label', config.label);
 	// Gesture code treats the canvas as its own surface; this is chrome.
 	handle.classList.add('ui-ignore-gestures');
 	return handle;
@@ -276,24 +330,15 @@ function initializePanelResize(editor) {
 			}
 		});
 
-		// Double-click returns the panel to the stylesheet's responsive default.
-		handle.addEventListener('dblclick', () => {
-			editor.viewport.beginPanelResize();
-			resetPanelWidth(key);
-			editor.viewport.endPanelResize();
-		});
-
-		handle.addEventListener('keydown', (event) => {
-			const step = event.shiftKey ? CONFIG.ui.panelResize.fastKeyStep : CONFIG.ui.panelResize.keyStep;
-			if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-				event.preventDefault();
+		bindSeparator(handle, {
+			orientation: 'vertical', label: config.label,
+			canUse: () => !editor?.mobileManager?.isMobile,
+			change: delta => {
 				editor.viewport.beginPanelResize();
-				const direction = event.key === 'ArrowRight' ? 1 : -1;
-				const delta = config.edge === 'start' ? -direction * step : direction * step;
-				setPanelWidth(key, getPanelWidth(key) + delta);
+				setPanelWidth(key, getPanelWidth(key) + (config.edge === 'start' ? -delta : delta));
 				editor.viewport.endPanelResize();
-			} else if (event.key === 'Home' || event.key === 'Escape') {
-				event.preventDefault();
+			},
+			reset: () => {
 				editor.viewport.beginPanelResize();
 				resetPanelWidth(key);
 				editor.viewport.endPanelResize();
