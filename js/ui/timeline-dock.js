@@ -291,7 +291,43 @@ class TimelineDock {
 	syncScroll() {
 		if (!this.rulerTrack) return;
 		this.rulerTrack.style.transform = `translateX(${-this.body.scrollLeft}px)`;
+		this.paintRuler();
 		this.paintPlayhead(this.editor.animationTicker.getPlayheadTime());
+	}
+
+	// The ticks are drawn for the stretch in view only: a canvas as wide as a
+	// long loop at a close zoom is more than a browser will allocate.
+	paintRuler() {
+		const { canvas, text, line, font } = this.rulerTicks;
+		const height = this.config.rulerHeight;
+		const ratio = window.devicePixelRatio || 1;
+		const left = this.body.scrollLeft;
+		const width = Math.max(0, Math.min(this.trackWidth - left, this.ruler.clientWidth - this.labelColumn));
+		canvas.width = Math.ceil(width * ratio); canvas.height = Math.ceil(height * ratio);
+		canvas.style.width = `${width}px`; canvas.style.height = `${height}px`;
+		canvas.style.transform = `translateX(${left}px)`;
+		const ctx = canvas.getContext('2d');
+		ctx.setTransform(ratio, 0, 0, ratio, -left * ratio, 0);
+		ctx.font = font;
+		ctx.textBaseline = 'middle';
+		const step = TimelineView.tickStep(this.scale, this.config.labelWidth / 2);
+		const end = Math.min(this.model.loopMs * (1 + this.nextLoopShare), TimelineView.xToTime(left + width, this.scale));
+		// From the step before the left edge: its label may still be in view.
+		for (let ms = Math.floor(TimelineView.xToTime(left, this.scale) / step) * step; ms < end; ms += step) {
+			const x = TimelineView.timeToX(ms, this.scale);
+			ctx.fillStyle = text;
+			ctx.fillText(`${ms / 1000}s`, x + this.config.minTickPx, height / 2);
+			ctx.fillStyle = line;
+			ctx.fillRect(x, 0, 1, height);
+		}
+		ctx.fillStyle = line;
+		const starts = this.showsFrames ? this.model.frameStarts : [];
+		starts.forEach((ms, index) => {
+			const x = TimelineView.timeToX(ms, this.scale);
+			if (x < left - 1 || x > left + width) return;
+			const gap = Math.min(index ? ms - starts[index - 1] : Infinity, index < starts.length - 1 ? starts[index + 1] - ms : Infinity);
+			if (TimelineView.timeToX(gap, this.scale) >= this.config.minTickPx) ctx.fillRect(x, height - this.config.minTickPx, 1, this.config.minTickPx);
+		});
 	}
 
 	paintPlayhead(ms) {
@@ -439,8 +475,7 @@ class TimelineDock {
 		if (!this.available) return;
 		this.fit.disabled = this.host.classList.contains('is-stale') || !this.editor.getLoopCandidate()?.canApply;
 		this.exact.disabled = this.host.classList.contains('is-stale') || !this.model?.loopMs;
-		const fit = PREFERENCES.get('timelineZoom') === 'fit';
-		this.zoomFit.disabled = this.zoomOut.disabled = fit || !this.model?.loopMs;
+		this.zoomFit.disabled = this.zoomOut.disabled = !this.model?.loopMs || this.scale <= this.fitScale;
 		this.zoomIn.disabled = !this.model?.loopMs || !this.config.pxPerSecondStops.some(value => value > this.fitScale && value > this.scale);
 	}
 
@@ -499,7 +534,9 @@ class TimelineDock {
 		const columns = this.labelColumn + parseFloat(style.getPropertyValue('--timeline-info-column'));
 		this.fitScale = timed ? Math.max(1, this.body.clientWidth - columns) / (loopMs * (1 + this.nextLoopShare) / 1000) : 1;
 		const zoom = PREFERENCES.get('timelineZoom');
-		this.scale = zoom === 'fit' ? this.fitScale : zoom;
+		// A stored zoom is never further out than fit: a shorter loop or a wider
+		// dock can leave it there.
+		this.scale = zoom === 'fit' ? this.fitScale : Math.max(this.fitScale, zoom);
 		this.trackWidth = TimelineView.timeToX(loopMs * (1 + this.nextLoopShare), this.scale);
 		this.stage.style.setProperty('--timeline-track-width', `${this.trackWidth}px`);
 		this.stage.style.setProperty('--timeline-loop-x', `${TimelineView.timeToX(loopMs, this.scale)}px`);
@@ -528,30 +565,11 @@ class TimelineDock {
 		track.setAttribute('aria-valuemax', (this.model.loopMs / 1000).toFixed(2));
 		this.rulerTrack = track;
 		const canvas = document.createElement('canvas'); canvas.className = 'timeline-ruler-ticks';
-		const height = this.config.rulerHeight;
-		const ratio = window.devicePixelRatio || 1;
-		canvas.width = Math.ceil(this.trackWidth * ratio); canvas.height = Math.ceil(height * ratio);
-		canvas.style.width = `${this.trackWidth}px`; canvas.style.height = `${height}px`;
-		const ctx = canvas.getContext('2d');
-		ctx.scale(ratio, ratio);
 		const style = getComputedStyle(this.host);
-		const text = style.getPropertyValue('--color-text-secondary');
-		const line = style.getPropertyValue('--color-border');
-		ctx.font = `${style.getPropertyValue('--font-size-xs')} ${style.fontFamily}`;
-		ctx.textBaseline = 'middle';
-		const step = TimelineView.tickStep(this.scale, this.config.labelWidth / 2);
-		for (let ms = 0; ms < this.model.loopMs * (1 + this.nextLoopShare); ms += step) {
-			const x = TimelineView.timeToX(ms, this.scale);
-			ctx.fillStyle = text;
-			ctx.fillText(`${ms / 1000}s`, x + this.config.minTickPx, height / 2);
-			ctx.fillStyle = line;
-			ctx.fillRect(x, 0, 1, height);
-		}
-		const starts = this.showsFrames ? this.model.frameStarts : [];
-		starts.forEach((ms, index) => {
-			const gap = Math.min(index ? ms - starts[index - 1] : Infinity, index < starts.length - 1 ? starts[index + 1] - ms : Infinity);
-			if (TimelineView.timeToX(gap, this.scale) >= this.config.minTickPx) ctx.fillRect(TimelineView.timeToX(ms, this.scale), height - this.config.minTickPx, 1, this.config.minTickPx);
-		});
+		this.rulerTicks = {
+			canvas, text: style.getPropertyValue('--color-text-secondary'), line: style.getPropertyValue('--color-border'),
+			font: `${style.getPropertyValue('--font-size-xs')} ${style.fontFamily}`
+		};
 		const loop = this.element('timeline-loop-end', `${(this.model.loopMs / 1000).toFixed(2)} s`);
 		loop.dataset.drag = 'loop';
 		loop.title = 'Drag to set loop length; double-click for Automatic';
