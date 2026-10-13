@@ -74,7 +74,7 @@ class AuthoredAnimationSource {
 }
 
 class ProceduralAnimationSource {
-	constructor({ key, label = null, rowLabel = null, ownerLayerId = null, effectSlot = null, naturalPeriod, phase = 0, direction = 'normal', cycleMarks, preferredSamplingRate, sampler, resolvedPeriod = null, setPeriod = null, periodRange = null, resolvePeriod = null, nonLooping = false, run = null, closesAt = null }) {
+	constructor({ key, label = null, rowLabel = null, ownerLayerId = null, effectSlot = null, naturalPeriod, phase = 0, direction = 'normal', cycleMarks, preferredSamplingRate, sampler, resolvedPeriod = null, setPeriod = null, setRun = null, setPhase = null, periodRange = null, resolvePeriod = null, nonLooping = false, run = null, closesAt = null }) {
 		this.kind = 'procedural';
 		this.key = key;
 		this.label = label;
@@ -88,7 +88,7 @@ class ProceduralAnimationSource {
 		this.cycleMarks = cycleMarks;
 		this.preferredSamplingRate = Math.max(1, Number(preferredSamplingRate));
 		this.sampler = sampler;
-		Object.assign(this, { setPeriod, periodRange, resolvePeriod, nonLooping, run, closesAt });
+		Object.assign(this, { setPeriod, setRun, setPhase, periodRange, resolvePeriod, nonLooping, run, closesAt });
 	}
 
 	withPeriod(resolvedPeriod) {
@@ -103,7 +103,7 @@ class ProceduralAnimationSource {
 			preferredSamplingRate: this.preferredSamplingRate,
 			sampler: this.sampler,
 			resolvedPeriod,
-			setPeriod: this.setPeriod, periodRange: this.periodRange, resolvePeriod: this.resolvePeriod, nonLooping: this.nonLooping,
+			setPeriod: this.setPeriod, setRun: this.setRun, setPhase: this.setPhase, periodRange: this.periodRange, resolvePeriod: this.resolvePeriod, nonLooping: this.nonLooping,
 			run: this.run, closesAt: this.closesAt
 		});
 	}
@@ -117,6 +117,13 @@ function sourceSeamError(source, duration, period = source.resolvedPeriod || sou
 	if (source.run && source.closesAt) return source.closesAt(duration, period) ? 0 : 1;
 	const remainder = duration % period;
 	return Math.min(remainder, period - remainder) / period;
+}
+
+function loopSeamForDuration(sources, duration) {
+	const errors = sources.filter(source => source.kind === 'procedural' || Number.isFinite(source.cycleDuration))
+		.map(source => sourceSeamError(source, duration));
+	const completedSources = errors.filter(error => error < 1e-8).length;
+	return { duration, exact: completedSources === errors.length, seamError: errors.reduce((sum, error) => sum + error, 0), completedSources };
 }
 
 // Period fitting always runs against the duration the format will actually
@@ -142,7 +149,7 @@ function fitProceduralPeriods(procedural, duration, tolerance) {
 
 // Timing only. Writable sources own their representable periods and setters;
 // fixed procedural steps have the same closure constraints as uploaded GIFs.
-function planLoopFit(timelines, { config, maxLoopDurationMs = config.maxLoopDurationMs, fallbackDuration = 100 } = {}) {
+function planLoopFit(timelines, { config, maxLoopDurationMs = config.maxLoopDurationMs, fallbackDuration = 100, loopDurationMs = null } = {}) {
 	const planner = new CompositeTimelinePlanner(config);
 	const animated = timelines.filter((source) => source.kind === 'procedural' || Number.isFinite(source.cycleDuration));
 	const oneShots = animated.filter((source) => source.nonLooping);
@@ -155,6 +162,7 @@ function planLoopFit(timelines, { config, maxLoopDurationMs = config.maxLoopDura
 	const durations = repeating.length
 		? planner._loopCandidateDurations(fixed, [...adjustable, ...oneShots], fixedLoop, maxLoopDurationMs)
 		: oneShots.length ? planner._loopCandidateDurations([], oneShots, fixedLoop, maxLoopDurationMs) : new Set();
+	if (Number.isFinite(loopDurationMs)) durations.add(loopDurationMs);
 	const candidates = [...durations].sort((a, b) => a - b).map((duration) => {
 		const fits = fitProceduralPeriods(adjustable, duration, Infinity).fits.map((fit) => {
 			const { source } = fit;
@@ -655,10 +663,12 @@ class CompositeTimelinePlanner {
 		const authored = timelines.filter((timeline) => timeline.kind === 'authored' && Number.isFinite(timeline.cycleDuration));
 		const procedural = timelines.filter((timeline) => timeline.kind === 'procedural');
 		const authoredLoop = this._chooseLoopDuration(authored, options.fallbackDuration, options.maxLoopDurationMs);
+		const setLoop = Number.isFinite(options.loopDurationMs);
+		const authoredDuration = setLoop ? options.loopDurationMs : authoredLoop.duration;
 		const context = {
 			authored,
 			procedural,
-			minimumDuration: Math.max(0, ...procedural.map((source) => Number.isFinite(source.run?.end) ? source.run.end : 0)),
+			minimumDuration: setLoop ? 0 : Math.max(0, ...procedural.map((source) => Number.isFinite(source.run?.end) ? source.run.end : 0)),
 			maxSamplingFps: options.maxSamplingFps,
 			frameLimit: options.hardFrameLimit,
 			resolveFrameLimit: options.resolveFrameLimit,
@@ -667,16 +677,17 @@ class CompositeTimelinePlanner {
 			candidateRank: 0
 		};
 		if (!procedural.length) {
+			const clock = this._authoredClock(timelines, authoredDuration, options.maxSamplingFps, context);
 			return {
-				clock: this._authoredClock(timelines, authoredLoop.duration, options.maxSamplingFps, context),
+				clock,
 				timelines,
-				loop: authoredLoop,
+				loop: setLoop ? loopSeamForDuration(authored, clock.duration) : authoredLoop,
 				fits: []
 			};
 		}
 
 		const shortlistSize = this.config.renderClock.loopCandidateShortlist;
-		const shortlist = [...this._loopCandidateDurations(authored, procedural, authoredLoop, options.maxLoopDurationMs)]
+		const shortlist = [...(setLoop ? [options.loopDurationMs] : this._loopCandidateDurations(authored, procedural, authoredLoop, options.maxLoopDurationMs))]
 			.map((duration) => ({ duration, ...fitProceduralPeriods(procedural, duration, context.tolerance) }))
 			.sort((left, right) => (left.maximumDrift - right.maximumDrift)
 				|| (left.totalDrift - right.totalDrift)
@@ -696,9 +707,9 @@ class CompositeTimelinePlanner {
 		});
 		if (!clock) {
 			return {
-				clock: this._authoredClock(timelines, authoredLoop.duration, options.maxSamplingFps, context),
+				clock: this._authoredClock(timelines, authoredDuration, options.maxSamplingFps, context),
 				timelines,
-				loop: authoredLoop,
+				loop: setLoop ? loopSeamForDuration(timelines, authoredDuration) : authoredLoop,
 				fits: []
 			};
 		}
@@ -718,20 +729,7 @@ class CompositeTimelinePlanner {
 			};
 		});
 		const resolvedSources = timelines.map((timeline) => replacements.get(timeline) || timeline);
-		const errors = resolvedSources.filter((source) => source.kind === 'procedural' || Number.isFinite(source.cycleDuration))
-			.map((source) => sourceSeamError(source, clock.duration));
-		const completedSources = errors.filter((error) => error < 1e-8).length;
-		return {
-			clock,
-			timelines: resolvedSources,
-			loop: {
-				duration: clock.duration,
-				exact: completedSources === errors.length,
-				seamError: errors.reduce((sum, error) => sum + error, 0),
-				completedSources
-			},
-			fits
-		};
+		return { clock, timelines: resolvedSources, loop: loopSeamForDuration(resolvedSources, clock.duration), fits };
 	}
 
 	_buildTimestamps(timelines, duration, maxSamplingFps) {
@@ -851,6 +849,7 @@ class CompositeTimelinePlanner {
 			timelines: sourceTimelines,
 			fallbackDuration,
 			maxLoopDurationMs: options.maxLoopDurationMs,
+			loopDurationMs: options.loopDurationMs,
 			maxSamplingFps: options.maxSamplingFps,
 			hardFrameLimit: options.hardFrameLimit,
 			resolveFrameLimit: (duration) => this._frameBudgets(duration, options).preRenderBudget,

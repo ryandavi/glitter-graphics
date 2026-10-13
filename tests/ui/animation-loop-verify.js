@@ -3,6 +3,21 @@ const { openApp } = require('../lib/app');
 const fs = require('fs');
 const path = require('path');
 
+// Serves the local app under a non-local host name.
+async function routeDeployedHost(page) {
+	await page.route('http://timeline.test/**', async route => {
+		if (process.env.GLITTER_TEST_CSS && route.request().url().includes('/css/style.css')) { await route.fallback(); return; }
+		const response = await route.fetch({ url: route.request().url().replace('timeline.test', 'localhost') });
+		await route.fulfill({ response });
+	});
+}
+
+// A routed request still in flight must not fail the run when the browser closes.
+async function closeDeployedHost({ browser, page }) {
+	await page.unrouteAll({ behavior: 'ignoreErrors' });
+	await browser.close();
+}
+
 async function verifyTimelineDock() {
 	const originalUrl = process.env.GLITTER_URL;
 	const localUrl = originalUrl || 'http://localhost/glitter/';
@@ -121,11 +136,7 @@ async function verifyTimelineDock() {
 			const fixture = await openApp({ document: { width: 32, height: 24 }, setup: async page => {
 				await page.addInitScript(() => localStorage.setItem('glitter.preferences', JSON.stringify({ timelineOpen: true })));
 				page.on('request', request => requested.push(request.url()));
-				if (url.includes('timeline.test')) await page.route('http://timeline.test/**', async route => {
-					if (process.env.GLITTER_TEST_CSS && route.request().url().includes('/css/style.css')) { await route.fallback(); return; }
-					const response = await route.fetch({ url: route.request().url().replace('timeline.test', 'localhost') });
-					await route.fulfill({ response });
-				});
+				if (url.includes('timeline.test')) await routeDeployedHost(page);
 			} });
 			try {
 				const allowed = url.includes('localhost') || url.includes('features=timeline');
@@ -134,13 +145,114 @@ async function verifyTimelineDock() {
 				assert.strictEqual(await fixture.page.locator('#timelineDock').isVisible(), allowed);
 				assert.strictEqual(requested.some(request => /js\/ui\/timeline-(view|dock|group)\.js/.test(request)), allowed);
 				assert.deepStrictEqual(fixture.errors, []);
-			} finally { await fixture.browser.close(); }
+			} finally { await closeDeployedHost(fixture); }
 		}
 	} finally {
 		if (originalUrl === undefined) delete process.env.GLITTER_URL;
 		else process.env.GLITTER_URL = originalUrl;
 	}
 	console.log('PASS dock lazy loading, local/bundle/override gates, responsive layout, source groups, seams, export readout, selection and undo/redo');
+}
+
+async function verifyTimingModel() {
+	const { browser, page, errors } = await openApp({ document: { width: 64, height: 48 } });
+	try {
+		const data = await page.evaluate(async () => {
+			const e = editor;
+			const layer = e.layerManager.addLayer(LayerType.SHAPE);
+			getLayerFillSlot(layer).mode = 'solid';
+			layer.animations = [GlitterAnimation.normalizeAnimation({ type: 'rotate', periodMs: 1000, turns: 1, fillMode: 'none' })];
+			e.animationPanel.load(layer);
+			const forever = document.getElementById('shapeAnimIterationsForever');
+			forever.checked = false; forever.dispatchEvent(new Event('change', { bubbles: true }));
+			const input = document.getElementById('shapeAnimIterations');
+			input.value = '2.5'; input.dispatchEvent(new Event('change', { bubbles: true }));
+			const count = layer.animations[0].iterations;
+			const source = e.sceneCompositor._createProceduralTimelines(e.sceneCompositor._createLayerAnimationTimelineSources(layer))[0];
+			const preview = GlitterAnimation.sampleAt(layer.animations[0], 2250, e.sceneCompositor._buildAnimationSamplingContext(layer));
+			const parity = JSON.stringify(preview) === JSON.stringify(source.sampleAt(2250).sample);
+			const run = GlitterAnimation.runTiming(layer.animations[0]);
+			await e.updateExportDuration();
+			const finiteDuration = e.loopEstimate.duration;
+			const start = e.historyManager.historyIndex;
+			e.setDocumentLoop({ mode: 'set', durationMs: 3004 });
+			const set = { ...e.documentLoop };
+			const step = e.historyManager.historyIndex - start;
+			await e.undo(); const automatic = { ...e.documentLoop };
+			await e.redo();
+			const project = JSON.parse(JSON.stringify(await e.projectSerializer.serialize()));
+			e.isSaved = true; await e.projectSerializer.load(project); await e.updateExportDuration();
+			const restored = { ...e.documentLoop };
+			const loadedRepeats = e.layers.find(layer => layer.type === LayerType.SHAPE).animations[0].iterations;
+			const mode = e.loopEstimate.loopMode;
+			e.openAnimationLoop(); await e.updateExportDuration();
+			const select = document.getElementById('animationLoopCandidate');
+			const selected = select.value;
+			select.value = 'auto'; select.dispatchEvent(new Event('change', { bubbles: true }));
+			await e.updateExportDuration();
+			const automaticOption = select.options[0].textContent;
+			const autoSelected = select.value;
+			delete project.loop;
+			e.isSaved = true; await e.projectSerializer.load(project);
+			const legacy = { ...e.documentLoop };
+			e.setDocumentLoop({ mode: 'set', durationMs: 4000 });
+			await e.loadBlankImage(64, 48, '#ffffff');
+			const newDocument = { ...e.documentLoop };
+			return { count, run, parity, finiteDuration, set, step, automatic, restored, loadedRepeats, mode, selected, automaticOption, autoSelected, legacy, newDocument, project: { ...project, loop: set } };
+		});
+		assert.strictEqual(data.count, 2.5);
+		assert.strictEqual(data.loadedRepeats, 2.5);
+		assert.strictEqual(data.run.end, 2500);
+		assert.strictEqual(data.finiteDuration, 2500);
+		assert(data.parity, 'Fractional repeat preview and export sampler must agree');
+		assert.deepStrictEqual(data.set, { mode: 'set', durationMs: 3000 });
+		assert.strictEqual(data.step, 1);
+		assert.deepStrictEqual(data.automatic, { mode: 'auto', durationMs: null });
+		assert.deepStrictEqual(data.restored, data.set);
+		assert.strictEqual(data.mode, 'set');
+		assert.strictEqual(data.selected, '3000');
+		assert.strictEqual(data.automaticOption, 'Automatic');
+		assert.strictEqual(data.autoSelected, 'auto');
+		assert.deepStrictEqual(data.legacy, data.automatic);
+		assert.deepStrictEqual(data.newDocument, data.automatic);
+		await page.setViewportSize({ width: 390, height: 844 });
+		await page.evaluate(async () => {
+			const layer = editor.layerManager.addLayer(LayerType.SHAPE);
+			getLayerFillSlot(layer).mode = 'solid'; layer.animations = [GlitterAnimation.normalizeAnimation({ type: 'pulse' })];
+			editor.openAnimationLoop(); await editor.updateExportDuration();
+		});
+		await page.waitForFunction(() => editor.mobileManager.sheetSection?.element.id === 'animationLoopSection');
+		assert.strictEqual(await page.locator('#animationLoopCandidate').getAttribute('aria-label'), 'Loop length');
+		assert(await page.locator('#animationLoopCandidate').isVisible());
+		await page.selectOption('#animationLoopCandidate', { index: 1 });
+		assert.strictEqual(await page.evaluate(() => editor.documentLoop.mode), 'set');
+		assert.strictEqual(await page.evaluate(() => !!editor.timelineDock), false, 'Timing fields must work without loading the dock');
+		assert.deepStrictEqual(errors, []);
+
+		const originalUrl = process.env.GLITTER_URL;
+		try {
+			process.env.GLITTER_URL = 'http://timeline.test/glitter/';
+			const deployed = await openApp({ document: { width: 64, height: 48 }, setup: async page => {
+				await routeDeployedHost(page);
+			} });
+			try {
+				const result = await deployed.page.evaluate(async project => {
+					editor.isSaved = true; await editor.projectSerializer.load(project); await editor.updateExportDuration();
+					const { plan } = await editor.sceneCompositor.planAnimation({ ...editor.getSceneSnapshotParams(editor.layers.filter(layer => layer.visible)), exportSettings: { ...editor.exportSettings, watermarkEnabled: false }, schedule: true });
+					return { loop: editor.documentLoop, duration: plan.totalDuration, label: document.getElementById('animationLoopCandidate').getAttribute('aria-label'), options: Array.from(document.getElementById('animationLoopCandidate').options).map(option => option.textContent) };
+				}, data.project);
+				assert.deepStrictEqual(result.loop, data.set);
+				assert.strictEqual(result.duration, 3000, 'Saved loop must export on a non-local host');
+				assert.strictEqual(result.label, 'Fit to');
+				assert(!result.options.includes('Automatic'));
+				assert.deepStrictEqual(deployed.errors, []);
+			} finally { await closeDeployedHost(deployed); }
+		} finally {
+			if (originalUrl === undefined) delete process.env.GLITTER_URL;
+			else process.env.GLITTER_URL = originalUrl;
+		}
+		console.log('PASS loop persistence, Automatic undo, optional-key loading, fractional repeats, phone fields and stored timing on a non-local host');
+	} finally { await browser.close(); }
 }
 
 (async () => {
@@ -226,7 +338,7 @@ async function verifyTimelineDock() {
 			if (document.getElementById('exportSettingsModal').classList.contains('visible') || document.getElementById('animationLoopSection').classList.contains('is-collapsed')) throw new Error('Animation Loop button must close the modal and expand the panel');
 			await e.updateExportDuration();
 			const candidate = e.loopEstimate.loopFit.candidates.find((entry) => entry.duration === 800);
-			document.getElementById('animationLoopCandidate').value = '800'; e.syncLoopCandidate();
+			document.getElementById('animationLoopCandidate').value = '800'; document.getElementById('animationLoopCandidate').dispatchEvent(new Event('change', { bubbles: true })); await e.updateExportDuration();
 			const beforeUi = {
 				fit: !document.getElementById('fitAnimationsToLoop').hidden,
 				length: !document.getElementById('animationLoopLengthSet').hidden,
@@ -262,7 +374,7 @@ async function verifyTimelineDock() {
 		assert.strictEqual(await page.locator('#animationLoopChanges').innerText(), 'Timing already fits.');
 		assert.strictEqual(await page.locator('#animationLoopSources td[aria-label="No saved timing"]').innerText(), '-');
 		assert(await page.locator('#animationLoopSourceSet').isVisible());
-		assert(!(await page.locator('#animationLoopLengthSet').isVisible()), 'Already fitted timing with no useful alternative needs no length picker');
+		assert(await page.locator('#animationLoopLengthSet').isVisible(), 'The local loop length control must remain available after fitting');
 		assert(!(await page.locator('#fitAnimationsToLoop').isVisible()), 'An unavailable fit action must be hidden');
 		assert(await page.locator('#resetAnimationLoop').isVisible(), 'Saved timing must remain available to restore');
 		const restored = await page.evaluate(async () => {
@@ -297,6 +409,7 @@ async function verifyTimelineDock() {
 		});
 		assert.deepStrictEqual(slow, [...Array.from({ length: 16 }, (_, index) => index / 4), 0], 'Slow crawl must advance uniformly through the wrap');
 		await verifyTimelineDock();
+		await verifyTimingModel();
 		await page.setViewportSize({ width: 390, height: 844 });
 		await page.waitForFunction(() => editor.mobileManager.isMobile);
 		await page.evaluate(() => editor.openAnimationLoop());

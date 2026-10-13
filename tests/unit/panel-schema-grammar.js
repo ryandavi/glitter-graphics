@@ -77,6 +77,7 @@ function checkRow(row, where) {
 		checkNumeric({ ...(fields[entry.slider] || {}), ...entry }, `${where} ${entry.id}`, Boolean(entry.slider) || /^(newCanvas|canvasSize|scaleDesign)/.test(entry.id));
 	});
 	if (row.kind === 'field' && row.type === 'number') checkNumeric(row, `${where} ${row.id}`, row.id !== 'artworkCropPadding');
+	if (row.toggle) assert(row.kind === 'field' && row.toggle.id && row.toggle.label, `${where}: a field toggle needs an id and label`);
 	if (row.kind === 'host') assert(!STRUCTURE_CLASSES.test(row.classes || ''), `${where}: host carries a structure class (${row.classes})`);
 	if (row.kind === 'labeled') checkRow(row.control, `${where} control`);
 	if (row.revert != null) assert(row.revert === true || typeof row.revert === 'string', `${where}: revert is true or an id`);

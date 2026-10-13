@@ -303,17 +303,16 @@ function createAnimationSectionSpec(prefix) {
 					{ value: 'normal', label: 'Normal' }, { value: 'reverse', label: 'Reverse' },
 					{ value: 'alternate', label: 'Alternate' }, { value: 'alternate-reverse', label: 'Alternate reverse' }
 				] },
-				{ kind: 'select', id: id('Iterations'), label: 'Iterations', options: [
-					{ value: 'Infinity', label: '∞' }, { value: '1', label: '1' }, { value: '2', label: '2' }, { value: '3', label: '3' }, { value: '5', label: '5' }, { value: '10', label: '10' }
-				] }
+				{ kind: 'field', id: id('Iterations'), type: 'number', ...FIELDS.animIterations,
+					toggle: { id: id('IterationsForever'), label: 'Repeat forever', title: 'Repeat forever' } }
 			] },
 			{ label: 'Start', rows: [
 				...sliders(['delayMs', 'phase']),
 				{ kind: 'select', id: id('FillMode'), label: 'Fill', ariaLabel: 'Fill mode',
-					hint: 'Whether the layer holds its start pose before a delay, and its end pose after a limited number of iterations finishes. Has no effect with no delay and infinite iterations.',
+					hint: 'What the layer does before the delay and after the last repeat.',
 					options: [
-						{ value: 'none', label: 'None' }, { value: 'forwards', label: 'Forwards' },
-						{ value: 'backwards', label: 'Backwards' }, { value: 'both', label: 'Both' }
+						{ value: 'none', label: 'Rests before and after' }, { value: 'forwards', label: 'Holds its last pose' },
+						{ value: 'backwards', label: 'Holds its first pose' }, { value: 'both', label: 'Holds both' }
 					] }
 			] },
 			{ label: 'Pivot', rows: [

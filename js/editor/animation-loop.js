@@ -1,6 +1,25 @@
 const EDITOR_ANIMATION_LOOP_METHODS = {
+	setDocumentLoop({ mode, durationMs } = CONFIG.project.loop, { commit = true } = {}) {
+		const config = CONFIG.export.timeline;
+		const loop = mode === 'set' ? {
+			mode, durationMs: clampNumber(roundTo(Number(durationMs), config.renderClock.gifDelayQuantumMs), config.setLoopRange.min, config.setLoopRange.max)
+		} : { ...CONFIG.project.loop };
+		if (commit && this.documentLoop.mode === loop.mode && this.documentLoop.durationMs === loop.durationMs) return;
+		this.documentLoop = loop;
+		this.scheduleExportDuration();
+		this.requestPreviewUpdate();
+		if (commit) this.saveState(mode === 'set' ? 'Set loop length' : 'Automatic loop length');
+	},
 	setupAnimationLoop() {
-		document.getElementById('animationLoopCandidate')?.addEventListener('change', () => this.syncLoopCandidate());
+		const select = document.getElementById('animationLoopCandidate');
+		if (select && isFeatureEnabled('loopLength')) {
+			select.closest('.property-row').querySelector('.property-label').textContent = 'Loop length';
+			select.setAttribute('aria-label', 'Loop length');
+		}
+		select?.addEventListener('change', () => {
+			if (isFeatureEnabled('loopLength')) this.setDocumentLoop(select.value === 'auto' ? CONFIG.project.loop : { mode: 'set', durationMs: Number(select.value) });
+			this.syncLoopCandidate();
+		});
 		document.getElementById('fitAnimationsToLoop')?.addEventListener('click', () => this.fitAnimationsToLoop());
 		document.getElementById('resetAnimationLoop')?.addEventListener('click', () => this.resetAnimationLoop());
 		this.scheduleExportDuration();
@@ -75,6 +94,7 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 				if (value == null) cell.setAttribute('aria-label', 'No saved timing');
 			});
 		});
+		const loopLengthEnabled = isFeatureEnabled('loopLength');
 		const previous = select.value;
 		select.replaceChildren(...(fit?.candidates || []).map((candidate) => {
 			const option = document.createElement('option');
@@ -82,15 +102,23 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 			option.textContent = `${(candidate.duration / 1000).toFixed(2)} s${candidate.exact ? '' : ' / ends do not match'}`;
 			return option;
 		}));
-		if (Array.from(select.options).some((option) => option.value === previous)) select.value = previous;
-		else if (Array.from(select.options).some((option) => Number(option.value) === estimate?.duration)) select.value = String(estimate.duration);
+		if (loopLengthEnabled) {
+			const automatic = document.createElement('option'); automatic.value = 'auto'; automatic.textContent = 'Automatic';
+			select.prepend(automatic);
+			select.value = this.documentLoop.mode === 'set' ? String(this.documentLoop.durationMs) : 'auto';
+		} else {
+			if (Array.from(select.options).some((option) => option.value === previous)) select.value = previous;
+			else if (Array.from(select.options).some((option) => Number(option.value) === estimate?.duration)) select.value = String(estimate.duration);
+		}
 		select.disabled = !select.options.length;
 		sources.hidden = !fit?.sources.length;
 		sources.parentElement.hidden = sources.hidden;
 		this.syncLoopCandidate();
 	},
 	getLoopCandidate() {
-		const duration = Number(document.getElementById('animationLoopCandidate')?.value);
+		const duration = isFeatureEnabled('loopLength')
+			? (this.documentLoop.mode === 'set' ? this.documentLoop.durationMs : this.loopEstimate?.duration)
+			: Number(document.getElementById('animationLoopCandidate')?.value);
 		return this.loopEstimate?.loopFit.candidates.find((candidate) => candidate.duration === duration);
 	},
 	syncLoopCandidate() {
@@ -123,7 +151,7 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 			});
 			reset.hidden = reset.disabled;
 		}
-		document.getElementById('animationLoopLengthSet').hidden = !fit?.candidates.some((entry) => entry.canApply);
+		document.getElementById('animationLoopLengthSet').hidden = isFeatureEnabled('loopLength') ? !fit?.sources.length : !fit?.candidates.some((entry) => entry.canApply);
 		document.getElementById('animationLoopActionSet').hidden = button.hidden && (!reset || reset.hidden);
 	},
 	fitAnimationsToLoop() {

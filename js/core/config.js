@@ -17,6 +17,7 @@ const EXPORT_FIDELITY_STOPS = [
 
 const CONFIG = deepFreeze({
 	project: {
+		loop: { mode: 'auto', durationMs: null },
 		extension: 'glitter.json',
 		fileNameSuffix: '_ryandavi-com',
 		name: { maxLength: 60, placeholder: 'Untitled project' }
@@ -1037,6 +1038,7 @@ const CONFIG = deepFreeze({
 			hardFrameLimit: 1000,
 
 			maxLoopDurationMs: 12000,
+			setLoopRange: { min: 200, max: 20000 },
 			// The composite render clock owns displayed time once any procedural
 			// (continuously evaluated) source is present: source boundaries stop
 			// being automatic output timestamps, so continuous motion is sampled

@@ -113,6 +113,45 @@ async function main() {
 		outputFormat: 'gif', fallbackDuration: 100, maxLoopDurationMs: 12000,
 		maxSamplingFps: 30, manualFrameSkip: 1, preferredFrameBudget: 1000, hardFrameLimit: 1000
 	};
+	for (const cycle of [800, 1000]) {
+		const set = createPlanner().planSchedule({ ...motionOptions, loopDurationMs: 3000, timelines: [timeline(`set-${cycle}`, 2, [cycle / 2, cycle / 2])] });
+		assert(set.loopSeam.duration === 3000 && set.totalDuration === 3000, 'Set authored loop must retain its chosen length');
+		assert(set.loopSeam.exact === (cycle === 1000), 'Set authored seam must use source closure');
+	}
+	const setMotion = duration => createPlanner().planSchedule({ ...motionOptions, loopDurationMs: duration, timelines: motionSources({ type: 'pulse', periodMs: 1400 }) });
+	const fittedSet = setMotion(3000);
+	assert(fittedSet.loopSeam.duration === 3000 && fittedSet.loopSeam.exact && fittedSet.sourceAnalysis[0].resolvedPeriod === 1500, 'Set loop must quietly fit within tolerance');
+	const missedSet = setMotion(2400);
+	assert(missedSet.loopSeam.duration === 2400 && !missedSet.loopSeam.exact && missedSet.sourceAnalysis[0].resolvedPeriod === 1400, 'Set loop must report an out-of-tolerance seam');
+	const cutFinite = createPlanner().planSchedule({ ...motionOptions, loopDurationMs: 1000, timelines: motionSources({ type: 'tada', periodMs: 1000, iterations: 5 }) });
+	assert(cutFinite.loopSeam.duration === 1000, 'Set length must override the automatic finite-run minimum');
+	const config = { ...createPlanner().config, maxLoopDurationMs: 12000 };
+	const candidates = planLoopFit([timeline('current-set', 2, [400, 400])], { config, loopDurationMs: 3000 });
+	assert(candidates.candidates.some(candidate => candidate.duration === 3000), 'Loop fitting must retain the current length');
+	const mutation = vm.runInContext(`(() => {
+		const compositor = Object.create(SceneCompositor.prototype);
+		compositor._buildAnimationSamplingContext = () => ({ id: 'run' });
+		const layer = { id: 'run', animations: [GlitterAnimation.normalizeAnimation({ type: 'pulse', periodMs: 1000 })] };
+		const source = () => compositor._createProceduralTimelines(compositor._createLayerAnimationTimelineSources(layer))[0];
+		return { layer, source, run: () => GlitterAnimation.runTiming(layer.animations[0]), normalize: value => GlitterAnimation.normalizeAnimation(value) };
+	})()`, context);
+	for (const phase of [0, 0.25]) for (const end of [2600, Infinity]) {
+		mutation.layer.animations[0].phase = phase;
+		mutation.source().setRun({ start: 600, end });
+		const run = mutation.run();
+		assert(run.start === 600 && run.end === end, 'Run setter must invert runTiming including phase and Infinity');
+		assert((typeof mutation.source().setPeriod === 'function') === (end === Infinity), 'Finite runs must not gain period setters');
+	}
+	mutation.source().setPhase(-0.25);
+	assert(mutation.layer.animations[0].phase === 0.75, 'Phase setter must wrap negative values');
+	const originalSource = mutation.source();
+	assert(originalSource.withPeriod(1200).setRun === originalSource.setRun && originalSource.withPeriod(1200).setPhase === originalSource.setPhase, 'Fitted source must retain timing setters');
+	const returned = motionSources({ type: 'rotate', periodMs: 1000, iterations: 0.5, turns: 0.5, fillMode: 'none' })[0];
+	const held = motionSources({ type: 'rotate', periodMs: 1000, iterations: 0.5, turns: 0.5, fillMode: 'forwards' })[0];
+	assert(returned.closesAt(1000, 1000) && !held.closesAt(1000, 1000), 'Trimmed rest closes and held non-rest pose does not');
+	assert(mutation.normalize({ type: 'tada' }).iterations === vm.runInContext('CONFIG.tools.animation.presets.tada.iterations', context), 'Omitted repeats retain the preset default');
+	assert(mutation.normalize(JSON.parse(JSON.stringify({ type: 'tada', iterations: Infinity }))).iterations === Infinity, 'JSON must preserve Repeat forever');
+	console.log('PASS set-loop timing, seam reports, finite-run overrides, run/phase setters and repeat persistence');
 	const motionCases = [
 		{ type: 'pulse', periodMs: 1400, delayMs: 2000 },
 		{ type: 'pulse', periodMs: 1400, delayMs: 500 },

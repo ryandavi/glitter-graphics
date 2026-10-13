@@ -233,13 +233,18 @@ class AnimationPanelController {
 				this.editor.saveState(field === 'anchor' && this._anchorDefinition(animation).stores === 'layer' ? 'Change anchor' : 'Edit animation');
 			});
 		});
-		this._id(prefix, 'Iterations')?.addEventListener('change', (event) => {
+		const applyRepeats = () => {
 			const layer = this._active(type);
 			const animation = this._selected(layer);
 			if (!animation) return;
-			animation.iterations = event.target.value === 'Infinity' ? Infinity : Number(event.target.value);
+			const spec = FIELDS.animIterations;
+			animation.iterations = this._id(prefix, 'IterationsForever').checked
+				? Infinity
+				: Number(clampNumber(this._id(prefix, 'Iterations').valueAsNumber, spec.min, spec.max, spec.value).toFixed(2));
 			this._render(layer, true);
-		});
+		};
+		this._id(prefix, 'Iterations')?.addEventListener('change', applyRepeats);
+		this._id(prefix, 'IterationsForever')?.addEventListener('change', applyRepeats);
 		this._id(prefix, 'Steps')?.addEventListener('change', (event) => {
 			const layer = this._active(type);
 			const animation = this._selected(layer);
@@ -290,7 +295,10 @@ class AnimationPanelController {
 			if (control) control.value = key === 'anchor' ? this._selectedAnchorPreset(layer, data) : data[key];
 		});
 		const iterations = this._id(prefix, 'Iterations');
-		if (iterations) iterations.value = Number.isFinite(data.iterations) ? String(data.iterations) : 'Infinity';
+		const forever = !Number.isFinite(data.iterations);
+		if (iterations) { iterations.value = forever ? FIELDS.animIterations.value : data.iterations; iterations.disabled = forever; }
+		const repeatForever = this._id(prefix, 'IterationsForever');
+		if (repeatForever) repeatForever.checked = forever;
 		const steps = this._id(prefix, 'Steps');
 		if (steps) steps.value = data.steps;
 		GlitterAnimation.ANIMATION_CONTROLS.filter((control) => control.field).forEach(({ suffix, key: field, field: spec, scale }) => {

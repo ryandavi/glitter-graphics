@@ -1563,6 +1563,13 @@ function buildPanelItemContent(item, schema) {
 			label.textContent = item.label || '';
 			if (item.title) label.title = item.title;
 			row.appendChild(label);
+			if (item.toggle) {
+				row.classList.add('is-pair');
+				const pair = panelDiv('property-pair');
+				pair.append(input, buildPropertyCardToggle(item.toggle, item.toggle.label));
+				row.appendChild(pair);
+				return row;
+			}
 			if (item.unit) {
 				const unit = document.createElement('span');
 				unit.className = 'input-unit';

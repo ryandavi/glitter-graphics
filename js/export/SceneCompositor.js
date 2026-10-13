@@ -168,7 +168,7 @@ class SceneCompositor {
 				...(LAYER_UI_CONFIG[layer.type]?.timelineSources?.(layer, { compositor: this, includeBaseImage, canvasData }) || []),
 				...this._createPatternTimelineSources(layer, includeBaseImage)
 			];
-			return isLayerFullyLocked(layer) ? sources.map((source) => ({ ...source, setPeriod: null })) : sources;
+			return isLayerFullyLocked(layer) ? sources.map((source) => ({ ...source, setPeriod: null, setRun: null, setPhase: null })) : sources;
 		});
 	}
 
@@ -235,6 +235,12 @@ class SceneCompositor {
 				effectSlot: `animation-${index}`,
 				naturalPeriod: animation.periodMs,
 				run: GlitterAnimation.runTiming(animation),
+				setRun: (run) => {
+					const current = layer.animations[index];
+					current.delayMs = clampNumber(run.start, 0, FIELDS.animDelay.max * 1000);
+					current.iterations = GlitterAnimation.iterationsForRun(current, run);
+				},
+				setPhase: (phase) => { layer.animations[index].phase = ((Number(phase) % 1) + 1) % 1; },
 				closesAt: (duration, period) => GlitterAnimation.isSeamlessLoop({ ...animation, periodMs: period }, samplingContext, duration),
 				nonLooping: Number.isFinite(animation.iterations),
 				...(Number.isFinite(animation.iterations) ? {} : {
@@ -1454,6 +1460,7 @@ class SceneCompositor {
 			outputFormat,
 			fallbackDuration: exportSettings.frameDelay,
 			maxLoopDurationMs: timelineConfig.maxLoopDurationMs,
+			loopDurationMs: this._loopDurationMs(),
 			maxSamplingFps: exportSettings.maxSamplingFps === 'auto' ? preset.maxSamplingFps : (exportSettings.maxSamplingFps || preset.maxSamplingFps),
 			manualFrameSkip: exportSettings.exportFrameSkip,
 			reverse: exportSettings.exportReverse,
@@ -1724,6 +1731,10 @@ class SceneCompositor {
 		return yieldToEventLoop();
 	}
 
+	_loopDurationMs() {
+		return this.editor.documentLoop?.mode === 'set' ? this.editor.documentLoop.durationMs : null;
+	}
+
 	async estimateLoopDuration({
 		layers,
 		library,
@@ -1764,6 +1775,7 @@ class SceneCompositor {
 			outputFormat,
 			fallbackDuration,
 			maxLoopDurationMs: timelineConfig.maxLoopDurationMs,
+			loopDurationMs: this._loopDurationMs(),
 			maxSamplingFps: maxSamplingFps === 'auto' ? fidelity.maxSamplingFps : maxSamplingFps,
 			manualFrameSkip,
 			reverse: false,
@@ -1797,12 +1809,12 @@ class SceneCompositor {
 		return {
 			...plan.loopSeam,
 			sourceAnalysis: plan.sourceAnalysis,
-			loopFit: planLoopFit(timelines, { config: timelineConfig, fallbackDuration }),
+			loopFit: planLoopFit(timelines, { config: timelineConfig, fallbackDuration, loopDurationMs: this._loopDurationMs() }),
 			duration: plan.totalDuration,
 			estimatedFrameCount: plan.frameCount,
 			maximumVisualError: plan.reduction.maximumVisualError,
 			timingResolution: plan.timingResolution,
-			outputFormat,
+			outputFormat, loopMode: this.editor.documentLoop?.mode || CONFIG.project.loop.mode,
 			renderClock: {
 				mode: plan.renderClock.mode, frameCount: plan.frameCount, outputFps: plan.renderClock.outputFps,
 				frameStarts: plan.frameDurations.reduce((starts, duration, index) => {

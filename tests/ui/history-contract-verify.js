@@ -48,7 +48,7 @@ async function main() {
 				shape() { return editor.layerManager.addLayer(LayerType.SHAPE); },
 				document() {
 					const state = editor.historyManager.createStateSnapshot();
-					return JSON.stringify({ layers: state.layers, canvas: state.canvas && { width: state.canvas.width, height: state.canvas.height, pixels: Array.from(state.canvas.imageData.data) } });
+					return JSON.stringify({ layers: state.layers, loop: state.loop, canvas: state.canvas && { width: state.canvas.width, height: state.canvas.height, pixels: Array.from(state.canvas.imageData.data) } });
 				},
 				stroke(finish = true) {
 					const rect = editor.previewWrapper.getBoundingClientRect();
@@ -71,6 +71,7 @@ async function main() {
 			['Add sticker', '', 'editor.layerManager.addLayer(LayerType.STICKER)'],
 			['Reorder layers', 'historyAudit.shape(); historyAudit.shape()', 'const lm = editor.layerManager; lm.draggedLayerId = editor.layers[1].id; lm.dropTargetId = editor.layers[2].id; lm.dropInsertAbove = true; lm.handleLayerDrop({ preventDefault() {} })'],
 			['Rename layer', 'historyAudit.shape()', 'document.querySelector(`[data-layer-id="${editor.activeLayerId}"] .layer-name`).dispatchEvent(new MouseEvent("dblclick", { bubbles: true })); const input = document.querySelector(".layer-name-input"); input.value = "Renamed"; input.blur()'],
+			['Loop length', '', "editor.setDocumentLoop({ mode: 'set', durationMs: 3000 })"],
 			['Number control', 'historyAudit.shape()', 'historyAudit.change("shapePosX", "90")'],
 			['Toggle control', 'historyAudit.shape()', 'historyAudit.change("shapeFlipX", true)'],
 			['Select control', 'historyAudit.shape()', 'historyAudit.change("shapeTransformAnchor", "0,0")'],
@@ -352,7 +353,7 @@ async function main() {
 					const h = editor.historyManager, restore = h.restoreState.bind(h);
 					let active = 0, max = 0;
 					h.restoreState = async (...args) => { max = Math.max(max, ++active); await new Promise(resolve => setTimeout(resolve, h.historyIndex === 2 ? 80 : 5)); await restore(...args); active--; };
-					try { await Promise.all([editor.undo(), editor.undo()]); return max === 1 && historyAudit.document() === JSON.stringify({ layers: h.history[h.historyIndex].layers, canvas: { width: 160, height: 120, pixels: Array.from(editor.originalImageData.data) } }); }
+					try { await Promise.all([editor.undo(), editor.undo()]); return max === 1 && historyAudit.document() === JSON.stringify({ layers: h.history[h.historyIndex].layers, loop: h.history[h.historyIndex].loop, canvas: { width: 160, height: 120, pixels: Array.from(editor.originalImageData.data) } }); }
 					finally { h.restoreState = restore; }
 				}), 'overlapping restores');
 			}],

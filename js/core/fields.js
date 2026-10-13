@@ -39,6 +39,7 @@ const FIELDS = Object.freeze({
 	animDuty: { label: 'Duty cycle', unit: '%', min: 5, max: 95, step: 1, value: 50 },
 	animOpacityFloor: { label: 'Opacity floor', unit: '%', min: 0, max: 95, step: 1, value: 0 },
 	animGap: { label: 'Gap', unit: 'px', min: 0, max: 500, step: 1, value: 0 },
+	animIterations: { label: 'Repeats', min: 0.25, max: 200, step: 0.25, value: 1 },
 	animDelay: { label: 'Delay', unit: 's', min: 0, max: 20, step: 0.05, value: 0 },
 	animPhase: { label: 'Start offset', unit: '%', min: 0, max: 100, step: 1, value: 0 },
 	animAnchorX: { label: 'Anchor X', unit: '%', min: 0, max: 100, step: 1, value: 50 },

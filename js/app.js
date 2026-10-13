@@ -54,6 +54,7 @@ class GlitterEditor {
 		// ============================================================================
 		this.isSaved = false;
 		this.projectName = '';
+		this.documentLoop = { ...CONFIG.project.loop };
 		this.baseImageSource = null;
 		this.baseAnimationUrls = new Set();
 		this.touchGestureActive = false;

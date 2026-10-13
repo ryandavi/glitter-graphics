@@ -250,6 +250,13 @@ const GlitterAnimation = (() => {
 		return { start, end: Number.isFinite(data.iterations) ? Math.max(0, start + loopDurationMs(data) - Number(data.phase) * data.periodMs) : Infinity };
 	}
 
+	function iterationsForRun(animation, { start, end }) {
+		const data = normalizeAnimation(animation);
+		if (end === Infinity) return Infinity;
+		const delayMs = clampNumber(start, 0, FIELDS.animDelay.max * 1000);
+		return Number(clampNumber((end - delayMs) / data.periodMs + Number(data.phase), FIELDS.animIterations.min, FIELDS.animIterations.max).toFixed(2));
+	}
+
 	// Typical canvas speed of a traveling motion in px/s: the median step over
 	// one cycle, so a wrap's jump and an easing's slow ends do not skew it.
 	function travelSpeed(value, samplingContext = {}, steps = 48) {
@@ -448,7 +455,7 @@ const GlitterAnimation = (() => {
 
 	return {
 		ANIMATION_TYPES, MOTION_REGISTRY, ANIMATION_CONTROLS, normalizeAnimation, normalizeAnimations, isActive, includesOffCanvas, summaryText, loopDurationMs,
-		isSeamlessLoop, runTiming, travelSpeed, sampleAt, composeSamples, seededRandom01, domTransformString, applyToContext, resolveOrigin,
+		isSeamlessLoop, runTiming, iterationsForRun, travelSpeed, sampleAt, composeSamples, seededRandom01, domTransformString, applyToContext, resolveOrigin,
 		hashString, mulberry32, createSamplingContext, splitSample, wrap, reflect
 	};
 })();

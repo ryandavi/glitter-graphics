@@ -27,6 +27,7 @@ class HistoryManager {
 			// history — they are removed or committed before any undoable edit.
 			layers: this.editor.layers.filter((layer) => !layer.isPreview)
 				.map((layer) => this.editor.layerManager.serializeLayer(layer)),
+			loop: { ...this.editor.documentLoop },
 			activeLayerId: this.editor.activeLayerId,
 			selectedLayerIds: [...(this.editor.selectedLayerIds || [])],
 			// Canvas dimensions + base-image pixels, so a Canvas Size / crop resize
@@ -137,6 +138,7 @@ class HistoryManager {
 		// Keep the current layer collection renderable across async font/image
 		// preparation, then commit the restored collection in one step.
 		await this.editor.glitterManager?.ensureLayersPreviewAssetsReady(restoredLayers);
+		this.editor.documentLoop = { ...(state.loop || CONFIG.project.loop) };
 		this.editor.layers = restoredLayers;
 		this.editor.paintMaskStore?.restorePaintState(this.editor.layers);
 		const touchedIds = touchedState?.selectedLayerIds?.filter(id => restoredLayers.some(layer => layer.id === id));
