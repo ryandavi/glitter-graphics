@@ -11,6 +11,12 @@ $mobile-breakpoint: 1040px;
 	}
 }
 
+@mixin desktop {
+	@media (min-width: $mobile-breakpoint + 1px) {
+		@content;
+	}
+}
+
 // Modals drop to their single-column layout below this width.
 $modal-compact-breakpoint: 600px;
 

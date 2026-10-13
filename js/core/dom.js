@@ -1,5 +1,9 @@
 'use strict';
 
+function isLocalHost() {
+	return document.documentElement.classList.contains('is-localhost');
+}
+
 function el(id, { required = true } = {}) {
 	const node = document.getElementById(id);
 	if (!node && required && CONFIG.debug.enabled) {

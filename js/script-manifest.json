@@ -22,6 +22,7 @@
 		"js/core/recents.js",
 		"js/core/area.js",
 		"js/core/config.js",
+		"js/core/features.js",
 		"js/core/boot.js",
 		"js/core/tools.js",
 		"js/core/sessions.js",

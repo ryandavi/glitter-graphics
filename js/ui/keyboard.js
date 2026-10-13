@@ -1,5 +1,10 @@
 'use strict';
 
+function isCommandAvailable(command, editor, event) {
+	return Boolean(command) && (!command.feature || isFeatureAvailable(command.feature))
+		&& command.when?.(editor, event) !== false;
+}
+
 function normalizeShortcutEvent(event) {
 	const parts = [];
 	if (event.ctrlKey || event.metaKey) parts.push('mod');
@@ -14,7 +19,7 @@ function normalizeShortcutEvent(event) {
 
 function matchShortcut(event) {
 	const combo = normalizeShortcutEvent(event);
-	return Object.values(COMMANDS).find((command) => command.keys?.includes(combo)) || null;
+	return Object.values(COMMANDS).find((command) => command.keys?.includes(combo) && (!command.feature || isFeatureAvailable(command.feature))) || null;
 }
 
 // Several commands may share a key (Delete removes path points in a path
@@ -24,7 +29,7 @@ function dispatchKeyboardCommand(editor, event, { isTyping = false } = {}) {
 	const command = Object.values(COMMANDS).find((candidate) => candidate.keys?.includes(combo)
 		&& sessionAllowsCommand(editor, candidate)
 		&& !(isTyping && !candidate.allowWhileTyping)
-		&& candidate.when?.(editor, event) !== false);
+		&& isCommandAvailable(candidate, editor, event));
 	if (!command) return false;
 	event.preventDefault();
 	command.run(editor, event);

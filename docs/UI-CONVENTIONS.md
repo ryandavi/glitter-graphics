@@ -6,6 +6,22 @@ The definition of done for UI work: **adding a setting is one schema line and no
 
 ## The system
 
+### Feature gates
+
+`FEATURES` in `js/core/features.js` owns release stage and optional layout limits. An omitted layout allows both desktop and phone.
+
+| Stage | Enabled when |
+|---|---|
+| `off` | Never |
+| `debug` | `CONFIG.debug.enabled` |
+| `local` | Local host, debug, or the id in `?features=a,b` |
+| `beta` | Always; surfaces that support a badge show Beta |
+| `on` | Always |
+
+Static markup starts `hidden` with `data-feature`; `applyFeatureGates` reveals enabled controls and stamps `data-layout`. Panel sections, sets and rows declare `feature`; commands use the same key and `isCommandAvailable`. Stage checks use `isFeatureEnabled`; interaction checks use `isFeatureAvailable`, which also reads the current layout.
+
+A new feature limited by stage or layout uses this registry, never a separate host test, width test or hiding class. Gates hide controls and never change saved project data. The URL override enables only `local` features and is not stored. Layout limits use `data-layout="desktop"` or `"phone"` and the shared breakpoint rules.
+
 ### Two layers of look
 
 | Layer | What | Look |

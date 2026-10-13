@@ -22,6 +22,7 @@ const CONFIG = deepFreeze({
 		name: { maxLength: 60, placeholder: 'Untitled project' }
 	},
 	app: {
+		features: { param: 'features' },
 		boot: {
 			stages: [
 				{ id: 'shell', tasks: [] },

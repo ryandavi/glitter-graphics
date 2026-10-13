@@ -1414,7 +1414,19 @@ function buildSetToggle(node, set, schema) {
 // name only in sections with more than one labelled set. `collapse: 'open' |
 // 'closed'` makes the name a toggle that folds the rows away: presets that
 // are a shortcut beside the controls they fill.
+function buildPanelFeature(spec, build) {
+	if (spec.feature && !isFeatureEnabled(spec.feature)) return document.createDocumentFragment();
+	const node = build();
+	const layout = spec.feature ? featureLayout(spec.feature) : null;
+	if (layout) node.dataset.layout = layout;
+	return node;
+}
+
 function buildPanelSet(set, schema) {
+	return buildPanelFeature(set, () => buildPanelSetContent(set, schema));
+}
+
+function buildPanelSetContent(set, schema) {
 	if (set.actions) return buildActionSet(set);
 	const node = addPanelClasses(panelDiv('property-set'), set.classes);
 	if (set.id) node.id = set.id;
@@ -1449,6 +1461,10 @@ function finishChoiceRow(item, control, revertTarget) {
 // `label` is the visible text and `ariaLabel` the accessible name where the
 // two must differ; a choice control with no `label` fills its set's width.
 function buildPanelItem(item, schema) {
+	return buildPanelFeature(item, () => buildPanelItemContent(item, schema));
+}
+
+function buildPanelItemContent(item, schema) {
 	switch (item.kind) {
 		case 'section':
 			return buildPanelSection(item, schema);

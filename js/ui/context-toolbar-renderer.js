@@ -280,8 +280,9 @@ class ContextToolbarRenderer {
 			const root = this.buildMenu(trigger, () => control.items.map(id => {
 				if (id === '-') return null;
 				const command = COMMANDS[id];
-				return { label: command.menuLabel || command.label, hint: command.displayKey, disabled: command.when?.(this.editor) === false, run: () => command.run(this.editor) };
-			}));
+				if (command.feature && !isFeatureAvailable(command.feature)) return undefined;
+				return { label: command.menuLabel || command.label, hint: command.displayKey, disabled: !isCommandAvailable(command, this.editor), run: () => { if (isCommandAvailable(command, this.editor)) command.run(this.editor); } };
+			}).filter(item => item !== undefined));
 			return root;
 		}
 		if (control.kind === 'group') {

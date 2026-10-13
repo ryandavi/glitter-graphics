@@ -1,5 +1,13 @@
 @use 'mixins' as *;
 
+@include desktop {
+	[data-layout="phone"] { display: none !important; }
+}
+
+@include mobile {
+	[data-layout="desktop"] { display: none !important; }
+}
+
 .mobile-bottom-nav,
 .mobile-sheet-handle,
 .phone-chip-bar {

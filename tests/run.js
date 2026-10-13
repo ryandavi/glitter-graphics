@@ -4,6 +4,7 @@ const { spawnSync } = require('child_process');
 const path = require('path');
 
 const SUITES = [
+	{ file: 'unit/features-unit.js', tags: ['unit', 'quick'] },
 	{ file: 'ui/clipping-preview-verify.js', tags: ['layers', 'touch', 'export'] },
 	{ file: 'parity/regional-look-verify.js', tags: ['effects', 'export'] },
 	{ file: 'parity/clipping-edge-verify.js', tags: ['layers', 'export'] },

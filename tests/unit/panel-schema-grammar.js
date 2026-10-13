@@ -37,7 +37,7 @@ const ROW_KINDS = new Set([
 	'note', 'assetInfo', 'presetGrid', 'textarea', 'host', 'sparkleGlyphs', 'processingStatus'
 ]);
 const GROUP_KEYS = new Set(['title', 'sections', 'note', 'actions', 'region', 'classes', 'role']);
-const SET_KEYS = new Set(['id', 'label', 'collapse', 'hidden', 'attrs', 'classes', 'rows', 'actions', 'paint']);
+const SET_KEYS = new Set(['id', 'label', 'collapse', 'hidden', 'attrs', 'classes', 'rows', 'actions', 'paint', 'feature']);
 // Spellings the grammar replaced. None may come back on any object.
 const RETIRED_KEYS = [
 	'items', 'visibleLabel', 'revertFor', 'reset', 'moduleSummary', 'titleSummary', 'summaryFrom', 'flatBody',

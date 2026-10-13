@@ -196,7 +196,7 @@ function isGestureCommand(command) {
 function getShortcutGroups(kind = 'keyboard') {
 	const groups = new Map();
 	[...Object.values(COMMANDS), ...SESSIONS.flatMap((session) => session.shortcuts || [])].filter((command) => {
-		if (!command.label) return false;
+		if (!command.label || (command.feature && !isFeatureAvailable(command.feature))) return false;
 		return kind === 'gesture' ? isGestureCommand(command) : Boolean(command.displayKey) && !isGestureCommand(command);
 	}).forEach((command) => {
 		const group = kind === 'gesture'
