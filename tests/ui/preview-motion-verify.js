@@ -167,6 +167,13 @@ async function verifyPlayhead(browser) {
 	const canvasSpace = await page.evaluate(() => ({ paused: editor.animationTicker.paused, hand: Boolean(editor.temporaryHandToolActive) }));
 	await page.keyboard.up('Space');
 	assert.deepEqual(canvasSpace, { paused: true, hand: true }, 'Space away from the dock is still the temporary Hand');
+	assert(!(await page.evaluate(() => editor.animationTicker.paused)), 'A tap of Space away from the dock plays');
+	await page.keyboard.down('Space');
+	await page.waitForTimeout(await page.evaluate(() => CONFIG.ui.timeline.spaceTapMs) + 100);
+	await page.keyboard.up('Space');
+	assert(!(await page.evaluate(() => editor.animationTicker.paused)), 'A held Space is only the Hand');
+	await page.keyboard.press('Space');
+	assert(await page.evaluate(() => editor.animationTicker.paused), 'A second tap pauses');
 
 	// Closing the dock while paused returns to the rest pose.
 	await page.evaluate(() => editor.animationTicker.seek(300));

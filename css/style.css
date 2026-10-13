@@ -3252,7 +3252,8 @@ body.no-document .app-header > .app-header-right > .app-header-project {
 
 .panel-resize-handle,
 .library-split-handle,
-.timeline-resize-handle {
+.timeline-resize-handle,
+.timeline-label-handle {
   pointer-events: auto;
   touch-action: none;
   background: transparent;
@@ -3262,14 +3263,17 @@ body.no-document .app-header > .app-header-right > .app-header-project {
 }
 .panel-resize-handle.is-dragging,
 .library-split-handle.is-dragging,
-.timeline-resize-handle.is-dragging {
+.timeline-resize-handle.is-dragging,
+.timeline-label-handle.is-dragging {
   opacity: 1;
 }
 .panel-resize-handle::before, .panel-resize-handle::after,
 .library-split-handle::before,
 .library-split-handle::after,
 .timeline-resize-handle::before,
-.timeline-resize-handle::after {
+.timeline-resize-handle::after,
+.timeline-label-handle::before,
+.timeline-label-handle::after {
   content: "";
   position: absolute;
   top: 50%;
@@ -3281,7 +3285,8 @@ body.no-document .app-header > .app-header-right > .app-header-project {
 }
 .panel-resize-handle::before,
 .library-split-handle::before,
-.timeline-resize-handle::before {
+.timeline-resize-handle::before,
+.timeline-label-handle::before {
   width: var(--split-grip-width, var(--spacing-2xs));
   height: var(--split-grip-height, var(--spacing-xl));
   background: var(--color-text-tertiary);
@@ -3289,7 +3294,8 @@ body.no-document .app-header > .app-header-right > .app-header-project {
 }
 .panel-resize-handle::after,
 .library-split-handle::after,
-.timeline-resize-handle::after {
+.timeline-resize-handle::after,
+.timeline-label-handle::after {
   width: var(--split-line-width, var(--spacing-2xs));
   height: var(--split-line-height, 100%);
   background: var(--color-accent);
@@ -3301,7 +3307,10 @@ body.no-document .app-header > .app-header-right > .app-header-project {
 .library-split-handle.is-dragging::before,
 .timeline-resize-handle:hover::before,
 .timeline-resize-handle:focus-visible::before,
-.timeline-resize-handle.is-dragging::before {
+.timeline-resize-handle.is-dragging::before,
+.timeline-label-handle:hover::before,
+.timeline-label-handle:focus-visible::before,
+.timeline-label-handle.is-dragging::before {
   background: var(--color-accent);
   opacity: 1;
 }
@@ -3311,7 +3320,10 @@ body.no-document .app-header > .app-header-right > .app-header-project {
 .library-split-handle.is-dragging::after,
 .timeline-resize-handle:hover::after,
 .timeline-resize-handle:focus-visible::after,
-.timeline-resize-handle.is-dragging::after {
+.timeline-resize-handle.is-dragging::after,
+.timeline-label-handle:hover::after,
+.timeline-label-handle:focus-visible::after,
+.timeline-label-handle.is-dragging::after {
   opacity: 0.7;
 }
 
@@ -5017,30 +5029,108 @@ body.tool-select .preview-container.is-over-picked-layer {
 .timeline-dock .section-header-action:disabled {
   opacity: var(--opacity-disabled);
 }
-.timeline-dock .timeline-body {
+.timeline-dock > .timeline-section > .section-header {
+  gap: var(--spacing-sm);
+  cursor: pointer;
+}
+.timeline-dock .section-header-action.collapsed .icon {
+  transform: rotate(-90deg);
+}
+.timeline-dock.is-minimized {
+  height: auto;
+}
+.timeline-dock.is-minimized > .timeline-resize-handle {
+  visibility: hidden;
+}
+.timeline-dock.is-minimized > .timeline-section > .section-header {
+  border-bottom: unset;
+}
+.timeline-dock.is-minimized .timeline-stage {
+  display: none;
+}
+.timeline-dock .timeline-transport {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+.timeline-dock .timeline-time {
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--color-text-secondary);
+}
+.timeline-dock .timeline-stage {
   --timeline-label-column: var(--timeline-label-width);
   --timeline-info-column: var(--timeline-info-width);
-  --timeline-label-inset: calc(var(--spacing-sm) + var(--font-size-md) + 3 * var(--spacing-xs));
+  --timeline-label-inset: calc(var(--spacing-sm) + var(--font-size-md) + var(--control-height) + var(--timeline-group-media) + 5 * var(--spacing-xs));
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.timeline-dock .timeline-stage::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  box-sizing: border-box;
+  width: var(--timeline-label-column);
+  border-right: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+}
+.timeline-dock .timeline-ruler, .timeline-dock .timeline-body {
+  position: relative;
+}
+.timeline-dock .timeline-body {
   flex: 1;
   min-height: 0;
   overflow: auto;
 }
-.timeline-dock .timeline-ruler, .timeline-dock .timeline-row {
+.timeline-dock .timeline-playhead {
+  position: absolute;
+  inset: 0 auto 0 var(--timeline-label-column);
+  z-index: 3;
+  width: 1px;
+  background: var(--color-text-primary);
+  pointer-events: none;
+}
+.timeline-dock .timeline-playhead::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: var(--timeline-frame-left);
+  width: var(--timeline-frame-width);
+  height: var(--timeline-ruler-height);
+  background: var(--color-accent-surface-strong);
+}
+.timeline-dock .timeline-label-handle {
+  position: absolute;
+  inset: 0 auto 0 calc(var(--timeline-label-column) - var(--spacing-xs));
+  z-index: 4;
+  width: var(--spacing-sm);
+  cursor: col-resize;
+}
+.timeline-dock .timeline-row, .timeline-dock .timeline-group-header {
   display: grid;
   grid-template-columns: var(--timeline-label-column) var(--timeline-track-width) var(--timeline-info-column);
   width: calc(var(--timeline-label-column) + var(--timeline-track-width) + var(--timeline-info-column));
   min-width: 100%;
 }
 .timeline-dock .timeline-ruler {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  background: var(--color-bg-primary);
+  flex: 0 0 auto;
+  border-bottom: 1px solid var(--color-border);
+}
+.timeline-dock .timeline-ruler-view {
+  margin-left: var(--timeline-label-column);
+  overflow: hidden;
 }
 .timeline-dock .timeline-ruler-track {
-  grid-column: 2;
   position: relative;
+  width: var(--timeline-track-width);
   overflow: hidden;
+  cursor: ew-resize;
+  touch-action: none;
 }
 .timeline-dock .timeline-ruler-ticks {
   display: block;
@@ -5054,28 +5144,69 @@ body.tool-select .preview-container.is-over-picked-layer {
   background: var(--color-bg-primary);
 }
 .timeline-dock .timeline-group-header {
+  background: var(--color-bg-secondary);
+  cursor: pointer;
+}
+.timeline-dock .timeline-group + .timeline-group > .timeline-group-header {
+  border-top: 1px solid var(--color-border);
+}
+.timeline-dock .timeline-group-label {
+  --list-row-media: var(--timeline-group-media);
   position: sticky;
   left: 0;
-  width: 100%;
+  z-index: 1;
+  min-width: 0;
   min-height: var(--timeline-group-height);
-  height: var(--timeline-group-height);
+  padding-block: var(--spacing-2xs);
   gap: var(--spacing-xs);
+  border-right: 1px solid var(--color-border);
   background: var(--color-bg-secondary);
+}
+.timeline-dock .timeline-group-label:hover {
+  background: var(--color-bg-tertiary);
+}
+.timeline-dock .timeline-group-label.active {
+  background: linear-gradient(var(--color-accent-surface-strong), var(--color-accent-surface-strong)) var(--color-bg-secondary);
+}
+.timeline-dock .timeline-group-track {
+  height: auto;
+}
+.timeline-dock .timeline-group-span {
+  position: absolute;
+  top: 50%;
+  height: var(--spacing-xs);
+  transform: translateY(-50%);
+  border-radius: var(--radius-xs);
+  background: var(--color-text-tertiary);
+  pointer-events: none;
+}
+.timeline-dock .timeline-group-select {
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.timeline-dock .timeline-group-lock.active {
+  background: none;
+}
+.timeline-dock .timeline-group.is-hidden .layer-swatch {
+  opacity: 0.35;
+}
+.timeline-dock .timeline-group.is-hidden .timeline-group-name {
+  color: var(--color-text-tertiary);
 }
 .timeline-dock .timeline-group-name {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  padding: 0;
-  text-align: left;
+  flex: 1;
+  min-width: 0;
   color: var(--color-text-primary);
+  font-weight: var(--font-weight-semibold);
 }
 .timeline-dock .timeline-group.is-collapsed .timeline-row {
   display: none;
-}
-.timeline-dock .timeline-group.is-locked .timeline-group-name::after {
-  content: " · Locked";
-  color: var(--color-text-secondary);
 }
 .timeline-dock .timeline-row {
   position: relative;
@@ -5092,7 +5223,8 @@ body.tool-select .preview-container.is-over-picked-layer {
   text-align: left;
   padding: 0 var(--spacing-base) 0 var(--timeline-label-inset);
   height: var(--timeline-row-height);
-  background: var(--color-bg-primary);
+  border-right: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
   color: var(--color-text-secondary);
   font-weight: var(--font-weight-normal);
 }
@@ -5168,13 +5300,25 @@ body.tool-select .preview-container.is-over-picked-layer {
   .timeline-dock .section-header-title-text {
     display: none;
   }
-  .timeline-dock .timeline-body {
+  .timeline-dock .timeline-stage {
     --timeline-label-column: 0px;
     --timeline-info-column: 0px;
     --timeline-label-inset: var(--spacing-base);
   }
   .timeline-dock .timeline-row-info {
     display: none;
+  }
+  .timeline-dock .timeline-group-header {
+    display: block;
+    position: sticky;
+    left: 0;
+    width: 100%;
+  }
+  .timeline-dock .timeline-group-track, .timeline-dock .timeline-label-handle, .timeline-dock .timeline-stage::before {
+    display: none;
+  }
+  .timeline-dock .timeline-group-label {
+    border-right: 0;
   }
   .timeline-dock .timeline-row:is(:hover, :focus-within, .is-selected) .timeline-row-label {
     background: var(--color-accent);
@@ -5187,6 +5331,7 @@ body.tool-select .preview-container.is-over-picked-layer {
     width: max-content;
     max-width: calc(var(--timeline-loop-x) - var(--timeline-bar-left));
     height: calc(var(--timeline-row-height) - 2 * var(--spacing-2xs));
+    border-right: 0;
     background: var(--color-bg-tertiary);
   }
 }
@@ -7619,6 +7764,11 @@ body.tool-text .text-hover-baselines {
 
 .preview-motion-paused .pattern-scrolling {
   animation: none;
+}
+
+.preview-motion-held .pattern-scrolling {
+  animation-play-state: paused;
+  animation-delay: calc(var(--preview-held-ms) * -1ms);
 }
 
 @keyframes pattern-scroll-x {

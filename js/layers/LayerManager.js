@@ -1200,10 +1200,11 @@ class LayerManager {
 		info.append(nameText, metaRow);
 
 		// 4. Visibility belongs with layer identity, matching modern layer panels.
+		const state = this.getLayerRowState(layer);
 		const visBtn = this.createIconButton({
 			className: 'list-row-action layer-visibility' + (!layer.visible ? ' hidden' : ''),
-			title: layer.visible ? 'Hide layer' : 'Show layer',
-			iconType: layer.visible ? 'eye' : 'eye-slash',
+			title: state.visibility.title,
+			iconType: state.visibility.icon,
 			onClick: (e) => {
 				e.stopPropagation();
 				this.toggleLayerVisibility(layer.id);
@@ -1214,15 +1215,13 @@ class LayerManager {
 		const actions = document.createElement('div');
 		actions.className = 'list-row-actions';
 
-		const isBaseLayer = layer.type === LayerType.BASE_IMAGE;
 		const lockBtn = this.createIconButton({
-			className: `list-row-action lock${layer.locked ? ' active' : ''}${isBaseLayer ? ' permanent' : ''}`,
-			title: isBaseLayer ? 'Fixed background — editable, but cannot be moved, reordered, or deleted' : (layer.locked ? 'Unlock layer' : 'Lock layer'),
-			iconType: layer.locked ? 'lock' : 'unlock',
+			className: `list-row-action lock${state.lock.active ? ' active' : ''}${state.lock.permanent ? ' permanent' : ''}`,
+			title: state.lock.title,
+			iconType: state.lock.icon,
 			onClick: (e) => {
 				e.stopPropagation();
-				if (isBaseLayer) this.editor.updateStatus('The fixed background can be edited, but not moved or deleted');
-				else this.toggleLayerLock(layer.id);
+				this.pressLayerLock(layer);
 			}
 		});
 		actions.appendChild(lockBtn);
@@ -1241,16 +1240,14 @@ class LayerManager {
 		});
 		actions.appendChild(arrowBtn);
 
-		const cannotDelete = isBaseLayer || isLayerFullyLocked(layer);
 		const delBtn = this.createIconButton({
-				className: `list-row-action delete${cannotDelete ? ' unavailable' : ''}`,
-				title: isBaseLayer ? 'Base layer cannot be deleted' : (cannotDelete ? 'Unlock layer to delete it' : 'Delete layer'),
+				className: `list-row-action delete${state.delete.disabled ? ' unavailable' : ''}`,
+				title: state.delete.title,
 				iconType: 'trash',
-				disabled: cannotDelete,
+				disabled: state.delete.disabled,
 				onClick: async (e) => {
 					e.stopPropagation();
-					this.setSelection([layer.id]);
-					await this.editor.deleteSelectedLayers();
+					await this.deleteLayerFromRow(layer);
 				}
 			});
 		actions.appendChild(delBtn);
@@ -1297,6 +1294,34 @@ class LayerManager {
 		}
 
 		return layerEl;
+	}
+
+	// What a layer row's state buttons show and do, for the Layers list and
+	// the timeline.
+	getLayerRowState(layer) {
+		const isBaseLayer = layer.type === LayerType.BASE_IMAGE;
+		const cannotDelete = isBaseLayer || isLayerFullyLocked(layer);
+		return {
+			visibility: { icon: layer.visible ? 'eye' : 'eye-slash', title: layer.visible ? 'Hide layer' : 'Show layer' },
+			lock: {
+				icon: layer.locked ? 'lock' : 'unlock', active: Boolean(layer.locked), permanent: isBaseLayer,
+				title: isBaseLayer ? 'Fixed background — editable, but cannot be moved, reordered, or deleted' : (layer.locked ? 'Unlock layer' : 'Lock layer')
+			},
+			delete: {
+				disabled: cannotDelete,
+				title: isBaseLayer ? 'Base layer cannot be deleted' : (cannotDelete ? 'Unlock layer to delete it' : 'Delete layer')
+			}
+		};
+	}
+
+	pressLayerLock(layer) {
+		if (layer.type === LayerType.BASE_IMAGE) this.editor.updateStatus('The fixed background can be edited, but not moved or deleted');
+		else this.toggleLayerLock(layer.id);
+	}
+
+	async deleteLayerFromRow(layer) {
+		this.setSelection([layer.id]);
+		await this.editor.deleteSelectedLayers();
 	}
 
 	createIconButton({ className = '', id = '', disabled = false, title = '', iconType = '', label = '', onClick }) {

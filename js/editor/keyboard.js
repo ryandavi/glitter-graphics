@@ -4,7 +4,14 @@ const EDITOR_KEYBOARD_METHODS = {
 	handleKeyUp(e) {
 		this.shiftHeld = e.shiftKey;
 		if (e.code === 'Space' && this.temporaryHandToolActive) {
+			const tap = this.temporaryHandTap;
+			this.temporaryHandTap = null;
+			window.removeEventListener('pointerdown', tap.use, { capture: true });
 			this.endTemporaryHandTool();
+			// A tap, not a hold or a pan, plays and pauses while the timeline is open.
+			if (!tap.used && performance.now() - tap.at <= CONFIG.ui.timeline.spaceTapMs && isFeatureAvailable('timeline') && this.timelineDock?.isOpen) {
+				this.animationPanel.setPaused(!this.animationTicker.paused);
+			}
 		}
 		if (e.key === 'Alt') {
 			if (this.currentTool === ToolType.ZOOM) {
@@ -32,6 +39,12 @@ const EDITOR_KEYBOARD_METHODS = {
 			e.preventDefault();
 			this.toolBeforeTemporaryHand = this.currentTool;
 			this.temporaryHandToolActive = true;
+			// A press during the hold, a drag already under way or a focused
+			// button makes it something other than a tap.
+			const tap = { at: performance.now(), used: Boolean(this.areaSelect?.drag || e.target.closest?.('button, a')) };
+			tap.use = () => { tap.used = true; };
+			window.addEventListener('pointerdown', tap.use, { capture: true, once: true });
+			this.temporaryHandTap = tap;
 			this.setTool(ToolType.HAND);
 			return;
 		}

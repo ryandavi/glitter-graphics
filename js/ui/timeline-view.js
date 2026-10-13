@@ -1,7 +1,9 @@
 'use strict';
 
 const TimelineView = {
-	buildModel(estimate, layers) {
+	// `kept` names the layers already listed: one of them that is now hidden
+	// keeps its group, without rows, so it can be shown again from there.
+	buildModel(estimate, layers, kept = new Set()) {
 		const loopMs = estimate?.duration || 0;
 		const analyses = new Map((estimate?.sourceAnalysis || []).map(entry => [entry.key, entry]));
 		const groups = new Map();
@@ -26,8 +28,8 @@ const TimelineView = {
 		return {
 			loopMs, exact: estimate?.exact, frameStarts: estimate?.renderClock?.frameStarts || [],
 			frameCount: estimate?.renderClock?.frameCount || 0, outputFormat: estimate?.outputFormat,
-			groups: [...layers].reverse().filter(layer => groups.has(layer.id)).map(layer => ({
-				layerId: layer.id, name: layer.name, locked: isLayerFullyLocked(layer), rows: groups.get(layer.id)
+			groups: [...layers].reverse().filter(layer => groups.has(layer.id) || (layer.visible === false && kept.has(layer.id))).map(layer => ({
+				layerId: layer.id, name: layer.name, locked: isLayerFullyLocked(layer), rows: groups.get(layer.id) || []
 			}))
 		};
 	},

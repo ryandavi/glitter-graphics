@@ -413,7 +413,8 @@ body.no-document .app-header {
 
 .panel-resize-handle,
 .library-split-handle,
-.timeline-resize-handle {
+.timeline-resize-handle,
+.timeline-label-handle {
 	pointer-events: auto;
 	touch-action: none;
 	background: transparent;

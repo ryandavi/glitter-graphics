@@ -6,9 +6,10 @@ class TimelineDock {
 		this.host = host;
 		this.config = CONFIG.ui.timeline;
 		this.selectedKey = null;
+		this.listedIds = new Set();
 		for (const [key, value] of Object.entries({
-			'row-height': this.config.rowHeight, 'group-height': this.config.groupHeight,
-			'label-width': this.config.labelWidth, 'info-width': this.config.infoWidth
+			'row-height': this.config.rowHeight, 'group-height': this.config.groupHeight, 'ruler-height': this.config.rulerHeight,
+			'group-media': this.config.groupMedia, 'info-width': this.config.infoWidth
 		})) host.style.setProperty(`--timeline-${key}`, `${value}px`);
 		this.resizeHandle = this.element('timeline-resize-handle');
 		this.resizeHandle.tabIndex = 0;
@@ -29,21 +30,39 @@ class TimelineDock {
 		this.play = this.button(action, 'Pause motion', 'motion-pause', () => editor.animationPanel.setPaused(!editor.animationTicker.paused));
 		this.time = this.element('timeline-time', undefined, 'span');
 		const transport = this.element('timeline-transport');
-		transport.append(this.play, this.time);
+		transport.append(this.time, this.play);
 		this.fit = this.button(action, 'Fit animations to loop', 'magic-wand', () => {
 			if (!host.classList.contains('is-stale')) editor.fitAnimationsToLoop();
 		});
+		this.minimize = this.button(action, 'Collapse timeline', 'chevron-down', () => this.toggleMinimized());
 		actions.append(this.fit,
 			this.button(action, 'Zoom timeline out', 'minus', () => this.stepZoom(-1)),
 			this.button(action, 'Zoom timeline in', 'plus', () => this.stepZoom(1)),
+			this.minimize,
 			this.button(action, 'Close timeline', 'x-mark', () => editor.toggleTimeline()));
 		this.header.append(this.title, transport, actions);
+		// The bar is the toggle, as on a panel section.
+		this.header.addEventListener('click', event => {
+			if (this.available && !event.target.closest('button')) this.toggleMinimized();
+		});
+		// The ruler stays above the scrolling rows and follows their sideways
+		// scroll; the playhead is one line over both.
+		this.ruler = this.element('timeline-ruler');
 		this.body = this.element('timeline-body');
+		this.playhead = this.element('timeline-playhead');
+		this.labelHandle = this.element('timeline-label-handle');
+		this.labelHandle.tabIndex = 0;
+		this.labelHandle.setAttribute('role', 'separator');
+		this.labelHandle.setAttribute('aria-orientation', 'vertical');
+		this.labelHandle.setAttribute('aria-label', 'Resize timeline labels');
+		this.stage = this.element('timeline-stage');
+		this.stage.append(this.ruler, this.body, this.playhead, this.labelHandle);
 		const section = this.element('timeline-section section');
-		section.append(this.header, this.body);
+		section.append(this.header, this.stage);
 		host.replaceChildren(this.resizeHandle, section);
 		this.bindResize();
-		this.body.addEventListener('wheel', event => {
+		this.bindLabelResize();
+		this.stage.addEventListener('wheel', event => {
 			if ((!event.ctrlKey && !event.metaKey) || !this.available || !this.model?.loopMs) return;
 			if (!event.target.closest('.timeline-track, .timeline-ruler')) return;
 			event.preventDefault();
@@ -55,12 +74,14 @@ class TimelineDock {
 		this.observer = new ResizeObserver(() => {
 			if (!this.available) return;
 			if (!this.resizing) this.applyHeight(PREFERENCES.get('timelineHeight'));
-			if (editor.loopEstimate) this.sync(editor.loopEstimate);
-			else this.markStale();
+			if (!this.resizingLabels) this.applyLabelWidth(PREFERENCES.get('timelineLabelWidth'));
+			this.resync();
 		});
 		this.observer.observe(host);
 		window.addEventListener('layerChanged', () => {
-			if (this.available) this.syncSelection();
+			if (!this.available) return;
+			this.syncSelection();
+			this.revealActive();
 		});
 	}
 
@@ -87,7 +108,9 @@ class TimelineDock {
 		if (!isFeatureAvailable('timeline')) return;
 		const changed = !this.isOpen;
 		this.host.hidden = false;
+		this.applyMinimized();
 		this.applyHeight(PREFERENCES.get('timelineHeight'));
+		this.applyLabelWidth(PREFERENCES.get('timelineLabelWidth'));
 		this.sync(this.editor.loopEstimate);
 		// An open dock keeps the preview clock running for its playhead.
 		this.editor.animationTicker.refresh();
@@ -125,28 +148,29 @@ class TimelineDock {
 		const scrub = event => {
 			const { loopMs, frameStarts } = this.model;
 			const ms = TimelineView.xToTime(event.clientX - this.rulerTrack.getBoundingClientRect().left, this.scale);
+			const inside = Math.max(0, Math.min(loopMs - 1, ms));
 			// Alt suspends snapping for the drag.
-			ticker.seek(event.altKey ? Math.max(0, Math.min(loopMs - 1, ms)) : TimelineView.nearestFrameStart(frameStarts, ms));
+			ticker.seek(event.altKey ? inside : TimelineView.nearestFrameStart(frameStarts, inside));
 		};
-		this.body.addEventListener('pointerdown', event => {
+		this.stage.addEventListener('pointerdown', event => {
 			if (event.button !== 0 || !this.available || !this.model?.loopMs || !event.target.closest('.timeline-ruler-track')) return;
 			event.preventDefault();
 			this.rulerTrack.focus({ preventScroll: true });
-			this.body.setPointerCapture(event.pointerId);
+			this.stage.setPointerCapture(event.pointerId);
 			this.scrubPointer = event.pointerId;
 			hold();
 			scrub(event);
 		});
-		this.body.addEventListener('pointermove', event => {
+		this.stage.addEventListener('pointermove', event => {
 			if (event.pointerId === this.scrubPointer && this.available && this.model?.loopMs) scrub(event);
 		});
 		for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
-			this.body.addEventListener(type, event => {
+			this.stage.addEventListener(type, event => {
 				if (event.pointerId === this.scrubPointer) this.scrubPointer = null;
 			});
 		}
-		this.body.addEventListener('scroll', () => this.paintPlayhead(ticker.getPlayheadTime()));
-		this.body.addEventListener('keydown', event => {
+		this.body.addEventListener('scroll', () => this.syncScroll());
+		this.stage.addEventListener('keydown', event => {
 			if (!this.available || !this.model?.loopMs || event.ctrlKey || event.metaKey || event.altKey) return;
 			const step = { ArrowLeft: -1, ArrowRight: 1 }[event.key];
 			if (event.key === ' ') this.editor.animationPanel.setPaused(!ticker.paused);
@@ -160,20 +184,36 @@ class TimelineDock {
 			event.stopPropagation();
 		});
 		// A button under the focus would otherwise take the release as a press.
-		this.body.addEventListener('keyup', event => {
+		this.stage.addEventListener('keyup', event => {
 			if (event.key !== ' ' || !this.available || !this.model?.loopMs) return;
 			event.preventDefault();
 			event.stopPropagation();
 		});
 	}
 
+	syncScroll() {
+		if (!this.rulerTrack) return;
+		this.rulerTrack.style.transform = `translateX(${-this.body.scrollLeft}px)`;
+		this.paintPlayhead(this.editor.animationTicker.getPlayheadTime());
+	}
+
 	paintPlayhead(ms) {
-		if (!this.available || !this.playhead) return;
+		if (!this.available || !this.rulerTrack) return;
 		const { loopMs } = this.model;
-		const x = TimelineView.timeToX(Math.min(ms, loopMs), this.scale);
+		const x = TimelineView.timeToX(Math.min(ms, loopMs), this.scale) - this.body.scrollLeft;
 		this.playhead.style.transform = `translateX(${x}px)`;
 		// The label column covers whatever has scrolled under it.
-		this.playhead.hidden = x < this.body.scrollLeft;
+		this.playhead.hidden = x < 0;
+		// The output frame under the playhead, from its start to the next one's:
+		// the last frame ends on the loop line.
+		const starts = this.model.frameStarts;
+		const index = starts.findLastIndex(start => start <= ms + 1e-6);
+		if (index !== this.frameIndex) {
+			this.frameIndex = index;
+			this.frameStart = index < 0 ? ms : starts[index];
+			this.playhead.style.setProperty('--timeline-frame-width', `${index < 0 ? 0 : TimelineView.timeToX((starts[index + 1] ?? loopMs) - starts[index], this.scale)}px`);
+		}
+		this.playhead.style.setProperty('--timeline-frame-left', `${TimelineView.timeToX(this.frameStart - Math.min(ms, loopMs), this.scale)}px`);
 		const text = `${(ms / 1000).toFixed(2)} / ${(loopMs / 1000).toFixed(2)} s`;
 		if (this.time.textContent === text) return;
 		this.time.textContent = text;
@@ -233,6 +273,65 @@ class TimelineDock {
 		});
 	}
 
+	// The label column, as wide as the stored preference where the dock has
+	// the room.
+	applyLabelWidth(value) {
+		const max = Math.max(this.config.labelMinWidth, this.host.clientWidth * this.config.labelMaxFraction);
+		const width = Math.round(Math.max(this.config.labelMinWidth, Math.min(max, value)));
+		this.host.style.setProperty('--timeline-label-width', `${width}px`);
+		this.labelHandle.setAttribute('aria-valuemin', String(this.config.labelMinWidth));
+		this.labelHandle.setAttribute('aria-valuemax', String(Math.round(max)));
+		this.labelHandle.setAttribute('aria-valuenow', String(width));
+		return width;
+	}
+
+	bindLabelResize() {
+		const handle = this.labelHandle;
+		const current = () => Number(handle.getAttribute('aria-valuenow'));
+		let startWidth = 0;
+		let startX = 0;
+		bindResizeHandleDrag(handle, {
+			canStart: () => this.available,
+			bodyClass: 'is-resizing-panel',
+			start: event => {
+				startWidth = current();
+				startX = event.clientX;
+				this.resizingLabels = true;
+			},
+			move: event => {
+				if (this.available) this.applyLabelWidth(startWidth + event.clientX - startX);
+			},
+			// The tracks refit once, when the drag ends.
+			end: cancelled => {
+				this.resizingLabels = false;
+				if (cancelled) this.applyLabelWidth(startWidth);
+				else PREFERENCES.set('timelineLabelWidth', current());
+				this.resync();
+			}
+		});
+		const reset = () => {
+			PREFERENCES.reset('timelineLabelWidth');
+			this.applyLabelWidth(PREFERENCES.get('timelineLabelWidth'));
+			this.resync();
+		};
+		handle.addEventListener('dblclick', () => { if (this.available) reset(); });
+		handle.addEventListener('keydown', event => {
+			if (!this.available) return;
+			if (event.key === 'Home' || event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); reset(); }
+			if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+			event.preventDefault(); event.stopPropagation();
+			const step = event.shiftKey ? CONFIG.ui.panelResize.fastKeyStep : CONFIG.ui.panelResize.keyStep;
+			PREFERENCES.set('timelineLabelWidth', this.applyLabelWidth(current() + (event.key === 'ArrowRight' ? step : -step)));
+			this.resync();
+		});
+	}
+
+	resync() {
+		if (!this.available) return;
+		if (this.editor.loopEstimate) this.sync(this.editor.loopEstimate);
+		else this.markStale();
+	}
+
 	markStale() {
 		if (!this.available) return;
 		this.host.classList.add('is-stale');
@@ -249,11 +348,16 @@ class TimelineDock {
 		const scrollTop = this.body.scrollTop;
 		const scrollLeft = this.body.scrollLeft;
 		const rulerFocused = Boolean(this.rulerTrack) && document.activeElement === this.rulerTrack;
-		this.playhead = null;
 		this.rulerTrack = null;
+		this.ruler.replaceChildren();
+		this.ruler.hidden = true;
+		this.playhead.hidden = true;
+		this.labelHandle.hidden = true;
+		this.frameIndex = null;
 		this.time.textContent = '';
 		this.host.classList.remove('is-stale');
-		this.model = TimelineView.buildModel(estimate, this.editor.layers);
+		this.model = TimelineView.buildModel(estimate, this.editor.layers, this.listedIds);
+		this.listedIds = new Set(this.model.groups.map(group => group.layerId));
 		this.body.replaceChildren();
 		this.readout.textContent = '';
 		this.seamBadge?.remove();
@@ -267,32 +371,37 @@ class TimelineDock {
 			return;
 		}
 		const { loopMs, frameCount, outputFormat, exact } = this.model;
-		this.readout.textContent = `about ${frameCount} frames, ${outputFormat.toUpperCase()}`;
-		this.seamBadge = this.element(`badge ${exact ? 'is-accent' : 'is-warning'}`, exact ? 'Seamless' : 'Visible seam', 'span');
-		this.title.appendChild(this.seamBadge);
+		this.labelHandle.hidden = false;
+		// With every animated layer hidden there are rows and nothing to time.
+		const timed = loopMs > 0;
+		if (timed) {
+			this.readout.textContent = `about ${frameCount} frames, ${outputFormat.toUpperCase()}`;
+			this.seamBadge = this.element(`badge ${exact ? 'is-accent' : 'is-warning'}`, exact ? 'Seamless' : 'Visible seam', 'span');
+			this.title.appendChild(this.seamBadge);
+		}
 		const style = getComputedStyle(this.body);
 		const columns = parseFloat(style.getPropertyValue('--timeline-label-column')) + parseFloat(style.getPropertyValue('--timeline-info-column'));
-		this.fitScale = Math.max(1, this.body.clientWidth - columns) / (loopMs * (1 + this.config.nextLoopFraction) / 1000);
+		this.fitScale = timed ? Math.max(1, this.body.clientWidth - columns) / (loopMs * (1 + this.config.nextLoopFraction) / 1000) : 1;
 		const zoom = PREFERENCES.get('timelineZoom');
 		this.scale = zoom === 'fit' ? this.fitScale : zoom;
 		this.trackWidth = TimelineView.timeToX(loopMs * (1 + this.config.nextLoopFraction), this.scale);
-		this.body.style.setProperty('--timeline-track-width', `${this.trackWidth}px`);
-		this.body.style.setProperty('--timeline-loop-x', `${TimelineView.timeToX(loopMs, this.scale)}px`);
-		this.body.appendChild(this.buildRuler());
+		this.stage.style.setProperty('--timeline-track-width', `${this.trackWidth}px`);
+		this.stage.style.setProperty('--timeline-loop-x', `${TimelineView.timeToX(loopMs, this.scale)}px`);
+		if (timed) {
+			this.ruler.appendChild(this.buildRuler());
+			this.ruler.hidden = false;
+		}
 		for (const group of this.model.groups) this.body.appendChild(this.buildGroup(group));
-		this.playhead = this.element('timeline-playhead');
-		this.playhead.style.height = `${this.body.scrollHeight}px`;
-		this.body.appendChild(this.playhead);
 		this.body.scrollTop = scrollTop;
 		this.body.scrollLeft = scrollLeft;
-		if (rulerFocused) this.rulerTrack.focus({ preventScroll: true });
-		this.paintPlayhead(this.editor.animationTicker.getPlayheadTime());
+		if (rulerFocused) this.rulerTrack?.focus({ preventScroll: true });
+		this.syncScroll();
 		this.syncControls();
 		this.syncSelection();
 	}
 
 	buildRuler() {
-		const ruler = this.element('timeline-ruler');
+		const view = this.element('timeline-ruler-view');
 		const track = this.element('timeline-ruler-track');
 		track.tabIndex = 0;
 		track.setAttribute('role', 'slider');
@@ -325,26 +434,71 @@ class TimelineDock {
 		});
 		const loop = this.element('timeline-loop-end', `${(this.model.loopMs / 1000).toFixed(2)} s`);
 		track.append(canvas, loop);
-		ruler.append(track);
-		return ruler;
+		view.append(track);
+		return view;
 	}
 
 	buildGroup(group) {
 		const node = this.element('timeline-group'); node.dataset.layerId = group.layerId;
-		node.classList.toggle('is-locked', group.locked);
 		const collapsed = Boolean(PREFERENCES.get('timelineCollapsed')[group.layerId]);
 		node.classList.toggle('is-collapsed', collapsed);
-		const header = this.element('timeline-group-header list-row');
-		const chevron = this.button('btn-icon-simple icon-wrapper sm', `Toggle ${group.name} timeline rows`, collapsed ? 'chevron-right' : 'chevron-down', () => {
+		// A row like the ones under it: the layer in the label column, and
+		// the span of its animations on the track.
+		const header = this.element('timeline-group-header');
+		const label = this.element('timeline-group-label list-row');
+		const toggle = () => {
 			PREFERENCES.set('timelineCollapsed', { ...PREFERENCES.get('timelineCollapsed'), [group.layerId]: !node.classList.contains('is-collapsed') });
 			this.sync(this.editor.loopEstimate);
-		});
+		};
+		const chevron = this.button('btn-icon-simple icon-wrapper sm', `Toggle ${group.name} timeline rows`, collapsed ? 'chevron-right' : 'chevron-down', toggle);
 		chevron.setAttribute('aria-expanded', String(!collapsed));
-		const name = this.button('btn-text timeline-group-name', `Select ${group.name}`, null, () => this.editor.layerManager.setActiveLayer(group.layerId));
-		name.textContent = group.name;
-		header.append(chevron, name); node.appendChild(header);
+		// The bar is the toggle; the thumbnail selects the layer.
+		header.addEventListener('click', event => {
+			if (this.available && !event.target.closest('button')) toggle();
+		});
+		const manager = this.editor.layerManager;
+		const layer = manager.getLayerById(group.layerId);
+		// The Layers list's own state buttons, on the same layer.
+		const rowAction = 'btn-icon-simple icon-wrapper sm list-row-action';
+		const visibility = this.button(`${rowAction} timeline-group-visibility`, '', 'eye', () => {
+			manager.toggleLayerVisibility(layer.id);
+			this.applyRowState(node, layer);
+		});
+		const lock = this.button(`${rowAction} timeline-group-lock`, '', 'lock', () => {
+			manager.pressLayerLock(layer);
+			this.applyRowState(node, layer);
+		});
+		const actions = this.element('list-row-actions');
+		actions.append(lock, this.button(`${rowAction} timeline-group-delete`, '', 'trash', () => manager.deleteLayerFromRow(layer)));
+		const select = this.button('timeline-group-select', `Select ${group.name}`, null, () => this.editor.layerManager.setActiveLayer(group.layerId));
+		const swatch = this.element('layer-swatch list-row-media');
+		manager.renderLayerSwatch(swatch, layer, { compact: true });
+		select.appendChild(swatch);
+		const name = this.element('timeline-group-name', group.name, 'span'); name.title = group.name;
+		label.append(chevron, visibility, select, name, actions);
+		const track = this.element('timeline-track timeline-group-track');
+		if (group.rows.length) {
+			const span = this.element('timeline-group-span');
+			const start = Math.min(...group.rows.map(row => row.startMs));
+			span.style.left = `${TimelineView.timeToX(start, this.scale)}px`;
+			span.style.width = `${TimelineView.timeToX(Math.max(...group.rows.map(row => row.endMs)) - start, this.scale)}px`;
+			track.appendChild(span);
+		}
+		header.append(label, track); node.appendChild(header);
+		this.applyRowState(node, layer);
 		for (const row of group.rows) node.appendChild(this.buildRow(row));
 		return node;
+	}
+
+	applyRowState(node, layer) {
+		const state = this.editor.layerManager.getLayerRowState(layer);
+		node.classList.toggle('is-hidden', !layer.visible);
+		for (const [key, { icon, title, active = false, disabled = false }] of Object.entries(state)) {
+			const button = node.querySelector(`.timeline-group-${key}`);
+			button.title = title; button.setAttribute('aria-label', title);
+			button.classList.toggle('active', active); button.disabled = disabled;
+			if (icon) button.querySelector('use').setAttribute('href', `#icon-${icon}`);
+		}
 	}
 
 	rowInfo(row) {
@@ -426,7 +580,34 @@ class TimelineDock {
 			node.classList.toggle('is-selected', selected);
 			node.querySelector('.timeline-bar').setAttribute('aria-pressed', String(selected));
 		}
-		for (const group of this.body.querySelectorAll('.timeline-group')) group.classList.toggle('active', group.dataset.layerId === this.editor.activeLayerId);
+		for (const group of this.body.querySelectorAll('.timeline-group')) group.querySelector('.timeline-group-label').classList.toggle('active', group.dataset.layerId === this.editor.activeLayerId);
+	}
+
+	// A layer picked on the canvas or in the Layers list scrolls into view.
+	revealActive() {
+		const label = this.body.querySelector('.timeline-group-label.active');
+		if (!label) return;
+		const box = label.getBoundingClientRect();
+		const view = this.body.getBoundingClientRect();
+		if (box.top < view.top) this.body.scrollTop -= view.top - box.top;
+		else if (box.bottom > view.bottom) this.body.scrollTop += box.bottom - view.bottom;
+	}
+
+	// Minimized, the dock is its bar: the transport and the readout stay.
+	applyMinimized() {
+		const minimized = PREFERENCES.get('timelineMinimized');
+		this.host.classList.toggle('is-minimized', minimized);
+		this.minimize.classList.toggle('collapsed', minimized);
+		this.minimize.setAttribute('aria-expanded', String(!minimized));
+		const label = minimized ? 'Expand timeline' : 'Collapse timeline';
+		this.minimize.title = label;
+		this.minimize.setAttribute('aria-label', label);
+	}
+
+	toggleMinimized() {
+		PREFERENCES.set('timelineMinimized', !PREFERENCES.get('timelineMinimized'));
+		this.applyMinimized();
+		this.editor.viewport.handleWindowResize();
 	}
 
 	stepZoom(direction, anchorX) {

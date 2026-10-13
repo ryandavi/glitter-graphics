@@ -26,10 +26,23 @@
 
 	.section-header-action:disabled { opacity: var(--opacity-disabled); }
 
+	// The time, play and the view actions sit on the actions' own spacing.
+	// The bar is the toggle, as on a panel section.
+	> .timeline-section > .section-header { gap: var(--spacing-sm); cursor: pointer; }
+	.section-header-action.collapsed .icon { transform: rotate(-90deg); }
+
+	// Minimized, the dock is its bar.
+	&.is-minimized {
+		height: auto;
+
+		> .timeline-resize-handle { visibility: hidden; }
+		> .timeline-section > .section-header { border-bottom: unset; }
+		.timeline-stage { display: none; }
+	}
 	.timeline-transport {
 		display: flex;
 		align-items: center;
-		gap: var(--spacing-xs);
+		gap: var(--spacing-sm);
 	}
 	.timeline-time {
 		font-size: var(--font-size-xs);
@@ -38,44 +51,87 @@
 		color: var(--color-text-secondary);
 	}
 
-	.timeline-body {
+	// The ruler over the scrolling rows, with the playhead across both.
+	.timeline-stage {
 		--timeline-label-column: var(--timeline-label-width);
 		--timeline-info-column: var(--timeline-info-width);
 		// Row labels start where the group name does: past the row's inset,
-		// the chevron and the gap after it.
-		--timeline-label-inset: calc(var(--spacing-sm) + var(--font-size-md) + 3 * var(--spacing-xs));
+		// the chevron, the eye, the thumbnail and the gap after each.
+		--timeline-label-inset: calc(var(--spacing-sm) + var(--font-size-md) + var(--control-height) + var(--timeline-group-media) + 5 * var(--spacing-xs));
 		position: relative;
+		flex: 1;
+		min-height: 0;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+
+		// The label column: one darker strip from the ruler to the floor, which
+		// the labels over it share.
+		&::before {
+			content: '';
+			position: absolute;
+			inset: 0 auto 0 0;
+			box-sizing: border-box;
+			width: var(--timeline-label-column);
+			border-right: 1px solid var(--color-border);
+			background: var(--color-bg-secondary);
+		}
+	}
+
+	.timeline-ruler, .timeline-body { position: relative; }
+
+	.timeline-body {
 		flex: 1;
 		min-height: 0;
 		overflow: auto;
 	}
 
-	// One line over the ruler and the rows, moved by a transform. Its height
-	// is the scrolled content's, written when the rows are built.
+	// One line over the ruler and the rows, moved by a transform.
 	.timeline-playhead {
 		position: absolute;
-		top: 0;
-		left: var(--timeline-label-column);
+		inset: 0 auto 0 var(--timeline-label-column);
 		z-index: 3;
 		width: 1px;
 		background: var(--color-text-primary);
 		pointer-events: none;
+
+		// The output frame it is in, marked on the ruler.
+		&::before {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: var(--timeline-frame-left);
+			width: var(--timeline-frame-width);
+			height: var(--timeline-ruler-height);
+			background: var(--color-accent-surface-strong);
+		}
 	}
 
-	.timeline-ruler, .timeline-row {
+	// The label column's edge, dragged to size it. It sits on the column's
+	// line, mostly over the labels' own right inset.
+	.timeline-label-handle {
+		position: absolute;
+		inset: 0 auto 0 calc(var(--timeline-label-column) - var(--spacing-xs));
+		z-index: 4;
+		width: var(--spacing-sm);
+		cursor: col-resize;
+	}
+
+	.timeline-row, .timeline-group-header {
 		display: grid;
 		grid-template-columns: var(--timeline-label-column) var(--timeline-track-width) var(--timeline-info-column);
 		width: calc(var(--timeline-label-column) + var(--timeline-track-width) + var(--timeline-info-column));
 		min-width: 100%;
 	}
 
+	// Outside the scroller: its track follows the rows' sideways scroll by a
+	// transform, clipped to the track column.
 	.timeline-ruler {
-		position: sticky;
-		top: 0;
-		z-index: 2;
-		background: var(--color-bg-primary);
+		flex: 0 0 auto;
+		border-bottom: 1px solid var(--color-border);
 	}
-	.timeline-ruler-track { grid-column: 2; position: relative; overflow: hidden; cursor: ew-resize; touch-action: none; }
+	.timeline-ruler-view { margin-left: var(--timeline-label-column); overflow: hidden; }
+	.timeline-ruler-track { position: relative; width: var(--timeline-track-width); overflow: hidden; cursor: ew-resize; touch-action: none; }
 	.timeline-ruler-ticks { display: block; }
 	.timeline-loop-end {
 		position: absolute;
@@ -86,23 +142,61 @@
 		background: var(--color-bg-primary);
 	}
 
+	// A layer's row: the layer in the label column, the span of its
+	// animations on the track. The row is as wide as the tracks, so the line
+	// between groups is its own.
 	.timeline-group-header {
+		background: var(--color-bg-secondary);
+		cursor: pointer;
+	}
+	.timeline-group + .timeline-group > .timeline-group-header { border-top: 1px solid var(--color-border); }
+	.timeline-group-label {
+		--list-row-media: var(--timeline-group-media);
 		position: sticky;
 		left: 0;
-		width: 100%;
+		z-index: 1;
+		min-width: 0;
 		min-height: var(--timeline-group-height);
-		height: var(--timeline-group-height);
+		padding-block: var(--spacing-2xs);
 		gap: var(--spacing-xs);
+		border-right: 1px solid var(--color-border);
+		// Opaque: it stays put while the tracks scroll under it.
 		background: var(--color-bg-secondary);
+
+		&:hover { background: var(--color-bg-tertiary); }
+		&.active { background: linear-gradient(var(--color-accent-surface-strong), var(--color-accent-surface-strong)) var(--color-bg-secondary); }
+	}
+	.timeline-group-track { height: auto; }
+	.timeline-group-span {
+		position: absolute;
+		top: 50%;
+		height: var(--spacing-xs);
+		transform: translateY(-50%);
+		border-radius: var(--radius-xs);
+		background: var(--color-text-tertiary);
+		pointer-events: none;
+	}
+	.timeline-group-select {
+		flex: 0 0 auto;
+		padding: 0;
+		border: 0;
+		background: none;
+		cursor: pointer;
+	}
+	.timeline-group-lock.active { background: none; }
+	// Visibility dims the preview, never the row's controls.
+	.timeline-group.is-hidden {
+		.layer-swatch { opacity: 0.35; }
+		.timeline-group-name { color: var(--color-text-tertiary); }
 	}
 	.timeline-group-name {
 		@include truncate;
-		padding: 0;
-		text-align: left;
+		flex: 1;
+		min-width: 0;
 		color: var(--color-text-primary);
+		font-weight: var(--font-weight-semibold);
 	}
 	.timeline-group.is-collapsed .timeline-row { display: none; }
-	.timeline-group.is-locked .timeline-group-name::after { content: ' · Locked'; color: var(--color-text-secondary); }
 
 	.timeline-row { position: relative; min-height: var(--timeline-row-height); align-items: center; }
 	.timeline-row-label {
@@ -113,7 +207,8 @@
 		text-align: left;
 		padding: 0 var(--spacing-base) 0 var(--timeline-label-inset);
 		height: var(--timeline-row-height);
-		background: var(--color-bg-primary);
+		border-right: 1px solid var(--color-border);
+		background: var(--color-bg-secondary);
 		color: var(--color-text-secondary);
 		font-weight: var(--font-weight-normal);
 	}
@@ -164,8 +259,12 @@
 
 	@container timeline (max-width: #{tokens.$timeline-narrow-width}) {
 		.section-header-title-text { display: none; }
-		.timeline-body { --timeline-label-column: 0px; --timeline-info-column: 0px; --timeline-label-inset: var(--spacing-base); }
+		.timeline-stage { --timeline-label-column: 0px; --timeline-info-column: 0px; --timeline-label-inset: var(--spacing-base); }
 		.timeline-row-info { display: none; }
+		// No label column: the layer's row is a bar across the visible width.
+		.timeline-group-header { display: block; position: sticky; left: 0; width: 100%; }
+		.timeline-group-track, .timeline-label-handle, .timeline-stage::before { display: none; }
+		.timeline-group-label { border-right: 0; }
 		.timeline-row:is(:hover, :focus-within, .is-selected) .timeline-row-label { background: var(--color-accent); color: var(--color-text-on-accent); }
 		.timeline-row-label {
 			position: absolute;
@@ -174,6 +273,7 @@
 			width: max-content;
 			max-width: calc(var(--timeline-loop-x) - var(--timeline-bar-left));
 			height: calc(var(--timeline-row-height) - 2 * var(--spacing-2xs));
+			border-right: 0;
 			background: var(--color-bg-tertiary);
 		}
 	}

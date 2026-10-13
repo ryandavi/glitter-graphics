@@ -741,9 +741,13 @@ const CONFIG = deepFreeze({
 	ui: {
 		timeline: {
 			defaultHeight: 240, minHeight: 140, maxHeightFraction: 0.6,
-			rowHeight: 24, groupHeight: 26, rulerHeight: 28, labelWidth: 140, infoWidth: 120,
+			rowHeight: 24, groupHeight: 26, groupMedia: 20, rulerHeight: 28, infoWidth: 120,
+			// The label column: its default, and how far its handle drags.
+			labelWidth: 220, labelMinWidth: 140, labelMaxFraction: 0.5,
 			pxPerSecondStops: [40, 60, 90, 135, 200, 300, 450, 680, 1000],
-			defaultZoom: 'fit', minTickPx: 4, maxMarksPerBar: 600, nextLoopFraction: 0.25
+			defaultZoom: 'fit', minTickPx: 4, maxMarksPerBar: 600, nextLoopFraction: 0.25,
+			// A Space press released this soon, with no pan, plays and pauses.
+			spaceTapMs: 250
 		},
 		canvasAlignment: { desktop: 'workspace', mobile: 'page' },
 		// Live canvas updates while a control changes (js/ui/slider.js). A field's

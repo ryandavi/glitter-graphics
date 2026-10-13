@@ -35,6 +35,8 @@ assert.strictEqual(marked.withPeriod(1200).direction, 'reverse');
 const estimate = { duration: 4800, exact: false, outputFormat: 'gif', renderClock: { frameStarts: [0, 100], frameCount: 2 }, loopFit: { sources: [c, a, b, new Authored({ key: 'watermark', frameCount: 2, frameDurations: [100, 100] })] } };
 const model = view.buildModel(estimate, [{ id: 'bottom', name: 'Bottom', locked: true }, { id: 'top', name: 'Top' }]);
 assert.strictEqual(model.groups.length, 2);
+const hidden = [{ id: 'gone', name: 'Gone', visible: false }, { id: 'other', name: 'Other', visible: false }];
+assert.deepStrictEqual(json(view.buildModel(estimate, hidden, new Set(['gone'])).groups), [{ layerId: 'gone', name: 'Gone', rows: [] }], 'A listed layer that is hidden keeps an empty group');
 assert.strictEqual(model.groups[0].layerId, 'top');
 assert.strictEqual(model.groups[0].rows.length, 2);
 assert.strictEqual(model.groups[0].rows[0].closes, false);
