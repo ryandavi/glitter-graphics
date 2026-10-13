@@ -337,7 +337,7 @@ function getGlitterTileSize(glitter) {
 function applyPaintSourceToElement(element, source, options = {}) {
 	const { glitterLibrary = null, layer = null, maskCanvas = null, localOffsetX = 0, localOffsetY = 0 } = options;
 	const style = element.style;
-	glitterLibrary?.editor?.canvasElementsContainer?.classList.toggle('preview-motion-paused', Boolean(glitterLibrary.editor.animationTicker?._isPreviewPaused()));
+	glitterLibrary?.editor?.animationTicker?.syncFrozenState();
 	style.backgroundSize = '';
 	style.backgroundPosition = '';
 	style.backgroundRepeat = '';

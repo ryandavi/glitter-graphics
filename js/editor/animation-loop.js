@@ -103,6 +103,7 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 	},
 	syncAnimationLoop(estimate, message = 'No animation sources.') {
 		this.loopEstimate = estimate;
+		this.animationTicker.setLoop(estimate?.duration);
 		this.syncGifCycleControls();
 		if (isFeatureAvailable('timeline')) this.timelineDock?.sync(estimate);
 		const status = document.getElementById('animationLoopStatus');

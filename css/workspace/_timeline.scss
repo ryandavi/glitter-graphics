@@ -26,15 +26,40 @@
 
 	.section-header-action:disabled { opacity: var(--opacity-disabled); }
 
+	.timeline-transport {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-xs);
+	}
+	.timeline-time {
+		font-size: var(--font-size-xs);
+		font-variant-numeric: tabular-nums;
+		white-space: nowrap;
+		color: var(--color-text-secondary);
+	}
+
 	.timeline-body {
 		--timeline-label-column: var(--timeline-label-width);
 		--timeline-info-column: var(--timeline-info-width);
 		// Row labels start where the group name does: past the row's inset,
 		// the chevron and the gap after it.
 		--timeline-label-inset: calc(var(--spacing-sm) + var(--font-size-md) + 3 * var(--spacing-xs));
+		position: relative;
 		flex: 1;
 		min-height: 0;
 		overflow: auto;
+	}
+
+	// One line over the ruler and the rows, moved by a transform. Its height
+	// is the scrolled content's, written when the rows are built.
+	.timeline-playhead {
+		position: absolute;
+		top: 0;
+		left: var(--timeline-label-column);
+		z-index: 3;
+		width: 1px;
+		background: var(--color-text-primary);
+		pointer-events: none;
 	}
 
 	.timeline-ruler, .timeline-row {
@@ -50,7 +75,7 @@
 		z-index: 2;
 		background: var(--color-bg-primary);
 	}
-	.timeline-ruler-track { grid-column: 2; position: relative; overflow: hidden; }
+	.timeline-ruler-track { grid-column: 2; position: relative; overflow: hidden; cursor: ew-resize; touch-action: none; }
 	.timeline-ruler-ticks { display: block; }
 	.timeline-loop-end {
 		position: absolute;

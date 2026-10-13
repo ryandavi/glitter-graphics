@@ -15,6 +15,12 @@
 	animation: none;
 }
 
+// Frozen at a playhead: the scroll stops where that moment puts it.
+.preview-motion-held .pattern-scrolling {
+	animation-play-state: paused;
+	animation-delay: calc(var(--preview-held-ms) * -1ms);
+}
+
 @keyframes pattern-scroll-x {
 	from { background-position-x: var(--pattern-origin-x); }
 	to { background-position-x: calc(var(--pattern-origin-x) + var(--pattern-distance-x)); }

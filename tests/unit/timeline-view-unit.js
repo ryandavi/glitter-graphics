@@ -47,4 +47,16 @@ const fitted = view.buildModel({ ...estimate, sourceAnalysis: [{ key: 'a', resol
 assert.strictEqual(fitted.groups[0].rows[0].closes, true);
 assert.strictEqual(fitted.groups[0].rows[0].exportCycleMs, 1200);
 assert.deepStrictEqual(json(view.buildModel(null, []).groups), []);
-console.log('PASS timeline grouping, source metadata, seam rules, geometry and directed cycle conversions');
+const starts = [0, 100, 250, 400];
+assert.strictEqual(view.nearestFrameStart(starts, 160), 100);
+assert.strictEqual(view.nearestFrameStart(starts, 190), 250);
+assert.strictEqual(view.nearestFrameStart(starts, 900), 400);
+assert.strictEqual(view.nearestFrameStart([], 42), 42);
+assert.strictEqual(view.stepFrame(starts, 100, 1), 250);
+assert.strictEqual(view.stepFrame(starts, 130, 1), 250);
+assert.strictEqual(view.stepFrame(starts, 130, -1), 100, 'Stepping back inside a frame lands on its start');
+assert.strictEqual(view.stepFrame(starts, 100, -1), 0);
+assert.strictEqual(view.stepFrame(starts, 0, -1), 400, 'Stepping back from the start wraps');
+assert.strictEqual(view.stepFrame(starts, 400, 1), 0, 'Stepping on from the last frame wraps');
+assert.strictEqual(view.stepFrame([], 70, 1), 70);
+console.log('PASS timeline grouping, source metadata, seam rules, geometry, directed cycle conversions and playhead frame steps');

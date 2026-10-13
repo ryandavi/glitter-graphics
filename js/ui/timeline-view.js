@@ -57,6 +57,18 @@ const TimelineView = {
 	cycleToTime(row, index, progress) {
 		return row.startMs + (index + (this.isReversed(row, index) ? 1 - progress : progress) - row.phase) * row.cycleMs;
 	},
+	// The start of the output frame nearest a moment: where a playhead snaps.
+	nearestFrameStart(frameStarts, ms) {
+		return frameStarts.reduce((best, start) => (Math.abs(start - ms) < Math.abs(best - ms) ? start : best), frameStarts.length ? frameStarts[0] : ms);
+	},
+	// One output frame on from a moment, or back. Stepping back from inside a
+	// frame lands on that frame's own start first. Both directions wrap.
+	stepFrame(frameStarts, ms, direction) {
+		if (!frameStarts.length) return ms;
+		const index = Math.max(0, frameStarts.findLastIndex(start => start <= ms + 1e-6));
+		if (direction < 0 && ms - frameStarts[index] > 1e-6) return frameStarts[index];
+		return frameStarts[(index + direction + frameStarts.length) % frameStarts.length];
+	},
 	tickStep(pxPerSecond, minPx) {
 		return [100, 200, 500, 1000, 2000, 5000].find(ms => this.timeToX(ms, pxPerSecond) >= minPx) || 5000;
 	}

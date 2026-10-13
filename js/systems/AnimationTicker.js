@@ -7,6 +7,13 @@ class AnimationTicker {
 		this.frameRequest = null;
 		this.paused = false;
 		this.timelineStartedAt = null;
+		// The loop length the last estimate gave. It is kept while the next
+		// estimate is computed, so a wrapped preview does not jump after an edit.
+		this.loopMs = null;
+		// The time every target is painted at while the preview is frozen.
+		this.heldMs = 0;
+		// Whether the frozen time is a playhead to resume from.
+		this.holding = false;
 		this.reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)') || null;
 		this.reducedMotion?.addEventListener?.('change', () => this.refresh());
 	}
@@ -27,31 +34,72 @@ class AnimationTicker {
 			&& current.target.getWrapper() === target.getWrapper()
 			&& current.target.getLayer() === target.getLayer();
 		if (!unchanged) this.targets.set(layerId, { target });
-		this._paintEntry(layerId, this.targets.get(layerId), now, this._isPreviewPaused());
+		this._paintEntry(layerId, this.targets.get(layerId), this._timeAt(now));
 		if (!this._isPreviewPaused()) this.start();
 	}
 
 	unregister(layerId) {
 		this.targets.delete(layerId);
-		if (!this.targets.size) {
+		if (!this._hasWork()) {
 			this.timelineStartedAt = null;
 			this.stop();
 		}
 	}
 
-	setPaused(paused) {
+	// `hold` keeps the playhead where it is and resumes from it. Without it
+	// a pause shows time 0 and leaves the clock running underneath.
+	setPaused(paused, { hold = false } = {}) {
+		const playhead = this.getPlayheadTime();
+		if (!paused && this.holding && this.timelineStartedAt != null) this.timelineStartedAt = performance.now() - this.heldMs;
 		this.paused = Boolean(paused);
+		this.holding = this.paused && hold;
+		this.heldMs = this.holding ? playhead : 0;
 		this.refresh();
 	}
 
+	setLoop(ms) {
+		if (!(ms > 0)) return;
+		this.loopMs = ms;
+		this.heldMs = this._wrap(this.heldMs);
+	}
+
+	// Moves the playhead. Frozen, every target is repainted there; playing,
+	// the clock carries on from there.
+	seek(ms) {
+		this.heldMs = this._wrap(Number(ms) || 0);
+		if (!this._isPreviewPaused() && this.timelineStartedAt != null) this.timelineStartedAt = performance.now() - this.heldMs;
+		this.refresh();
+	}
+
+	// The time samplers get: the running clock, or the held time while frozen.
 	getCurrentTime() {
-		if (this._isPreviewPaused()) return 0;
-		return this._elapsedAt(performance.now());
+		return this._timeAt(performance.now());
+	}
+
+	// Where the loop is, for display. Unlike the samplers' time it always
+	// wraps, so a playhead loops even while the preview runs free.
+	getPlayheadTime(now = performance.now()) {
+		if (this._isPreviewPaused()) return this.heldMs;
+		return this._wrap(this.timelineStartedAt == null ? 0 : Math.max(0, now - this.timelineStartedAt));
+	}
+
+	_wrap(ms) {
+		return this.loopMs > 0 ? ((ms % this.loopMs) + this.loopMs) % this.loopMs : Math.max(0, ms);
+	}
+
+	_timeAt(now) {
+		return this._isPreviewPaused() ? this.heldMs : this._elapsedAt(now);
+	}
+
+	// The playhead needs the clock even when nothing on the canvas is driven
+	// from it (a document of GIFs only).
+	_hasWork() {
+		return this.targets.size > 0 || Boolean(isFeatureAvailable('timeline') && this.editor.timelineDock?.isOpen);
 	}
 
 	_elapsedAt(now) {
 		const elapsed = this.timelineStartedAt == null ? 0 : Math.max(0, now - this.timelineStartedAt);
-		const duration = this.editor.loopEstimate?.duration;
+		const duration = this.loopMs;
 		const hasRun = this.editor.layers.some((layer) => layer.visible !== false
 			&& GlitterAnimation.normalizeAnimations(layer.animations).some((animation) => {
 				const run = GlitterAnimation.runTiming(animation);
@@ -61,10 +109,24 @@ class AnimationTicker {
 	}
 
 	refresh() {
-		this.editor.canvasElementsContainer?.classList.toggle('preview-motion-paused', this._isPreviewPaused());
-		this._paint(performance.now());
-		if (this._isPreviewPaused() || !this.targets.size) this.stop();
+		const now = performance.now();
+		if (this.timelineStartedAt == null && this._hasWork()) this.timelineStartedAt = now;
+		this.syncFrozenState();
+		this._paint(now);
+		if (this._isPreviewPaused() || !this._hasWork()) this.stop();
 		else this.start();
+	}
+
+	// What CSS-driven preview motion reads: frozen at rest, or held at a
+	// moment it should stop on.
+	syncFrozenState() {
+		const container = this.editor.canvasElementsContainer;
+		const frozen = Boolean(this._isPreviewPaused());
+		if (!container || (this.frozenState?.container === container && this.frozenState.frozen === frozen && this.frozenState.heldMs === this.heldMs)) return;
+		this.frozenState = { container, frozen, heldMs: this.heldMs };
+		container.classList.toggle('preview-motion-paused', frozen && !this.heldMs);
+		container.classList.toggle('preview-motion-held', frozen && this.heldMs > 0);
+		container.style.setProperty('--preview-held-ms', String(this.heldMs));
 	}
 
 	_isPreviewPaused() {
@@ -72,7 +134,7 @@ class AnimationTicker {
 	}
 
 	start() {
-		if (this.frameRequest != null || !this.targets.size) return;
+		if (this.frameRequest != null || !this._hasWork()) return;
 		this.frameRequest = requestAnimationFrame((now) => this._tick(now));
 	}
 
@@ -84,16 +146,16 @@ class AnimationTicker {
 	_tick(now) {
 		this.frameRequest = null;
 		this._paint(now);
-		if (!this._isPreviewPaused() && this.targets.size) this.start();
+		if (!this._isPreviewPaused() && this._hasWork()) this.start();
 	}
 
 	_paint(now) {
-		const frozen = this._isPreviewPaused();
-		const elapsed = frozen ? 0 : this._elapsedAt(now);
-		this.targets.forEach((entry, layerId) => this._paintEntry(layerId, entry, now, frozen, elapsed));
+		const time = this._timeAt(now);
+		this.targets.forEach((entry, layerId) => this._paintEntry(layerId, entry, time));
+		if (isFeatureAvailable('timeline')) this.editor.timelineDock?.paintPlayhead(this.getPlayheadTime(now));
 	}
 
-	_paintEntry(layerId, entry, now, frozen, elapsed = this._elapsedAt(now)) {
+	_paintEntry(layerId, entry, time) {
 		const target = entry.target;
 		if (!target.getWrapper()?.isConnected) {
 			this.targets.delete(layerId);
@@ -101,11 +163,11 @@ class AnimationTicker {
 		}
 		const wrapper = target.getWrapper();
 		if (target.paint) {
-			target.paint(frozen ? 0 : elapsed);
+			target.paint(time);
 			return;
 		}
 		const layer = target.getLayer();
-		LAYER_UI_CONFIG[layer.type]?.animate?.(layer, frozen ? 0 : elapsed, wrapper, {
+		LAYER_UI_CONFIG[layer.type]?.animate?.(layer, time, wrapper, {
 			editor: this.editor,
 			layerId,
 			data: target.getData()

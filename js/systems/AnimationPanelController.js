@@ -22,8 +22,12 @@ class AnimationPanelController {
 		this.pauseButton?.addEventListener('click', () => this.setPaused(!this.editor.animationTicker.paused));
 	}
 
+	// With the timeline open a pause holds the playhead; otherwise it shows
+	// the rest pose.
 	setPaused(paused) {
-		this.editor.animationTicker.setPaused(paused);
+		const dock = isFeatureAvailable('timeline') && this.editor.timelineDock?.isOpen ? this.editor.timelineDock : null;
+		this.editor.animationTicker.setPaused(paused, { hold: Boolean(dock) });
+		dock?.syncPlayback();
 		if (this.pauseButton) {
 			this.pauseButton.classList.toggle('active', paused);
 			this.pauseButton.setAttribute('aria-pressed', String(paused));

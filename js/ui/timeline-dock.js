@@ -25,6 +25,11 @@ class TimelineDock {
 		this.title.append(icon, this.element('section-header-title-text', 'Timeline', 'span'), this.readout);
 		const actions = this.element('section-header-actions');
 		const action = 'section-header-action btn-icon icon-wrapper visible';
+		// Shows the same state as the view menu's Pause motion.
+		this.play = this.button(action, 'Pause motion', 'motion-pause', () => editor.animationPanel.setPaused(!editor.animationTicker.paused));
+		this.time = this.element('timeline-time', undefined, 'span');
+		const transport = this.element('timeline-transport');
+		transport.append(this.play, this.time);
 		this.fit = this.button(action, 'Fit animations to loop', 'magic-wand', () => {
 			if (!host.classList.contains('is-stale')) editor.fitAnimationsToLoop();
 		});
@@ -32,7 +37,7 @@ class TimelineDock {
 			this.button(action, 'Zoom timeline out', 'minus', () => this.stepZoom(-1)),
 			this.button(action, 'Zoom timeline in', 'plus', () => this.stepZoom(1)),
 			this.button(action, 'Close timeline', 'x-mark', () => editor.toggleTimeline()));
-		this.header.append(this.title, actions);
+		this.header.append(this.title, transport, actions);
 		this.body = this.element('timeline-body');
 		const section = this.element('timeline-section section');
 		section.append(this.header, this.body);
@@ -46,6 +51,7 @@ class TimelineDock {
 			const x = event.clientX - track.getBoundingClientRect().left;
 			this.stepZoom(event.deltaY < 0 ? 1 : -1, x);
 		}, { passive: false });
+		this.bindPlayhead();
 		this.observer = new ResizeObserver(() => {
 			if (!this.available) return;
 			if (!this.resizing) this.applyHeight(PREFERENCES.get('timelineHeight'));
@@ -83,13 +89,96 @@ class TimelineDock {
 		this.host.hidden = false;
 		this.applyHeight(PREFERENCES.get('timelineHeight'));
 		this.sync(this.editor.loopEstimate);
+		// An open dock keeps the preview clock running for its playhead.
+		this.editor.animationTicker.refresh();
+		this.syncPlayback();
 		if (changed) this.editor.viewport.handleWindowResize();
 	}
 
+	// A held playhead belongs to the open dock: closed, a paused preview
+	// shows its rest pose again.
 	close() {
 		if (!this.isOpen) return;
 		this.host.hidden = true;
+		const ticker = this.editor.animationTicker;
+		if (ticker.paused) ticker.seek(0);
+		else ticker.refresh();
 		this.editor.viewport.handleWindowResize();
+	}
+
+	syncPlayback() {
+		const paused = this.editor.animationTicker.paused;
+		const label = paused ? 'Resume motion' : 'Pause motion';
+		this.play.title = label;
+		this.play.setAttribute('aria-label', label);
+		this.play.querySelector('use').setAttribute('href', paused ? '#icon-motion-play' : '#icon-motion-pause');
+	}
+
+	// The ruler is the playhead's control: press or drag to move it, and with
+	// focus Left and Right step one output frame and Home returns to the
+	// start. Space plays and pauses from anywhere in the rows.
+	bindPlayhead() {
+		const ticker = this.editor.animationTicker;
+		const hold = () => {
+			if (!ticker.paused || !ticker.holding) this.editor.animationPanel.setPaused(true);
+		};
+		const scrub = event => {
+			const { loopMs, frameStarts } = this.model;
+			const ms = TimelineView.xToTime(event.clientX - this.rulerTrack.getBoundingClientRect().left, this.scale);
+			// Alt suspends snapping for the drag.
+			ticker.seek(event.altKey ? Math.max(0, Math.min(loopMs - 1, ms)) : TimelineView.nearestFrameStart(frameStarts, ms));
+		};
+		this.body.addEventListener('pointerdown', event => {
+			if (event.button !== 0 || !this.available || !this.model?.loopMs || !event.target.closest('.timeline-ruler-track')) return;
+			event.preventDefault();
+			this.rulerTrack.focus({ preventScroll: true });
+			this.body.setPointerCapture(event.pointerId);
+			this.scrubPointer = event.pointerId;
+			hold();
+			scrub(event);
+		});
+		this.body.addEventListener('pointermove', event => {
+			if (event.pointerId === this.scrubPointer && this.available && this.model?.loopMs) scrub(event);
+		});
+		for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+			this.body.addEventListener(type, event => {
+				if (event.pointerId === this.scrubPointer) this.scrubPointer = null;
+			});
+		}
+		this.body.addEventListener('scroll', () => this.paintPlayhead(ticker.getPlayheadTime()));
+		this.body.addEventListener('keydown', event => {
+			if (!this.available || !this.model?.loopMs || event.ctrlKey || event.metaKey || event.altKey) return;
+			const step = { ArrowLeft: -1, ArrowRight: 1 }[event.key];
+			if (event.key === ' ') this.editor.animationPanel.setPaused(!ticker.paused);
+			else if (!event.target.closest('.timeline-ruler-track') || (!step && event.key !== 'Home')) return;
+			else {
+				hold();
+				ticker.seek(step ? TimelineView.stepFrame(this.model.frameStarts, ticker.getPlayheadTime(), step) : 0);
+			}
+			event.preventDefault();
+			// The canvas shortcuts on these keys belong to the canvas.
+			event.stopPropagation();
+		});
+		// A button under the focus would otherwise take the release as a press.
+		this.body.addEventListener('keyup', event => {
+			if (event.key !== ' ' || !this.available || !this.model?.loopMs) return;
+			event.preventDefault();
+			event.stopPropagation();
+		});
+	}
+
+	paintPlayhead(ms) {
+		if (!this.available || !this.playhead) return;
+		const { loopMs } = this.model;
+		const x = TimelineView.timeToX(Math.min(ms, loopMs), this.scale);
+		this.playhead.style.transform = `translateX(${x}px)`;
+		// The label column covers whatever has scrolled under it.
+		this.playhead.hidden = x < this.body.scrollLeft;
+		const text = `${(ms / 1000).toFixed(2)} / ${(loopMs / 1000).toFixed(2)} s`;
+		if (this.time.textContent === text) return;
+		this.time.textContent = text;
+		this.rulerTrack.setAttribute('aria-valuenow', (ms / 1000).toFixed(2));
+		this.rulerTrack.setAttribute('aria-valuetext', `${(ms / 1000).toFixed(2)} s`);
 	}
 
 	applyHeight(value) {
@@ -159,6 +248,10 @@ class TimelineDock {
 		if (!this.available) return;
 		const scrollTop = this.body.scrollTop;
 		const scrollLeft = this.body.scrollLeft;
+		const rulerFocused = Boolean(this.rulerTrack) && document.activeElement === this.rulerTrack;
+		this.playhead = null;
+		this.rulerTrack = null;
+		this.time.textContent = '';
 		this.host.classList.remove('is-stale');
 		this.model = TimelineView.buildModel(estimate, this.editor.layers);
 		this.body.replaceChildren();
@@ -174,7 +267,7 @@ class TimelineDock {
 			return;
 		}
 		const { loopMs, frameCount, outputFormat, exact } = this.model;
-		this.readout.textContent = `${(loopMs / 1000).toFixed(2)} s loop · about ${frameCount} frames, ${outputFormat.toUpperCase()}`;
+		this.readout.textContent = `about ${frameCount} frames, ${outputFormat.toUpperCase()}`;
 		this.seamBadge = this.element(`badge ${exact ? 'is-accent' : 'is-warning'}`, exact ? 'Seamless' : 'Visible seam', 'span');
 		this.title.appendChild(this.seamBadge);
 		const style = getComputedStyle(this.body);
@@ -187,8 +280,13 @@ class TimelineDock {
 		this.body.style.setProperty('--timeline-loop-x', `${TimelineView.timeToX(loopMs, this.scale)}px`);
 		this.body.appendChild(this.buildRuler());
 		for (const group of this.model.groups) this.body.appendChild(this.buildGroup(group));
+		this.playhead = this.element('timeline-playhead');
+		this.playhead.style.height = `${this.body.scrollHeight}px`;
+		this.body.appendChild(this.playhead);
 		this.body.scrollTop = scrollTop;
 		this.body.scrollLeft = scrollLeft;
+		if (rulerFocused) this.rulerTrack.focus({ preventScroll: true });
+		this.paintPlayhead(this.editor.animationTicker.getPlayheadTime());
 		this.syncControls();
 		this.syncSelection();
 	}
@@ -196,6 +294,12 @@ class TimelineDock {
 	buildRuler() {
 		const ruler = this.element('timeline-ruler');
 		const track = this.element('timeline-ruler-track');
+		track.tabIndex = 0;
+		track.setAttribute('role', 'slider');
+		track.setAttribute('aria-label', 'Playhead');
+		track.setAttribute('aria-valuemin', '0');
+		track.setAttribute('aria-valuemax', (this.model.loopMs / 1000).toFixed(2));
+		this.rulerTrack = track;
 		const canvas = document.createElement('canvas'); canvas.className = 'timeline-ruler-ticks';
 		const height = this.config.rulerHeight;
 		const ratio = window.devicePixelRatio || 1;
