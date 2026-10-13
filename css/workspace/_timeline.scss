@@ -48,20 +48,16 @@
 	.section-header-action:disabled { opacity: var(--opacity-disabled); }
 
 	// Name, transport, what the export would write, then the view actions.
-	// The bar is the toggle, as on a panel section.
+	// Only the chevron folds the dock; transport stays clear of the toggle.
 	> .timeline-section > .section-header {
 		gap: var(--spacing-md);
-		cursor: pointer;
+		cursor: default;
 
 		> .section-header-title { flex: 0 0 auto; }
 		> .section-header-actions { gap: var(--spacing-2xs); }
 	}
 	.section-header-action.collapsed .icon { transform: rotate(-90deg); }
-	// A toggle that is on stays as quiet as the buttons beside it.
-	.section-header-action.active {
-		background: var(--color-accent-surface-strong);
-		color: var(--color-accent);
-	}
+	.timeline-window-actions { display: flex; gap: var(--spacing-2xs); margin-left: var(--spacing-base); }
 	.timeline-summary {
 		display: flex;
 		align-items: center;
@@ -75,6 +71,9 @@
 	// exists: then it wears the warning badge's colors.
 	.timeline-readout {
 		@include truncate;
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-xs);
 		padding: 2px var(--spacing-sm);
 		border: 1px solid transparent;
 		border-radius: var(--radius-xs);
@@ -117,11 +116,7 @@
 	.timeline-stage {
 		--timeline-label-column: var(--timeline-label-width);
 		--timeline-info-column: 0px;
-		// A gutter on each side of the track: a bar at either end keeps its rim,
-		// its grips and the playhead's head clear of the columns beside it.
-		--timeline-columns: var(--timeline-label-column) var(--timeline-track-pad) var(--timeline-track-width) var(--timeline-track-pad) var(--timeline-info-column);
-		// Where time 0 is, from the stage's left edge.
-		--timeline-track-origin: calc(var(--timeline-label-column) + var(--timeline-track-pad));
+		--timeline-columns: var(--timeline-label-column) var(--timeline-track-width) var(--timeline-info-column);
 		// Row labels start where the group name does: past the row's inset,
 		// the chevron, the eye, the thumbnail and the gap after each.
 		--timeline-label-inset: calc(var(--spacing-sm) + var(--font-size-md) + var(--control-height) + var(--timeline-group-media) + 5 * var(--spacing-xs));
@@ -155,12 +150,13 @@
 		flex: 1;
 		min-height: 0;
 		overflow: auto;
+		padding-bottom: var(--scrollbar-hit-width);
 	}
 
 	// One line over the ruler and the rows, moved by a transform.
 	.timeline-playhead, .timeline-snap-guide {
 		position: absolute;
-		inset: 0 auto 0 var(--timeline-track-origin);
+		inset: 0 auto 0 var(--timeline-label-column);
 		z-index: 3;
 		width: 1px;
 		pointer-events: none;
@@ -206,7 +202,7 @@
 	.timeline-row, .timeline-group-header {
 		display: grid;
 		grid-template-columns: var(--timeline-columns);
-		width: calc(var(--timeline-label-column) + var(--timeline-track-width) + 2 * var(--timeline-track-pad) + var(--timeline-info-column));
+		width: calc(var(--timeline-label-column) + var(--timeline-track-width) + var(--timeline-info-column));
 		min-width: 100%;
 	}
 
@@ -220,7 +216,6 @@
 	.timeline-ruler-track {
 		position: relative;
 		width: var(--timeline-track-width);
-		margin-left: var(--timeline-track-pad);
 		overflow: hidden;
 		cursor: ew-resize;
 		touch-action: none;
@@ -343,7 +338,7 @@
 	.timeline-row.is-selected .timeline-row-label { color: var(--color-text-primary); }
 	.timeline-track {
 		position: relative;
-		grid-column: 3;
+		grid-column: 2;
 		height: var(--timeline-row-height);
 		overflow: hidden;
 		// Past the loop's end: the line, and the next pass set back behind it.
@@ -437,6 +432,8 @@
 		@include cover;
 		overflow: hidden;
 		border-radius: inherit;
+		// Marks never paint over the bar's inset rim; time offsets stay unchanged.
+		clip-path: inset(1px);
 		pointer-events: none;
 	}
 	&.shows-cycles .timeline-bar-marks {
@@ -462,7 +459,7 @@
 		color: var(--color-warning);
 		pointer-events: auto;
 	}
-	.timeline-row-info { @include truncate; grid-column: 5; padding: 0 var(--spacing-base); font-size: var(--font-size-xs); font-variant-numeric: tabular-nums; color: var(--color-text-tertiary); }
+	.timeline-row-info { @include truncate; grid-column: 3; padding: 0 var(--spacing-base); font-size: var(--font-size-xs); font-variant-numeric: tabular-nums; color: var(--color-text-tertiary); }
 	// The selected Custom bar's keys: a row of its own under the bar, on the
 	// same columns, with one cycle of the bar opened up in its track.
 	.timeline-row-lane {
@@ -518,13 +515,16 @@
 		&.is-ghost { opacity: var(--opacity-disabled); pointer-events: none; }
 	}
 
+	@container timeline (max-width: #{tokens.$timeline-compact-width}) {
+		&.shows-details .timeline-stage { --timeline-info-column: 0px; }
+		.timeline-row-info { display: none; }
+	}
+
 	@container timeline (max-width: #{tokens.$timeline-narrow-width}) {
 		.section-header-title-text { display: none; }
 		// The summary stays as the spacer between the transport and the actions.
-		.timeline-readout, .timeline-summary > .badge { display: none; }
+		.timeline-readout:not(.is-warning), .timeline-readout-text { display: none; }
 		.timeline-stage { --timeline-label-column: 0px; --timeline-label-inset: var(--spacing-base); }
-		&.shows-details .timeline-stage { --timeline-info-column: 0px; }
-		.timeline-row-info { display: none; }
 		// No label column: the layer's row is a bar across the visible width.
 		.timeline-group-header { display: block; position: sticky; left: 0; width: 100%; }
 		.timeline-group-track, .timeline-label-handle, .timeline-stage::before { display: none; }
@@ -532,7 +532,6 @@
 		// No label column: the lane's name and buttons sit on a line of their
 		// own at the track's left edge, clear of the keys under them.
 		.timeline-row-lane { display: block; }
-		.timeline-key-cell { margin-inline: var(--timeline-track-pad); }
 		.timeline-key-label {
 			width: max-content;
 			padding-left: var(--timeline-label-inset);
@@ -542,7 +541,7 @@
 		// The label sits inside its bar, on the bar's own fill.
 		.timeline-row-label {
 			position: absolute;
-			left: calc(var(--timeline-track-pad) + var(--timeline-bar-left));
+			left: var(--timeline-bar-left);
 			top: var(--timeline-bar-inset);
 			width: max-content;
 			max-width: calc(var(--timeline-loop-x) - var(--timeline-bar-left));

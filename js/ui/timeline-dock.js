@@ -9,7 +9,7 @@ class TimelineDock {
 		this.listedIds = new Set();
 		for (const [key, value] of Object.entries({
 			'row-height': this.config.rowHeight, 'group-height': this.config.groupHeight, 'ruler-height': this.config.rulerHeight,
-			'group-media': this.config.groupMedia, 'info-width': this.config.infoWidth, 'grip': this.config.gripPx, 'key-size': this.config.keySize, 'track-pad': this.config.trackPadPx
+			'group-media': this.config.groupMedia, 'info-width': this.config.infoWidth, 'grip': this.config.gripPx, 'key-size': this.config.keySize
 		})) host.style.setProperty(`--timeline-${key}`, `${value}px`);
 		this.resizeHandle = this.element('timeline-resize-handle');
 		this.resizeHandle.tabIndex = 0;
@@ -33,22 +33,12 @@ class TimelineDock {
 		const transport = this.element('timeline-transport');
 		transport.append(this.play, this.time);
 		this.minimize = this.button(action, 'Collapse timeline', 'chevron-down', () => this.toggleMinimized());
-		this.snap = this.button(action, 'Snap timeline', 'magnet', () => {
-			PREFERENCES.set('timelineSnap', !PREFERENCES.get('timelineSnap'));
-			this.syncSnap();
-		});
-		this.syncSnap();
 		this.zoomOut = this.button(action, 'Zoom timeline out', 'minus', () => this.stepZoom(-1));
 		this.zoomIn = this.button(action, 'Zoom timeline in', 'plus', () => this.stepZoom(1));
-		actions.append(this.snap, this.zoomOut, this.zoomIn,
-			this.buildOptionsMenu(),
-			this.minimize,
-			this.button(action, 'Close timeline', 'x-mark', () => editor.toggleTimeline()));
+		const windowActions = this.element('timeline-window-actions');
+		windowActions.append(this.minimize, this.button(action, 'Close timeline', 'x-mark', () => editor.toggleTimeline()));
+		actions.append(this.zoomOut, this.zoomIn, this.buildOptionsMenu(), windowActions);
 		this.header.append(this.title, transport, this.summary, actions);
-		// The bar is the toggle, as on a panel section.
-		this.header.addEventListener('click', event => {
-			if (this.available && !event.target.closest('button')) this.toggleMinimized();
-		});
 		// The ruler stays above the scrolling rows and follows their sideways
 		// scroll; the playhead is one line over both.
 		this.ruler = this.element('timeline-ruler');
@@ -71,27 +61,36 @@ class TimelineDock {
 		this.keyRecording = new TimelineKeyRecording(this);
 		this.bindResize();
 		this.bindLabelResize();
-		this.stage.addEventListener('wheel', event => {
-			if ((!event.ctrlKey && !event.metaKey) || !this.available || !this.model?.loopMs) return;
-			if (!event.target.closest('.timeline-track, .timeline-ruler')) return;
+		this.host.addEventListener('wheel', event => {
+			if (!event.ctrlKey && !event.metaKey && event.target.closest('.timeline-ruler') && this.available) {
+				const unit = event.deltaMode === 1 ? this.config.rulerHeight : event.deltaMode === 2 ? this.viewWidth : 1;
+				this.body.scrollLeft += (event.deltaX || event.deltaY) * unit;
+				event.preventDefault();
+				return;
+			}
+			if ((!event.ctrlKey && !event.metaKey) || !this.available) return;
 			event.preventDefault();
-			const track = this.body.querySelector('.timeline-track');
-			const x = event.clientX - track.getBoundingClientRect().left;
+			event.stopPropagation();
+			if (!this.model?.loopMs || !event.deltaY) return;
+			const box = this.body.getBoundingClientRect();
+			const x = this.body.scrollLeft + clampNumber(event.clientX - box.left - this.labelColumn, 0, this.viewWidth);
 			this.stepZoom(event.deltaY < 0 ? 1 : -1, x);
-		}, { passive: false });
+		}, { passive: false, capture: true });
 		this.bindPlayhead();
 		this.bindGestures();
 		this.observer = new ResizeObserver(() => {
 			if (!this.available) return;
 			if (!this.resizing) this.applyHeight(PREFERENCES.get('timelineHeight'));
 			if (!this.resizingLabels) this.applyLabelWidth(PREFERENCES.get('timelineLabelWidth'));
-			this.resync();
+			if (this.body.clientWidth !== this.builtWidth) this.resync();
 		});
 		this.observer.observe(host);
 		// Reset Panels restores these from outside the dock.
 		PREFERENCES.onChange('timelineHeight', value => { if (this.available && !this.resizing) { this.applyHeight(value); this.editor.viewport.handleWindowResize(); } });
 		PREFERENCES.onChange('timelineLabelWidth', value => { if (this.available && !this.resizingLabels) { this.applyLabelWidth(value); this.resync(); } });
 		PREFERENCES.onChange('timelineShow', () => { this.applyShow(); this.resync(); });
+		PREFERENCES.onChange('timelineSnap', () => this.syncViewChoices());
+		PREFERENCES.onChange('timelineFollow', () => { this.followSuspended = false; this.syncViewChoices(); });
 		window.addEventListener('layerChanged', () => {
 			if (!this.available) return;
 			this.syncSelection();
@@ -126,7 +125,14 @@ class TimelineDock {
 		const panel = this.element('app-menu-panel'); panel.hidden = true;
 		panel.setAttribute('role', 'menu');
 		root.append(this.readout, panel);
-		this.frameMenu = setupMenuPopover({ root, trigger: this.readout, panel, fixed: true, beforeOpen: () => this.editor.fillFrameOptionsMenu(panel) });
+		this.frameMenu = setupMenuPopover({ root, trigger: this.readout, panel, fixed: true, beforeOpen: () => {
+			this.editor.fillFrameOptionsMenu(panel);
+			if (this.model && !this.model.exact) {
+				const seam = this.element('app-menu-item', 'Visible seam: the end does not match the start.', 'button');
+				seam.type = 'button'; seam.disabled = true; seam.setAttribute('role', 'menuitem');
+				panel.prepend(seam);
+			}
+		} });
 		return root;
 	}
 
@@ -155,7 +161,15 @@ class TimelineDock {
 		this.fit = item('Fit animations to loop', () => {
 			if (!this.host.classList.contains('is-stale')) this.editor.fitAnimationsToLoop();
 		});
-		const separator = this.element('app-menu-separator'); separator.setAttribute('role', 'separator');
+		const separator = () => {
+			const node = this.element('app-menu-separator'); node.setAttribute('role', 'separator'); return node;
+		};
+		this.viewChoices = ['timelineSnap', 'timelineFollow'].map((key, index) => {
+			const button = item(index ? 'Follow playhead' : 'Snap', () => PREFERENCES.set(key, !PREFERENCES.get(key)));
+			button.setAttribute('role', 'menuitemcheckbox'); button.dataset.preference = key;
+			return button;
+		});
+		this.syncViewChoices();
 		this.showItems = Object.entries(this.config.showLabels).map(([key, label]) => {
 			const button = item(label, () => {
 				PREFERENCES.set('timelineShow', { ...this.show, [key]: !this.show[key] });
@@ -163,7 +177,7 @@ class TimelineDock {
 			button.dataset.show = key;
 			return button;
 		});
-		panel.append(this.zoomFit, this.exact, this.fit, separator, this.element('app-menu-group-label', 'Show'), ...this.showItems);
+		panel.append(this.zoomFit, this.exact, this.fit, separator(), ...this.viewChoices, separator(), this.element('app-menu-group-label', 'Show'), ...this.showItems);
 		root.append(trigger, panel);
 		setupMenuPopover({ root, trigger, panel, fixed: true });
 		this.applyShow();
@@ -213,6 +227,10 @@ class TimelineDock {
 	// shows its rest pose again.
 	close() {
 		if (!this.isOpen) return;
+		const pointer = this.stagePointer;
+		this.stagePointer = null; this.scrubPointer = null;
+		this.stopEdgeScroll();
+		if (pointer != null && this.stage.hasPointerCapture(pointer)) this.stage.releasePointerCapture(pointer);
 		this.keyRecording.end();
 		this.keyLane.finish(true);
 		this.finishDrag(true);
@@ -228,6 +246,7 @@ class TimelineDock {
 
 	syncPlayback() {
 		const paused = this.editor.animationTicker.paused;
+		if (!paused) this.followSuspended = false;
 		const label = paused ? 'Resume motion' : 'Pause motion';
 		this.play.title = label;
 		this.play.setAttribute('aria-label', label);
@@ -266,7 +285,13 @@ class TimelineDock {
 				if (event.pointerId === this.scrubPointer) this.scrubPointer = null;
 			});
 		}
-		this.body.addEventListener('scroll', () => this.syncScroll());
+		this.body.addEventListener('scroll', () => {
+			const left = this.body.scrollLeft;
+			if (left !== this.lastScrollLeft && left !== this.writtenScrollLeft && !ticker.paused) this.followSuspended = true;
+			this.lastScrollLeft = left;
+			this.syncScroll();
+		});
+		this.bindEdgeScroll(scrub);
 		this.stage.addEventListener('keydown', event => {
 			if (!this.available || !this.model?.loopMs || event.ctrlKey || event.metaKey || event.altKey) return;
 			const step = { ArrowLeft: -1, ArrowRight: 1 }[event.key];
@@ -295,15 +320,71 @@ class TimelineDock {
 		this.paintPlayhead(this.editor.animationTicker.getPlayheadTime());
 	}
 
+	scrollToTimeX(left) {
+		this.body.scrollLeft = clampNumber(left, 0, Math.max(0, this.body.scrollWidth - this.body.clientWidth));
+		this.writtenScrollLeft = this.body.scrollLeft;
+	}
+
+	revealTime(ms, { page = false } = {}) {
+		if (!(this.viewWidth > 0) || this.body.scrollWidth <= this.body.clientWidth) return;
+		const x = TimelineView.timeToX(ms, this.scale), left = this.body.scrollLeft;
+		const margin = Math.min(this.config.followMarginPx, this.viewWidth / 2);
+		if (x >= left && x <= left + this.viewWidth - margin) return;
+		this.scrollToTimeX(page ? x - margin : TimelineView.revealScroll(x, x + margin, left, this.viewWidth));
+	}
+
+	// One clock scrolls all held timeline drags; their coordinates include its travel.
+	bindEdgeScroll(scrub) {
+		const stop = () => {
+			cancelAnimationFrame(this.edgeFrame);
+			this.edgeFrame = null; this.edgeEvent = null;
+		};
+		this.stopEdgeScroll = stop;
+		const tick = now => {
+			this.edgeFrame = null;
+			if (!this.available || this.stagePointer == null || !this.edgeEvent || !(this.drag?.moved || this.keyLane.drag?.moved || this.scrubPointer != null)) return;
+			const event = this.edgeEvent;
+			const box = this.body.getBoundingClientRect();
+			const left = box.left + this.labelColumn;
+			const direction = event.clientX < left + this.config.edgeScrollPx ? -1 : event.clientX > box.right - this.config.edgeScrollPx ? 1 : 0;
+			const before = this.body.scrollLeft;
+			this.scrollToTimeX(before + direction * this.config.edgeScrollPxPerSecond * Math.min(now - this.edgeTime, 50) / 1000);
+			this.edgeTime = now;
+			if (this.body.scrollLeft !== before) {
+				this.syncScroll();
+				if (this.scrubPointer != null) scrub(event);
+				else if (this.keyLane.drag) this.keyLane.move(event);
+				else this.moveDrag(event);
+			}
+			this.edgeFrame = requestAnimationFrame(tick);
+		};
+		this.stage.addEventListener('pointerdown', event => {
+			if (event.button !== 0) return;
+			this.stagePointer = event.pointerId;
+		}, true);
+		window.addEventListener('pointermove', event => {
+			if (event.pointerId !== this.stagePointer) return;
+			this.edgeEvent = event;
+			if (this.edgeFrame == null) { this.edgeTime = performance.now(); this.edgeFrame = requestAnimationFrame(tick); }
+		});
+		for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) window.addEventListener(type, event => {
+			if (event.pointerId !== this.stagePointer) return;
+			this.stagePointer = null; stop();
+		});
+		window.addEventListener('blur', () => {
+			this.stagePointer = null; this.scrubPointer = null;
+			stop(); this.finishDrag(true); this.keyLane.finish(true);
+		});
+	}
+
 	// The ticks are drawn for the stretch in view only: a canvas as wide as a
 	// long loop at a close zoom is more than a browser will allocate.
 	paintRuler() {
 		const { canvas, text, line, font } = this.rulerTicks;
 		const height = this.config.rulerHeight;
 		const ratio = window.devicePixelRatio || 1;
-		const pad = this.config.trackPadPx;
-		const left = Math.max(0, this.body.scrollLeft - pad);
-		const width = Math.max(0, Math.min(this.trackWidth - left, this.ruler.clientWidth - this.labelColumn - Math.max(0, pad - this.body.scrollLeft)));
+		const left = this.body.scrollLeft;
+		const width = Math.max(0, Math.min(this.trackWidth - left, this.ruler.clientWidth - this.labelColumn));
 		canvas.width = Math.ceil(width * ratio); canvas.height = Math.ceil(height * ratio);
 		canvas.style.width = `${width}px`; canvas.style.height = `${height}px`;
 		canvas.style.transform = `translateX(${left}px)`;
@@ -333,6 +414,15 @@ class TimelineDock {
 
 	paintPlayhead(ms) {
 		if (!this.available || !this.rulerTrack) return;
+		const paused = this.editor.animationTicker.paused;
+		const moved = ms !== this.lastPlayheadMs;
+		if (PREFERENCES.get('timelineFollow') && this.stagePointer == null && !this.host.classList.contains('is-minimized')) {
+			const x = TimelineView.timeToX(ms, this.scale), left = this.body.scrollLeft;
+			const inside = x >= left && x <= left + this.viewWidth - this.config.followMarginPx;
+			if (inside) this.followSuspended = false;
+			if (!inside && !this.followSuspended && (!paused || moved)) this.revealTime(ms, { page: !paused });
+		}
+		this.lastPlayheadMs = ms;
 		this.keyRecording.refresh();
 		this.keyLane.paint(ms);
 		this.frameView.paint(ms);
@@ -340,7 +430,7 @@ class TimelineDock {
 		const x = TimelineView.timeToX(Math.min(ms, loopMs), this.scale) - this.body.scrollLeft;
 		this.playhead.style.transform = `translateX(${x}px)`;
 		// The label column covers whatever has scrolled under it.
-		this.playhead.hidden = x < -this.config.trackPadPx;
+		this.playhead.hidden = x < 0;
 		// The output frame under the playhead, from its start to the next one's:
 		// the last frame ends on the loop line.
 		const starts = this.model.frameStarts;
@@ -506,8 +596,6 @@ class TimelineDock {
 		this.body.replaceChildren();
 		this.readout.hidden = true;
 		this.readout.disabled = false;
-		this.seamBadge?.remove();
-		this.seamBadge = null;
 		this.stage.classList.toggle('is-empty', !this.model.groups.length);
 		if (!this.model.groups.length) {
 			this.body.appendChild(buildPropertyEmpty({
@@ -523,17 +611,21 @@ class TimelineDock {
 		const timed = loopMs > 0;
 		if (timed) {
 			const optimizable = estimate.frameOptions.optimizable;
-			this.readout.textContent = `about ${frameCount} frames, ${outputFormat.toUpperCase()}`;
+			this.readout.replaceChildren();
+			if (!exact || optimizable) this.readout.appendChild(createIcon('triangle-exclamation'));
+			this.readout.appendChild(this.element('timeline-readout-text', `${frameCount} frames · ${outputFormat.toUpperCase()}`, 'span'));
 			this.readout.hidden = false;
-			this.readout.classList.toggle('is-warning', optimizable);
-			this.readout.title = optimizable ? 'A change of timing would export fewer frames. Press for the options.' : 'Frame options';
-			this.seamBadge = this.element(`badge ${exact ? 'is-accent' : 'is-warning'}`, exact ? 'Seamless' : 'Visible seam', 'span');
-			this.summary.appendChild(this.seamBadge);
+			this.readout.classList.toggle('is-warning', !exact || optimizable);
+			this.readout.title = [!exact ? 'Visible seam: the end does not match the start.' : '', optimizable ? 'A change of timing would export fewer frames.' : '', 'Press for frame options.'].filter(Boolean).join(' ');
+			this.readout.setAttribute('aria-label', `${frameCount} frames · ${outputFormat.toUpperCase()}. ${this.readout.title}`);
 		}
 		const style = getComputedStyle(this.body);
 		this.labelColumn = parseFloat(style.getPropertyValue('--timeline-label-column'));
-		const columns = this.labelColumn + 2 * this.config.trackPadPx + parseFloat(style.getPropertyValue('--timeline-info-column'));
-		this.fitScale = timed ? Math.max(1, this.body.clientWidth - columns) / (loopMs * (1 + this.nextLoopShare) / 1000) : 1;
+		const columns = this.labelColumn + parseFloat(style.getPropertyValue('--timeline-info-column'));
+		this.builtWidth = this.body.clientWidth;
+		this.viewWidth = Math.max(1, this.builtWidth - this.labelColumn);
+		this.body.style.setProperty('--scroll-region-inset-start', `${this.labelColumn}px`);
+		this.fitScale = timed ? Math.max(this.config.minPxPerSecond, Math.max(1, this.builtWidth - columns) / (loopMs * (1 + this.nextLoopShare) / 1000)) : this.config.minPxPerSecond;
 		const zoom = PREFERENCES.get('timelineZoom');
 		// A stored zoom is never further out than fit: a shorter loop or a wider
 		// dock can leave it there.
@@ -547,7 +639,7 @@ class TimelineDock {
 		}
 		for (const group of this.model.groups) this.body.appendChild(this.buildGroup(group));
 		this.body.scrollTop = scrollTop;
-		this.body.scrollLeft = scrollLeft;
+		this.scrollToTimeX(scrollLeft);
 		if (rulerFocused) this.rulerTrack?.focus({ preventScroll: true });
 		if (focusedKey) Array.from(this.body.querySelectorAll('.timeline-row')).find(node => node.dataset.sourceKey === focusedKey)?.querySelector('.timeline-bar').focus({ preventScroll: true });
 		this.syncScroll();
@@ -673,14 +765,14 @@ class TimelineDock {
 		this.placeBar(node, bar, row);
 		bar.appendChild(this.buildMarks(row, row.startMs, row.endMs));
 		bar.dataset.drag = 'body';
-		for (const side of ['left', 'right']) if (row.can.run) {
+		for (const side of ['left', 'right']) if (TimelineView.edgeDrag(row, side)) {
 			const handle = this.element(`timeline-bar-handle is-${side}`, undefined, 'span');
 			handle.dataset.drag = side;
-			handle.title = side === 'left' ? 'Drag to change when it starts. Alt: no snapping' : 'Drag to change how many times it repeats. Alt: no snapping';
+			handle.title = side === 'left' ? 'Drag to change when it starts. Alt: no snapping' : `${TimelineView.edgeDrag(row, side) === 'period' ? 'Drag to stretch the cycle.' : 'Drag to trim repeats.'}${row.can.run && row.can.period ? TimelineView.edgeDrag(row, side, true) === 'period' ? ' Shift: stretch all cycles.' : ' Shift: add repeats.' : ''} Alt: no snapping`;
 			bar.appendChild(handle);
 		}
 		if (row.can.period) {
-			const drawing = { ...row, cycleMs: row.exportCycleMs, endMs: Infinity };
+			const drawing = { ...row, cycleMs: row.exportCycleMs };
 			for (const ms of TimelineView.cycleStarts(drawing, this.model.loopMs)) {
 				if (TimelineView.timeToX(ms - row.startMs, this.scale) < this.config.minTickPx) continue;
 				const notch = this.element('timeline-period-notch', undefined, 'span');
@@ -693,7 +785,11 @@ class TimelineDock {
 		}
 		bar.addEventListener('focus', () => this.syncHint(row));
 		bar.addEventListener('blur', () => this.syncHint(null));
-		bar.addEventListener('contextmenu', event => { event.preventDefault(); this.openBarMenu(row, node, bar); });
+		bar.addEventListener('contextmenu', event => {
+			event.preventDefault();
+			const anchor = event.clientX || event.clientY ? { left: event.clientX, right: event.clientX, top: event.clientY, bottom: event.clientY } : null;
+			this.openBarMenu(row, node, bar, null, anchor);
+		});
 		bar.addEventListener('keydown', event => {
 			if (event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10')) {
 				event.preventDefault(); event.stopPropagation(); this.openBarMenu(row, node, bar);
@@ -768,10 +864,12 @@ class TimelineDock {
 		return marks;
 	}
 
-	syncSnap() {
-		const enabled = PREFERENCES.get('timelineSnap');
-		this.snap.classList.toggle('active', enabled);
-		this.snap.setAttribute('aria-pressed', String(enabled));
+	syncViewChoices() {
+		for (const button of this.viewChoices) {
+			const enabled = PREFERENCES.get(button.dataset.preference);
+			button.setAttribute('aria-checked', String(enabled));
+			button.setAttribute('aria-current', String(enabled));
+		}
 	}
 
 	openRowSection(row) {
@@ -808,10 +906,15 @@ class TimelineDock {
 		this.editor.requestPreviewUpdate();
 	}
 
-	openBarMenu(row, node, bar, choices = null) {
+	openBarMenu(row, node, bar, choices = null, anchor = null) {
 		if (!this.canEdit(row)) return;
 		this.menu?.close();
 		this.menuPanel?.remove();
+		if (!anchor) {
+			const rect = bar.getBoundingClientRect(), view = this.body.getBoundingClientRect();
+			const left = Math.max(rect.left, view.left + this.labelColumn);
+			anchor = { left, right: left, top: rect.top, bottom: rect.bottom };
+		}
 		const actions = choices || TimelineView.barActions(row, this.model);
 		if (!actions.length) return;
 		const panel = this.element('app-menu-panel'); panel.hidden = true;
@@ -822,7 +925,7 @@ class TimelineDock {
 				if (!this.canEdit(row)) return;
 				if (action.choices) {
 					// The popover closes after a menu item click.
-					queueMicrotask(() => this.openBarMenu(row, node, bar, action.choices));
+					queueMicrotask(() => this.openBarMenu(row, node, bar, action.choices, anchor));
 					return;
 				}
 				if (action.id === 'fit') this.rememberPeriod(row);
@@ -844,7 +947,7 @@ class TimelineDock {
 		node.appendChild(panel);
 		this.menuPanel = panel;
 		this.menu = setupMenuPopover({ root: node, trigger: bar, panel, fixed: true, bindTrigger: false });
-		this.menu.open();
+		this.menu.open({ anchor });
 	}
 
 	rememberPeriod(row) {
@@ -874,6 +977,7 @@ class TimelineDock {
 				}
 				// Alt picks slip over move here, and means nothing more to that drag.
 				if (kind === 'body') kind = TimelineView.bodyDrag(row, event.altKey);
+				else if (kind === 'left' || kind === 'right') kind = TimelineView.edgeDrag(row, kind, event.shiftKey);
 				if (!kind || !row.can[{ left: 'run', right: 'run', move: 'run', slip: 'phase', period: 'period' }[kind]]) return;
 			}
 			event.preventDefault();
@@ -881,53 +985,9 @@ class TimelineDock {
 			node?.querySelector('.timeline-bar').focus({ preventScroll: true });
 			const track = kind === 'loop' ? this.rulerTrack : node.querySelector('.timeline-track');
 			const initial = kind === 'loop' ? { ...this.editor.documentLoop } : kind === 'period' ? row.cycleMs : kind === 'slip' ? row.phase : { ...row.source.run };
-			this.drag = { kind, row, node, initial, loopMs: this.model.loopMs, trackLeft: track.getBoundingClientRect().left, x: event.clientX, pointerId: event.pointerId, notch: Number(target.dataset.notchIndex), moved: false };
+			this.drag = { kind, row, node, initial, loopMs: this.model.loopMs, trackLeft: track.getBoundingClientRect().left, x: event.clientX, pointerId: event.pointerId, notch: target.dataset.drag === 'right' ? (row.endMs - row.startMs) / row.cycleMs + row.phase : Number(target.dataset.notchIndex), edge: target.dataset.drag === 'right', scrollLeft: this.body.scrollLeft, moved: false };
 		});
-		window.addEventListener('pointermove', event => {
-			const drag = this.drag;
-			if (!drag || event.pointerId !== drag.pointerId) return;
-			if (!this.available) { this.finishDrag(true); return; }
-			if (!drag.moved && Math.abs(event.clientX - drag.x) < this.config.dragThresholdPx) return;
-			if (!drag.moved) {
-				this.stage.setPointerCapture(event.pointerId);
-				this.frameView.invalidate();
-				this.frameView.blocked = true;
-				this.host.dataset.dragging = drag.kind;
-				drag.node?.classList.add('is-dragging');
-			}
-			drag.moved = true;
-			const { row, kind } = drag;
-			const delta = TimelineView.xToTime(event.clientX - drag.x, this.scale);
-			let time = TimelineView.xToTime(event.clientX - drag.trackLeft, this.scale);
-			const snap = PREFERENCES.get('timelineSnap') && (kind === 'slip' || !event.altKey);
-			const threshold = TimelineView.xToTime(this.config.snapPx, this.scale);
-			// What the value snapped to, while that still holds after clamping.
-			let value, target = null;
-			const snapped = (wanted, targets, within) => {
-				const result = snap ? TimelineView.snapTime(wanted, targets, within) : { ms: wanted, target: null };
-				target = result.target;
-				return result.ms;
-			};
-			if (kind === 'slip') {
-				value = snapped(TimelineView.phaseFromSlip(row, delta), TimelineView.snapTargets(this.model, row, kind), threshold / row.cycleMs) % 1;
-			} else if (kind === 'period') {
-				const wanted = snapped(TimelineView.periodFromNotch(row, drag.notch, time), TimelineView.snapTargets(this.model, row, kind), threshold / Math.max(1, drag.notch - row.phase));
-				value = clampNumber(wanted, row.source.periodRange.min, row.source.periodRange.max);
-				if (row.source.resolvePeriod) value = row.source.resolvePeriod(value);
-				if (value !== wanted) target = null;
-			} else {
-				if (kind === 'move') time = row.startMs + delta;
-				const wanted = time = snapped(time, TimelineView.snapTargets(this.model, row, kind, this.editor.animationTicker.getPlayheadTime()), threshold);
-				if (kind === 'move' || kind === 'left') time = clampNumber(time, 0, FIELDS.animDelay.max * 1000);
-				if (time !== wanted) target = null;
-				if (kind === 'loop') value = { mode: 'set', durationMs: time };
-				else if (kind === 'right') value = TimelineView.runFromRightEdge(row, time, this.model.loopMs);
-				else if (kind === 'left') value = TimelineView.runFromLeftEdge(row, time);
-				else value = TimelineView.runFromBodyMove(row, time - row.startMs);
-			}
-			this.writeDrag(drag, value);
-			this.paintDrag(drag, value, target);
-		});
+		window.addEventListener('pointermove', event => this.moveDrag(event));
 		for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) window.addEventListener(type, event => {
 			if (event.pointerId === this.drag?.pointerId) this.finishDrag(type !== 'pointerup');
 		});
@@ -938,6 +998,52 @@ class TimelineDock {
 		this.stage.addEventListener('dblclick', event => {
 			if (event.target.closest('.timeline-loop-end') && this.available && !this.host.classList.contains('is-stale')) this.editor.setDocumentLoop(CONFIG.project.loop);
 		});
+	}
+
+	moveDrag(event) {
+		const drag = this.drag;
+		if (!drag || event.pointerId !== drag.pointerId) return;
+		if (!this.available) { this.finishDrag(true); return; }
+		if (!drag.moved && Math.abs(event.clientX - drag.x) < this.config.dragThresholdPx) return;
+		if (!drag.moved) {
+			this.stage.setPointerCapture(event.pointerId);
+			this.frameView.invalidate();
+			this.frameView.blocked = true;
+			this.host.dataset.dragging = drag.kind;
+			drag.node?.classList.add('is-dragging');
+		}
+		drag.moved = true;
+		const { row, kind } = drag;
+		const delta = TimelineView.xToTime(event.clientX - drag.x + this.body.scrollLeft - drag.scrollLeft, this.scale);
+		let time = TimelineView.xToTime(event.clientX - drag.trackLeft + this.body.scrollLeft - drag.scrollLeft, this.scale);
+		const snap = PREFERENCES.get('timelineSnap') && (kind === 'slip' || !event.altKey);
+		const threshold = TimelineView.xToTime(this.config.snapPx, this.scale);
+		// What the value snapped to, while that still holds after clamping.
+		let value, target = null;
+		const snapped = (wanted, targets, within) => {
+			const result = snap ? TimelineView.snapTime(wanted, targets, within) : { ms: wanted, target: null };
+			target = result.target;
+			return result.ms;
+		};
+		if (kind === 'slip') {
+			value = snapped(TimelineView.phaseFromSlip(row, delta), TimelineView.snapTargets(this.model, row, kind), threshold / row.cycleMs) % 1;
+		} else if (kind === 'period') {
+			const wanted = snapped(TimelineView.periodFromNotch(row, drag.notch, time), TimelineView.snapTargets(this.model, row, kind), threshold / Math.max(1, drag.notch - row.phase));
+			value = clampNumber(wanted, row.source.periodRange.min, row.source.periodRange.max);
+			if (row.source.resolvePeriod) value = row.source.resolvePeriod(value);
+			if (value !== wanted) target = null;
+		} else {
+			if (kind === 'move') time = row.startMs + delta;
+			const wanted = time = snapped(time, TimelineView.snapTargets(this.model, row, kind, this.editor.animationTicker.getPlayheadTime()), threshold);
+			if (kind === 'move' || kind === 'left') time = clampNumber(time, 0, FIELDS.animDelay.max * 1000);
+			if (time !== wanted) target = null;
+			if (kind === 'loop') value = { mode: 'set', durationMs: time };
+			else if (kind === 'right') value = TimelineView.runFromRightEdge(row, time, this.model.loopMs);
+			else if (kind === 'left') value = TimelineView.runFromLeftEdge(row, time);
+			else value = TimelineView.runFromBodyMove(row, time - row.startMs);
+		}
+		this.writeDrag(drag, value);
+		this.paintDrag(drag, value, target);
 	}
 
 	writeDrag(drag, value) {
@@ -961,7 +1067,10 @@ class TimelineDock {
 		} else {
 			const row = { ...drag.row };
 			if (kind === 'slip') { row.phase = value; guide = null; }
-			else if (kind === 'period') { row.cycleMs = row.exportCycleMs = value; edge = guide = row.startMs + (drag.notch - row.phase) * value; }
+			else if (kind === 'period') {
+				row.cycleMs = row.exportCycleMs = value; edge = guide = row.startMs + (drag.notch - row.phase) * value;
+				if (drag.edge && row.can.run && Number.isFinite(row.source.run.end)) row.endMs = Math.min(this.model.loopMs, edge);
+			}
 			else { row.startMs = value.start; row.endMs = Math.min(value.end, this.model.loopMs); }
 			const bar = drag.node.querySelector('.timeline-bar');
 			this.placeBar(drag.node, bar, row);
@@ -979,12 +1088,12 @@ class TimelineDock {
 		if (!this.dragReadout) { this.dragReadout = this.element('timeline-drag-readout badge'); this.host.appendChild(this.dragReadout); }
 		this.dragReadout.textContent = text;
 		const box = this.host.getBoundingClientRect();
-		const origin = this.stage.getBoundingClientRect().left + this.labelColumn + this.config.trackPadPx - this.body.scrollLeft - box.left;
+		const origin = this.stage.getBoundingClientRect().left + this.labelColumn - this.body.scrollLeft - box.left;
 		const x = origin + TimelineView.timeToX(edgeMs, this.scale);
 		this.dragReadout.style.left = `${Math.min(this.host.clientWidth - this.dragReadout.offsetWidth, Math.max(0, x))}px`;
 		this.dragReadout.style.top = `${Math.max(0, anchor.getBoundingClientRect().top - box.top - this.dragReadout.offsetHeight)}px`;
 		const guideX = guideMs == null ? -Infinity : TimelineView.timeToX(guideMs, this.scale) - this.body.scrollLeft;
-		this.snapGuide.hidden = guideX < -this.config.trackPadPx;
+		this.snapGuide.hidden = guideX < 0;
 		if (!this.snapGuide.hidden) this.snapGuide.style.transform = `translateX(${guideX}px)`;
 	}
 
@@ -1079,8 +1188,8 @@ class TimelineDock {
 		if (!label) return;
 		const box = label.getBoundingClientRect();
 		const view = this.body.getBoundingClientRect();
-		if (box.top < view.top) this.body.scrollTop -= view.top - box.top;
-		else if (box.bottom > view.bottom) this.body.scrollTop += box.bottom - view.bottom;
+		const top = this.body.scrollTop;
+		this.body.scrollTop = TimelineView.revealScroll(box.top - view.top + top, box.bottom - view.top + top, top, this.body.clientHeight);
 	}
 
 	// Minimized, the dock is its bar: the transport and the readout stay.
@@ -1102,6 +1211,11 @@ class TimelineDock {
 
 	stepZoom(direction, anchorX) {
 		if (!this.model?.loopMs) return;
+		if (anchorX == null) {
+			const x = TimelineView.timeToX(this.editor.animationTicker.getPlayheadTime(), this.scale);
+			const left = this.body.scrollLeft;
+			anchorX = x >= left && x <= left + this.viewWidth ? x : left + this.viewWidth / 2;
+		}
 		const stops = this.config.pxPerSecondStops.filter(value => value > this.fitScale);
 		const next = direction > 0 ? stops.find(value => value > this.scale) : stops.findLast(value => value < this.scale);
 		this.setZoom(next || (direction < 0 ? 'fit' : PREFERENCES.get('timelineZoom')), anchorX);
@@ -1114,6 +1228,6 @@ class TimelineDock {
 		const oldScroll = this.body.scrollLeft;
 		PREFERENCES.set('timelineZoom', pxPerSecond);
 		this.sync(this.editor.loopEstimate);
-		if (time != null) this.body.scrollLeft = oldScroll + TimelineView.timeToX(time, this.scale) - anchorX;
+		if (time != null) this.scrollToTimeX(oldScroll + TimelineView.timeToX(time, this.scale) - anchorX);
 	}
 }

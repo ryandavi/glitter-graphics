@@ -1217,6 +1217,12 @@ select {
   position: fixed;
   z-index: calc(var(--modal-z-index) + 2);
   width: var(--scrollbar-hit-width);
+}
+.scroll-region-track.is-horizontal {
+  width: auto;
+  height: var(--scrollbar-hit-width);
+}
+.scroll-region-track {
   border-radius: var(--radius-sm);
   opacity: 0;
   pointer-events: none;
@@ -1258,6 +1264,20 @@ select {
 }
 .scroll-region-thumb:hover::after, .scroll-region-track.is-dragging .scroll-region-thumb::after {
   background: var(--color-text-tertiary);
+}
+.scroll-region-track.is-horizontal .scroll-region-thumb {
+  inset-inline: auto;
+  inset-block: 0;
+}
+.scroll-region-track.is-horizontal .scroll-region-thumb::after {
+  inset-inline: var(--scrollbar-inset);
+  inset-block: auto var(--scrollbar-inset);
+  width: auto;
+  height: var(--scrollbar-width);
+  transition: height var(--transition-fast), background var(--transition-fast);
+}
+.scroll-region-track.is-horizontal:hover .scroll-region-thumb::after, .scroll-region-track.is-horizontal.is-dragging .scroll-region-thumb::after {
+  height: calc(100% - 2 * var(--scrollbar-inset));
 }
 
 .has-scroll-fade::after {
@@ -5045,7 +5065,7 @@ body.tool-select .preview-container.is-over-picked-layer {
 }
 .timeline-dock > .timeline-section > .section-header {
   gap: var(--spacing-md);
-  cursor: pointer;
+  cursor: default;
 }
 .timeline-dock > .timeline-section > .section-header > .section-header-title {
   flex: 0 0 auto;
@@ -5056,9 +5076,10 @@ body.tool-select .preview-container.is-over-picked-layer {
 .timeline-dock .section-header-action.collapsed .icon {
   transform: rotate(-90deg);
 }
-.timeline-dock .section-header-action.active {
-  background: var(--color-accent-surface-strong);
-  color: var(--color-accent);
+.timeline-dock .timeline-window-actions {
+  display: flex;
+  gap: var(--spacing-2xs);
+  margin-left: var(--spacing-base);
 }
 .timeline-dock .timeline-summary {
   display: flex;
@@ -5075,6 +5096,9 @@ body.tool-select .preview-container.is-over-picked-layer {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
   padding: 2px var(--spacing-sm);
   border: 1px solid transparent;
   border-radius: var(--radius-xs);
@@ -5151,6 +5175,7 @@ body.tool-select .preview-container.is-over-picked-layer {
   flex: 1;
   min-height: 0;
   overflow: auto;
+  padding-bottom: var(--scrollbar-hit-width);
 }
 .timeline-dock .timeline-playhead, .timeline-dock .timeline-snap-guide {
   position: absolute;
@@ -5463,6 +5488,7 @@ body.tool-select .preview-container.is-over-picked-layer {
   inset: 0;
   overflow: hidden;
   border-radius: inherit;
+  clip-path: inset(1px);
   pointer-events: none;
 }
 .timeline-dock.shows-cycles .timeline-bar-marks {
@@ -5498,6 +5524,7 @@ body.tool-select .preview-container.is-over-picked-layer {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  grid-column: 3;
   padding: 0 var(--spacing-base);
   font-size: var(--font-size-xs);
   font-variant-numeric: tabular-nums;
@@ -5576,22 +5603,24 @@ body.tool-select .preview-container.is-over-picked-layer {
   opacity: var(--opacity-disabled);
   pointer-events: none;
 }
-@container timeline (max-width: 600px) {
-  .timeline-dock .section-header-title-text {
-    display: none;
-  }
-  .timeline-dock .timeline-readout, .timeline-dock .timeline-summary > .badge {
-    display: none;
-  }
-  .timeline-dock .timeline-stage {
-    --timeline-label-column: 0px;
-    --timeline-label-inset: var(--spacing-base);
-  }
+@container timeline (max-width: 900px) {
   .timeline-dock.shows-details .timeline-stage {
     --timeline-info-column: 0px;
   }
   .timeline-dock .timeline-row-info {
     display: none;
+  }
+}
+@container timeline (max-width: 600px) {
+  .timeline-dock .section-header-title-text {
+    display: none;
+  }
+  .timeline-dock .timeline-readout:not(.is-warning), .timeline-dock .timeline-readout-text {
+    display: none;
+  }
+  .timeline-dock .timeline-stage {
+    --timeline-label-column: 0px;
+    --timeline-label-inset: var(--spacing-base);
   }
   .timeline-dock .timeline-group-header {
     display: block;

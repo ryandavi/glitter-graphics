@@ -28,7 +28,7 @@ async function verifyTimelineGestures(browser) {
 		});
 		let liveDrag = false;
 		let feedback = null;
-		const drag = async (kind, time, { alt = false, cancel = false, delta = false, pointerCancel = false, grab = null } = {}) => {
+		const drag = async (kind, time, { alt = false, shift = false, cancel = false, delta = false, pointerCancel = false, grab = null } = {}) => {
 			await ready();
 			const points = await page.evaluate(({ kind, time, delta, grab }) => {
 				const dock = editor.timelineDock;
@@ -39,6 +39,7 @@ async function verifyTimelineGestures(browser) {
 				return { x, y: target.top + target.height / 2, to: (delta ? x : track.left) + TimelineView.timeToX(time, dock.scale) };
 			}, { kind, time, delta, grab });
 			if (alt) await page.keyboard.down('Alt');
+			if (shift) await page.keyboard.down('Shift');
 			await page.mouse.move(points.x, points.y);
 			await page.mouse.down();
 			await page.mouse.move(points.to, points.y, { steps: 4 });
@@ -51,6 +52,7 @@ async function verifyTimelineGestures(browser) {
 			if (pointerCancel) await page.evaluate(() => editor.timelineDock.stage.dispatchEvent(new PointerEvent('pointercancel', { bubbles: true, pointerId: editor.timelineDock.drag.pointerId })));
 			await page.mouse.up();
 			if (alt) await page.keyboard.up('Alt');
+			if (shift) await page.keyboard.up('Shift');
 			await ready();
 		};
 		await page.evaluate(() => { editor.animationPanel.setPaused(true); editor.animationTicker.seek(700); });
@@ -156,6 +158,19 @@ async function verifyTimelineGestures(browser) {
 		});
 		await ready();
 		const gifBar = page.locator('#timelineDock .timeline-group').filter({ has: page.locator('.timeline-bar.is-authored') }).locator('.timeline-bar');
+		await page.evaluate(() => { editor.timelineDock.setZoom(300); editor.animationTicker.seek(0); editor.timelineDock.scrollToTimeX(0); });
+		const menuBar = await gifBar.boundingBox();
+		await gifBar.click({ button: 'right', position: { x: 30, y: menuBar.height / 2 } });
+		const menuBox = await page.locator('.app-menu-panel.is-fixed-menu:visible').boundingBox();
+		assert(Math.abs(menuBox.x - (menuBar.x + 30)) < 1, 'A zoomed-in bar menu opens at the right-click, rather than its distant end');
+		assert(menuBox.x + menuBox.width <= 1600 && menuBox.y >= 0 && menuBox.y + menuBox.height <= 900, 'A context menu stays within the viewport');
+		await page.getByRole('menuitem', { name: 'Match cycle to...', exact: true }).click();
+		assert(Math.abs((await page.locator('.app-menu-panel.is-fixed-menu:visible').boundingBox()).x - menuBox.x) < 1, 'Nested choices retain the right-click anchor');
+		await page.keyboard.press('Escape');
+		await gifBar.focus(); await page.keyboard.press('Enter');
+		assert(Math.abs((await page.locator('.app-menu-panel.is-fixed-menu:visible').boundingBox()).x - menuBar.x) < 1, 'Keyboard menus anchor at the visible start of the bar');
+		await page.keyboard.press('Escape');
+		await page.evaluate(() => editor.timelineDock.setZoom('fit'));
 		await gifBar.click({ button: 'right' });
 		await page.getByRole('menuitem', { name: 'Match cycle to...', exact: true }).click();
 		await page.getByRole('menuitem', { name: /1\.20 s/ }).click();
@@ -177,7 +192,7 @@ async function verifyTimelineGestures(browser) {
 		const focusedLayer = () => page.evaluate(() => document.activeElement.closest('.timeline-group')?.dataset.layerId);
 		const fixtureId = await page.evaluate(() => window.timelineFixtureId);
 		await page.locator(`#timelineDock [data-layer-id="${fixtureId}"] .timeline-bar`).focus();
-		assert.equal(await page.evaluate(() => editor.notifications.statusText.textContent), 'Drag to move · edges trim · Alt-drag slips · right-click for more', 'A focused bar says what it can do');
+		assert.equal(await page.evaluate(() => editor.notifications.statusText.textContent), 'Drag to move · left edge changes start · right edge trims repeats · Shift-edge stretches cycles · Alt-drag slips · right-click for more', 'A focused bar says what it can do');
 		await page.keyboard.press('Home');
 		assert.equal(await focusedLayer(), await page.evaluate(() => window.timelineGifId), 'Home reaches the first bar, in another layer');
 		await page.keyboard.press('End');
@@ -205,6 +220,142 @@ async function verifyTimelineGestures(browser) {
 		await drag('body', 500, { delta: true, grab: 'middle' });
 		after = await state();
 		assert(after.delay > before.delay + 400 && after.repeats === 1, 'A short bar moves by its body');
+		await drag('right', after.delay + 400, { alt: true });
+		assert(Math.abs((await state()).period - 400) < 0.01 && (await state()).repeats === 1, 'A one-cycle right edge stretches duration and keeps one repeat');
+		assert.match(feedback.text, /^Cycle 0\.40 s \(was 0\.20 s\)/);
+		await page.evaluate(() => editor.historyManager.undo()); await ready();
+		after = await state();
+		await drag('right', after.delay + 400, { alt: true, shift: true });
+		assert(Math.abs((await state()).period - 200) < 0.01 && Math.abs((await state()).repeats - 2) < 0.01, 'Shift on a one-cycle edge adds repeats');
+		after = await state();
+		await drag('right', after.delay + 800, { alt: true, shift: true });
+		assert(Math.abs((await state()).period - 400) < 0.01 && Math.abs((await state()).repeats - 2) < 0.01, 'Shift on a repeating edge stretches duration and keeps its count');
+
+		await page.evaluate(async () => {
+			editor.animationPanel.setPaused(true);
+			editor.timelineDock.setZoom(300);
+			editor.animationTicker.seek(0);
+			editor.timelineDock.scrollToTimeX(0);
+		});
+		const body = page.locator('.timeline-body');
+		const bodyBox = await body.boundingBox();
+		await page.evaluate(() => {
+			window.timelineWheelResult = null;
+			window.addEventListener('wheel', event => {
+				setTimeout(() => { window.timelineWheelResult = { prevented: event.defaultPrevented, ratio: devicePixelRatio, width: innerWidth, canvasZoom: editor.viewport.currentZoom }; }, 0);
+			}, { capture: true });
+		});
+		const pageZoom = await page.evaluate(() => ({ prevented: true, ratio: devicePixelRatio, width: innerWidth, canvasZoom: editor.viewport.currentZoom }));
+		const ctrlWheel = async (selector, position, direction = -1) => {
+			const box = await page.locator(selector).first().boundingBox();
+			await page.mouse.move(box.x + (position?.x ?? Math.min(30, box.width / 2)), box.y + (position?.y ?? box.height / 2));
+			await page.evaluate(() => { window.timelineWheelResult = null; });
+			const scale = await page.evaluate(() => editor.timelineDock.scale);
+			await page.keyboard.down('Control'); await page.mouse.wheel(0, direction * 100); await page.keyboard.up('Control');
+			await page.waitForFunction(() => window.timelineWheelResult);
+			const result = await page.evaluate(() => window.timelineWheelResult);
+			assert.deepEqual(result, pageZoom, `Ctrl-wheel consumes browser zoom over ${selector} and leaves canvas zoom unchanged: ${JSON.stringify(result)}`);
+			assert(await page.evaluate(() => editor.timelineDock.scale) !== scale, `Ctrl-wheel zooms over ${selector}`);
+		};
+		for (const selector of ['.timeline-bar', '.timeline-row-label', '.timeline-ruler', '#timelineDock .section-header', '.timeline-body']) {
+			await page.evaluate(() => { editor.timelineDock.setZoom(300); editor.timelineDock.scrollToTimeX(0); });
+			const empty = selector === '.timeline-body' ? { x: bodyBox.width - 40, y: bodyBox.height - 25 } : null;
+			await ctrlWheel(selector, empty);
+		}
+		await ctrlWheel('#timelineDock .section-header', null, 1);
+		assert(await page.evaluate(() => {
+			const dock = editor.timelineDock;
+			dock.setZoom(dock.config.pxPerSecondStops.at(-1));
+			const scale = dock.scale;
+			const consumed = !dock.header.dispatchEvent(new WheelEvent('wheel', { bubbles: true, cancelable: true, ctrlKey: true, deltaY: -100 }));
+			return consumed && dock.scale === scale;
+		}), 'Ctrl-wheel remains consumed at the timeline zoom limit');
+		await page.evaluate(() => { editor.timelineDock.setZoom(300); editor.timelineDock.scrollToTimeX(0); });
+		await page.mouse.move(bodyBox.x + bodyBox.width - 40, bodyBox.y + 30);
+		if (process.env.GLITTER_TEST_CSS) {
+			const rail = page.locator('.scroll-region-track.is-horizontal');
+			await rail.waitFor({ state: 'visible' });
+			assert(await rail.evaluate(node => {
+				const body = editor.timelineDock.body.getBoundingClientRect();
+				return node.getBoundingClientRect().left >= body.left + editor.timelineDock.labelColumn;
+			}), 'The horizontal rail clears sticky labels');
+			await ctrlWheel('.scroll-region-track.is-horizontal', { x: 40, y: 4 });
+			await page.evaluate(() => { editor.timelineDock.setZoom(300); editor.timelineDock.scrollToTimeX(0); });
+			const thumb = await rail.locator('.scroll-region-thumb').boundingBox();
+			await page.mouse.move(thumb.x + thumb.width / 2, thumb.y + thumb.height / 2);
+			await page.mouse.down(); await page.mouse.move(thumb.x + thumb.width / 2 + 70, thumb.y + thumb.height / 2); await page.mouse.up();
+			assert(await body.evaluate(node => node.scrollLeft > 0), 'Dragging the horizontal thumb scrolls the tracks');
+			await page.evaluate(() => editor.timelineDock.scrollToTimeX(0));
+		}
+		await page.evaluate(() => {
+			const dock = editor.timelineDock, ticker = editor.animationTicker;
+			ticker.stop(); ticker.paused = false; dock.syncPlayback();
+			const ms = TimelineView.xToTime(dock.viewWidth, dock.scale);
+			dock.paintPlayhead(ms); ticker.heldMs = ms; ticker.paused = true;
+		});
+		assert(await body.evaluate(node => node.scrollLeft > 0), 'Playing pages when the playhead passes the edge');
+		await page.evaluate(() => { const dock = editor.timelineDock; editor.animationTicker.paused = false; dock.paintPlayhead(0); editor.animationTicker.heldMs = 0; editor.animationTicker.paused = true; });
+		assert.equal(await body.evaluate(node => node.scrollLeft), 0, 'Loop wrap returns the view to the start');
+		await page.evaluate(() => { editor.animationTicker.stop(); editor.animationTicker.timelineStartedAt = performance.now(); editor.animationTicker.paused = false; editor.timelineDock.body.scrollLeft = 500; });
+		await page.waitForTimeout(50);
+		assert(await page.evaluate(() => editor.timelineDock.followSuspended), 'A manual sideways scroll suspends following');
+		await page.evaluate(() => editor.timelineDock.paintPlayhead(0));
+		assert.equal(await body.evaluate(node => node.scrollLeft), 500, 'Following respects the manual view');
+		await page.evaluate(() => { const dock = editor.timelineDock; dock.syncPlayback(); dock.paintPlayhead(0); editor.animationTicker.paused = true; });
+		assert.equal(await body.evaluate(node => node.scrollLeft), 0, 'Pressing Play resumes following');
+		const pausedScroll = await page.evaluate(() => {
+			const dock = editor.timelineDock;
+			editor.animationTicker.seek(TimelineView.xToTime(dock.viewWidth - dock.config.followMarginPx - 1, dock.scale));
+			const before = dock.body.scrollLeft;
+			dock.rulerTrack.focus();
+			return { before, view: dock.viewWidth };
+		});
+		await page.keyboard.press('ArrowRight');
+		const steppedScroll = await body.evaluate(node => node.scrollLeft);
+		assert(steppedScroll > pausedScroll.before && steppedScroll - pausedScroll.before < pausedScroll.view / 2, 'A paused frame step reveals by less than a page');
+		await page.evaluate(() => { editor.animationTicker.seek(0); editor.timelineDock.scrollToTimeX(0); });
+		const rulerBox = await page.locator('.timeline-ruler').boundingBox();
+		await page.mouse.move(rulerBox.x + rulerBox.width - 60, rulerBox.y + rulerBox.height / 2);
+		await page.mouse.wheel(0, 100); await page.waitForTimeout(50);
+		assert(await body.evaluate(node => node.scrollLeft >= 100), 'A plain wheel over the ruler scrolls sideways');
+		await page.evaluate(() => editor.timelineDock.scrollToTimeX(0));
+		await page.mouse.move(bodyBox.x + bodyBox.width - 60, bodyBox.y + 30);
+		await page.mouse.wheel(100, 0); await page.waitForTimeout(50);
+		assert(await body.evaluate(node => node.scrollLeft >= 100), 'A trackpad sideways wheel scrolls natively');
+		await page.evaluate(() => editor.timelineDock.scrollToTimeX(0));
+		await page.keyboard.down('Shift'); await page.mouse.wheel(0, 100); await page.keyboard.up('Shift'); await page.waitForTimeout(50);
+		assert(await body.evaluate(node => node.scrollLeft >= 100), 'Shift-wheel scrolls sideways natively');
+		await page.evaluate(() => PREFERENCES.set('timelineFollow', false));
+		await page.evaluate(() => { const dock = editor.timelineDock; dock.scrollToTimeX(500); editor.animationTicker.seek(0); dock.paintPlayhead(0); });
+		assert.equal(await body.evaluate(node => node.scrollLeft), 500, 'Follow off leaves paused seeks where the user put the view');
+		await page.evaluate(() => { PREFERENCES.reset('timelineFollow'); editor.timelineDock.scrollToTimeX(0); });
+		// A held scrub travels after pointer movement stops, then releases its clock.
+		const scrubStart = await page.evaluate(() => editor.timelineDock.labelColumn + 20);
+		await page.mouse.move(rulerBox.x + scrubStart, rulerBox.y + rulerBox.height / 2);
+		await page.mouse.down();
+		await page.mouse.move(rulerBox.x + rulerBox.width + 20, rulerBox.y + rulerBox.height / 2);
+		const edgeBefore = await body.evaluate(node => node.scrollLeft);
+		await page.waitForTimeout(180);
+		assert(await body.evaluate(node => node.scrollLeft) > edgeBefore + 20, 'A scrub held beyond the edge scrolls at a steady rate');
+		await page.mouse.up();
+		const edgeAfter = await body.evaluate(node => node.scrollLeft);
+		await page.waitForTimeout(80);
+		assert.equal(await body.evaluate(node => node.scrollLeft), edgeAfter, 'Release stops edge scrolling');
+		await page.evaluate(async () => {
+			const layer = editor.layerManager.getLayerById(window.timelineFixtureId);
+			Object.assign(layer.animations[0], { delayMs: 0, iterations: Infinity, periodMs: 1000 });
+			editor.shapeGlitterManager.renderLayer(layer); await editor.updateExportDuration();
+			editor.animationTicker.seek(0); editor.timelineDock.scrollToTimeX(0);
+		}); await ready();
+		before = await state();
+		const moveBar = await page.locator(`[data-layer-id="${fixtureId}"] .timeline-bar`).boundingBox();
+		await page.mouse.move(moveBar.x + 30, moveBar.y + moveBar.height / 2); await page.mouse.down();
+		await page.mouse.move(bodyBox.x + bodyBox.width + 20, moveBar.y + moveBar.height / 2);
+		const barEdgeBefore = await body.evaluate(node => node.scrollLeft);
+		await page.waitForTimeout(180);
+		assert(await body.evaluate(node => node.scrollLeft) > barEdgeBefore + 20, 'A bar held beyond the edge uses the shared scroll clock');
+		await page.keyboard.press('Escape'); await page.mouse.up(); await ready();
+		assert.deepEqual(await state(), before, 'Cancelling an edge-scrolling bar restores timing without history');
 		assert.deepEqual(errors, []);
 		console.log('PASS timeline gestures: body move and slip, snap guide and readout, Alt, live trim, Undo, Escape, locked bars, nudge burst, arrow focus, menu, short bars, cycle and loop length');
 	} finally { await context.close(); }

@@ -131,7 +131,7 @@ class TimelineKeyLane {
 		event.preventDefault(); event.stopPropagation();
 		const keys = GlitterAnimation.normalizeKeys(this.entry.keys);
 		const at = Number(button.dataset.keyAt);
-		this.drag = { pointerId: event.pointerId, x: event.clientX, left: this.cell.getBoundingClientRect().left, keys, at, layer: this.layer, entry: this.entry, button, track: this.track, moved: false };
+		this.drag = { pointerId: event.pointerId, x: event.clientX, left: this.cell.getBoundingClientRect().left, scrollLeft: this.dock.body.scrollLeft, keys, at, layer: this.layer, entry: this.entry, button, track: this.track, moved: false };
 		this.panel.selectKey(this.layer, this.entry, at);
 		for (const item of this.buttons) {
 			const selected = item === button;
@@ -149,7 +149,7 @@ class TimelineKeyLane {
 		drag.moved = true;
 		const { scale, editor } = this.dock;
 		const span = TimelineView.cycleSpan(this.row, this.cycle);
-		let ms = TimelineView.xToTime(event.clientX - drag.left, scale), target = null;
+		let ms = TimelineView.xToTime(event.clientX - drag.left + this.dock.body.scrollLeft - drag.scrollLeft, scale), target = null;
 		if (PREFERENCES.get('timelineSnap') && !event.altKey) {
 			const targets = [
 				{ ms: editor.animationTicker.getPlayheadTime(), kind: 'playhead' }, { ms: span.start, kind: 'cycle' }, { ms: span.end, kind: 'cycle' },

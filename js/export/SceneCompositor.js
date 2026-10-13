@@ -245,10 +245,8 @@ class SceneCompositor {
 				setPhase: (phase) => { layer.animations[index].phase = ((Number(phase) % 1) + 1) % 1; },
 				closesAt: (duration, period) => GlitterAnimation.isSeamlessLoop({ ...animation, periodMs: period }, samplingContext, duration),
 				nonLooping: Number.isFinite(animation.iterations),
-				...(Number.isFinite(animation.iterations) ? {} : {
-					periodRange: { min: FIELDS.animDuration.min * 1000, max: FIELDS.animDuration.max * 1000 },
-					setPeriod: (ms) => { layer.animations[index].periodMs = Math.min(FIELDS.animDuration.max * 1000, Math.max(FIELDS.animDuration.min * 1000, ms)); }
-				}),
+				periodRange: { min: FIELDS.animDuration.min * 1000, max: FIELDS.animDuration.max * 1000 },
+				setPeriod: (ms) => { layer.animations[index].periodMs = Math.min(FIELDS.animDuration.max * 1000, Math.max(FIELDS.animDuration.min * 1000, ms)); },
 				phase: animation.phase,
 				preferredSamplingRate: CONFIG.tools.animation.exportFps,
 				sampleAt: (timestamp, period = animation.periodMs) => ({

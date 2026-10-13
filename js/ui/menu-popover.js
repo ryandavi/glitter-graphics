@@ -27,7 +27,7 @@ function setupMenuPopover({ root, trigger, panel, liftHost = null, fixed = false
 		document.removeEventListener('pointerdown', onPointerDown, true);
 		if (focusTrigger) trigger.focus();
 	};
-	const open = () => {
+	const open = ({ anchor = null } = {}) => {
 		if (isOpen()) return;
 		beforeOpen?.();
 		if (fixed) {
@@ -37,11 +37,11 @@ function setupMenuPopover({ root, trigger, panel, liftHost = null, fixed = false
 		}
 		panel.hidden = false;
 		if (fixed) {
-			const rect = trigger.getBoundingClientRect();
+			const rect = anchor || trigger.getBoundingClientRect();
 			const box = panel.getBoundingClientRect();
 			const inset = parseFloat(getComputedStyle(panel).getPropertyValue('--spacing-md'));
 			const gap = parseFloat(getComputedStyle(panel).getPropertyValue('--spacing-xs'));
-			panel.style.left = `${Math.max(inset, Math.min(rect.right - box.width, window.innerWidth - box.width - inset))}px`;
+			panel.style.left = `${Math.max(inset, Math.min(anchor ? rect.left : rect.right - box.width, window.innerWidth - box.width - inset))}px`;
 			const top = rect.bottom + gap + box.height <= window.innerHeight - inset ? rect.bottom + gap : rect.top - box.height - gap;
 			panel.style.top = `${Math.max(inset, Math.min(top, window.innerHeight - box.height - inset))}px`;
 			document.addEventListener('scroll', closeOnViewportChange, true);

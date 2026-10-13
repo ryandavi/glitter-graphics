@@ -1,5 +1,5 @@
 // Classic native scrollbars reserve width even with a transparent track.
-// One floating bar serves opted-in vertical regions without changing overflow.
+// Floating bars serve opted-in regions on either axis without changing overflow.
 function initializeScrollRegions() {
 	const selector = '.scroll-region';
 	// Horizontal rails, native inputs and the canvas viewport keep their own treatment.
@@ -82,163 +82,191 @@ function initializeScrollRegions() {
 			queueEdges(record.target);
 		}
 	}).observe(document.body, { childList: true, subtree: true });
-	// The track is the hit area: wider than the drawn thumb, and as tall as the region.
-	const track = document.createElement('div');
-	track.className = 'scroll-region-track ui-ignore-gestures';
-	track.setAttribute('aria-hidden', 'true');
-	const thumb = document.createElement('div');
-	thumb.className = 'scroll-region-thumb';
-	track.appendChild(thumb);
-	document.body.appendChild(track);
-	let region = null;
-	let drag = null;
-	let paging = null;
-	let touch = false;
-	let timer = null;
-	let frame = null;
-	let travel = 0;
-	const minThumb = parseFloat(getComputedStyle(thumb).getPropertyValue('--scrollbar-min-thumb'));
+	const createBar = (horizontal) => {
+		const axisSelector = horizontal ? '.timeline-body' : selector;
+		const position = horizontal ? 'scrollLeft' : 'scrollTop';
+		const extent = horizontal ? 'scrollWidth' : 'scrollHeight';
+		const client = horizontal ? 'clientWidth' : 'clientHeight';
+		const overflow = horizontal ? 'overflowX' : 'overflowY';
+		const coordinate = horizontal ? 'clientX' : 'clientY';
+		const near = horizontal ? 'left' : 'top', far = horizontal ? 'right' : 'bottom';
+		// The track is the hit area: wider than the drawn thumb, and as tall as the region.
+		const track = document.createElement('div');
+		track.className = `scroll-region-track ui-ignore-gestures${horizontal ? ' is-horizontal' : ''}`;
+		track.setAttribute('aria-hidden', 'true');
+		const thumb = document.createElement('div');
+		thumb.className = 'scroll-region-thumb';
+		track.appendChild(thumb);
+		document.body.appendChild(track);
+		let region = null;
+		let drag = null;
+		let paging = null;
+		let touch = false;
+		let timer = null;
+		let frame = null;
+		let travel = 0;
+		const minThumb = parseFloat(getComputedStyle(thumb).getPropertyValue('--scrollbar-min-thumb'));
 
-	// Hover sticks after a tap, so touch relies on the hide delay alone.
-	const hovered = () => !touch && (region?.matches(':hover') || track.matches(':hover'));
-	// Regions may opt into smooth scrolling; the bar must track the pointer exactly.
-	const scrollTo = (top) => region.scrollTo({ top, behavior: 'instant' });
-	const hide = () => {
-		if (drag || paging || hovered()) return;
-		track.classList.remove('is-visible');
-		region = null;
-		resize.disconnect();
-		mutation.disconnect();
-	};
-	const deferHide = () => {
-		clearTimeout(timer);
-		timer = setTimeout(hide, CONFIG.ui.scrollbar.hideDelayMs);
-	};
-	const update = () => {
-		frame = null;
-		if (!region) return;
-		const rect = region.getBoundingClientRect();
-		const height = region.clientHeight;
-		const range = region.scrollHeight - height;
-		const visible = region.isConnected && height > 0 && range > 0 && scrollable(getComputedStyle(region).overflowY) && rect.bottom > 0 && rect.top < innerHeight;
-		track.classList.toggle('is-visible', visible);
-		if (!visible) return;
-		const size = Math.min(height, Math.max(minThumb, height * height / region.scrollHeight));
-		travel = height - size;
-		const width = track.offsetWidth;
-		const left = rect.left + region.clientLeft + region.clientWidth - width;
-		const top = rect.top + region.clientTop;
-		let clipTop = 0;
-		let clipBottom = innerHeight;
-		let clipLeft = 0;
-		let clipRight = innerWidth;
-		// The floating bar must respect the same clipping as nested native bars.
-		for (let parent = region.parentElement; parent; parent = parent.parentElement) {
-			const style = getComputedStyle(parent);
-			const box = parent.getBoundingClientRect();
-			if (style.overflowY !== 'visible') {
-				clipTop = Math.max(clipTop, box.top + parent.clientTop);
-				clipBottom = Math.min(clipBottom, box.top + parent.clientTop + parent.clientHeight);
-			}
-			if (style.overflowX !== 'visible') {
-				clipLeft = Math.max(clipLeft, box.left + parent.clientLeft);
-				clipRight = Math.min(clipRight, box.left + parent.clientLeft + parent.clientWidth);
-			}
-		}
-		track.style.height = `${height}px`;
-		track.style.left = `${left}px`;
-		track.style.top = `${top}px`;
-		track.style.clipPath = `inset(${Math.max(0, clipTop - top)}px ${Math.max(0, left + width - clipRight)}px ${Math.max(0, top + height - clipBottom)}px ${Math.max(0, clipLeft - left)}px)`;
-		thumb.style.height = `${size}px`;
-		thumb.style.top = `${travel * Math.max(0, Math.min(1, region.scrollTop / range))}px`;
-	};
-	const schedule = () => {
-		if (region && frame === null) frame = requestAnimationFrame(update);
-	};
-	const resize = new ResizeObserver(schedule);
-	const mutation = new MutationObserver(schedule);
-	const activate = (next) => {
-		if (drag || paging) return;
-		if (region !== next) {
+		// Hover sticks after a tap, so touch relies on the hide delay alone.
+		const hovered = () => !touch && ((horizontal ? region?.closest('.timeline-dock') : region)?.matches(':hover') || track.matches(':hover'));
+		// Regions may opt into smooth scrolling; the bar must track the pointer exactly.
+		const scrollTo = (value) => region.scrollTo({ [horizontal ? 'left' : 'top']: value, behavior: 'instant' });
+		const hide = () => {
+			if (drag || paging || hovered()) return;
+			track.classList.remove('is-visible');
+			region = null;
 			resize.disconnect();
 			mutation.disconnect();
-			region = next;
-			if (region) {
-				resize.observe(region);
-				for (const child of region.children) resize.observe(child);
-				mutation.observe(region.closest('.section') || region, { subtree: true, childList: true, attributes: true });
+		};
+		const deferHide = () => {
+			clearTimeout(timer);
+			timer = setTimeout(hide, CONFIG.ui.scrollbar.hideDelayMs);
+		};
+		const update = () => {
+			frame = null;
+			if (!region) return;
+			const rect = region.getBoundingClientRect();
+			const style = getComputedStyle(region);
+			const inset = horizontal ? parseFloat(style.getPropertyValue('--scroll-region-inset-start')) || 0 : 0;
+			const height = Math.max(0, region[client] - inset);
+			const range = region[extent] - region[client];
+			const visible = region.isConnected && height > 0 && range > 0 && scrollable(getComputedStyle(region)[overflow]) && rect.bottom > 0 && rect.top < innerHeight;
+			track.classList.toggle('is-visible', visible);
+			if (!visible) return;
+			const size = Math.min(height, Math.max(minThumb, height * height / (range + height)));
+			travel = height - size;
+			const width = horizontal ? height : track.offsetWidth;
+			const boxHeight = horizontal ? track.offsetHeight : height;
+			const left = rect.left + region.clientLeft + (horizontal ? inset : region.clientWidth - width);
+			const top = rect.top + region.clientTop + (horizontal ? region.clientHeight - boxHeight : 0);
+			let clipTop = 0;
+			let clipBottom = innerHeight;
+			let clipLeft = 0;
+			let clipRight = innerWidth;
+			// The floating bar must respect the same clipping as nested native bars.
+			for (let parent = region.parentElement; parent; parent = parent.parentElement) {
+				const style = getComputedStyle(parent);
+				const box = parent.getBoundingClientRect();
+				if (style.overflowY !== 'visible') {
+					clipTop = Math.max(clipTop, box.top + parent.clientTop);
+					clipBottom = Math.min(clipBottom, box.top + parent.clientTop + parent.clientHeight);
+				}
+				if (style.overflowX !== 'visible') {
+					clipLeft = Math.max(clipLeft, box.left + parent.clientLeft);
+					clipRight = Math.min(clipRight, box.left + parent.clientLeft + parent.clientWidth);
+				}
 			}
-		}
-		update();
-		deferHide();
-	};
-	const findRegion = (target) => {
-		for (let node = target instanceof Element ? target.closest(selector) : null; node; node = node.parentElement?.closest(selector)) {
-			if (node.scrollHeight > node.clientHeight && scrollable(getComputedStyle(node).overflowY)) return node;
-		}
-		return null;
-	};
-	document.addEventListener('pointerover', (event) => {
-		// Touch scrolls the region directly, so the bar only indicates position for it.
-		touch = event.pointerType === 'touch';
-		track.classList.toggle('is-touch', touch);
-		if (track.contains(event.target)) return;
-		const next = findRegion(event.target);
-		if (next) activate(next);
-		else hide();
-	}, { passive: true });
-	document.addEventListener('pointerout', deferHide, { passive: true });
-	document.addEventListener('scroll', (event) => {
-		if (event.target instanceof Element && event.target.matches(selector)) {
-			activate(event.target);
-		} else schedule();
-		queueEdges(event.target);
-	}, { capture: true, passive: true });
-	window.addEventListener('resize', schedule, { passive: true });
+			track.style[horizontal ? 'width' : 'height'] = `${height}px`;
+			track.style.left = `${left}px`;
+			track.style.top = `${top}px`;
+			track.style.clipPath = `inset(${Math.max(0, clipTop - top)}px ${Math.max(0, left + width - clipRight)}px ${Math.max(0, top + boxHeight - clipBottom)}px ${Math.max(0, clipLeft - left)}px)`;
+			thumb.style[horizontal ? 'width' : 'height'] = `${size}px`;
+			thumb.style[horizontal ? 'left' : 'top'] = `${travel * Math.max(0, Math.min(1, region[position] / range))}px`;
+		};
+		const schedule = () => {
+			if (region && frame === null) frame = requestAnimationFrame(update);
+		};
+		const resize = new ResizeObserver(schedule);
+		const mutation = new MutationObserver(schedule);
+		const activate = (next) => {
+			if (drag || paging) return;
+			if (region !== next) {
+				resize.disconnect();
+				mutation.disconnect();
+				region = next;
+				if (region) {
+					resize.observe(region);
+					for (const child of region.children) resize.observe(child);
+					mutation.observe(region.closest('.section') || region, { subtree: true, childList: true, attributes: true });
+				}
+			}
+			update();
+			deferHide();
+		};
+		const findRegion = (target) => {
+			if (horizontal && target instanceof Element && target.closest('.timeline-dock')) {
+				const body = target.closest('.timeline-dock').querySelector(axisSelector);
+				if (body && body[extent] > body[client] && scrollable(getComputedStyle(body)[overflow])) return body;
+			}
+			for (let node = target instanceof Element ? target.closest(axisSelector) : null; node; node = node.parentElement?.closest(axisSelector)) {
+				if (node[extent] > node[client] && scrollable(getComputedStyle(node)[overflow])) return node;
+			}
+			return null;
+		};
+		document.addEventListener('pointerover', (event) => {
+			// Touch scrolls the region directly, so the bar only indicates position for it.
+			touch = event.pointerType === 'touch';
+			track.classList.toggle('is-touch', touch);
+			if (track.contains(event.target)) return;
+			const next = findRegion(event.target);
+			if (next) activate(next);
+			else hide();
+		}, { passive: true });
+		document.addEventListener('pointerout', deferHide, { passive: true });
+		document.addEventListener('scroll', (event) => {
+			if (event.target instanceof Element && event.target.matches(axisSelector)) {
+				activate(event.target);
+			} else schedule();
+			queueEdges(event.target);
+		}, { capture: true, passive: true });
+		window.addEventListener('resize', schedule, { passive: true });
 
-	// Wheel events over the floating bar must still reach the native scroller.
-	track.addEventListener('wheel', (event) => {
-		if (!region || event.ctrlKey) return;
-		const unit = event.deltaMode === 1 ? parseFloat(getComputedStyle(region).lineHeight) || minThumb : event.deltaMode === 2 ? region.clientHeight : 1;
-		scrollTo(region.scrollTop + event.deltaY * unit);
-		event.preventDefault();
-	}, { passive: false });
-	// A press on the bare track pages toward the pointer, repeating while held.
-	const pageToward = () => {
-		if (!region || !paging) return;
-		const box = thumb.getBoundingClientRect();
-		if (paging.y >= box.top && paging.y <= box.bottom) return;
-		scrollTo(region.scrollTop + (paging.y < box.top ? -1 : 1) * region.clientHeight * CONFIG.ui.scrollbar.pageFraction);
-		update();
-		paging.timer = setTimeout(pageToward, paging.repeating ? CONFIG.ui.scrollbar.pageRepeatMs : CONFIG.ui.scrollbar.pageRepeatDelayMs);
-		paging.repeating = true;
+		// Wheel events over the floating bar must still reach the native scroller.
+		track.addEventListener('wheel', (event) => {
+			if (!region) return;
+			if (event.ctrlKey || event.metaKey) {
+				if (region.closest('.timeline-dock')) {
+					region.dispatchEvent(new WheelEvent('wheel', {
+						bubbles: true, cancelable: true, ctrlKey: event.ctrlKey, metaKey: event.metaKey,
+						deltaX: event.deltaX, deltaY: event.deltaY, deltaMode: event.deltaMode, clientX: event.clientX
+					}));
+					event.preventDefault();
+				}
+				return;
+			}
+			const unit = event.deltaMode === 1 ? parseFloat(getComputedStyle(region).lineHeight) || minThumb : event.deltaMode === 2 ? region[client] : 1;
+			scrollTo(region[position] + (horizontal ? event.deltaX || event.deltaY : event.deltaY) * unit);
+			event.preventDefault();
+		}, { passive: false });
+		// A press on the bare track pages toward the pointer, repeating while held.
+		const pageToward = () => {
+			if (!region || !paging) return;
+			const box = thumb.getBoundingClientRect();
+			if (paging.y >= box[near] && paging.y <= box[far]) return;
+			scrollTo(region[position] + (paging.y < box[near] ? -1 : 1) * region[client] * CONFIG.ui.scrollbar.pageFraction);
+			update();
+			paging.timer = setTimeout(pageToward, paging.repeating ? CONFIG.ui.scrollbar.pageRepeatMs : CONFIG.ui.scrollbar.pageRepeatDelayMs);
+			paging.repeating = true;
+		};
+		track.addEventListener('pointerdown', (event) => {
+			if (!region || event.button !== 0 || event.pointerType === 'touch') return;
+			update();
+			track.setPointerCapture(event.pointerId);
+			event.preventDefault();
+			if (event.target === thumb) {
+				drag = { y: event[coordinate], top: region[position], range: region[extent] - region[client], travel };
+				track.classList.add('is-dragging');
+				return;
+			}
+			paging = { y: event[coordinate], timer: null, repeating: false };
+			pageToward();
+		});
+		track.addEventListener('pointermove', (event) => {
+			if (paging) paging.y = event[coordinate];
+			if (!drag || !region || !drag.travel) return;
+			scrollTo(drag.top + (event[coordinate] - drag.y) * drag.range / drag.travel);
+			schedule();
+		});
+		track.addEventListener('lostpointercapture', () => {
+			clearTimeout(paging?.timer);
+			paging = null;
+			drag = null;
+			track.classList.remove('is-dragging');
+			deferHide();
+		});
 	};
-	track.addEventListener('pointerdown', (event) => {
-		if (!region || event.button !== 0 || event.pointerType === 'touch') return;
-		update();
-		track.setPointerCapture(event.pointerId);
-		event.preventDefault();
-		if (event.target === thumb) {
-			drag = { y: event.clientY, top: region.scrollTop, range: region.scrollHeight - region.clientHeight, travel };
-			track.classList.add('is-dragging');
-			return;
-		}
-		paging = { y: event.clientY, timer: null, repeating: false };
-		pageToward();
-	});
-	track.addEventListener('pointermove', (event) => {
-		if (paging) paging.y = event.clientY;
-		if (!drag || !region || !drag.travel) return;
-		scrollTo(drag.top + (event.clientY - drag.y) * drag.range / drag.travel);
-		schedule();
-	});
-	track.addEventListener('lostpointercapture', () => {
-		clearTimeout(paging?.timer);
-		paging = null;
-		drag = null;
-		track.classList.remove('is-dragging');
-		deferHide();
-	});
+	createBar(false);
+	createBar(true);
 	document.documentElement.classList.add('has-overlay-scrollbars');
 }
 

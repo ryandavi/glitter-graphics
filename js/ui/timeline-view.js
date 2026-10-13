@@ -50,6 +50,18 @@ const TimelineView = {
 		if (row.can.run) return alt && row.can.phase ? 'slip' : 'move';
 		return row.can.phase ? 'slip' : null;
 	},
+	// A single cycle stretches; a repeating run trims. Shift exchanges them.
+	edgeDrag(row, side, shift = false) {
+		if (side === 'left') return row.can.run ? 'left' : null;
+		if (!row.can.run) return row.can.period ? 'period' : null;
+		if (!row.can.period) return 'right';
+		const once = Math.abs(this.repeats(row) - 1) < 1e-9;
+		return once !== shift ? 'period' : 'right';
+	},
+	// The smallest scroll that shows a span, shared by both dock axes.
+	revealScroll(start, end, scroll, view) {
+		return start < scroll ? start : end > scroll + view ? end - view : scroll;
+	},
 	seconds(ms) { return `${(ms / 1000).toFixed(2)} s`; },
 	// How many times a run plays its cycle; Infinity to the loop's end.
 	repeats(row, run = row.source.run) {
@@ -66,7 +78,9 @@ const TimelineView = {
 		const body = this.bodyDrag(row, false);
 		return [
 			body === 'move' ? 'Drag to move' : body === 'slip' ? 'Drag to slip' : null,
-			row.can.run ? 'edges trim' : null,
+			row.can.run ? 'left edge changes start' : null,
+			this.edgeDrag(row, 'right') === 'period' ? 'right edge stretches cycle' : row.can.run ? 'right edge trims repeats' : null,
+			row.can.run && row.can.period ? this.edgeDrag(row, 'right', true) === 'period' ? 'Shift-edge stretches cycles' : 'Shift-edge adds repeats' : null,
 			body === 'move' && row.can.phase ? 'Alt-drag slips' : null,
 			row.can.run || row.can.phase || row.can.period ? 'right-click for more' : null
 		].filter(Boolean).join(' · ');

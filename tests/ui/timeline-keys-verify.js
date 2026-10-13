@@ -224,6 +224,17 @@ const { openApp } = require('../lib/app');
 		assert.strictEqual(await page.locator('.timeline-row-lane:not([hidden]) .timeline-key[data-key-at]').count(), 0);
 		await page.evaluate(() => document.getElementById('shapeAnimKeyAdd').click()); await ready();
 		assert.strictEqual((await state()).keys.length, 1, 'Deleting the last key keeps an editable identity motion');
+		await page.evaluate(() => { editor.timelineDock.setZoom(1000); editor.animationTicker.seek(250); }); await ready();
+		before = await state();
+		const edgeKey = await page.locator('.timeline-row-lane:not([hidden]) [data-key-at]').first().boundingBox();
+		const edgeBody = await page.locator('.timeline-body').boundingBox();
+		await page.mouse.move(edgeKey.x + edgeKey.width / 2, edgeKey.y + edgeKey.height / 2); await page.mouse.down();
+		await page.mouse.move(edgeBody.x + edgeBody.width + 20, edgeKey.y + edgeKey.height / 2);
+		const edgeStart = await page.locator('.timeline-body').evaluate(node => node.scrollLeft);
+		await page.waitForTimeout(180);
+		assert(await page.locator('.timeline-body').evaluate(node => node.scrollLeft) > edgeStart + 20, 'A held key drag shares the dock edge-scroll clock');
+		await page.keyboard.press('Escape'); await page.mouse.up(); await ready();
+		assert.deepStrictEqual(await state(), before, 'Cancelling an edge-scrolling key restores its keys without history');
 		assert.deepStrictEqual(errors, []);
 		console.log('PASS Custom key values, stepper, Position slider, diamond retiming, collisions, cancellation, seeking, history, serialization and rest-transform preservation');
 	} finally { await browser.close(); }

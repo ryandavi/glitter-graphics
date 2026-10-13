@@ -31,6 +31,7 @@ async function verifyTimelineDock() {
 		await page.waitForTimeout(200);
 		await page.evaluate(() => editor.updateExportDuration());
 		assert(await page.locator('#timelineDock .property-empty').isVisible(), 'A document with nothing animated must say so');
+		assert(await page.locator('#timelineDock .property-empty').evaluate(node => !node.dispatchEvent(new WheelEvent('wheel', { bubbles: true, cancelable: true, ctrlKey: true, deltaY: -100 }))), 'An empty timeline also consumes Ctrl-wheel to prevent page zoom');
 		assert((await page.locator('#previewContainer').evaluate(node => node.clientHeight)) < fullHeight);
 		assert.strictEqual(await page.evaluate(() => editor.viewport.lastViewportHeight), await page.locator('#previewContainer').evaluate(node => node.clientHeight), 'Opening must use the viewport resize path');
 		const sources = await page.evaluate(async () => {
@@ -60,10 +61,10 @@ async function verifyTimelineDock() {
 		await page.evaluate(() => editor.updateExportDuration());
 		assert(await page.locator('.timeline-group').first().evaluate(node => node.classList.contains('is-collapsed')));
 		await page.locator('.timeline-group-header button[aria-expanded]').first().click();
-		const gif = await page.locator('.timeline-readout').innerText();
+		const gif = await page.locator('.timeline-readout').textContent();
 		await page.evaluate(async () => { editor.exportSettings.animationFormat = 'mp4'; editor.exportSettings.type = 'animation'; await editor.updateExportDuration(); });
-		assert((await page.locator('.timeline-readout').innerText()).includes('MP4'));
-		assert.notStrictEqual(await page.locator('.timeline-readout').innerText(), gif);
+		assert((await page.locator('.timeline-readout').textContent()).includes('MP4'));
+		assert.notStrictEqual(await page.locator('.timeline-readout').textContent(), gif);
 		await page.evaluate(async () => { editor.exportSettings.animationFormat = 'gif'; await editor.updateExportDuration(); });
 		await page.evaluate(async () => { editor.layerManager.deleteLayer(editor.layers.find(layer => layer.type === LayerType.STICKER).id); await editor.updateExportDuration(); });
 		assert.strictEqual(await page.locator('.timeline-group').count(), 1);
@@ -97,6 +98,22 @@ async function verifyTimelineDock() {
 		assert(await page.evaluate(() => editor.timelineDock.showsFrames && !editor.timelineDock.show.frames), 'Close zoom draws frame ticks without the choice');
 		await page.evaluate(() => editor.timelineDock.zoomFit.click());
 		assert.strictEqual(await page.evaluate(() => PREFERENCES.get('timelineZoom')), 'fit', 'Zoom to fit returns to fit');
+		const oldLoop = await page.evaluate(() => ({ ...editor.documentLoop }));
+		await page.evaluate(async () => { editor.setDocumentLoop({ mode: 'set', durationMs: 20000 }, { commit: false }); await editor.updateExportDuration(); });
+		assert(await page.evaluate(() => {
+			const dock = editor.timelineDock;
+			return dock.scale === CONFIG.ui.timeline.minPxPerSecond && dock.body.scrollWidth > dock.body.clientWidth && dock.zoomOut.disabled;
+		}), 'A long loop at fit keeps readable seconds and scrolls');
+		await page.evaluate(() => { window.timelineResizeRow = editor.timelineDock.body.querySelector('.timeline-row'); editor.timelineDock.applyHeight(240); });
+		await page.waitForTimeout(100);
+		assert(await page.evaluate(() => window.timelineResizeRow === editor.timelineDock.body.querySelector('.timeline-row')), 'Height-only resizing keeps the row nodes');
+		await page.locator('#timelineDock .section-header-title').click();
+		assert(await page.evaluate(() => !PREFERENCES.get('timelineMinimized')), 'The header title leaves transport expanded');
+		await page.click('[aria-label="Timeline options"]');
+		assert(await page.getByRole('menuitemcheckbox', { name: 'Follow playhead', exact: true }).isChecked());
+		await page.getByRole('menuitemcheckbox', { name: 'Snap', exact: true }).click();
+		assert(await page.evaluate(() => !PREFERENCES.get('timelineSnap')), 'Snap is a remembered menu choice');
+		await page.evaluate(async oldLoop => { PREFERENCES.reset('timelineSnap'); editor.setDocumentLoop(oldLoop, { commit: false }); await editor.updateExportDuration(); }, oldLoop);
 		// A stored choice from before Next pass existed still shows the next pass.
 		await page.evaluate(() => PREFERENCES.set('timelineShow', { cycles: true, frames: false, details: true }));
 		assert(await page.evaluate(() => editor.timelineDock.show.nextLoop && editor.timelineDock.body.querySelectorAll('.timeline-bar-ghost').length > 0));

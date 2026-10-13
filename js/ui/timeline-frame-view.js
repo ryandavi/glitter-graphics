@@ -43,7 +43,7 @@ class TimelineFrameView {
 		this.compositor.releaseDecodedSources();
 	}
 
-	seek() { this.blocked = false; }
+	seek() { this.blocked = false; this.dock.followSuspended = false; this.dock.lastPlayheadMs = null; }
 
 	paint(ms) {
 		const ticker = this.editor.animationTicker;

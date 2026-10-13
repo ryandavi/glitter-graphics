@@ -513,8 +513,27 @@ async function timelineStates(page, visit, viewport) {
 	await page.evaluate(() => { editor.timelineDock.host.style.width = '480px'; editor.timelineDock.resync(); });
 	await wait(page);
 	await visit(`${viewport} timeline narrow`, { shot: '#timelineDock' });
+	await page.evaluate(() => {
+		editor.timelineDock.host.style.removeProperty('width');
+		editor.animationPanel.setPaused(true); editor.animationTicker.seek(0);
+		editor.timelineDock.setZoom(300);
+	});
+	await wait(page);
+	const scrollBox = await page.locator('.timeline-body').boundingBox();
+	await page.mouse.move(scrollBox.x + scrollBox.width - 40, scrollBox.y + 20);
+	await wait(page, 50);
+	await visit(`${viewport} timeline scrolling`, { shot: '#timelineDock' });
+	await page.evaluate(async () => {
+		editor.timelineDock.setZoom('fit');
+		editor.setDocumentLoop({ mode: 'set', durationMs: 4300 });
+		await editor.updateExportDuration();
+		editor.timelineDock.host.style.width = '480px'; editor.timelineDock.resync();
+	});
+	await wait(page);
+	await visit(`${viewport} timeline warning narrow`, { shot: '#timelineDock' });
 	await page.evaluate(async () => {
 		editor.timelineDock.host.style.removeProperty('width');
+		editor.setDocumentLoop({ mode: 'set', durationMs: 4800 });
 		const layer = editor.layers.find(entry => entry.animations?.length > 1);
 		layer.animations[0] = GlitterAnimation.normalizeAnimation({ type: 'custom', periodMs: 1600, keys: [
 			{ at: 0, values: { tx: 0, rotate: 0 } }, { at: 0.35, values: { tx: 40, rotate: 20 } }, { at: 0.7, values: { tx: -30, rotate: -10 } }

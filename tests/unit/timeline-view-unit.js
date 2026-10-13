@@ -118,12 +118,29 @@ assert.deepStrictEqual(json(view.barBox({ startMs: 0, endMs: 4800 }, 100, config
 assert.deepStrictEqual(json(view.barBox({ startMs: 1000, endMs: 1050 }, 100, config)), { left: 100, width: 12, gripsOutside: true, leftGripInside: false }, 'A short bar keeps a body and wears its grips outside');
 assert.strictEqual(view.barBox({ startMs: 0, endMs: 50 }, 100, config).leftGripInside, true);
 const can = (run, phase, period = false) => ({ can: { run, phase, period } });
+
+const edges = { ...can(true, true, true), cycleMs: 1000, phase: 0, source: { run: { start: 0, end: 1000 } } };
+assert.equal(view.edgeDrag(edges, 'left'), 'left');
+assert.equal(view.edgeDrag(edges, 'right'), 'period', 'A plays-once edge stretches its cycle');
+assert.equal(view.edgeDrag(edges, 'right', true), 'right');
+for (const end of [2000, Infinity]) {
+	const repeating = { ...edges, source: { run: { start: 0, end } } };
+	assert.equal(view.edgeDrag(repeating, 'right'), 'right');
+	assert.equal(view.edgeDrag(repeating, 'right', true), 'period');
+}
+assert.equal(view.edgeDrag(can(false, false, true), 'right'), 'period', 'A GIF edge changes speed');
+assert.equal(view.edgeDrag(can(false, false, true), 'right', true), 'period');
+assert.equal(view.edgeDrag(can(false, false, true), 'left'), null);
+assert.equal(view.edgeDrag(can(true, true), 'right', true), 'right', 'Fixed timing cannot stretch');
+assert.equal(view.revealScroll(400, 424, 0, 400), 24);
+assert.equal(view.revealScroll(0, 24, 400, 400), 0);
+assert.equal(view.revealScroll(450, 474, 400, 400), 400);
 assert.strictEqual(view.bodyDrag(can(true, true), false), 'move');
 assert.strictEqual(view.bodyDrag(can(true, true), true), 'slip');
 assert.strictEqual(view.bodyDrag(can(true, false), true), 'move');
 assert.strictEqual(view.bodyDrag(can(false, true), false), 'slip');
 assert.strictEqual(view.bodyDrag(can(false, false), false), null);
-assert.strictEqual(view.rowHint(can(true, true)), 'Drag to move · edges trim · Alt-drag slips · right-click for more');
+assert.strictEqual(view.rowHint(can(true, true)), 'Drag to move · left edge changes start · right edge trims repeats · Alt-drag slips · right-click for more');
 assert.strictEqual(view.rowHint(can(false, true)), 'Drag to slip · right-click for more');
 assert.strictEqual(view.rowHint(can(false, false)), '');
 const full = { cycleMs: 1000, phase: 0, source: { run: { start: 0, end: Infinity } } };

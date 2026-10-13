@@ -14,6 +14,7 @@
 	// Above a stacked modal, which sits one step over the modal layer.
 	z-index: calc(var(--modal-z-index) + 2);
 	width: var(--scrollbar-hit-width);
+	&.is-horizontal { width: auto; height: var(--scrollbar-hit-width); }
 	border-radius: var(--radius-sm);
 	opacity: 0;
 	pointer-events: none;
@@ -53,6 +54,20 @@
 
 	&:hover::after,
 	.scroll-region-track.is-dragging &::after { background: var(--color-text-tertiary); }
+
+	.scroll-region-track.is-horizontal & {
+		inset-inline: auto;
+		inset-block: 0;
+		&::after {
+			inset-inline: var(--scrollbar-inset);
+			inset-block: auto var(--scrollbar-inset);
+			width: auto;
+			height: var(--scrollbar-width);
+			transition: height var(--transition-fast), background var(--transition-fast);
+		}
+	}
+	.scroll-region-track.is-horizontal:hover &::after,
+	.scroll-region-track.is-horizontal.is-dragging &::after { height: calc(100% - 2 * var(--scrollbar-inset)); }
 }
 
 // A bottom strip cues content below the fold. scroll-regions.js stamps the
