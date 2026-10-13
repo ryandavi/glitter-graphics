@@ -736,6 +736,12 @@ const CONFIG = deepFreeze({
 	},
 
 	ui: {
+		timeline: {
+			defaultHeight: 220, minHeight: 120, maxHeightFraction: 0.6,
+			rowHeight: 24, groupHeight: 26, labelWidth: 140, infoWidth: 120,
+			pxPerSecondStops: [40, 60, 90, 135, 200, 300, 450, 680, 1000],
+			defaultZoom: 'fit', minTickPx: 4, maxMarksPerBar: 600, nextLoopFraction: 0.25
+		},
 		canvasAlignment: { desktop: 'workspace', mobile: 'page' },
 		// Live canvas updates while a control changes (js/ui/slider.js). A field's
 		// FIELDS `cost` picks its tier; these are the tiers' budgets.

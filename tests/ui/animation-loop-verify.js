@@ -1,5 +1,147 @@
 const assert = require('assert');
 const { openApp } = require('../lib/app');
+const fs = require('fs');
+const path = require('path');
+
+async function verifyTimelineDock() {
+	const originalUrl = process.env.GLITTER_URL;
+	const localUrl = originalUrl || 'http://localhost/glitter/';
+	const { browser, page, errors } = await openApp({ viewport: { width: 1600, height: 900 }, document: { width: 320, height: 240 } });
+	try {
+		assert(await page.locator('#timelineToggle').isVisible());
+		assert.strictEqual(await page.evaluate(() => !!editor.timelineDock), false, 'Closed dock must not load its lazy group');
+		const fullHeight = await page.locator('#previewContainer').evaluate(node => node.clientHeight);
+		await page.click('#timelineToggle');
+		await page.waitForFunction(() => editor.timelineDock?.isOpen);
+		await page.waitForTimeout(200);
+		assert((await page.locator('#previewContainer').evaluate(node => node.clientHeight)) < fullHeight);
+		assert.strictEqual(await page.evaluate(() => editor.viewport.lastViewportHeight), await page.locator('#previewContainer').evaluate(node => node.clientHeight), 'Opening must use the viewport resize path');
+		const sources = await page.evaluate(async () => {
+			const e = editor;
+			const asset = e.stickerLibrary.content.find(item => item.isAnimated);
+			await e.stickerLibrary.ensureAssetDetails(asset.id);
+			const sticker = e.stickerManager.createLayer(asset.id);
+			e.layerManager.insertLayer(sticker);
+			sticker.animations = [GlitterAnimation.normalizeAnimation({ type: 'pulse', periodMs: 1400 }), GlitterAnimation.normalizeAnimation({ type: 'rotate', periodMs: 1000, iterations: 1, turns: 0.5, fillMode: 'forwards' })];
+			const text = e.textGlitterManager.createLayer({ text: 'hello', position: { x: 160, y: 120 } });
+			e.layerManager.insertLayer(text);
+			const glitter = e.glitterLibrary.content.find(item => item.isAnimated);
+			getLayerFillSlot(text).mode = 'glitter'; getLayerFillSlot(text).glitterId = glitter.id;
+			e.textGlitterManager.fieldHost.ensureSlot(text, 'sparkles').enabled = true;
+			e.requestPreviewUpdate();
+			e.saveState('Timeline fixture');
+			await e.updateExportDuration();
+			return { stickerId: sticker.id, textId: text.id, count: e.loopEstimate.loopFit.sources.filter(source => source.kind === 'procedural' || Number.isFinite(source.cycleDuration)).length };
+		});
+		assert.strictEqual(await page.locator('.timeline-group').count(), 2);
+		assert.strictEqual(await page.locator('.timeline-row').count(), sources.count);
+		assert((await page.locator('.timeline-bar-seam').count()) > 0, 'A held non-rest pose must mark its seam');
+		assert((await page.locator('.timeline-bar-marks').count()) >= sources.count);
+		await page.locator('.timeline-bar').first().click();
+		assert.strictEqual(await page.evaluate(() => editor.activeLayerId), sources.textId);
+		await page.locator('.timeline-group-header button[aria-expanded]').first().click();
+		await page.evaluate(() => editor.updateExportDuration());
+		assert(await page.locator('.timeline-group').first().evaluate(node => node.classList.contains('is-collapsed')));
+		await page.locator('.timeline-group-header button[aria-expanded]').first().click();
+		const gif = await page.locator('.timeline-readout').innerText();
+		await page.evaluate(async () => { editor.exportSettings.animationFormat = 'mp4'; editor.exportSettings.type = 'animation'; await editor.updateExportDuration(); });
+		assert((await page.locator('.timeline-readout').innerText()).includes('MP4'));
+		assert.notStrictEqual(await page.locator('.timeline-readout').innerText(), gif);
+		await page.evaluate(async () => { editor.exportSettings.animationFormat = 'gif'; await editor.updateExportDuration(); });
+		await page.evaluate(async () => { editor.layerManager.deleteLayer(editor.layers.find(layer => layer.type === LayerType.STICKER).id); await editor.updateExportDuration(); });
+		assert.strictEqual(await page.locator('.timeline-group').count(), 1);
+		await page.evaluate(async () => { await editor.historyManager.undo(); await editor.updateExportDuration(); });
+		assert.strictEqual(await page.locator('.timeline-group').count(), 2);
+		await page.evaluate(async () => { await editor.historyManager.redo(); await editor.updateExportDuration(); });
+		assert.strictEqual(await page.locator('.timeline-group').count(), 1);
+		await page.evaluate(async () => { await editor.historyManager.undo(); await editor.updateExportDuration(); });
+		const handle = page.locator('.timeline-resize-handle');
+		await handle.focus();
+		const initialHeight = await page.locator('#timelineDock').evaluate(node => node.clientHeight);
+		await page.keyboard.press('ArrowUp');
+		assert((await page.locator('#timelineDock').evaluate(node => node.clientHeight)) > initialHeight);
+		const box = await handle.boundingBox();
+		const startHeight = await page.locator('#timelineDock').evaluate(node => node.clientHeight);
+		await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+		await page.mouse.down();
+		await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2 - 40);
+		await page.waitForTimeout(100);
+		assert.strictEqual(await page.locator('#timelineDock').evaluate(node => node.clientHeight), startHeight + 40, 'Resize observer must preserve the live drag height');
+		await page.keyboard.press('Escape');
+		await page.mouse.up();
+		assert.strictEqual(await page.locator('#timelineDock').evaluate(node => node.clientHeight), startHeight, 'Escape restores the starting height');
+		await page.click('[aria-label="Zoom timeline in"]');
+		assert.strictEqual(await page.evaluate(() => typeof PREFERENCES.get('timelineZoom')), 'number');
+		await page.evaluate(() => editor.timelineDock.setZoom('fit'));
+		await page.setViewportSize({ width: 1100, height: 900 });
+		await page.waitForTimeout(250);
+		if (process.env.GLITTER_TEST_CSS) {
+			assert.strictEqual(await page.locator('.timeline-row-info').first().evaluate(node => getComputedStyle(node).display), 'none');
+			assert.strictEqual(await page.locator('.timeline-row-label').first().evaluate(node => getComputedStyle(node).position), 'absolute');
+		}
+		await page.setViewportSize({ width: 390, height: 844 });
+		assert(!(await page.locator('#timelineToggle').isVisible()));
+		assert(!(await page.locator('#timelineDock').isVisible()));
+		assert(await page.evaluate(() => PREFERENCES.get('timelineOpen')));
+		await page.setViewportSize({ width: 1600, height: 900 });
+		await page.waitForTimeout(250);
+		assert(await page.locator('#timelineDock').isVisible());
+		if (process.env.GLITTER_TIMELINE_SHOTS) {
+			const beforeDir = path.join(process.env.GLITTER_TIMELINE_SHOTS, 'dock-before');
+			const afterDir = path.join(process.env.GLITTER_TIMELINE_SHOTS, 'dock-after');
+			fs.mkdirSync(beforeDir, { recursive: true }); fs.mkdirSync(afterDir, { recursive: true });
+			const index = [];
+			for (const theme of ['default', 'light']) for (const width of [1600, 1280, 1100]) {
+				await page.setViewportSize({ width, height: 900 });
+				await page.evaluate(theme => { document.documentElement.dataset.theme = theme === 'default' ? 'dark' : theme; }, theme);
+				const file = `dock-${width}-${theme}.png`;
+				await page.click('#timelineToggle'); await page.waitForTimeout(250);
+				await page.screenshot({ path: path.join(beforeDir, file) });
+				await page.click('#timelineToggle'); await page.waitForTimeout(250);
+				await page.screenshot({ path: path.join(afterDir, file) });
+				index.push({ name: `Timeline ${width} ${theme}`, file });
+			}
+			fs.writeFileSync(path.join(beforeDir, 'index.json'), JSON.stringify(index));
+			fs.writeFileSync(path.join(afterDir, 'index.json'), JSON.stringify(index));
+			await page.evaluate(() => { document.documentElement.dataset.theme = editor.interfaceTheme; });
+			await page.setViewportSize({ width: 1600, height: 900 });
+		}
+
+		await page.click('#timelineToggle');
+		await page.waitForTimeout(200);
+		assert.strictEqual(await page.locator('#previewContainer').evaluate(node => node.clientHeight), fullHeight);
+		assert.strictEqual(await page.evaluate(() => editor.viewport.lastViewportHeight), fullHeight, 'Closing must use the viewport resize path');
+		assert.deepStrictEqual(errors, []);
+	} finally { await browser.close(); }
+
+	try {
+		for (const url of [new URL('?bundle=1', localUrl).href, 'http://timeline.test/glitter/', 'http://timeline.test/glitter/?features=timeline']) {
+			process.env.GLITTER_URL = url;
+			const requested = [];
+			const fixture = await openApp({ document: { width: 32, height: 24 }, setup: async page => {
+				await page.addInitScript(() => localStorage.setItem('glitter.preferences', JSON.stringify({ timelineOpen: true })));
+				page.on('request', request => requested.push(request.url()));
+				if (url.includes('timeline.test')) await page.route('http://timeline.test/**', async route => {
+					if (process.env.GLITTER_TEST_CSS && route.request().url().includes('/css/style.css')) { await route.fallback(); return; }
+					const response = await route.fetch({ url: route.request().url().replace('timeline.test', 'localhost') });
+					await route.fulfill({ response });
+				});
+			} });
+			try {
+				const allowed = url.includes('localhost') || url.includes('features=timeline');
+				if (allowed) await fixture.page.waitForFunction(() => editor.timelineDock?.isOpen);
+				assert.strictEqual(await fixture.page.locator('#timelineToggle').isVisible(), allowed);
+				assert.strictEqual(await fixture.page.locator('#timelineDock').isVisible(), allowed);
+				assert.strictEqual(requested.some(request => /js\/ui\/timeline-(view|dock|group)\.js/.test(request)), allowed);
+				assert.deepStrictEqual(fixture.errors, []);
+			} finally { await fixture.browser.close(); }
+		}
+	} finally {
+		if (originalUrl === undefined) delete process.env.GLITTER_URL;
+		else process.env.GLITTER_URL = originalUrl;
+	}
+	console.log('PASS dock lazy loading, local/bundle/override gates, responsive layout, source groups, seams, export readout, selection and undo/redo');
+}
 
 (async () => {
 	const { browser, page, errors } = await openApp({ viewport: { width: 1280, height: 800 }, document: { width: 32, height: 24, color: '#a348cd' } });
@@ -154,6 +296,7 @@ const { openApp } = require('../lib/app');
 			return Array.from({ length: animation.frames + 1 }, (_, index) => GlitterFilter.resolve(data, index).ops[0].gradient.offset);
 		});
 		assert.deepStrictEqual(slow, [...Array.from({ length: 16 }, (_, index) => index / 4), 0], 'Slow crawl must advance uniformly through the wrap');
+		await verifyTimelineDock();
 		await page.setViewportSize({ width: 390, height: 844 });
 		await page.waitForFunction(() => editor.mobileManager.isMobile);
 		await page.evaluate(() => editor.openAnimationLoop());

@@ -712,7 +712,7 @@ class FrameLayerManager {
 			label: image.name || 'Frame',
 			ownerLayerId: layer.id,
 			effectSlot: null,
-			role: 'sticker',
+			role: 'sticker', rowLabel: 'Frame',
 			replayPolicy: 'native-layer',
 			sourceIdentity: image,
 			ensureLoaded: async (callbacks, { timingOnly = false } = {}) => {

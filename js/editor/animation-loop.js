@@ -26,6 +26,7 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 	},
 	syncAnimationLoop(estimate, message = 'No animation sources.') {
 		this.loopEstimate = estimate;
+		if (isFeatureAvailable('timeline')) this.timelineDock?.sync(estimate);
 		const status = document.getElementById('animationLoopStatus');
 		const sources = document.getElementById('animationLoopSources');
 		const select = document.getElementById('animationLoopCandidate');
@@ -112,6 +113,7 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		note.hidden = !fit?.sources.length || !note.textContent;
 		document.getElementById('animationLoopChangeSet').hidden = note.hidden;
 		button.disabled = !candidate?.canApply;
+		if (isFeatureAvailable('timeline')) this.timelineDock?.syncControls();
 		button.hidden = button.disabled;
 		const reset = document.getElementById('resetAnimationLoop');
 		if (reset) {

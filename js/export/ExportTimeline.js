@@ -1,9 +1,10 @@
 // Export timeline planning primitives. Loaded before SceneCompositor and the exporters.
 class AuthoredAnimationSource {
-	constructor({ key, label = null, ownerLayerId = null, effectSlot = null, frameCount = 0, frameDurations = [], fallbackDuration = 100 }) {
+	constructor({ key, label = null, rowLabel = null, ownerLayerId = null, effectSlot = null, frameCount = 0, frameDurations = [], fallbackDuration = 100 }) {
 		this.kind = 'authored';
 		this.key = key;
 		this.label = label;
+		this.rowLabel = rowLabel;
 		this.ownerLayerId = ownerLayerId;
 		this.effectSlot = effectSlot;
 		this.frameCount = Math.max(0, Math.floor(Number(frameCount) || 0));
@@ -17,6 +18,7 @@ class AuthoredAnimationSource {
 			this.cumulativeBoundaries.push(this.cumulativeBoundaries.at(-1) + duration);
 		});
 		this.cycleDuration = this.isStatic ? Infinity : this.cumulativeBoundaries.at(-1);
+		this.cycleMarks = this.cumulativeBoundaries.slice(1, -1).map(ms => ms / this.cycleDuration);
 	}
 
 	static normalizeDuration(duration, fallback = 100) {
@@ -72,15 +74,18 @@ class AuthoredAnimationSource {
 }
 
 class ProceduralAnimationSource {
-	constructor({ key, label = null, ownerLayerId = null, effectSlot = null, naturalPeriod, phase = 0, preferredSamplingRate, sampler, resolvedPeriod = null, setPeriod = null, periodRange = null, resolvePeriod = null, nonLooping = false, run = null, closesAt = null }) {
+	constructor({ key, label = null, rowLabel = null, ownerLayerId = null, effectSlot = null, naturalPeriod, phase = 0, direction = 'normal', cycleMarks, preferredSamplingRate, sampler, resolvedPeriod = null, setPeriod = null, periodRange = null, resolvePeriod = null, nonLooping = false, run = null, closesAt = null }) {
 		this.kind = 'procedural';
 		this.key = key;
 		this.label = label;
+		this.rowLabel = rowLabel;
 		this.ownerLayerId = ownerLayerId;
 		this.effectSlot = effectSlot;
 		this.naturalPeriod = Math.max(1, Number(naturalPeriod));
 		this.resolvedPeriod = Number.isFinite(resolvedPeriod) ? Math.max(1, Number(resolvedPeriod)) : this.naturalPeriod;
 		this.phase = Number(phase) || 0;
+		this.direction = direction;
+		this.cycleMarks = cycleMarks;
 		this.preferredSamplingRate = Math.max(1, Number(preferredSamplingRate));
 		this.sampler = sampler;
 		Object.assign(this, { setPeriod, periodRange, resolvePeriod, nonLooping, run, closesAt });
@@ -90,6 +95,7 @@ class ProceduralAnimationSource {
 		return new ProceduralAnimationSource({
 			key: this.key,
 			label: this.label,
+			rowLabel: this.rowLabel, cycleMarks: this.cycleMarks, direction: this.direction,
 			ownerLayerId: this.ownerLayerId,
 			effectSlot: this.effectSlot,
 			naturalPeriod: this.naturalPeriod,

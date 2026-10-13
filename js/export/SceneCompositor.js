@@ -182,7 +182,7 @@ class SceneCompositor {
 				if (pattern.scroll === 'none') return [];
 				return [{
 					key: `__pattern_${getPaintSlotSourceKey(layer, entry)}`,
-					label: `${layer.name || 'Layer'} pattern scroll`, ownerLayerId: layer.id, effectSlot: entry.key,
+					rowLabel: 'Pattern scroll', label: `${layer.name || 'Layer'} pattern scroll`, ownerLayerId: layer.id, effectSlot: entry.key,
 					naturalPeriod: pattern.scrollCycleMs,
 					periodRange: { min: FIELDS.patternScrollCycle.min, max: FIELDS.patternScrollCycle.max },
 					setPeriod: (ms) => { entry.data.pattern.scrollCycleMs = Math.min(FIELDS.patternScrollCycle.max, Math.max(FIELDS.patternScrollCycle.min, ms)); },
@@ -201,6 +201,7 @@ class SceneCompositor {
 		const data = layer.filterData;
 		return [{
 			key: `__filter_anim_${layer.id}`,
+			rowLabel: GlitterFilter.summaryText(layer.filterData),
 			label: `${layer.name || 'Filter'} ${GlitterFilter.summaryText(layer.filterData)}`,
 			ownerLayerId: layer.id,
 			naturalPeriod: animation.frames * frameDuration,
@@ -228,6 +229,7 @@ class SceneCompositor {
 			.filter(({ animation }) => GlitterAnimation.isActive(animation))
 			.map(({ animation, index }) => ({
 				key: `__anim_${layer.id}_${index}`,
+				rowLabel: GlitterAnimation.summaryText(animation), direction: animation.direction,
 				label: `${layer.name || 'Layer'} ${GlitterAnimation.summaryText(animation)}`,
 				ownerLayerId: layer.id,
 				effectSlot: `animation-${index}`,
@@ -256,7 +258,7 @@ class SceneCompositor {
 			const cycle = Math.max(1, Number(entry.data.cycleMs) || FIELDS.sparkleCycle.value);
 			return {
 				key: this._getSparkleTimelineKey(layer, entry),
-				label: `${layer.name || 'Layer'} sparkles`,
+				rowLabel: 'Sparkles', label: `${layer.name || 'Layer'} sparkles`,
 				ownerLayerId: layer.id,
 				effectSlot: entry.key,
 				naturalPeriod: cycle,
@@ -681,7 +683,7 @@ class SceneCompositor {
 					label: suffix ? `${name} (${suffix})` : undefined,
 					ownerLayerId: layer.id,
 					effectSlot: entry.definition.wholeLayer ? null : entry.key,
-					glitterId: source.glitterId
+					rowLabel: panelCap(entry.definition.label), glitterId: source.glitterId
 				}));
 			} else if (entry.data.mode === 'image') {
 				const asset = this.resolveImageFill(entry.data.imageRef);
@@ -691,14 +693,14 @@ class SceneCompositor {
 		return [...images, ...glitters];
 	}
 
-	_createGlitterDescriptor(library, { key, label, ownerLayerId, effectSlot = null, glitterId }) {
+	_createGlitterDescriptor(library, { key, label, rowLabel, ownerLayerId, effectSlot = null, glitterId }) {
 		const glitter = library.find((item) => item.id === glitterId);
 		return {
 			key,
 			label: label || glitter?.name || String(glitterId),
 			ownerLayerId,
 			effectSlot,
-			role: 'glitter',
+			role: 'glitter', rowLabel,
 			replayPolicy: 'derived-glitter',
 			sourceIdentity: glitter,
 			ensureLoaded: async (callbacks, { timingOnly = false } = {}) => {
@@ -732,7 +734,7 @@ class SceneCompositor {
 			label: stickerData.name,
 			ownerLayerId: layer.id,
 			effectSlot: null,
-			role: 'sticker',
+			role: 'sticker', rowLabel: 'Image',
 			replayPolicy: 'native-layer',
 			sourceIdentity: stickerData,
 			ensureLoaded: async (callbacks, { timingOnly = false } = {}) => {
@@ -756,7 +758,7 @@ class SceneCompositor {
 			label: `${layer.name || 'Shape'} ${entry.key} image`,
 			ownerLayerId: layer.id,
 			effectSlot: entry.key,
-			role: 'shape-fill-image',
+			role: 'shape-fill-image', rowLabel: panelCap(entry.definition.label),
 			replayPolicy: 'native-layer',
 			sourceIdentity: asset,
 			ensureLoaded: async (callbacks, { timingOnly = false } = {}) => {
@@ -777,7 +779,7 @@ class SceneCompositor {
 		const timing = this._reconcileAuthoredTiming(descriptor, animation, fallbackDuration);
 		return new AuthoredAnimationSource({
 			key: descriptor.key,
-			label: descriptor.label,
+			label: descriptor.label, rowLabel: descriptor.rowLabel,
 			ownerLayerId: descriptor.ownerLayerId,
 			effectSlot: descriptor.effectSlot,
 			frameCount,
@@ -1270,7 +1272,7 @@ class SceneCompositor {
 			label: animation.name,
 			ownerLayerId: layer.id,
 			effectSlot: null,
-			role: 'base-image',
+			role: 'base-image', rowLabel: 'Image',
 			replayPolicy: 'native-layer',
 			sourceIdentity: animation.file,
 			ensureLoaded: async (callbacks, { timingOnly = false } = {}) => {
@@ -1799,7 +1801,15 @@ class SceneCompositor {
 			duration: plan.totalDuration,
 			estimatedFrameCount: plan.frameCount,
 			maximumVisualError: plan.reduction.maximumVisualError,
-			timingResolution: plan.timingResolution
+			timingResolution: plan.timingResolution,
+			outputFormat,
+			renderClock: {
+				mode: plan.renderClock.mode, frameCount: plan.frameCount, outputFps: plan.renderClock.outputFps,
+				frameStarts: plan.frameDurations.reduce((starts, duration, index) => {
+					starts.push(index ? starts[index - 1] + plan.frameDurations[index - 1] : 0);
+					return starts;
+				}, [])
+			}
 		};
 	}
 

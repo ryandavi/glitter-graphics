@@ -8,7 +8,7 @@ function initializeScrollRegions() {
 		'.asset-options', '.asset-browser-content', '.filters-container-inner',
 		'.property-scrollbox', '.modal-split-main', '.modal-split-side',
 		'.welcome-section', '.no-layer-settings-section', '.base-layer-settings-section',
-		'.modal-body', '.confirmation-message', '.timeline-list',
+		'.modal-body', '.confirmation-message', '.timeline-list', '.timeline-body',
 		'.document-toc-panel', '.document-search-results', '.app-menu-panel', '.export-side'
 	].join(', ');
 	// Every edge host gets `has-overflow-*` classes for the edges that hide

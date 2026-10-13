@@ -92,6 +92,7 @@ initializeExportSettings() {
 
 	this.setupSettingsResetListeners();
 	this.setupAnimationLoop();
+	this.setupTimeline();
 },
 
 	ensureSettingsModal(id) {
@@ -561,6 +562,7 @@ initializeExportSettings() {
 		clearTimeout(this.exportDurationTimer);
 		this.exportDurationRequestId = (this.exportDurationRequestId || 0) + 1;
 		this.loopEstimate = null;
+		if (isFeatureAvailable('timeline')) this.timelineDock?.markStale();
 		const fit = document.getElementById('fitAnimationsToLoop');
 		if (fit) fit.disabled = true;
 		const reset = document.getElementById('resetAnimationLoop');
@@ -572,7 +574,7 @@ initializeExportSettings() {
 		clearTimeout(this.exportDurationTimer);
 		const output = document.getElementById('exportMp4Duration');
 		const fidelityOutput = document.getElementById('exportFidelityEstimate');
-		if (!output && !fidelityOutput && !document.getElementById('animationLoopStatus')) return;
+		if (!output && !fidelityOutput && !document.getElementById('animationLoopStatus') && !(isFeatureAvailable('timeline') && this.timelineDock?.isOpen)) return;
 		const requestId = (this.exportDurationRequestId || 0) + 1;
 		this.exportDurationRequestId = requestId;
 		const usesTargetDuration = this.exportSettings.mp4LengthMode === 'duration';
