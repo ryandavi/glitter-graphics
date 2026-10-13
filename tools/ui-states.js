@@ -482,4 +482,25 @@ async function clippingStates(page, visit, tag) {
 	await visit(`${tag} clipping actions`);
 }
 
-module.exports = { routeSourceSnapshot, chromium, URL, VIEWPORTS, boot, wait, desktopStates, phoneStates, recolorStates, backgroundRemovalStates, animatedFilterStates, patternStates, creationStates, clippingStates };
+async function timelineStates(page, visit, viewport) {
+	await page.evaluate(async () => {
+		await editor.loadBlankImage(200, 160, '#ffffff');
+		const shape = editor.shapeGlitterManager.createLayer({ shapeId: 'square', width: 60, height: 60, position: { x: 100, y: 80 } });
+		getLayerFillSlot(shape).mode = 'solid';
+		shape.animations = [GlitterAnimation.normalizeAnimation({ type: 'pulse', periodMs: 1000, iterations: 2, delayMs: 600 }), GlitterAnimation.normalizeAnimation({ type: 'rotate', periodMs: 1200 })];
+		editor.layerManager.insertLayer(shape);
+		editor.shapeGlitterManager.renderLayer(shape);
+		editor.setDocumentLoop({ mode: 'set', durationMs: 4800 });
+		await editor.ensureTimelineDock();
+		PREFERENCES.set('timelineOpen', true);
+		await editor.updateExportDuration();
+	});
+	await wait(page);
+	await page.locator('.timeline-bar').first().focus();
+	await visit(`${viewport} timeline`, { shot: '#timelineDock' });
+	await page.evaluate(() => { editor.timelineDock.host.style.width = '480px'; editor.timelineDock.resync(); });
+	await wait(page);
+	await visit(`${viewport} timeline narrow`, { shot: '#timelineDock' });
+}
+
+module.exports = { routeSourceSnapshot, chromium, URL, VIEWPORTS, boot, wait, desktopStates, phoneStates, recolorStates, backgroundRemovalStates, animatedFilterStates, patternStates, creationStates, clippingStates, timelineStates };

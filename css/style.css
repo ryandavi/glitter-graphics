@@ -5006,6 +5006,19 @@ body.tool-select .preview-container.is-over-picked-layer {
   cursor: move;
 }
 
+.timeline-frame-view {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 19;
+  pointer-events: none;
+}
+
+.timeline-frame-active > .canvas-elements-container, .timeline-frame-active > .preview-canvas {
+  opacity: 0;
+}
+
 .timeline-dock {
   container: timeline/inline-size;
   position: relative;
@@ -5142,6 +5155,8 @@ body.tool-select .preview-container.is-over-picked-layer {
   padding-left: var(--spacing-xs);
   font-size: var(--font-size-xs);
   background: var(--color-bg-primary);
+  cursor: ew-resize;
+  touch-action: none;
 }
 .timeline-dock .timeline-group-header {
   background: var(--color-bg-secondary);
@@ -5254,6 +5269,36 @@ body.tool-select .preview-container.is-over-picked-layer {
 }
 .timeline-dock .timeline-bar {
   cursor: pointer;
+  touch-action: none;
+}
+.timeline-dock .timeline-bar-handle, .timeline-dock .timeline-period-notch {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: var(--spacing-sm);
+  cursor: ew-resize;
+  opacity: 0;
+  background: currentColor;
+  z-index: 1;
+}
+.timeline-dock .timeline-bar-handle.is-left {
+  left: 0;
+}
+.timeline-dock .timeline-bar-handle.is-right {
+  right: 0;
+}
+.timeline-dock .timeline-period-notch {
+  top: 50%;
+  transform: translateX(-50%);
+}
+.timeline-dock .timeline-row:is(:hover, :focus-within, .is-selected) .timeline-bar-handle, .timeline-dock .timeline-row:is(:hover, :focus-within, .is-selected) .timeline-period-notch {
+  opacity: 0.4;
+}
+.timeline-dock .timeline-drag-readout {
+  position: absolute;
+  z-index: 5;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
 }
 .timeline-dock .timeline-row:hover .timeline-bar, .timeline-dock .timeline-row:focus-within .timeline-bar, .timeline-dock .is-selected .timeline-bar {
   background: var(--color-accent);
@@ -5300,6 +5345,9 @@ body.tool-select .preview-container.is-over-picked-layer {
   .timeline-dock .section-header-title-text {
     display: none;
   }
+  .timeline-dock .timeline-readout, .timeline-dock .section-header-title > .badge {
+    display: none;
+  }
   .timeline-dock .timeline-stage {
     --timeline-label-column: 0px;
     --timeline-info-column: 0px;
@@ -5333,6 +5381,7 @@ body.tool-select .preview-container.is-over-picked-layer {
     height: calc(var(--timeline-row-height) - 2 * var(--spacing-2xs));
     border-right: 0;
     background: var(--color-bg-tertiary);
+    pointer-events: none;
   }
 }
 

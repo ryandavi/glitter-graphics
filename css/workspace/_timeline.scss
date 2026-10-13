@@ -1,6 +1,19 @@
 @use '../mixins' as *;
 @use '../tokens' as tokens;
 
+.timeline-frame-view {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 19;
+	pointer-events: none;
+}
+
+.timeline-frame-active {
+	> .canvas-elements-container, > .preview-canvas { opacity: 0; }
+}
+
 .timeline-dock {
 	container: timeline / inline-size;
 	position: relative;
@@ -140,6 +153,8 @@
 		padding-left: var(--spacing-xs);
 		font-size: var(--font-size-xs);
 		background: var(--color-bg-primary);
+		cursor: ew-resize;
+		touch-action: none;
 	}
 
 	// A layer's row: the layer in the label column, the span of its
@@ -236,7 +251,24 @@
 		color: var(--color-text-secondary);
 		overflow: hidden;
 	}
-	.timeline-bar { cursor: pointer; }
+	.timeline-bar { cursor: pointer; touch-action: none; }
+	.timeline-bar-handle, .timeline-period-notch {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		width: var(--spacing-sm);
+		cursor: ew-resize;
+		opacity: 0;
+		background: currentColor;
+		z-index: 1;
+	}
+	.timeline-bar-handle.is-left { left: 0; }
+	.timeline-bar-handle.is-right { right: 0; }
+	.timeline-period-notch { top: 50%; transform: translateX(-50%); }
+	.timeline-row:is(:hover, :focus-within, .is-selected) {
+		.timeline-bar-handle, .timeline-period-notch { opacity: 0.4; }
+	}
+	.timeline-drag-readout { position: absolute; z-index: 5; pointer-events: none; font-variant-numeric: tabular-nums; }
 	.timeline-row:hover .timeline-bar, .timeline-row:focus-within .timeline-bar, .is-selected .timeline-bar { background: var(--color-accent); color: var(--color-text-on-accent); }
 	.timeline-bar-ghost { opacity: 0.35; pointer-events: none; }
 	.timeline-bar-marks {
@@ -259,6 +291,7 @@
 
 	@container timeline (max-width: #{tokens.$timeline-narrow-width}) {
 		.section-header-title-text { display: none; }
+		.timeline-readout, .section-header-title > .badge { display: none; }
 		.timeline-stage { --timeline-label-column: 0px; --timeline-info-column: 0px; --timeline-label-inset: var(--spacing-base); }
 		.timeline-row-info { display: none; }
 		// No label column: the layer's row is a bar across the visible width.
@@ -275,6 +308,7 @@
 			height: calc(var(--timeline-row-height) - 2 * var(--spacing-2xs));
 			border-right: 0;
 			background: var(--color-bg-tertiary);
+			pointer-events: none;
 		}
 	}
 }

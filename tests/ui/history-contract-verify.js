@@ -398,6 +398,7 @@ async function main() {
 		for (const failure of failures) console.error(`FAIL ${failure}`);
 		assert.equal(failures.length, 0, `${failures.length} history contract rows failed`);
 		console.log(`PASS History contract: ${rows.length + probes.length} rows`);
+		await require('./timeline-gestures-verify').verifyTimelineGestures(browser);
 	} finally { await browser.close(); }
 }
 main().catch(error => { console.error(error.message); process.exitCode = 1; });

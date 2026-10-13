@@ -311,6 +311,88 @@ async function main() {
 		await page.waitForTimeout(200);
 		assert.equal(await page.evaluate(() => window.editor.stickerManager.layerElements.get('paused-sticker').querySelector('img').src), await page.evaluate(() => window.motionFixture.url), 'A quick resume cannot receive a stale frozen image');
 		console.log('PASS paused textures, stickers, first-frame pixels, new layers, resume and unchanged animated exports');
+		await page.evaluate(async () => {
+			const animated = editor.layers.find(layer => layer.type === LayerType.SHAPE);
+			animated.animations = [GlitterAnimation.normalizeAnimation({ type: 'pulse', periodMs: 1000 })];
+			editor.shapeGlitterManager.renderLayer(animated);
+			const look = editor.filterLayerManager.createLayer({ filterData: { type: 'hue-cycle' } });
+			editor.layerManager.insertLayer(look);
+			editor.saveState('Frame view fixture');
+			await editor.ensureTimelineDock();
+			PREFERENCES.set('timelineOpen', true);
+			await editor.updateExportDuration();
+			editor.animationPanel.setPaused(true);
+			editor.animationTicker.seek(150);
+		});
+		await page.waitForFunction(() => !editor.timelineDock.frameView.canvas.hidden && !editor.timelineDock.frameView.scrubbing);
+		const heldFrame = await page.evaluate(async () => {
+			const view = editor.timelineDock.frameView;
+			const expected = await editor.sceneCompositor.composeFrameAt(editor.getSceneSnapshotParams(editor.layers.filter(layer => layer.visible !== false), { timestamp: 150 }));
+			const actual = view.canvas.getContext('2d').getImageData(0, 0, view.canvas.width, view.canvas.height).data;
+			return { equal: actual.every((value, index) => value === expected.imageData.data[index]), active: editor.previewWrapper.classList.contains('timeline-frame-active'), opacity: getComputedStyle(editor.canvasElementsContainer).opacity };
+		});
+		assert.deepEqual(heldFrame, { equal: true, active: true, opacity: '0' }, 'Held GIF, glitter and pattern pixels equal composition, with live artwork hidden');
+		await page.evaluate(async () => {
+			const view = editor.timelineDock.frameView;
+			const compose = view.compositor.composeFrameAt.bind(view.compositor);
+			const prepare = view.compositor.prepareContext.bind(view.compositor);
+			window.scrubCalls = [];
+			window.prepareCalls = 0;
+			view.compositor.composeFrameAt = async params => { window.scrubCalls.push(params.timestamp); await new Promise(resolve => setTimeout(resolve, 20)); return compose(params); };
+			view.compositor.prepareContext = async params => { window.prepareCalls++; return prepare(params); };
+			editor.animationTicker.seek(50);
+			await new Promise(resolve => setTimeout(resolve, 5));
+			editor.animationTicker.seek(100);
+			editor.animationTicker.seek(170);
+		});
+		await page.waitForFunction(() => !editor.timelineDock.frameView.scrubbing && window.scrubCalls.at(-1) === 170);
+		assert.deepEqual(await page.evaluate(() => ({ calls: window.scrubCalls, prepares: window.prepareCalls })), { calls: [50, 170], prepares: 0 }, 'Scrubbing reuses preparation and collapses queued steps to the newest');
+		await page.evaluate(() => editor.animationPanel.setPaused(false));
+		assert(await page.evaluate(() => editor.timelineDock.frameView.canvas.hidden), 'Resume removes the held frame');
+		await page.evaluate(() => editor.timelineDock.frameView.playExact());
+		await page.waitForFunction(() => editor.timelineDock.frameView.exact != null && !editor.timelineDock.frameView.done);
+		const exact = await page.evaluate(() => {
+			const view = editor.timelineDock.frameView;
+			const count = view.frames.length;
+			editor.animationPanel.setPaused(true);
+			const index = Math.min(1, count - 1);
+			editor.animationTicker.seek(view.exact.entries[index].start + 0.1);
+			const expected = createAppCanvas(view.frames[index].width, view.frames[index].height, 'tests/exact');
+			expected.getContext('2d').drawImage(view.frames[index], 0, 0);
+			const pixels = expected.getContext('2d').getImageData(0, 0, expected.width, expected.height).data;
+			const actual = view.canvas.getContext('2d').getImageData(0, 0, view.canvas.width, view.canvas.height).data;
+			return { count, width: view.canvas.width, height: view.canvas.height, duration: view.exact.totalDuration, loop: editor.animationTicker.loopMs, equal: actual.every((value, i) => value === pixels[i]) };
+		});
+		assert(exact.count > 1 && exact.equal && exact.duration === exact.loop, 'Exact playback shows the scheduled bitmap at its planned delay');
+		assert.equal(exact.width, 96, 'A canvas below the preview limit plays at document size');
+		assert.equal(exact.height, 96);
+		await page.keyboard.press('Escape');
+		assert(await page.evaluate(() => !editor.timelineDock.frameView.exact && editor.timelineDock.frameView.frames.length === 0), 'Escape releases exact playback');
+		await page.evaluate(async () => {
+			const view = editor.timelineDock.frameView;
+			editor.animationTicker.seek(150);
+			await new Promise(resolve => setTimeout(resolve, 5));
+			editor.animationTicker.seek(0);
+		});
+		await page.waitForFunction(() => !editor.timelineDock.frameView.scrubbing);
+		assert(await page.evaluate(() => editor.timelineDock.frameView.canvas.hidden), 'An older scrub cannot cover time zero');
+		await page.evaluate(() => {
+			window.originalTimelineBudget = getMemoryBudget;
+			getMemoryBudget = () => ({ ...window.originalTimelineBudget(), previewCacheBytes: 1 });
+			editor.timelineDock.frameView.playExact();
+		});
+		await page.waitForFunction(() => !editor.timelineDock.frameView.done);
+		assert(await page.evaluate(() => editor.timelineDock.frameView.frames.length === 0 && !editor.timelineDock.frameView.exact), 'Exact playback refuses a loop above its byte budget');
+		await page.evaluate(() => {
+			getMemoryBudget = window.originalTimelineBudget;
+			editor.timelineDock.frameView.playExact();
+			editor.saveState('Cancel exact playback with an edit');
+		});
+		await page.evaluate(() => editor.timelineDock.frameView.queue);
+		assert(await page.evaluate(() => !editor.timelineDock.frameView.exact && editor.timelineDock.frameView.frames.length === 0 && !editor.timelineDock.frameView.done), 'A document commit cancels pending exact playback');
+		await page.evaluate(() => { editor.animationTicker.seek(150); editor.previewWrapper.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); });
+		assert(await page.evaluate(() => editor.timelineDock.frameView.canvas.hidden && !editor.previewWrapper.classList.contains('timeline-frame-active')), 'A canvas gesture immediately returns to live layers');
+		console.log('PASS composed held-frame pixels, reusable preparation, latest-only scrubbing, exact bitmap playback, Escape and live editing');
 		await verifyPlayhead(browser);
 	} finally {
 		await browser.close();

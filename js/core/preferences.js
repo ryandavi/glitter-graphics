@@ -21,6 +21,7 @@ const PREFERENCE_SCHEMA = Object.freeze({
 	timelineOpen: { default: () => false },
 	timelineHeight: { default: () => CONFIG.ui.timeline.defaultHeight },
 	timelineZoom: { default: () => CONFIG.ui.timeline.defaultZoom },
+	timelineSnap: { default: () => true },
 	timelineCollapsed: { default: () => ({}) },
 	timelineMinimized: { default: () => false },
 	timelineLabelWidth: { default: () => CONFIG.ui.timeline.labelWidth },

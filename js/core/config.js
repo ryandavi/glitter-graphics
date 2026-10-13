@@ -746,6 +746,8 @@ const CONFIG = deepFreeze({
 			labelWidth: 220, labelMinWidth: 140, labelMaxFraction: 0.5,
 			pxPerSecondStops: [40, 60, 90, 135, 200, 300, 450, 680, 1000],
 			defaultZoom: 'fit', minTickPx: 4, maxMarksPerBar: 600, nextLoopFraction: 0.25,
+			snapPx: 8, dragThresholdPx: 3,
+			frameViewMaxSide: 500,
 			// A Space press released this soon, with no pan, plays and pauses.
 			spaceTapMs: 250
 		},
@@ -1233,7 +1235,8 @@ const CONFIG = deepFreeze({
 		gifBytesPerPixel: 5,
 		stickerEffectMaskCacheEntries: 8,
 		// Retimed copies of preview GIFs kept as object URLs.
-		retimedGifEntries: 24
+		retimedGifEntries: 24,
+		timelineFrameBudgetFraction: 0.5
 	},
 
 	debug: {

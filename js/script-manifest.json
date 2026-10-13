@@ -221,6 +221,7 @@
 	],
 	"timeline": [
 		"js/ui/timeline-view.js",
+		"js/ui/timeline-frame-view.js",
 		"js/ui/timeline-dock.js",
 		"js/ui/timeline-group.js"
 	],

@@ -66,6 +66,7 @@ class AnimationTicker {
 	// Moves the playhead. Frozen, every target is repainted there; playing,
 	// the clock carries on from there.
 	seek(ms) {
+		if (isFeatureAvailable('timeline')) this.editor.timelineDock?.frameView?.seek();
 		this.heldMs = this._wrap(Number(ms) || 0);
 		if (!this._isPreviewPaused() && this.timelineStartedAt != null) this.timelineStartedAt = performance.now() - this.heldMs;
 		this.refresh();

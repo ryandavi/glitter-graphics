@@ -28,6 +28,7 @@ class TimelineDock {
 		const action = 'section-header-action btn-icon icon-wrapper visible';
 		// Shows the same state as the view menu's Pause motion.
 		this.play = this.button(action, 'Pause motion', 'motion-pause', () => editor.animationPanel.setPaused(!editor.animationTicker.paused));
+		this.exact = this.button(action, 'Play exact', 'motion-play', () => this.frameView.playExact());
 		this.time = this.element('timeline-time', undefined, 'span');
 		const transport = this.element('timeline-transport');
 		transport.append(this.time, this.play);
@@ -35,7 +36,12 @@ class TimelineDock {
 			if (!host.classList.contains('is-stale')) editor.fitAnimationsToLoop();
 		});
 		this.minimize = this.button(action, 'Collapse timeline', 'chevron-down', () => this.toggleMinimized());
-		actions.append(this.fit,
+		this.snap = this.button(action, 'Snap timeline', 'magnet', () => {
+			PREFERENCES.set('timelineSnap', !PREFERENCES.get('timelineSnap'));
+			this.syncSnap();
+		});
+		this.syncSnap();
+		actions.append(this.exact, this.fit, this.snap,
 			this.button(action, 'Zoom timeline out', 'minus', () => this.stepZoom(-1)),
 			this.button(action, 'Zoom timeline in', 'plus', () => this.stepZoom(1)),
 			this.minimize,
@@ -60,6 +66,7 @@ class TimelineDock {
 		const section = this.element('timeline-section section');
 		section.append(this.header, this.stage);
 		host.replaceChildren(this.resizeHandle, section);
+		this.frameView = new TimelineFrameView(this);
 		this.bindResize();
 		this.bindLabelResize();
 		this.stage.addEventListener('wheel', event => {
@@ -71,6 +78,7 @@ class TimelineDock {
 			this.stepZoom(event.deltaY < 0 ? 1 : -1, x);
 		}, { passive: false });
 		this.bindPlayhead();
+		this.bindGestures();
 		this.observer = new ResizeObserver(() => {
 			if (!this.available) return;
 			if (!this.resizing) this.applyHeight(PREFERENCES.get('timelineHeight'));
@@ -122,6 +130,9 @@ class TimelineDock {
 	// shows its rest pose again.
 	close() {
 		if (!this.isOpen) return;
+		this.finishDrag(true);
+		this.menu?.close();
+		this.frameView.invalidate();
 		this.host.hidden = true;
 		const ticker = this.editor.animationTicker;
 		if (ticker.paused) ticker.seek(0);
@@ -150,10 +161,10 @@ class TimelineDock {
 			const ms = TimelineView.xToTime(event.clientX - this.rulerTrack.getBoundingClientRect().left, this.scale);
 			const inside = Math.max(0, Math.min(loopMs - 1, ms));
 			// Alt suspends snapping for the drag.
-			ticker.seek(event.altKey ? inside : TimelineView.nearestFrameStart(frameStarts, inside));
+			ticker.seek(event.altKey || !PREFERENCES.get('timelineSnap') ? inside : TimelineView.nearestFrameStart(frameStarts, inside));
 		};
 		this.stage.addEventListener('pointerdown', event => {
-			if (event.button !== 0 || !this.available || !this.model?.loopMs || !event.target.closest('.timeline-ruler-track')) return;
+			if (event.button !== 0 || !this.available || this.host.classList.contains('is-stale') || !this.model?.loopMs || !event.target.closest('.timeline-ruler-track') || event.target.closest('.timeline-loop-end')) return;
 			event.preventDefault();
 			this.rulerTrack.focus({ preventScroll: true });
 			this.stage.setPointerCapture(event.pointerId);
@@ -199,6 +210,7 @@ class TimelineDock {
 
 	paintPlayhead(ms) {
 		if (!this.available || !this.rulerTrack) return;
+		this.frameView.paint(ms);
 		const { loopMs } = this.model;
 		const x = TimelineView.timeToX(Math.min(ms, loopMs), this.scale) - this.body.scrollLeft;
 		this.playhead.style.transform = `translateX(${x}px)`;
@@ -334,6 +346,7 @@ class TimelineDock {
 
 	markStale() {
 		if (!this.available) return;
+		this.frameView.invalidate();
 		this.host.classList.add('is-stale');
 		this.fit.disabled = true;
 	}
@@ -341,13 +354,18 @@ class TimelineDock {
 	syncControls() {
 		if (!this.available) return;
 		this.fit.disabled = this.host.classList.contains('is-stale') || !this.editor.getLoopCandidate()?.canApply;
+		this.exact.disabled = this.host.classList.contains('is-stale') || !this.model?.loopMs;
 	}
 
 	sync(estimate) {
 		if (!this.available) return;
+		if (this.drag) return;
+		this.menu?.close();
+		this.menuPanel?.remove();
 		const scrollTop = this.body.scrollTop;
 		const scrollLeft = this.body.scrollLeft;
 		const rulerFocused = Boolean(this.rulerTrack) && document.activeElement === this.rulerTrack;
+		const focusedKey = document.activeElement?.closest('.timeline-row')?.dataset.sourceKey;
 		this.rulerTrack = null;
 		this.ruler.replaceChildren();
 		this.ruler.hidden = true;
@@ -357,6 +375,7 @@ class TimelineDock {
 		this.time.textContent = '';
 		this.host.classList.remove('is-stale');
 		this.model = TimelineView.buildModel(estimate, this.editor.layers, this.listedIds);
+		for (const group of this.model.groups) for (const row of group.rows) row.originalPeriod = this.editor.layerManager.getLayerById(group.layerId)?.loopOriginalPeriods?.[row.key];
 		this.listedIds = new Set(this.model.groups.map(group => group.layerId));
 		this.body.replaceChildren();
 		this.readout.textContent = '';
@@ -395,6 +414,7 @@ class TimelineDock {
 		this.body.scrollTop = scrollTop;
 		this.body.scrollLeft = scrollLeft;
 		if (rulerFocused) this.rulerTrack?.focus({ preventScroll: true });
+		if (focusedKey) Array.from(this.body.querySelectorAll('.timeline-row')).find(node => node.dataset.sourceKey === focusedKey)?.querySelector('.timeline-bar').focus({ preventScroll: true });
 		this.syncScroll();
 		this.syncControls();
 		this.syncSelection();
@@ -433,6 +453,8 @@ class TimelineDock {
 			if (TimelineView.timeToX(gap, this.scale) >= this.config.minTickPx) ctx.fillRect(TimelineView.timeToX(ms, this.scale), height - this.config.minTickPx, 1, this.config.minTickPx);
 		});
 		const loop = this.element('timeline-loop-end', `${(this.model.loopMs / 1000).toFixed(2)} s`);
+		loop.dataset.drag = 'loop';
+		loop.title = 'Drag to set loop length; double-click for Automatic';
 		track.append(canvas, loop);
 		view.append(track);
 		return view;
@@ -516,8 +538,12 @@ class TimelineDock {
 	buildRow(row) {
 		const node = this.element('timeline-row'); node.dataset.sourceKey = row.key;
 		const select = () => {
+			if (this.suppressClick) return;
 			this.selectedKey = String(row.key);
+			if (row.effectSlot?.startsWith('animation-')) this.editor.animationPanel.selectedByLayer.set(row.layerId, Number(row.effectSlot.slice('animation-'.length)));
 			this.editor.layerManager.setActiveLayer(row.layerId);
+			this.editor.refreshInspector();
+			this.openRowSection(row);
 			this.syncSelection();
 		};
 		const label = this.button('timeline-row-label btn-text', `Select ${row.label}`, null, select); label.textContent = row.label;
@@ -531,6 +557,33 @@ class TimelineDock {
 		node.style.setProperty('--timeline-bar-left', `${left}px`);
 		bar.style.left = `${left}px`; bar.style.width = `${width}px`;
 		bar.appendChild(this.buildMarks(row, row.startMs, row.endMs));
+		bar.dataset.drag = 'body';
+		for (const side of ['left', 'right']) if (row.can.run) {
+			const handle = this.element(`timeline-bar-handle is-${side}`, undefined, 'span');
+			handle.dataset.drag = side;
+			handle.title = side === 'left' ? 'Change delay' : 'Change repeats';
+			bar.appendChild(handle);
+		}
+		if (row.can.period) {
+			const drawing = { ...row, cycleMs: row.exportCycleMs, endMs: Infinity };
+			for (const ms of TimelineView.cycleStarts(drawing, this.model.loopMs)) {
+				if (TimelineView.timeToX(ms - row.startMs, this.scale) < this.config.minTickPx) continue;
+				const notch = this.element('timeline-period-notch', undefined, 'span');
+				notch.dataset.drag = 'period';
+				notch.dataset.notchIndex = String(TimelineView.timeToCycle(drawing, ms + 1e-6).index);
+				notch.style.left = `${TimelineView.timeToX(ms - row.startMs, this.scale)}px`;
+				notch.title = 'Change cycle length';
+				bar.appendChild(notch);
+			}
+		}
+		bar.addEventListener('contextmenu', event => { event.preventDefault(); this.openBarMenu(row, node, bar); });
+		bar.addEventListener('keydown', event => {
+			if (event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10')) {
+				event.preventDefault(); event.stopPropagation(); this.openBarMenu(row, node, bar);
+			} else if (['ArrowLeft', 'ArrowRight'].includes(event.key) && !event.altKey && !event.ctrlKey && !event.metaKey) {
+				event.preventDefault(); event.stopPropagation(); this.nudgeRow(row, event);
+			}
+		});
 		track.appendChild(bar);
 		if (!row.closes) {
 			const seam = this.element('timeline-bar-seam');
@@ -572,6 +625,235 @@ class TimelineDock {
 			}
 		}
 		return marks;
+	}
+
+	syncSnap() {
+		const enabled = PREFERENCES.get('timelineSnap');
+		this.snap.classList.toggle('active', enabled);
+		this.snap.setAttribute('aria-pressed', String(enabled));
+	}
+
+	openRowSection(row) {
+		const layer = this.editor.layerManager.getLayerById(row.layerId);
+		const prefix = LAYER_UI_CONFIG[layer.type].transformPrefix;
+		const section = row.effectSlot?.startsWith('animation-') ? document.getElementById(`${prefix}AnimationSection`)
+			: row.effectSlot ? document.querySelector(`#${prefix}SettingsSection [data-slot="${row.effectSlot}"]`) || Array.from(document.querySelectorAll('.flyout-host:not([hidden]) [data-slot]')).find(card => card.dataset.slot === row.effectSlot && card.id.startsWith(prefix))
+				: document.querySelector('.panel-controls.visible .section');
+		if (!section) return;
+		if (section.dataset.flyoutKey && this.editor.pickers.flyout !== section.dataset.flyoutKey) this.editor.pickers.toggleFlyout(section.dataset.flyoutKey);
+		setPanelCardCollapsed(section, false);
+		section.scrollIntoView({ block: 'nearest' });
+	}
+
+	rowFor(node) { return this.model?.groups.flatMap(group => group.rows).find(row => String(row.key) === node?.dataset.sourceKey); }
+
+	canEdit(row) {
+		return this.available && !this.host.classList.contains('is-stale') && row && !isLayerFullyLocked(this.editor.layerManager.getLayerById(row.layerId));
+	}
+
+	commitTiming(label, options) {
+		this.editor.layerManager.renderLayersList();
+		this.editor.refreshInspector();
+		this.editor.requestPreviewUpdate();
+		this.editor.saveState(label, options);
+	}
+
+	renderTiming(row) {
+		this.frameView.invalidate();
+		if (row) {
+			const layer = this.editor.layerManager.getLayerById(row.layerId);
+			getLayerManagerForType(this.editor, layer.type).renderLayer(layer);
+		}
+		this.editor.requestPreviewUpdate();
+	}
+
+	openBarMenu(row, node, bar, choices = null) {
+		if (!this.canEdit(row)) return;
+		this.menu?.close();
+		this.menuPanel?.remove();
+		const actions = choices || TimelineView.barActions(row, this.model);
+		if (!actions.length) return;
+		const panel = this.element('app-menu-panel'); panel.hidden = true;
+		panel.setAttribute('role', 'menu');
+		for (const action of actions) {
+			if (action.choices && !action.choices.length) continue;
+			const item = this.button('app-menu-item', action.label, null, () => {
+				if (!this.canEdit(row)) return;
+				if (action.choices) {
+					// The popover closes after a menu item click.
+					queueMicrotask(() => this.openBarMenu(row, node, bar, action.choices));
+					return;
+				}
+				if (action.id === 'fit') this.rememberPeriod(row);
+				action.run();
+				if (action.id === 'reset') {
+					const layer = this.editor.layerManager.getLayerById(row.layerId);
+					if (layer.loopOriginalPeriods) {
+						delete layer.loopOriginalPeriods[row.key];
+						if (!Object.keys(layer.loopOriginalPeriods).length) delete layer.loopOriginalPeriods;
+					}
+				}
+				this.renderTiming(row);
+				this.commitTiming(action.label);
+			});
+			item.textContent = action.label;
+			item.setAttribute('role', 'menuitem');
+			panel.appendChild(item);
+		}
+		node.appendChild(panel);
+		this.menuPanel = panel;
+		this.menu = setupMenuPopover({ root: node, trigger: bar, panel, fixed: true, bindTrigger: false });
+		this.menu.open();
+	}
+
+	rememberPeriod(row) {
+		const layer = this.editor.layerManager.getLayerById(row.layerId);
+		layer.loopOriginalPeriods ||= {};
+		layer.loopOriginalPeriods[row.key] ??= row.cycleMs;
+	}
+
+	bindGestures() {
+		this.host.addEventListener('click', event => {
+			if (this.suppressClick) { event.preventDefault(); event.stopPropagation(); this.suppressClick = false; }
+		}, true);
+		this.stage.addEventListener('pointerdown', event => {
+			if (event.button !== 0 || !this.available || this.host.classList.contains('is-stale') || this.drag) return;
+			const target = event.target.closest('[data-drag]');
+			if (!target) return;
+			const node = target.closest('.timeline-row');
+			const row = this.rowFor(node);
+			let kind = target.dataset.drag;
+			if (kind !== 'loop') {
+				if (!this.canEdit(row)) return;
+				if (kind === 'body') kind = event.altKey || !row.nonLooping ? 'slip' : 'move';
+				if (!row.can[{ left: 'run', right: 'run', move: 'run', slip: 'phase', period: 'period' }[kind]]) return;
+			}
+			event.preventDefault();
+			this.menu?.close();
+			node?.querySelector('.timeline-bar').focus({ preventScroll: true });
+			const track = kind === 'loop' ? this.rulerTrack : node.querySelector('.timeline-track');
+			const initial = kind === 'loop' ? { ...this.editor.documentLoop } : kind === 'period' ? row.cycleMs : kind === 'slip' ? row.phase : { ...row.source.run };
+			this.drag = { kind, row, node, initial, trackLeft: track.getBoundingClientRect().left, x: event.clientX, pointerId: event.pointerId, notch: Number(target.dataset.notchIndex), moved: false };
+		});
+		window.addEventListener('pointermove', event => {
+			const drag = this.drag;
+			if (!drag || event.pointerId !== drag.pointerId) return;
+			if (!this.available) { this.finishDrag(true); return; }
+			if (!drag.moved && Math.abs(event.clientX - drag.x) < this.config.dragThresholdPx) return;
+			if (!drag.moved) {
+				this.stage.setPointerCapture(event.pointerId);
+				this.frameView.invalidate();
+				this.frameView.blocked = true;
+			}
+			drag.moved = true;
+			const { row, kind } = drag;
+			const delta = TimelineView.xToTime(event.clientX - drag.x, this.scale);
+			let time = TimelineView.xToTime(event.clientX - drag.trackLeft, this.scale);
+			const snap = PREFERENCES.get('timelineSnap') && !event.altKey;
+			const threshold = TimelineView.xToTime(this.config.snapPx, this.scale);
+			let value;
+			if (kind === 'slip') {
+				value = TimelineView.phaseFromSlip(row, delta);
+				if (snap) value = TimelineView.snapTime(value, TimelineView.snapTargets(this.model, row, kind), threshold / row.cycleMs).ms % 1;
+			} else if (kind === 'period') {
+				value = TimelineView.periodFromNotch(row, drag.notch, time);
+				if (snap) value = TimelineView.snapTime(value, TimelineView.snapTargets(this.model, row, kind), threshold / Math.max(1, drag.notch - row.phase)).ms;
+				value = clampNumber(value, row.source.periodRange.min, row.source.periodRange.max);
+				if (row.source.resolvePeriod) value = row.source.resolvePeriod(value);
+			} else {
+				if (kind === 'move') time = row.startMs + delta;
+				if (snap) time = TimelineView.snapTime(time, TimelineView.snapTargets(this.model, row, kind, this.editor.animationTicker.getPlayheadTime()), threshold).ms;
+				if (kind === 'move' || kind === 'left') time = clampNumber(time, 0, FIELDS.animDelay.max * 1000);
+				if (kind === 'loop') value = { mode: 'set', durationMs: time };
+				else if (kind === 'right') value = TimelineView.runFromRightEdge(row, time, this.model.loopMs);
+				else if (kind === 'left') value = TimelineView.runFromLeftEdge(row, time);
+				else value = TimelineView.runFromBodyMove(row, time - row.startMs);
+			}
+			this.writeDrag(drag, value);
+			this.paintDrag(drag, value, event);
+		});
+		for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) window.addEventListener(type, event => {
+			if (event.pointerId === this.drag?.pointerId) this.finishDrag(type !== 'pointerup');
+		});
+		document.addEventListener('keydown', event => {
+			if (event.key !== 'Escape' || (!this.drag && !this.frameView.exact && !this.frameView.done)) return;
+			event.preventDefault(); event.stopPropagation(); this.finishDrag(true); this.frameView.invalidate();
+		}, true);
+		this.stage.addEventListener('dblclick', event => {
+			if (event.target.closest('.timeline-loop-end') && this.available && !this.host.classList.contains('is-stale')) this.editor.setDocumentLoop(CONFIG.project.loop);
+		});
+	}
+
+	writeDrag(drag, value) {
+		drag.value = value;
+		if (drag.kind === 'loop') this.editor.setDocumentLoop(value, { commit: false });
+		else {
+			const setter = { slip: 'setPhase', period: 'setPeriod' }[drag.kind] || 'setRun';
+			drag.row.source[setter](value);
+			this.renderTiming(drag.row);
+		}
+	}
+
+	paintDrag(drag, value, event) {
+		let text;
+		if (drag.kind === 'loop') {
+			const ms = this.editor.documentLoop.durationMs;
+			this.stage.style.setProperty('--timeline-loop-x', `${TimelineView.timeToX(ms, this.scale)}px`);
+			text = `${(ms / 1000).toFixed(2)} s`;
+		} else {
+			const row = { ...drag.row };
+			if (drag.kind === 'slip') { row.phase = value; text = `Offset ${Math.round(value * 100)}%`; }
+			else if (drag.kind === 'period') { row.cycleMs = row.exportCycleMs = value; text = `${(value / 1000).toFixed(2)} s`; }
+			else {
+				row.startMs = value.start; row.endMs = Math.min(value.end, this.model.loopMs);
+				text = drag.kind === 'right' ? value.end === Infinity ? 'Repeats ∞' : `x${((value.end - value.start) / row.cycleMs + row.phase).toFixed(2)}` : `Delay ${(value.start / 1000).toFixed(2)} s`;
+			}
+			const bar = drag.node.querySelector('.timeline-bar');
+			const left = TimelineView.timeToX(row.startMs, this.scale);
+			drag.node.style.setProperty('--timeline-bar-left', `${left}px`);
+			bar.style.left = `${left}px`; bar.style.width = `${TimelineView.timeToX(Math.max(0, row.endMs - row.startMs), this.scale)}px`;
+			bar.querySelector('.timeline-bar-marks').replaceWith(this.buildMarks(row, row.startMs, row.endMs));
+		}
+		if (!this.dragReadout) { this.dragReadout = this.element('timeline-drag-readout badge'); this.host.appendChild(this.dragReadout); }
+		this.dragReadout.textContent = text;
+		const box = this.host.getBoundingClientRect();
+		this.dragReadout.style.left = `${Math.min(this.host.clientWidth - this.dragReadout.offsetWidth, Math.max(0, event.clientX - box.left))}px`;
+		this.dragReadout.style.top = `${event.clientY - box.top - this.dragReadout.offsetHeight}px`;
+	}
+
+	finishDrag(cancelled) {
+		const drag = this.drag;
+		if (!drag) return;
+		this.drag = null;
+		this.dragReadout?.remove(); this.dragReadout = null;
+		if (this.stage.hasPointerCapture(drag.pointerId)) this.stage.releasePointerCapture(drag.pointerId);
+		if (!drag.moved) {
+			if (cancelled) {
+				this.suppressClick = true;
+				setTimeout(() => { this.suppressClick = false; }, 0);
+			}
+			return;
+		}
+		this.suppressClick = true;
+		setTimeout(() => { this.suppressClick = false; }, 0);
+		if (cancelled) this.writeDrag(drag, drag.initial);
+		else if (JSON.stringify(drag.value) !== JSON.stringify(drag.initial)) this.commitTiming({ left: 'Trim animation', right: 'Trim animation', move: 'Move animation', slip: 'Slip animation', period: 'Change animation speed', loop: 'Set loop length' }[drag.kind]);
+		this.frameView.seek();
+		this.editor.scheduleExportDuration();
+		if (cancelled) this.editor.updateExportDuration();
+	}
+
+	nudgeRow(row, event) {
+		if (!row.can.run || !this.available || isLayerFullyLocked(this.editor.layerManager.getLayerById(row.layerId))) return;
+		const direction = event.key === 'ArrowRight' ? 1 : -1;
+		const end = row.source.run.end;
+		const next = event.shiftKey ? TimelineView.runFromRightEdge(row, (Number.isFinite(end) ? end : this.model.loopMs) + direction * row.cycleMs, this.model.loopMs)
+			: TimelineView.runFromBodyMove(row, clampNumber(row.startMs + direction * (this.model.frameStarts[1] || row.cycleMs), 0, FIELDS.animDelay.max * 1000) - row.startMs);
+		if (next.start === row.source.run.start && next.end === row.source.run.end) return;
+		row.source.setRun(next);
+		row.source.run = next; row.startMs = next.start; row.endMs = Math.min(next.end, this.model.loopMs);
+		this.renderTiming(row);
+		this.commitTiming(event.shiftKey ? 'Trim animation' : 'Move animation', { coalesceKey: this.editor.historyManager.burstCoalesceKey('timeline-nudge') });
 	}
 
 	syncSelection() {

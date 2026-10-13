@@ -35,6 +35,7 @@ const SUITES = [
 	{ file: 'ui/crop-motion-verify.js', tags: ['document', 'touch', 'export'] },
 	{ file: 'ui/animation-loop-verify.js', tags: ['panels', 'effects', 'export'] },
 	{ file: 'ui/preview-motion-verify.js', tags: ['panels', 'effects', 'export'] },
+	{ file: 'ui/timeline-gestures-verify.js', tags: ['panels', 'layers', 'document'] },
 	{ file: 'unit/glitter-recolor-unit.js', tags: ['unit', 'assets', 'effects'] },
 	{ file: 'ui/personal-assets-verify.js', tags: ['assets', 'document', 'export'] },
 	{ file: 'ui/glitter-recolor-verify.js', tags: ['assets', 'document', 'export', 'panels'] },
