@@ -181,7 +181,7 @@ assert.strictEqual(ditherFields.duotoneDark.when({ ...legacyDither, palette: 'du
 assert.strictEqual(ditherFields.colors.when({ ...legacyDither, palette: 'gameboy' }), false);
 assert.strictEqual(ditherFields.angle.when({ ...legacyDither, algorithm: 'halftone' }), true);
 assert.deepStrictEqual(Filters.recipe({ type: 'dither', palette: 'duotone', duotoneDark: '#112233' })[0].params.duotone, ['#112233', '#ffffff']);
-assert.deepStrictEqual(Object.keys(Filter.normalizeFilterData({ type: 'posterize' })).sort(), ['cleanEdges', 'colors', 'detail', 'merge', 'pixelSize', 'style', 'type']);
+assert.deepStrictEqual(Object.keys(Filter.normalizeFilterData({ type: 'posterize' })).sort(), ['cleanEdges', 'colors', 'detail', 'merge', 'pixelSize', 'region', 'style', 'type']);
 const pixelContext = {
 	pixelDefaults: GlitterPixelEffects.normalizeSettings({}, CONFIG.tools.pixelEffects),
 	pixelConfig: { pixelEffects: CONFIG.tools.pixelEffects }

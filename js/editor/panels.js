@@ -483,6 +483,11 @@ isLayerContentLocked(layer) {
 			document.querySelectorAll('#multiSelectionAlignScope button, [data-multi-align]').forEach((button) => { button.disabled = !canTransform; });
 			document.querySelectorAll('[data-multi-distribute]').forEach((button) => { button.disabled = !canTransform || multiCount < 3; });
 			const canChangeLayers = selectedLayers.every((layer) => canEditLayerInStack(layer));
+			const clip = document.getElementById('multiSelectionClipBtn');
+			if (clip) {
+				clip.disabled = !this.canToggleClippingMask(selectedLayers);
+				clip.textContent = selectedLayers.every(layer => layer.clipped) ? 'Release Clip' : 'Clip to Layer Below';
+			}
 			const duplicate = document.getElementById('multiSelectionDuplicateBtn');
 			const remove = document.getElementById('multiSelectionDeleteBtn');
 			if (duplicate) {
@@ -504,7 +509,8 @@ isLayerContentLocked(layer) {
 			const sourceContext = this.getMovableLayerContext(source);
 			const sourceSize = sourceContext && this.getTransformSizeState(source, sourceContext.prefix);
 			document.querySelectorAll('[data-multi-size], [data-multi-flip]').forEach((button) => {
-				button.disabled = !canTransform || (button.dataset.multiSize !== undefined && !sourceSize?.visible);
+				button.disabled = !canTransform || (button.dataset.multiSize !== undefined && !sourceSize?.visible)
+					|| (button.dataset.multiFlip !== undefined && selectedLayers.some(layer => LAYER_UI_CONFIG[layer.type]?.transformCapabilities?.flip === false));
 			});
 			const sourceNote = document.getElementById('multiSelectionSource');
 			if (sourceNote) sourceNote.textContent = `Size and appearance source: ${source?.name || LAYER_UI_CONFIG[source?.type]?.displayName || 'active layer'}`;

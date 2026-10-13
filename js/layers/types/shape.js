@@ -1,9 +1,9 @@
 'use strict';
 
 registerLayerType(LayerType.SHAPE, {
-	onDoubleClick: (editor) => {
-		if (editor.mobileManager.isMobile) editor.mobileManager.openLeadingSection();
-	},
+	clippable: true,
+	clipBase: true,
+	onDoubleClick: (editor, layer) => editor.openCreateTarget(layer, 'asset'),
 	vectorGeometry: (editor, layer) => {
 		const data = layer.shapeData;
 		const entry = editor.shapeGlitterManager.getMeasurementEntry(layer);

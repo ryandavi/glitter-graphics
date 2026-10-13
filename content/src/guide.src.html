@@ -208,7 +208,7 @@
                     <span class="icon-wrapper sm"><svg class="icon">{ui-tool-icon:select}</svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>{ui-tool:select}</strong> – Press <kbd class="guide-kbd">V</kbd>. Pick layers and move stickers, text, shapes, and paths. Turn off <strong>Auto-Select</strong> in the options to keep moving the layer selected in the Layers panel when you drag across other artwork.</p>
+                    <p><strong>{ui-tool:select}</strong> – Press <kbd class="guide-kbd">V</kbd>. Pick layers and move stickers, text, shapes, and paths. Dragging out a Shape or Text box shows its size in document pixels; a Line shows length and angle. Turn off <strong>Auto-Select</strong> in the options to keep moving the layer selected in the Layers panel when you drag across other artwork.</p>
                     <ul>
                         <li>See <a href="#transform">Transform</a> for moving, resizing, and rotating.</li>
                         <li>See <a href="#selection-alignment">Selection &amp; Alignment</a> for selecting several layers and aligning them.</li>
@@ -357,6 +357,8 @@
 
         <div class="guide-subsection">
             <h4 id="working-with-layers">Working with Layers</h4>
+            <p>Double-click or double tap a layer with Select to open its source. Shapes open the Shapes Library; text and paths open their editors.</p>
+            <p><strong>Clipping</strong> – Select a layer and use <strong>Clip to Layer Below</strong> beside Duplicate to show it only inside the nearest unclipped layer below. Its bent-arrow button releases the clip. The base's opacity and animation apply to the clipped artwork too. Shadows and sparkles do not define the clipping shape. Deleting the base releases its clips. SVG and HTML Scene exports leave clipped layers out.</p>
             <p>The <strong>Layers</strong> panel lists every layer. Layers at the top appear in front.</p>
 
             <div class="guide-item">
@@ -1784,6 +1786,7 @@
 
         <div class="guide-subsection">
             <h4 id="create-filter">Add a Filter Layer</h4>
+            <p>A new filter is position-locked over the whole canvas, while its look remains editable. Unlock it in Layers to select it on the canvas and move or resize a rectangular region. It affects only that region. Reset Transform returns it to the whole canvas; regional filters cannot rotate.</p>
             <p>A filter layer draws nothing of its own. It re-processes everything composited below it, live on the canvas and in the export.</p>
 
             <div class="guide-item">

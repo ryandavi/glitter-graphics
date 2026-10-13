@@ -4,6 +4,12 @@ const { spawnSync } = require('child_process');
 const path = require('path');
 
 const SUITES = [
+	{ file: 'ui/clipping-preview-verify.js', tags: ['layers', 'touch', 'export'] },
+	{ file: 'parity/regional-look-verify.js', tags: ['effects', 'export'] },
+	{ file: 'parity/clipping-edge-verify.js', tags: ['layers', 'export'] },
+	{ file: 'ui/canvas-qol-verify.js', tags: ['layers', 'touch', 'quick'] },
+	{ file: 'unit/clip-mask-unit.js', tags: ['unit', 'layers', 'quick'] },
+	{ file: 'parity/clipping-region-verify.js', tags: ['layers', 'export', 'quick'] },
 	{ file: 'unit/cross-language-contract-unit.js', tags: ['unit'] },
 	{ file: 'unit/suite-registry-unit.js', tags: ['unit'] },
 	{ file: 'unit/config-usage-unit.js', tags: ['unit'] },

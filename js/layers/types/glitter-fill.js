@@ -1,6 +1,8 @@
 'use strict';
 
 registerLayerType(LayerType.GLITTER_FILL, {
+	clippable: true,
+	clipBase: true,
 	vectorGeometry: (editor, layer) => ({ masks: editor.glitterManager.renderSlotMasks(layer) }),
 	describe: (layer, editor) => {
 		const fill = describeLayerPaint(editor, getLayerFillSlot(layer));

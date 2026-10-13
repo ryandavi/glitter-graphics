@@ -143,6 +143,7 @@ class LayerManager {
 			if (!spec.omit?.includes(key)) serialized[key] = key === 'type' ? type : layer[key];
 		});
 		serialized.opacity = layer.opacity;
+		serialized.clipped = Boolean(layer.clipped);
 		if (layer.loopOriginalPeriods) serialized.loopOriginalPeriods = structuredClone(layer.loopOriginalPeriods);
 		if (isTransformableLayerType(type)) serialized.transform = cloneTransform(getLayerTransform(layer));
 		if (LAYER_UI_CONFIG[type]?.blendable) serialized.blendMode = GlitterBlendModes.forLayer(layer);
@@ -200,6 +201,7 @@ class LayerManager {
 		if (layerData.animations?.length && isAnimatableLayerType(type)) {
 			restored.animations = GlitterAnimation.normalizeAnimations(layerData.animations);
 		}
+		restored.clipped = Boolean(layerData.clipped);
 		spec.normalize?.(this.editor, restored);
 		try {
 			await spec.hydrate?.(this.editor, restored);
@@ -211,6 +213,7 @@ class LayerManager {
 	}
 
 	insertLayer(layer, options = {}) {
+		layer.clipped = Boolean(layer.clipped);
 		if (LAYER_UI_CONFIG[layer.type]?.blendable) layer.blendMode = GlitterBlendModes.forLayer(layer);
 
 		// Insert above the currently selected layer, or at the top if none selected
@@ -574,7 +577,8 @@ class LayerManager {
 		if (options.source !== 'history' && selectedCount > 1) {
 			this.editor.updateStatus(`${selectedCount} layers selected`);
 		} else if (options.source !== 'history' && activeLayer) {
-			this.editor.updateStatus(`Selected: ${describeLayer(activeLayer, this.editor).name}`);
+			const clipBase = getClipBase(this.layers, activeLayer);
+			this.editor.updateStatus(`Selected: ${describeLayer(activeLayer, this.editor).name}${clipBase ? ` (clipped to ${describeLayer(clipBase, this.editor).name})` : ''}`);
 		}
 
 		this.editor.currentHintDismissed = false;
@@ -711,22 +715,29 @@ class LayerManager {
 		const movableOnly = options.movableOnly === true;
 		const excludeLocked = options.excludeLocked === true;
 		const hits = [];
+		// Layers hit only where nothing else is (LAYER_UI_CONFIG hitTestBehind).
+		const behind = [];
 
 		for (let i = this.layers.length - 1; i >= 0; i--) {
 			const layer = this.layers[i];
 			if (!layer.visible) continue;
+			const base = getClipBase(this.layers, layer);
+			if (base?.visible === false) continue;
+			const hitPoints = base ? this.editor.clipPreview?.getHitPoints(base, x, y) || [] : [{ x, y }];
+			if (!hitPoints.length) continue;
 			if (excludeLocked && isLayerFullyLocked(layer) && layer.type !== LayerType.BASE_IMAGE) continue;
 			if (movableOnly && !this.isLayerMovable(layer)) continue;
 
 			let isHit = false;
-			const hitTest = LAYER_UI_CONFIG[layer.type]?.hitTest;
+			const { hitTest, hitTestBehind } = LAYER_UI_CONFIG[layer.type] || {};
 
 			if (hitTest) {
 				const zoom = Math.max(0.01, this.editor.viewport?.currentZoom || 1);
-				isHit = LAYER_UI_CONFIG[layer.type].hasVisibleContent?.(layer) !== false
-					&& hitTest(this.editor, layer, x, y, CONFIG.ui.stickerHandles.frameHitTolerance / zoom);
+				const hasContent = LAYER_UI_CONFIG[layer.type].hasVisibleContent?.(layer) !== false;
+				isHit = hasContent && hitPoints.some(point => hitTest(this.editor, layer, point.x, point.y, CONFIG.ui.stickerHandles.frameHitTolerance / zoom));
+				if (!isHit && hasContent && hitTestBehind && hitPoints.some(point => hitTestBehind(this.editor, layer, point.x, point.y))) behind.push(layer);
 			} else if (isLayerTransformable(layer)) {
-				isHit = this.isPointInLayer(layer, x, y);
+				isHit = hitPoints.some(point => this.isPointInLayer(layer, point.x, point.y));
 			} else if (includeBase && layer.type === LayerType.BASE_IMAGE && this.editor.originalImage) {
 				isHit = true;
 			}
@@ -736,7 +747,8 @@ class LayerManager {
 			}
 		}
 
-		return hits;
+		const background = hits.at(-1)?.type === LayerType.BASE_IMAGE ? hits.pop() : null;
+		return [...hits, ...behind, ...(background ? [background] : [])];
 	}
 
 	getTopVisibleLayerAtPoint(x, y, options = {}) {
@@ -901,6 +913,11 @@ class LayerManager {
 		// Buttons requiring selection (but not base)
 		const goToBtn = document.getElementById('layersBarGoToSelected');
 		const cloneBtn = document.getElementById('layersBarCloneSelected');
+		const clipBtn = document.getElementById('layersBarClipping');
+		if (clipBtn) {
+			clipBtn.disabled = !this.editor.canToggleClippingMask();
+			clipBtn.title = selectedLayers.every(layer => layer.clipped) ? 'Release Clip (Ctrl+Alt+G)' : 'Clip to Layer Below (Ctrl+Alt+G)';
+		}
 		const deleteBtn = document.getElementById('layersBarDeleteSelected');
 
 		if (goToBtn) goToBtn.disabled = !canGoToSelected;
@@ -1036,6 +1053,7 @@ class LayerManager {
 		}
 
 		removableLayers.forEach((layer) => {
+			getClippedLayers(this.layers, layer).forEach(clipped => { clipped.clipped = false; });
 			const manager = getLayerManagerForType(this.editor, layer.type);
 			if (manager?.releaseLayerResources) {
 				manager.releaseLayerResources(layer);
@@ -1060,6 +1078,12 @@ class LayerManager {
 		const layerEl = document.createElement('div');
 		layerEl.className = 'layer-item list-row';
 		layerEl.dataset.layerId = layer.id;
+		const clipBase = getClipBase(this.layers, layer);
+		layerEl.classList.toggle('is-clipped', Boolean(clipBase));
+		const clipButton = clipBase ? this.createIconButton({ className: 'list-row-action layer-clip', title: `Release clip to ${describeLayer(clipBase, this.editor).name}`, iconType: 'clip', onClick: event => {
+				event.stopPropagation();
+				this.editor.toggleClippingMask([layer]);
+			} }) : null;
 		layerEl.setAttribute('role', 'option');
 		layerEl.setAttribute('aria-selected', String(this.isLayerSelected(layer.id)));
 		layerEl.tabIndex = layer.id === this.activeLayerId ? 0 : -1;
@@ -1231,8 +1255,12 @@ class LayerManager {
 			});
 		actions.appendChild(delBtn);
 
-		layerEl.append(dragHandle, visBtn, swatch, info, actions);
+		layerEl.append(dragHandle, visBtn, ...(clipButton ? [clipButton] : []), swatch, info, actions);
 		layerEl.onclick = (event) => {
+			if (event.altKey && event.pointerType !== 'touch' && layerEl.getBoundingClientRect().bottom - event.clientY <= CONFIG.ui.gestures.dragThresholdPx && this.editor.canToggleClippingMask([layer])) {
+				this.editor.toggleClippingMask([layer]);
+				return;
+			}
 			// Dispatch custom event for mobile manager
 			window.dispatchEvent(new CustomEvent('layerItemClick', {
 				detail: { layerId: layer.id }
@@ -1534,10 +1562,12 @@ class LayerManager {
 		let newIndex = insertAbove ? newTargetIndex + 1 : newTargetIndex;
 
 		// Insert at new position
-		this.layers.splice(newIndex, 0, draggedLayer);
+		const insertion = getClipInsertion(this.layers, draggedLayer, newIndex);
+		draggedLayer.clipped = insertion.clipped;
+		this.layers.splice(insertion.index, 0, draggedLayer);
 
 		// OPTIMIZED: Just reorder DOM instead of recreating
-		this.reorderLayerItems();
+		this.renderLayersList();
 		this.reorderLayers();
 		this.editor.saveState('Reorder layers');
 	}
@@ -1697,8 +1727,10 @@ class LayerManager {
 				// "Insert Above" visually means a higher index in the array (rendered bottom-to-top)
 				let newIndex = this.dropInsertAbove ? newTargetIndex + 1 : newTargetIndex;
 
-				this.layers.splice(newIndex, 0, draggedLayer);
-				this.reorderLayerItems();
+				const insertion = getClipInsertion(this.layers, draggedLayer, newIndex);
+				draggedLayer.clipped = insertion.clipped;
+				this.layers.splice(insertion.index, 0, draggedLayer);
+				this.renderLayersList();
 				this.reorderLayers();
 				this.editor.saveState('Reorder layers');
 			}
@@ -1776,10 +1808,6 @@ class LayerManager {
 		});
 
 		const transformHandleNodes = Array.from(container.children).filter(el => el.classList.contains('transform-handles'));
-		const layerElements = Array.from(container.children).filter(el => el.matches(getAllLayerElementSelector()));
-
-		layerElements.forEach(el => el.remove());
-
 		// Reorder them to match layers array.
 		const fragment = document.createDocumentFragment();
 		this.layers.forEach(layer => {
@@ -1790,7 +1818,7 @@ class LayerManager {
 				el.style.zIndex = layer.type === LayerType.FILTER
 					? ''
 					: this.editor.layerManager.getLayerZIndex(layer.id);
-				fragment.appendChild(el);
+				fragment.appendChild(el.closest('.clip-wrapper') || el);
 			}
 		});
 

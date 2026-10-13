@@ -7,7 +7,7 @@ class SvgExportEncoder {
 		const job = { defs: [], colors: new Map(), nextId: 0, settings, callbacks };
 		const parts = [];
 		for (const layer of layers) {
-			if (!layer.visible || layer.isPreview || !layerHasVisibleContent(layer) || !SvgExporter.isEligible(layer)) continue;
+			if (!layer.visible || layer.isPreview || !layerHasVisibleContent(layer) || !SvgExporter.isEligible(layer, this.editor.layers)) continue;
 			if (callbacks.isCancelled?.()) throw new Error('Export cancelled');
 			const geometry = await LAYER_UI_CONFIG[layer.type].vectorGeometry(this.editor, layer);
 			if (!geometry) continue;

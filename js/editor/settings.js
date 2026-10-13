@@ -461,7 +461,7 @@ initializeExportSettings() {
 			if (!target.isVector && pixelLooks.length) description += ` Active pixel look${pixelLooks.length === 1 ? '' : 's'}: ${pixelLooks.map((layer) => GlitterFilter.summaryText(layer.filterData)).join(', ')}.`;
 			if (target.isGif && pixelLooks.some((layer) => ['dither', 'posterize'].includes(layer.filterData.type))) description += ' Clean GIF Look keeps these colors sharp.';
 			if (target.isGif && pixelLooks.some((layer) => layer.filterData.type === 'jpeg-crunch')) description += ' JPEG Crunch can make the GIF larger.';
-			if (target.isVector) { const count = SvgExporter.count(this.layers); description = `${count.vectors} vector layers. ${count.omitted} other layers are left out of an SVG. ${description}`; }
+			if (target.isVector) { const count = SvgExporter.count(this.layers); description = `${count.vectors} vector layers. ${count.omitted} other layers are left out of an SVG. ${count.clipped ? `${count.clipped} clipped layers are omitted because SVG clipping is not supported. ` : ''}${description}`; }
 			formatDescription.textContent = description;
 		}
 		document.querySelectorAll('#exportModeControl [data-export-mode]').forEach((button) => {

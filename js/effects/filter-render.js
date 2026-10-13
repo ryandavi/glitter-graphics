@@ -21,7 +21,37 @@
 
 	function normalizeFilterData(value) {
 		const source = value || {};
-		return Filters.normalize(source.type, source);
+		const data = Filters.normalize(source.type, source);
+		const width = Number(source.region?.width), height = Number(source.region?.height);
+		data.region = Number.isFinite(width) && Number.isFinite(height) ? { width: Math.max(1, Math.round(width)), height: Math.max(1, Math.round(height)) } : null;
+		return data;
+	}
+
+	function regionRect(layer, width, height) {
+		const region = layer.filterData?.region;
+		if (!region) return { x: 0, y: 0, width, height };
+		const scale = layer.transform?.scale;
+		const w = Math.max(1, Math.round(region.width * (scale?.x || 100) / 100));
+		const h = Math.max(1, Math.round(region.height * (scale?.y || 100) / 100));
+		return { x: Math.round(layer.transform.position.x - w / 2), y: Math.round(layer.transform.position.y - h / 2), width: w, height: h };
+	}
+
+	async function renderRegionToCanvas(context, width, height, layer, options) {
+		if (!layer.filterData.region) return renderToCanvas(context, width, height, layer.filterData, layer.opacity / 100, options);
+		const rect = regionRect(layer, width, height);
+		const canvas = createAppCanvas(rect.width, rect.height, 'effects/filter-region');
+		const ctx = canvas.getContext('2d');
+		ctx.drawImage(context.canvas, -rect.x, -rect.y);
+		const caption = resolve(layer.filterData).caption;
+		const spec = caption ? nameCaptionSpec(caption, rect) : null;
+		await renderToCanvas(ctx, rect.width, rect.height, layer.filterData, layer.opacity / 100, { ...options, renderSource: spec ? (target) => drawCaption(target, spec) : null });
+		context.save();
+		context.beginPath();
+		context.rect(rect.x, rect.y, rect.width, rect.height);
+		context.clip();
+		context.clearRect(rect.x, rect.y, rect.width, rect.height);
+		context.drawImage(canvas, rect.x, rect.y);
+		context.restore();
 	}
 
 	function isActive(value, opacity = 100) {
@@ -400,7 +430,7 @@
 			textAlign: 'center', textBaseline: 'middle' };
 	}
 
-	const api = { FILTER_TYPES, normalizeFilterData, isActive, summaryText, resolve, animation, toneCssFilter, gradientCss, overlayLayerStyles, renderToCanvas, drawCaption, nameCaptionSpec, jpegRoundTrip };
+	const api = { FILTER_TYPES, normalizeFilterData, isActive, summaryText, resolve, animation, toneCssFilter, gradientCss, overlayLayerStyles, renderToCanvas, renderRegionToCanvas, regionRect, drawCaption, nameCaptionSpec, jpegRoundTrip };
 	root.GlitterFilter = api;
 	if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof self !== 'undefined' ? self : globalThis);

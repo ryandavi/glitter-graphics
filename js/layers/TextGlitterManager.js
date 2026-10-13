@@ -692,6 +692,42 @@ class TextGlitterManager {
 		return null;
 	}
 
+	createTextData(options, text, align) {
+		return {
+			text,
+			fontId: CONFIG.tools.text.defaultFontId,
+			fontWeight: CONFIG.tools.text.defaultFontWeight,
+			fontStyle: CONFIG.tools.text.defaultFontStyle,
+			textCase: CONFIG.tools.text.defaultTextCase,
+			orientation: CONFIG.tools.text.defaultOrientation,
+			fontSize: FIELDS.textFontSize.value,
+			letterSpacing: FIELDS.textLetterSpacing.value,
+			lineHeight: FIELDS.textLineHeight.value / 100,
+			align,
+			verticalAlign: CONFIG.tools.text.defaultVerticalAlign,
+			boxMode: options.boxMode || CONFIG.tools.text.defaultBoxMode,
+			boxWidth: options.boxWidth,
+			boxHeight: options.boxHeight,
+			colorEmoji: CONFIG.tools.text.defaultColorEmoji,
+			decoration: { underline: false, strikethrough: false },
+			width: 0,
+			height: 0,
+			border: null,
+			shadow: null
+		};
+	}
+
+	getCreationSize(box) {
+		const width = Math.max(this.getMinBoxSize(), Math.round(box.width));
+		const height = Math.max(Math.round(FIELDS.textFontSize.value * FIELDS.textLineHeight.value / 100), Math.round(box.height));
+		const layer = { type: LayerType.TEXT_GLITTER, transform: createDefaultTransform(), textData: this.createTextData({ boxMode: 'fixed', boxWidth: width, boxHeight: height }, CONFIG.tools.text.placeholderText, 'left') };
+		this.normalizeLayer(layer);
+		// A glyph wider than a narrow box contributes to the Size readout.
+		// Include that body when promising the size before the text exists.
+		const frame = this.getTextBodyFrame(layer);
+		return { width: Math.max(width, frame.width), height: Math.max(height, frame.height) };
+	}
+
 	createLayer(options = {}) {
 		if (!this.editor.layerManager.requireLayerCapacity()) return null;
 
@@ -715,28 +751,7 @@ class TextGlitterManager {
 			locked: false,
 			opacity: FIELDS.layerOpacity.value,
 			transform,
-			textData: {
-				text: defaultText,
-				fontId: CONFIG.tools.text.defaultFontId,
-				fontWeight: CONFIG.tools.text.defaultFontWeight,
-				fontStyle: CONFIG.tools.text.defaultFontStyle,
-				textCase: CONFIG.tools.text.defaultTextCase,
-				orientation: CONFIG.tools.text.defaultOrientation,
-				fontSize: FIELDS.textFontSize.value,
-				letterSpacing: FIELDS.textLetterSpacing.value,
-				lineHeight: FIELDS.textLineHeight.value / 100,
-				align: initialAlign,
-				verticalAlign: CONFIG.tools.text.defaultVerticalAlign,
-				boxMode: options.boxMode || CONFIG.tools.text.defaultBoxMode,
-				boxWidth: options.boxWidth,
-				boxHeight: options.boxHeight,
-				colorEmoji: CONFIG.tools.text.defaultColorEmoji,
-				decoration: { underline: false, strikethrough: false },
-				width: 0,
-				height: 0,
-				border: null,
-				shadow: null
-			}
+			textData: this.createTextData(options, defaultText, initialAlign)
 		};
 
 		this.normalizeLayer(layer);
@@ -1497,9 +1512,7 @@ class TextGlitterManager {
 						this.editor.currentTool === ToolType.SELECT &&
 						!this.editor.layerManager.hasMultiSelection()
 					) {
-						if (!transform.isDraggingHandle) {
-							transform.createTransformHandles();
-						}
+						transform.createTransformHandles();
 					} else {
 						transform.removeTransformHandles();
 					}

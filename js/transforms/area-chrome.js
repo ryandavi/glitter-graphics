@@ -32,6 +32,14 @@ class AreaChrome {
 
 	setDraft(draft) {
 		this.draft = draft;
+		if (draft?.frame && !this.badgeChrome) {
+			this.badgeChrome = new SelectionChrome(this.overlay, { readOnly: true, handles: [], className: 'transform-handles ui-ignore-gestures' });
+			this.badgeChrome.box.hidden = true;
+		}
+		if (!draft?.frame) {
+			this.badgeChrome?.remove();
+			this.badgeChrome = null;
+		}
 		this.render();
 	}
 
@@ -54,6 +62,8 @@ class AreaChrome {
 	}
 
 	hide() {
+		this.badgeChrome?.remove();
+		this.badgeChrome = null;
 		clearInterval(this.timer);
 		this.timer = null;
 		if (!this.canvas) return;
@@ -64,6 +74,7 @@ class AreaChrome {
 
 	draw() {
 		if (!this.canvas?.isConnected) return;
+		if (this.draft?.frame) this.badgeChrome?.render({ frame: this.draft.frame, badge: { mode: 'size', text: formatSizeBadge(this.draft.frame.width, this.draft.frame.height) } });
 		const overlay = this.overlay;
 		const ratio = this.ratio = window.devicePixelRatio || 1;
 		const width = Math.max(1, Math.round(overlay.element.clientWidth * ratio));

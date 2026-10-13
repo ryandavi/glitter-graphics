@@ -447,6 +447,7 @@ const PANEL_SCHEMAS = {
 					{ actions: [{ id: 'multiSelectionCopyAppearance', label: 'Copy active layer appearance', title: 'Copy paint, outline, shadow, bevel, opacity and blend to unlocked layers of the same type' }] },
 					{ classes: 'multi-selection-actions', actions: [
 						{ id: 'multiSelectionDuplicateBtn', label: 'Duplicate' },
+						{ id: 'multiSelectionClipBtn', label: 'Clip to Layer Below' },
 						{ id: 'multiSelectionDeleteBtn', label: 'Delete' }
 					] }
 				] }
@@ -566,7 +567,8 @@ const PANEL_SCHEMAS = {
 			] },
 			{ title: 'Appearance', sections: [
 				createLayerSectionSpec('filterLayerOpacity', 'filterLayerBlendMode')
-			] }
+			] },
+			{ title: 'Layout', sections: [{ kind: 'transform' }] }
 		]
 	},
 	[LayerType.FRAME]: {

@@ -86,7 +86,7 @@ class CropEditSession {
 			editor.viewport.selectionOverlay.addSyncer(this.syncChrome);
 		}
 		const { x, y, width, height } = bounds.rect;
-		this.chrome.render({ frame: { centerX: x + width / 2, centerY: y + height / 2, width, height, rotation: 0 }, shade: !readOnly, guides: readOnly ? null : 'thirds', badge: { text: `${width} × ${height}`, mode: 'size' } });
+		this.chrome.render({ frame: { centerX: x + width / 2, centerY: y + height / 2, width, height, rotation: 0 }, shade: !readOnly, guides: readOnly ? null : 'thirds', badge: { text: formatSizeBadge(width, height), mode: 'size' } });
 	}
 	press(input) {
 		if (!this.editor.canvasBounds) this.activate();

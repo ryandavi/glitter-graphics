@@ -328,6 +328,7 @@ setupLayerTypePickerListeners() {
 		// Bottom bar action buttons
 		const layersBarGoToSelected = document.getElementById('layersBarGoToSelected');
 		const layersBarCloneSelected = document.getElementById('layersBarCloneSelected');
+		document.getElementById('layersBarClipping')?.addEventListener('click', () => this.toggleClippingMask());
 		const layersBarDeleteSelected = document.getElementById('layersBarDeleteSelected');
 		const layersBarClearAll = document.getElementById('layersBarClearAll');
 
@@ -352,6 +353,7 @@ setupLayerTypePickerListeners() {
 		}
 		layersBarClearAll?.addEventListener('click', () => this.resetAll());
 
+		document.getElementById('multiSelectionClipBtn')?.addEventListener('click', () => this.toggleClippingMask());
 		const multiDuplicateBtn = document.getElementById('multiSelectionDuplicateBtn');
 		const multiDeleteBtn = document.getElementById('multiSelectionDeleteBtn');
 		const multiOpacity = document.getElementById('multiSelectionOpacity');

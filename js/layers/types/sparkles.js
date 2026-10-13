@@ -4,6 +4,7 @@
 // weather that can sit in front of everything. The same slot, engine and
 // panel card as the Sparkles effect on any other layer.
 registerLayerType(LayerType.SPARKLES, {
+	clippable: true,
 	displayName: 'Sparkles',
 	paintSlots: [
 		{

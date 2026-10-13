@@ -175,6 +175,17 @@ async function main() {
 	assert.strictEqual(chrome.hitTest(100, 100, 'mouse'), 'corner-tl', 'Fine pointer hit testing changed');
 
 	manager.destroy();
+	context.isLayerFullyLocked = layer => Boolean(layer.locked);
+	vm.runInContext(fs.readFileSync(path.join(__dirname, '../../js/editor/canvas-gestures.js'), 'utf8') + '\nglobalThis.__CanvasGestures = CANVAS_GESTURE_METHODS;', context);
+	const opened = [];
+	viewport.editor.layerManager.goToLayerSource = id => opened.push(id);
+	viewport.editor.handleLayerDoubleClick = context.__CanvasGestures.handleLayerDoubleClick;
+	viewport.editor.layerManager.activeLayerId = other.id;
+	manager.handleDoubleTap({ x: 130, y: 130 }, { type: 'layerDrag', layerId: layer.id });
+	assert.deepStrictEqual(opened, [layer.id], 'Touch double-tap did not use the source fallback');
+	assert.strictEqual(viewport.editor.layerManager.activeLayerId, layer.id);
+	manager.handleDoubleTap({ x: 130, y: 130 }, { type: 'layerSelect', layerId: layer.id });
+	assert.strictEqual(opened.length, 2, 'Non-transformable selection did not dispatch a double-tap');
 	process.stdout.write('PASS deterministic gesture routing and finger-count transitions\n');
 }
 

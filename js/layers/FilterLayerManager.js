@@ -3,6 +3,7 @@ class FilterLayerManager {
 		this.editor = editor;
 		this.layerElements = new Map();
 		this.layerTransforms = new Map();
+		this.documentSizes = new WeakMap();
 		this.grainTileCache = new Map();
 		this.snapshotInputs = new ByteBudgetCache({ id: 'filter-snapshot-inputs', label: 'Pixel filter inputs', measure: (value) => value?.imageData?.data?.byteLength || 0 });
 		this.snapshotOutputs = new ByteBudgetCache({ id: 'filter-snapshot-outputs', label: 'Pixel filter outputs', measure: (value) => (value?.frames || []).reduce((sum, frame) => sum + canvasBytes(frame), 0) });
@@ -43,7 +44,7 @@ class FilterLayerManager {
 			type: LayerType.FILTER,
 			name: 'Filter',
 			visible: true,
-			locked: false,
+			locked: true,
 			opacity: 100,
 			filterData: options.filterData || { type: CONFIG.tools.filter.defaultType }
 		});
@@ -53,7 +54,78 @@ class FilterLayerManager {
 		if (!layer || layer.type !== LayerType.FILTER) return null;
 		layer.opacity = Number.isFinite(Number(layer.opacity)) ? Number(layer.opacity) : 100;
 		layer.filterData = GlitterFilter.normalizeFilterData(layer.filterData);
+		layer.transform = createDefaultTransform(layer.transform || { position: { x: this.editor.originalCanvas.width / 2, y: this.editor.originalCanvas.height / 2 } });
 		return layer;
+	}
+
+	getFrameBox(layer) {
+		const region = layer.filterData.region;
+		return { width: region?.width || this.editor.originalCanvas.width, height: region?.height || this.editor.originalCanvas.height, offsetX: 0, offsetY: 0 };
+	}
+
+	// A pinned filter covers the picture without taking its clicks. Unlocked,
+	// it is picked on the edge of its box, and a region also inside it where
+	// no other layer is (hitTestBehind), so the layers it covers stay
+	// reachable and a whole-canvas filter leaves the canvas clickable.
+	hitTest(layer, x, y, tolerance = CONFIG.ui.stickerHandles.frameHitTolerance) {
+		if (layer.locked) return false;
+		const rect = this.getPreviewRect(layer);
+		const dx = Math.abs(x - rect.x - rect.width / 2);
+		const dy = Math.abs(y - rect.y - rect.height / 2);
+		return dx <= rect.width / 2 + tolerance && dy <= rect.height / 2 + tolerance
+			&& (dx >= rect.width / 2 - tolerance || dy >= rect.height / 2 - tolerance);
+	}
+
+	hitTestBehind(layer, x, y) {
+		if (layer.locked || !layer.filterData.region) return false;
+		const rect = this.getPreviewRect(layer);
+		return x >= rect.x && y >= rect.y && x < rect.x + rect.width && y < rect.y + rect.height;
+	}
+
+	commitScale(layer) {
+		const box = this.getFrameBox(layer);
+		const transform = getLayerTransform(layer);
+		layer.filterData.region = { width: Math.max(1, Math.round(box.width * transform.scale.x / 100)), height: Math.max(1, Math.round(box.height * transform.scale.y / 100)) };
+		transform.scale = { x: 100, y: 100 };
+		this.syncElementScale(layer);
+		this.loadLayerSettings(layer);
+	}
+
+	updateTransform(layerId, updates) {
+		const layer = this.editor.layerManager.getLayerById(layerId);
+		const transform = this.layerTransforms.get(layerId);
+		if (!layer || !transform) return;
+		if (updates.position || updates.scale) this.commitTransform(layer);
+		transform.updateTransform(updates);
+		if (updates.scale) this.commitScale(layer);
+		this.syncElementScale(layer);
+		this.editor.requestPreviewUpdate();
+	}
+
+	commitTransform(layer) {
+		if (!layer.filterData.region) layer.filterData.region = { width: this.editor.originalCanvas.width, height: this.editor.originalCanvas.height };
+		this.syncElementScale(layer);
+	}
+
+	syncElementScale(layer, element = this.layerElements.get(layer.id)) {
+		const transform = getLayerTransform(layer);
+		const canvas = this.editor.originalCanvas;
+		const rect = this.getPreviewRect(layer);
+		transform.position = { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+		if (element) {
+			const key = `${rect.x}|${rect.y}|${rect.width}|${rect.height}`;
+			if (element.dataset.regionBox !== key) {
+				element.dataset.regionBox = key;
+				this.editor.requestPreviewUpdate();
+			}
+			Object.assign(element.style, { transform: '', opacity: '', left: `${rect.x}px`, top: `${rect.y}px`, right: 'auto', bottom: 'auto', width: `${rect.width}px`, height: `${rect.height}px`, pointerEvents: 'none', zIndex: '', mixBlendMode: '' });
+			if (GlitterFilters.tier(layer.filterData) === 3) Object.assign(element.style, { left: '0px', top: '0px', width: `${canvas.width}px`, height: `${canvas.height}px` });
+		}
+	}
+
+	getPreviewRect(layer) {
+		const canvas = this.editor.originalCanvas;
+		return GlitterFilter.regionRect(layer.filterData.region ? layer : { ...layer, filterData: { ...layer.filterData, region: { width: canvas.width, height: canvas.height } } }, canvas.width, canvas.height);
 	}
 
 	setupUI() {
@@ -145,7 +217,7 @@ class FilterLayerManager {
 	chooseLook(entry) {
 		const layer = this.getActiveLayer();
 		if (!layer) return;
-		layer.filterData = GlitterFilter.normalizeFilterData(GlitterFilters.looksLibrary.apply(entry));
+		layer.filterData = GlitterFilter.normalizeFilterData({ ...GlitterFilters.looksLibrary.apply(entry), region: layer.filterData.region });
 		this.loadLayerSettings(layer);
 		this.editor.requestPreviewUpdate();
 		this.editor.layerManager.renderLayersList();
@@ -154,6 +226,7 @@ class FilterLayerManager {
 
 	loadLayerSettings(layer) {
 		if (!layer || layer.type !== LayerType.FILTER) return;
+		this.editor.loadTransformSettings?.(layer, 'filter');
 		this.loadingSettings = true;
 		writeSliderValue(this.ui.opacity, layer.opacity);
 		this.loadingSettings = false;
@@ -300,7 +373,7 @@ class FilterLayerManager {
 	}
 
 	getFilterSignature(layer) {
-		return `${JSON.stringify(layer.filterData)}|${layer.opacity}|${GlitterBlendModes.forLayer(layer)}`;
+		return `${JSON.stringify(layer.filterData)}|${JSON.stringify(layer.transform?.position)}|${layer.opacity}|${GlitterBlendModes.forLayer(layer)}`;
 	}
 
 	isAnimatedPreview(layer, level = PREFERENCES.get('filterPreviewLevel')) {
@@ -328,20 +401,34 @@ class FilterLayerManager {
 	}
 
 	renderLayer(layer) {
+		const canvasSize = `${this.editor.originalCanvas.width}x${this.editor.originalCanvas.height}`;
+		if (!layer.filterData.region && this.documentSizes.get(layer) !== canvasSize) layer.transform.position = { x: this.editor.originalCanvas.width / 2, y: this.editor.originalCanvas.height / 2 };
+		this.documentSizes.set(layer, canvasSize);
 		let element = this.layerElements.get(layer.id);
 		if (!element) {
 			element = document.createElement('div');
-			element.className = 'filter-layer-overlay ui-ignore-gestures';
+			element.className = 'filter-layer-overlay';
 			element.dataset.layerId = layer.id;
 			this.editor.canvasElementsContainer.append(element);
 			this.layerElements.set(layer.id, element);
 		}
-		const width = this.editor.previewCanvas?.width || 1;
-		const height = this.editor.previewCanvas?.height || 1;
+		let transform = this.layerTransforms.get(layer.id);
+		if (!transform) {
+			transform = new LayerTransform(layer, this.editor);
+			this.layerTransforms.set(layer.id, transform);
+		}
+		transform.layer = layer;
+		transform.element = element;
+		this.syncElementScale(layer, element);
+		if (layer.id === this.editor.layerManager.activeLayerId && this.editor.currentTool === ToolType.SELECT && !this.editor.layerManager.hasMultiSelection() && !layer.locked) {
+			transform.createTransformHandles();
+		} else transform.removeTransformHandles();
+		const rect = this.getPreviewRect(layer);
+		const { width, height } = rect;
 		const viewScale = this.editor.viewport?.currentZoom || 1;
 		const blendMode = GlitterBlendModes.forLayer(layer);
 		const tier = GlitterFilters.tier(layer.filterData);
-		const signature = `${JSON.stringify(layer.filterData)}|${layer.opacity}|${blendMode}|${this.editor.layerManager.getLayerZIndex(layer.id)}|${width}|${height}|${viewScale}`;
+		const signature = `${this.getFilterSignature(layer)}|${blendMode}|${this.editor.layerManager.getLayerZIndex(layer.id)}|${width}|${height}|${viewScale}`;
 		if (element.dataset.renderSignature === signature) {
 			if (tier === 3) this.paintSnapshotElement(layer, element);
 			return element;
@@ -517,7 +604,7 @@ class FilterLayerManager {
 				const canvas = createAppCanvas(source.width, source.height, 'layers/FilterLayerManager');
 				const context = canvas.getContext('2d');
 				context.putImageData(source, 0, 0);
-				await GlitterFilter.renderToCanvas(context, source.width, source.height, layer.filterData, layer.opacity / 100, {
+				await GlitterFilter.renderRegionToCanvas(context, source.width, source.height, layer, {
 					keepAlpha: true, alphaThreshold: CONFIG.tools.selection.transparency.alphaThreshold,
 					seed: layer.id, frameIndex: animation ? Math.floor(timestamp / animation.frameMs) % animation.frames : index, matteColor: this.editor.exportSettings.matteColor,
 					blendMode: GlitterBlendModes.forLayer(layer)
@@ -654,4 +741,5 @@ class FilterLayerManager {
 }
 
 FilterLayerManager.LAYER_TYPE = LayerType.FILTER;
+Object.assign(FilterLayerManager.prototype, MOVABLE_LAYER_METHODS);
 Object.assign(FilterLayerManager.prototype, { getActiveLayer: LAYER_ELEMENT_METHODS.getActiveLayer });

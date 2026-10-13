@@ -102,11 +102,19 @@ class HtmlSceneExporter {
 
 	getVisibleStickers() {
 		return this.editor.layers.filter((layer) => (
+			!getClipBase(this.editor.layers, layer) &&
 			layer.type === LayerType.STICKER &&
 			layer.visible &&
 			!layer.stickerData?.isEmpty &&
 			layer.stickerData?.url
 		));
+	}
+
+	getOmissionReason() {
+		const layers = this.editor.layers.filter(layer => layer.visible && !layer.isPreview);
+		const clipped = layers.filter(layer => getClipBase(this.editor.layers, layer)).length;
+		const filters = layers.filter(layer => layer.type === LayerType.FILTER).length;
+		return [clipped ? `${clipped} clipped layers omitted: HTML Scene clipping is unsupported.` : '', filters ? `${filters} filters omitted: HTML Scene filters are unsupported.` : ''].filter(Boolean).join(' ');
 	}
 
 	validateScene() {
@@ -116,6 +124,8 @@ class HtmlSceneExporter {
 		}
 
 		const stickers = this.getVisibleStickers();
+		const omissions = this.getOmissionReason();
+		if (omissions) this.editor.updateStatus(omissions);
 		if (!stickers.length) {
 			this.editor.showError('HTML scenes need at least one visible sticker');
 			return null;
@@ -182,7 +192,7 @@ class HtmlSceneExporter {
 	}
 
 	setStatus(message) {
-		if (this.ui.status) this.ui.status.textContent = message;
+		if (this.ui.status) this.ui.status.textContent = [message, this.getOmissionReason()].filter(Boolean).join(' ');
 	}
 
 	async createDocument(layers, options) {

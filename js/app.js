@@ -604,6 +604,7 @@ class GlitterEditor {
 	// held arrow is one undo.
 	saveState(label = null, options = {}) {
 		this.historyManager.saveState(label, { coalesceKey: currentStepCoalesceKey(), ...options });
+		this.clipPreview?.refresh();
 		this.filterLayerManager?.noteSceneEdited();
 		this.scheduleExportDuration();
 		this.isSaved = false;
@@ -954,6 +955,8 @@ class GlitterEditor {
 		if (this.originalImageData) this.renderPreviewCanvas([]);
 
 		this.getLayerRenderManagers().forEach((manager) => manager.clearElements());
+		this.clipPreview?.reconcile([]);
+		this.clipBodyCache?.clear();
 	}
 
 	// ===== PREVIEW & RENDERING =====
@@ -987,6 +990,7 @@ class GlitterEditor {
 
 		this.renderPreviewCanvas(layersToShow);
 		this.getLayerRenderManagers().forEach((manager) => manager.renderContent(layersToShow));
+		(this.clipPreview ||= new ClipPreview(this)).reconcile(layersToShow);
 	}
 
 	renderPreviewCanvas(layersToShow) {

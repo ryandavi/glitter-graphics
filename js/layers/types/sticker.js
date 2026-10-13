@@ -1,6 +1,8 @@
 'use strict';
 
 registerLayerType(LayerType.STICKER, {
+	clippable: true,
+	clipBase: true,
 	assetRefs: (layer) => [{ kind: 'sticker', id: layer.stickerSourceId }],
 	describe: (layer, editor) => {
 		const sticker = editor.stickerLibrary.getItemById(layer.stickerSourceId);

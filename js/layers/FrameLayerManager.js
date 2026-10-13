@@ -471,7 +471,7 @@ class FrameLayerManager {
 			&& isLayerSelectableOnCanvas(layer)
 			&& !layer.locked
 		) {
-			if (!transform.isDraggingHandle) transform.createTransformHandles();
+			transform.createTransformHandles();
 		} else {
 			transform.removeTransformHandles();
 		}
@@ -739,6 +739,24 @@ class FrameLayerManager {
 				...(descriptor ? [descriptor] : []),
 				...compositor._getSlotAuthoredSources(layer, library).filter((source) => source.effectSlot !== 'fill')
 			],
+			renderBody: ({ ctx }) => {
+				const width = Math.round(data.width), height = Math.round(data.height);
+				ensureCanvasSize(scratch.composite, width, height);
+				const target = scratch.composite.getContext('2d');
+				resetCanvasContext(target, width, height);
+				const frames = descriptor ? compositor.decodedSources.get(image.url)?.frames || [] : [scratch.still];
+				for (const frame of frames) {
+					const pixels = compositor._getFrameImageData(frame);
+					if (!pixels) continue;
+					ensureCanvasSize(scratch.source, pixels.width, pixels.height);
+					scratch.source.getContext('2d').putImageData(pixels, 0, 0);
+					drawFrameImage(target, scratch.source, data, width, height);
+				}
+				target.globalCompositeOperation = 'source-in';
+				target.fillStyle = '#fff'; target.fillRect(0, 0, width, height);
+				target.globalCompositeOperation = 'source-over';
+				compositor._drawTransformedCanvas(ctx, scratch.composite, layer, width, height);
+			},
 			render: ({ ctx, frameIndex, timestamp, sourceSelectionMap, resolvedFramesBySource }) => {
 				let pixels = scratch.still;
 				if (descriptor) {
@@ -752,7 +770,7 @@ class FrameLayerManager {
 				const height = Math.round(data.height);
 				ensureCanvasSize(scratch.source, imageData.width, imageData.height);
 				scratch.source.getContext('2d').putImageData(imageData, 0, 0);
-				const pad = Math.ceil(compositor._getSparklePadding(layer));
+				const pad = compositor._bodyOnly ? 0 : Math.ceil(compositor._getSparklePadding(layer));
 				ensureCanvasSize(scratch.composite, width + pad * 2, height + pad * 2);
 				const compositeCtx = scratch.composite.getContext('2d', { alpha: true });
 				resetCanvasContext(compositeCtx, scratch.composite.width, scratch.composite.height, image.isPixelated === false);

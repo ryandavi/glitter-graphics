@@ -23,7 +23,7 @@ class GroupTransformManager {
 		const translateX = options.translateX || 0;
 		const translateY = options.translateY || 0;
 		const scaleFactor = Math.max(0.1, Math.min(5, options.scaleFactor || 1));
-		const rotateDeg = options.rotateDeg || 0;
+		const rotateDeg = this.supportsRotation() ? (options.rotateDeg || 0) : 0;
 		const rotateRad = (rotateDeg * Math.PI) / 180;
 		const cos = Math.cos(rotateRad);
 		const sin = Math.sin(rotateRad);
@@ -60,6 +60,14 @@ class GroupTransformManager {
 
 	isActive() {
 		return this.getSelectedLayers().length > 1;
+	}
+
+	supportsRotation() {
+		return this.getSelectedLayers().every(layer => LAYER_UI_CONFIG[layer.type]?.transformCapabilities?.rotation !== false);
+	}
+
+	commitTransforms(entries = this.getLayerEntries()) {
+		entries.forEach(({ layer }) => getLayerManagerForType(this.editor, layer.type)?.commitTransform?.(layer));
 	}
 
 	getSelectedLayerIds() {
@@ -336,6 +344,7 @@ class GroupTransformManager {
 			transform.updateTransform({ position: { x: current.position.x + deltaX, y: current.position.y + deltaY } });
 		});
 		this.applyEntries(entries);
+		this.commitTransforms(entries);
 		this.editor.saveState('Transform layers');
 	}
 
@@ -354,6 +363,7 @@ class GroupTransformManager {
 			entry.transform.updateTransform({ position: { x: current.position.x + (axis === 'horizontal' ? delta : 0), y: current.position.y + (axis === 'vertical' ? delta : 0) } });
 		});
 		this.applyEntries(keyed);
+		this.commitTransforms(keyed);
 		this.editor.saveState('Transform layers');
 	}
 
@@ -373,6 +383,7 @@ class GroupTransformManager {
 		});
 
 		this.applyEntries(entries);
+		this.commitTransforms(entries);
 
 		if (options.saveState) {
 			this.editor.saveState('Transform layers');
@@ -393,7 +404,7 @@ class GroupTransformManager {
 		this.chrome = new SelectionChrome(this.editor.viewport.selectionOverlay, {
 			layerId: 'group-selection',
 			className: 'transform-handles group-transform-handles',
-			handles: ['corner-tl', 'corner-tr', 'corner-br', 'corner-bl', 'rotate-tl', 'rotate-tr', 'rotate-br', 'rotate-bl', 'rotation']
+			handles: ['corner-tl', 'corner-tr', 'corner-br', 'corner-bl', ...(this.supportsRotation() ? ['rotate-tl', 'rotate-tr', 'rotate-br', 'rotate-bl', 'rotation'] : [])]
 		});
 		this.transformHandles = this.chrome.element;
 		this.editor.viewport.selectionOverlay.addSyncer(this.syncHandlePositions);
@@ -414,7 +425,7 @@ class GroupTransformManager {
 		if (this.activeHandleType !== 'move') {
 			badge = this.activeHandleType === 'rotation'
 				? { mode: 'angle', text: `${Math.round(this.dragStartState?.rotateDeg || 0)}°` }
-				: { mode: 'size', text: `${Math.round(bounds.width)} × ${Math.round(bounds.height)}` };
+				: { mode: 'size', text: formatSizeBadge(bounds.width, bounds.height) };
 		}
 		this.chrome.render({
 			frame: { centerX: bounds.centerX, centerY: bounds.centerY, width: bounds.width, height: bounds.height, rotation: 0 },
@@ -475,6 +486,7 @@ class GroupTransformManager {
 
 	beginHandleDrag(handleType, event, handle) {
 		if (handleType.startsWith('rotate-')) handleType = 'rotation';
+		if (handleType === 'rotation' && !this.supportsRotation()) return;
 		if (event.pointerType === 'mouse' && event.button !== 0) {
 			return;
 		}
@@ -599,6 +611,7 @@ class GroupTransformManager {
 			event.stopPropagation();
 			this.isDraggingHandle = false;
 			if (!shouldSingleSelect && this.dragStartState?.didMove) {
+				this.commitTransforms(completedDrag.layerStates);
 				if (this.activeHandleType?.startsWith('corner-')) {
 					await this.commitScaledLayers(new Map(completedDrag.layerStates.map(({ layer, scale }) => [layer.id, scale])));
 				}

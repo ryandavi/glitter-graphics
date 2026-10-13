@@ -29,6 +29,11 @@ const wait = (page, ms = 350) => page.waitForTimeout(ms);
 // replaced by `css.main` when given, so a scratch compile can be viewed without
 // touching the committed file.
 async function routeSourceSnapshot(page) {
+	const snapshotHtml = process.env.GLITTER_UI_SOURCE_DIR && path.join(process.env.GLITTER_UI_SOURCE_DIR, 'index.html');
+	if (snapshotHtml && fs.existsSync(snapshotHtml)) {
+		const app = new globalThis.URL(URL);
+		await page.route(url => url.origin === app.origin && url.pathname === app.pathname, route => route.fulfill({ contentType: 'text/html', body: fs.readFileSync(snapshotHtml) }));
+	}
 	if (process.env.GLITTER_UI_SOURCE_DIR) await page.route('**/js/**', (route) => {
 		const relative = new globalThis.URL(route.request().url()).pathname.split('/js/')[1];
 		const file = path.join(process.env.GLITTER_UI_SOURCE_DIR, 'js', relative);
@@ -446,4 +451,35 @@ async function patternStates(page, visit, viewport) {
 	await visit(`${viewport} patterns motif`, { shot: '#libraryWindow', tall: true });
 }
 
-module.exports = { routeSourceSnapshot, chromium, URL, VIEWPORTS, boot, wait, desktopStates, phoneStates, recolorStates, backgroundRemovalStates, animatedFilterStates, patternStates };
+async function creationStates(page, visit, tag) {
+	await page.evaluate(async () => { await editor.loadBlankImage(320, 240, '#ffffff'); editor.viewport.setZoom(1); });
+	await wait(page);
+	for (const tool of ['shape', 'text', 'line']) {
+		await page.evaluate(tool => {
+			editor.setTool(tool);
+			const rect = editor.previewWrapper.getBoundingClientRect();
+			editor.beginCreationGesture(rect.left + 40, rect.top + 50);
+			editor.updateCreationGesture(rect.left + 200, rect.top + 170);
+		}, tool);
+		await visit(`${tag} creation ${tool}`);
+		await page.evaluate(() => editor.cancelCreationGesture());
+	}
+}
+
+async function clippingStates(page, visit, tag) {
+	await page.evaluate(async () => {
+		await editor.loadBlankImage(320, 240, '#ffffff'); editor.viewport.setZoom(1);
+		const base = editor.shapeGlitterManager.createLayer({ shapeId: 'heart', width: 170, height: 170 }); base.name = 'Heart base'; editor.layerManager.insertLayer(base);
+		const text = editor.textGlitterManager.createLayer({ text: 'CLIP', position: { x: 160, y: 120 } }); text.textData.fill.mode = 'solid'; text.textData.fill.color = '#ff3366'; text.clipped = true; editor.layerManager.insertLayer(text);
+		const top = editor.shapeGlitterManager.createLayer({ shapeId: 'square', width: 200, height: 40, position: { x: 160, y: 160 } }); top.clipped = true; editor.layerManager.insertLayer(top);
+		editor.layerManager.setSelection([text.id, top.id]); editor.requestPreviewUpdate();
+		if (editor.mobileManager?.isMobile) editor.mobileManager.openDrawer('layers');
+	});
+	await wait(page, 500);
+	await visit(`${tag} clipping layers`);
+	await page.evaluate(() => { editor.refreshInspector(); if (editor.mobileManager?.isMobile) editor.mobileManager.openDrawer('edit'); });
+	await wait(page);
+	await visit(`${tag} clipping actions`);
+}
+
+module.exports = { routeSourceSnapshot, chromium, URL, VIEWPORTS, boot, wait, desktopStates, phoneStates, recolorStates, backgroundRemovalStates, animatedFilterStates, patternStates, creationStates, clippingStates };

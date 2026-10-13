@@ -5,11 +5,12 @@ class SvgExporter extends DeferredExporter {
 	setFileName(fileName) { if (fileName) this.fileName = fileName; }
 	static count(layers) {
 		const visible = layers.filter((layer) => layer.visible && !layer.isPreview && layerHasVisibleContent(layer));
-		const vectors = visible.filter(SvgExporter.isEligible);
-		return { vectors: vectors.length, omitted: visible.length - vectors.length };
+		const vectors = visible.filter(layer => SvgExporter.isEligible(layer, layers));
+		return { vectors: vectors.length, omitted: visible.length - vectors.length, clipped: visible.filter(layer => getClipBase(layers, layer)).length };
 	}
 	static escape(value) { return String(value).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[c]); }
-	static isEligible(layer) {
+	static isEligible(layer, layers = null) {
+		if (layers ? getClipBase(layers, layer) : layer.clipped) return false;
 		const type = LAYER_UI_CONFIG[layer.type];
 		return Boolean(type?.vectorGeometry && (!type.vectorEligible || type.vectorEligible(layer))
 			&& getLayerPaintSlots(layer).some(entry => entry.renders && entry.role !== 'sparkles' && !['none', 'image'].includes(entry.data.mode)));

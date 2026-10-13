@@ -398,6 +398,10 @@ class ContextToolbarRenderer {
 }
 
 function syncSelectionContextToolbar(editor) {
+	const clip = document.getElementById('contextClipping');
+	clip.disabled = !editor.canToggleClippingMask();
+	const release = editor.layerManager.getSelectedLayers().every(layer => layer.clipped);
+	clip.title = release ? 'Release Clip (Ctrl+Alt+G)' : 'Clip to Layer Below (Ctrl+Alt+G)';
 	const layer = editor.layerManager.getActiveLayer();
 	const multi = editor.layerManager.hasMultiSelection();
 	const canTransform = multi ? editor.layerManager.canTransformMultiSelection() : Boolean(layer && isLayerTransformable(layer) && !layer.locked && LAYER_UI_CONFIG[layer.type].hasVisibleContent?.(layer) !== false);

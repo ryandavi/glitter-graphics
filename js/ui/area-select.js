@@ -167,7 +167,9 @@ class AreaSelectSession {
 		const shape = AREA_SHAPES[this.shape];
 		const options = { square: Boolean(input.shiftKey) && !drag.shiftFromPress, fromCenter: Boolean(input.altKey) && !drag.altFromPress };
 		drag.points = shape.gesture === 'trace' ? [this.traceLasso(drag, point)] : shape.build(drag.start, point, options);
-		this.chrome.setDraft({ ops: this.area.combine(drag.points, drag.mode) });
+		const box = shape.gesture === 'box' ? areaBox(drag.start, point, options) : null;
+		const frame = box ? { centerX: (box.left + box.right) / 2, centerY: (box.top + box.bottom) / 2, width: box.right - box.left, height: box.bottom - box.top, rotation: 0 } : null;
+		this.chrome.setDraft({ ops: this.area.combine(drag.points, drag.mode), frame });
 		if (shape.gesture === 'box') {
 			const box = areaBox(drag.start, point, options);
 			this.reportGeometry(`${box.right - box.left} × ${box.bottom - box.top} px`);

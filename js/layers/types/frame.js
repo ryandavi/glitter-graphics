@@ -1,6 +1,8 @@
 'use strict';
 
 registerLayerType(LayerType.FRAME, {
+	clippable: true,
+	clipBase: true,
 	vectorEligible: (layer) => layer.frameData?.kind !== 'image',
 	vectorGeometry: (editor, layer) => ({ masks: editor.frameLayerManager.renderSlotMasks(layer), stack: editor.frameLayerManager.buildFrameStack(layer, entry => resolvePaintSlotSource(layer, entry)) }),
 	assetRefs: (layer) => [{ kind: 'sticker', id: layer.frameData?.image?.stickerId }],

@@ -182,8 +182,10 @@ const TOOLS = {
 		available: assetEditingAvailable,
 		onCanvasDrag(editor, { box, isClick, start }) {
 			if (isClick) return this.onCanvasAction(editor, { x: start.x, y: start.y, hitCanvas: true });
-			return createTextAt(editor, { position: { x: box.left, y: box.top }, boxMode: 'fixed', boxWidth: Math.max(CONFIG.tools.text.minBoxSize, box.width), boxHeight: Math.max(FIELDS.textFontSize.value * FIELDS.textLineHeight.value / 100, box.height) });
+			const size = this.creationSize(box, editor);
+			return createTextAt(editor, { position: { x: box.left, y: box.top }, boxMode: 'fixed', boxWidth: size.width, boxHeight: size.height });
 		},
+		creationSize: (box, editor) => editor.textGlitterManager.getCreationSize(box),
 		onCanvasAction(editor, { x, y, hitCanvas }) {
 			if (!hitCanvas) return;
 			// Figma parity: clicking existing text with the text tool edits it;
@@ -211,8 +213,9 @@ const TOOLS = {
 		touchRoute: 'creationDrag',
 		available: assetEditingAvailable,
 		// Clicks and touch taps use the same default-size creation path.
+		creationSize: box => ({ width: Math.max(CONFIG.tools.shapes.minSize, Math.round(box.width)), height: Math.max(CONFIG.tools.shapes.minSize, Math.round(box.height)) }),
 		onCanvasDrag(editor, { box, isClick, start }) {
-			const layer = editor.layerManager.addLayer(LayerType.SHAPE, { shapeLayer: { shapeId: editor.shapeGlitterManager.getActiveShapeId(), position: isClick ? start : { x: box.centerX, y: box.centerY }, ...(isClick ? {} : { width: box.width, height: box.height }) } });
+			const layer = editor.layerManager.addLayer(LayerType.SHAPE, { shapeLayer: { shapeId: editor.shapeGlitterManager.getActiveShapeId(), position: isClick ? start : { x: box.centerX, y: box.centerY }, ...(isClick ? {} : this.creationSize(box)) } });
 			editor.finishLayerCreation(layer);
 			return layer;
 		},

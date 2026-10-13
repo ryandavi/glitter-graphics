@@ -13,7 +13,9 @@ const EDITOR_EXPORT_FLOW_METHODS = {
 		if (GlitterAnimation.includesOffCanvas(layer.animations)) return true;
 
 		try {
-			const box = getLayerCanvasBox(this, layer, { visual: true });
+			const base = getClipBase(this.layers, layer);
+			if (base?.visible === false) return false;
+			const box = base ? getLayerMotionBox(this, layer) : getLayerCanvasBox(this, layer, { visual: true });
 			return !box || (box.right > 0 && box.bottom > 0 && box.left < this.originalCanvas.width && box.top < this.originalCanvas.height);
 		} catch (error) {
 			dbg('[Export] Could not measure layer bounds; keeping layer in export.', layer?.id, error);

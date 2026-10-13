@@ -6,6 +6,7 @@ const vm = require('vm');
 
 const root = path.join(__dirname, '..', '..');
 const sources = {
+	ClipPreview: fs.readFileSync(path.join(root, 'js/systems/ClipPreview.js'), 'utf8'),
 	patternSource: fs.readFileSync(path.join(root, 'js/paint/pattern-source.js'), 'utf8'),
 	FilterLayerManager: fs.readFileSync(path.join(root, 'js/layers/FilterLayerManager.js'), 'utf8'),
 	transformMath: fs.readFileSync(path.join(root, 'js/transforms/transform-math.js'), 'utf8'),

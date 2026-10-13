@@ -662,6 +662,9 @@ const CONFIG = deepFreeze({
 		// Canvas edge coverage; brush Softness remains an independent feather.
 		crispMaskEdges: true,
 		maskAlphaThreshold: 128,
+		// How many times over a clipped layer counts its base's soft edge
+		// coverage (js/paint/clip-mask.js). 1 is plain coverage.
+		clipSoftEdgeGain: 3,
 		textureCoordinates: {
 			defaultAnchor: 'artwork',
 			defaultOffsetX: 0,
@@ -911,6 +914,7 @@ const CONFIG = deepFreeze({
 					{ kind: 'button', id: 'centerLayerHorizontal', icon: 'align-center-x', name: 'Center H', title: 'Center Horizontally', action: 'centerSelectionH' },
 					{ kind: 'button', id: 'centerLayerVertical', icon: 'align-center-y', name: 'Center V', title: 'Center Vertically', action: 'centerSelectionV' },
 					{ kind: 'button', id: 'duplicateLayerSelection', icon: 'clone', name: 'Duplicate', title: 'Duplicate selected layer(s) (Ctrl+D)', action: 'duplicateSelection' },
+					{ kind: 'button', id: 'contextClipping', icon: 'clip', name: 'Clip', title: 'Clip to Layer Below / Release Clip (Ctrl+Alt+G)', action: 'toggleClippingMask' },
 					{ kind: 'button', id: 'contextCropLayers', icon: 'crop', name: 'Crop', title: 'Crop the canvas to the selected layer(s), or to all the artwork when nothing is selected', action: 'cropToLayers' }
 				]
 			},

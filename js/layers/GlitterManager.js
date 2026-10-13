@@ -520,7 +520,7 @@ class GlitterManager {
 				isLayerTransformable(layer) &&
 				!layer.locked
 			) {
-				if (!transform.isDraggingHandle) transform.createTransformHandles();
+				transform.createTransformHandles();
 			} else {
 				transform.removeTransformHandles();
 			}

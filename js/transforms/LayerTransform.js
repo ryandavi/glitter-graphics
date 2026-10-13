@@ -66,6 +66,10 @@ class LayerTransform {
 		return null;
 	}
 
+	supportsRotation() {
+		return LAYER_UI_CONFIG[this.layer.type]?.transformCapabilities?.rotation !== false;
+	}
+
 	supportsEdgeResize() {
 		return Boolean(LAYER_UI_CONFIG[this.layer.type]?.transformCapabilities?.edgeResize);
 	}
@@ -178,7 +182,7 @@ updateTransform(updates) {
 		transform.proportionalScale = updates.proportionalScale;
 	}
 
-	if (updates.rotation !== undefined) {
+	if (updates.rotation !== undefined && this.supportsRotation()) {
 		// Normalize rotation to 0-360 range
 		let newRotation = CONFIG.tools.stickers.transform.roundValues ? Math.round(updates.rotation) : updates.rotation;
 		newRotation = newRotation % 360;
@@ -194,11 +198,11 @@ updateTransform(updates) {
 		this.layer.opacity = updates.opacity;
 	}
 
-	if (updates.flipX !== undefined) {
+	if (updates.flipX !== undefined && LAYER_UI_CONFIG[this.layer.type]?.transformCapabilities?.flip !== false) {
 		transform.flipX = updates.flipX;
 	}
 
-	if (updates.flipY !== undefined) {
+	if (updates.flipY !== undefined && LAYER_UI_CONFIG[this.layer.type]?.transformCapabilities?.flip !== false) {
 		transform.flipY = updates.flipY;
 	}
 
@@ -477,6 +481,7 @@ updateTransform(updates) {
 	}
 
 	resetTransform(options = {}) {
+		LAYER_UI_CONFIG[this.layer.type]?.resetGeometry?.(this.editor, this.layer);
 		const transform = this.getTransform();
 		// A type with a home placement (a fill's mask surface) goes back to it;
 		// every other layer stays where it is.
@@ -837,7 +842,8 @@ const handleMouseMove = (e) => {
 		const nextScaleX = clampLayerScale(currentScaleX * gestureDelta.scale);
 		const nextScaleY = clampLayerScale(currentScaleY * gestureDelta.scale);
 		const scaleFactor = currentScaleX !== 0 ? nextScaleX / currentScaleX : 1;
-		const rotationDeltaRad = (gestureDelta.rotateDeg * Math.PI) / 180;
+		const rotateDeg = this.supportsRotation() ? gestureDelta.rotateDeg : 0;
+		const rotationDeltaRad = (rotateDeg * Math.PI) / 180;
 		const relativeX = transform.position.x - previousCentroidCanvas.x;
 		const relativeY = transform.position.y - previousCentroidCanvas.y;
 		const scaledX = relativeX * scaleFactor;
@@ -854,7 +860,7 @@ const handleMouseMove = (e) => {
 				x: nextScaleX,
 				y: nextScaleY
 			},
-			rotation: transform.rotation + gestureDelta.rotateDeg
+			rotation: transform.rotation + rotateDeg
 		});
 		this.gestureRawPosition = { ...this.getTransform().position };
 
@@ -911,6 +917,7 @@ const handleMouseMove = (e) => {
 			const scaled = scale.x !== startScale?.x || scale.y !== startScale?.y;
 			const anchor = scaled ? getLayerAnchorPoint(this.editor, this.layer) : null;
 			if (anchor) await this.commitScaleChange(anchor, { startScale });
+			getLayerManagerForType(this.editor, this.layer.type)?.commitTransform?.(this.layer);
 			this.editor.saveState('Transform layer');
 		}
 	}
@@ -922,6 +929,9 @@ const handleMouseMove = (e) => {
 	 * Only works when CONFIG.ui.stickerHandles.enabled is true
 	 */
 createTransformHandles() {
+	// A drag owns the handles it started on: rebuilding them mid-gesture
+	// drops its pointer capture. Every re-render during a drag lands here.
+	if (this.isDraggingHandle && this.transformHandles) return;
 	this.removeHoverOutline();
 	// Check if handles are enabled
 	if (!CONFIG.ui.stickerHandles.enabled) return;
@@ -960,7 +970,7 @@ createTransformHandles() {
 	const handles = readOnly ? [] : ['corner-tl', 'corner-tr', 'corner-br', 'corner-bl'];
 	if (!readOnly && this.supportsEdgeResize()) handles.push('edge-top', 'edge-right', 'edge-bottom', 'edge-left');
 	if (!readOnly) handles.push(...(LAYER_UI_CONFIG[this.layer.type]?.selectionChrome?.handles || []));
-	if (!readOnly) handles.push('rotate-tl', 'rotate-tr', 'rotate-br', 'rotate-bl', 'rotation', 'anchor');
+	if (!readOnly && this.supportsRotation()) handles.push('rotate-tl', 'rotate-tr', 'rotate-br', 'rotate-bl', 'rotation', 'anchor');
 	if (!readOnly && LAYER_UI_CONFIG[this.layer.type]?.supportsCornerRadius?.(this.layer)) {
 		handles.push('radius-tl', 'radius-tr', 'radius-br', 'radius-bl');
 	}
@@ -1012,7 +1022,7 @@ createTransformHandles() {
 			} else {
 				const prefix = LAYER_UI_CONFIG[this.layer.type]?.transformPrefix;
 				const size = this.editor.getTransformSizeState?.(this.layer, prefix);
-				if (size?.visible) badge = { mode: 'size', text: `${size.width} × ${size.height}` };
+				if (size?.visible) badge = { mode: 'size', text: formatSizeBadge(size.width, size.height) };
 			}
 		}
 		const anchor = transform.anchor;
@@ -1121,6 +1131,11 @@ removeTransformHandles() {
 		this.transformHandles.addEventListener('dblclick', (event) => {
 			// An area text edge fits its box to the text on that side.
 			const handleType = this.chrome.handleTypeAt(event) || '';
+			if (handleType === 'move') {
+				event.stopPropagation();
+				this.editor.handleLayerDoubleClick(this.layer);
+				return;
+			}
 			if (handleType.startsWith('edge-')) {
 				const edge = handleType.replace('edge-', '');
 				if (this.layer.locked || !this.editor.textGlitterManager?.canResizeBoxEdges?.(this.layer)) return;
@@ -1363,6 +1378,7 @@ removeTransformHandles() {
 				await this.commitScaleChange(anchorBeforeCommit, { text: !resizesTextBox, startScale });
 			}
 			if (completedDrag?.didMove) {
+				getLayerManagerForType(this.editor, this.layer.type)?.commitTransform?.(this.layer);
 				if (completedDrag.targetLayerId) {
 					this.editor.layerManager.setActiveLayer(completedDrag.targetLayerId);
 				}

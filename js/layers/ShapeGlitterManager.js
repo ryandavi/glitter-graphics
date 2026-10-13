@@ -785,7 +785,7 @@ class ShapeGlitterManager {
 				this.editor.currentTool === ToolType.SELECT &&
 				!this.editor.layerManager.hasMultiSelection()
 			) {
-				if (!transform.isDraggingHandle) transform.createTransformHandles();
+				transform.createTransformHandles();
 			} else {
 				transform.removeTransformHandles();
 			}

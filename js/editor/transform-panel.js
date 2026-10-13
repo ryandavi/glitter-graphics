@@ -69,7 +69,7 @@ renderTransformPanels() {
 				Math.abs(transform.position.x - home.position.x) > 0.5
 				|| Math.abs(transform.position.y - home.position.y) > 0.5
 			);
-			resetTransform.disabled = !moved && !this.hasResettableTransformAdjustments(transform);
+			resetTransform.disabled = !moved && !this.hasResettableTransformAdjustments(transform) && !LAYER_UI_CONFIG[layer.type]?.hasResettableGeometry?.(layer);
 		}
 		// Per-row reverts: on only when their control is away from its default.
 		const resetFlip = document.getElementById(ids.resetFlip);

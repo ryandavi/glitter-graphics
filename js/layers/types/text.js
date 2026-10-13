@@ -1,6 +1,8 @@
 'use strict';
 
 registerLayerType(LayerType.TEXT_GLITTER, {
+	clippable: true,
+	clipBase: true,
 	onDoubleClick: (editor, layer) => editor.textGlitterManager.beginTextEdit(layer),
 	vectorGeometry: async (editor, layer) => {
 		const data = layer.textData;

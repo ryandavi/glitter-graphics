@@ -191,6 +191,20 @@
 	image-rendering: inherit;
 }
 
+// A clipped layer's mask box and, inside it, the layer back in document
+// space (js/systems/ClipPreview.js places both).
+.clip-wrapper,
+.clip-content {
+	position: absolute;
+	transform-origin: 0 0;
+}
+
+.clip-wrapper {
+	pointer-events: none;
+	-webkit-mask-size: 100% 100%;
+	mask-size: 100% 100%;
+}
+
 // Sparkles slot particles (js/paint/sparkles.js): a host-sized layer of
 // absolutely placed spans, one per particle, each painting the slot through
 // its glyph mask. AnimationTicker writes every particle's transform and

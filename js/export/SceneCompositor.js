@@ -360,54 +360,47 @@ class SceneCompositor {
 	// box on each side (sparkles); the box, not the padding, anchors transform
 	// and animation.
 	_drawTransformedCanvas(ctx, sourceCanvas, layer, width, height, { smooth = false, pad = 0, padX = pad, padY = pad, rasterScale = null } = {}) {
-		const transform = getLayerTransform(layer);
-		const metrics = computeLayerTransform(transform, { width: width / (rasterScale?.x || 1), height: height / (rasterScale?.y || 1) });
-		const animation = this._activeLayerAnimation?.layer === layer
-			? this._activeLayerAnimation.sample
-			: null;
+		const metrics = computeLayerTransform(getLayerTransform(layer), { width: width / (rasterScale?.x || 1), height: height / (rasterScale?.y || 1) });
+		const animation = !this._bodyOnly && this._activeLayerAnimation?.layer === layer ? this._activeLayerAnimation.sample : null;
+		this._drawComposedCanvas(ctx, sourceCanvas, layer, metrics, width, height, animation, { smooth, rasterScale }, () => {
+			ctx.drawImage(sourceCanvas, -width / 2 - padX, -height / 2 - padY, width + padX * 2, height + padY * 2);
+		});
+	}
 
-		// Rainbow: rotate hue on the isolated source canvas before it's composited,
-		// mirroring the live-preview wrapper filter. sourceCanvas is rebuilt fresh
-		// every frame, so mutating it in place here is safe.
+	// Both local sources and a clipped canvas use the same composed motion,
+	// hue and wrap copies. A document-space source undoes the rest transform.
+	_drawComposedCanvas(ctx, sourceCanvas, layer, metrics, width, height, animation, { smooth = false, rasterScale = null, canvasSpace = false } = {}, draw) {
 		if (animation?.hue) {
 			const sourceCtx = sourceCanvas.getContext('2d');
 			const pixels = sourceCtx.getImageData(0, 0, sourceCanvas.width, sourceCanvas.height);
 			applyColorAdjustToImageData(pixels, { hue: animation.hue, saturation: 100, brightness: 100 });
 			sourceCtx.putImageData(pixels, 0, 0);
 		}
-
 		for (const copy of animation?.copies || [{ x: 0, y: 0 }]) {
 			ctx.save();
 			ctx.translate(copy.x, copy.y);
 			ctx.imageSmoothingEnabled = smooth;
-			ctx.globalAlpha *= layer.opacity / 100;
+			ctx.globalAlpha *= this._bodyOnly ? 1 : layer.opacity / 100;
 			if (animation) {
 				ctx.globalAlpha *= animation.opacity;
 				const { move } = GlitterAnimation.splitSample(animation);
 				ctx.translate(move.x, move.y);
 			}
 			ctx.translate(metrics.centerX, metrics.centerY);
-
-			if (metrics.rotationRad !== 0) {
-				ctx.rotate(metrics.rotationRad);
-			}
-
+			if (metrics.rotationRad !== 0) ctx.rotate(metrics.rotationRad);
 			ctx.scale(metrics.signedScaleX / (rasterScale?.x || 1), metrics.signedScaleY / (rasterScale?.y || 1));
 			if (animation) {
 				ctx.translate(-width / 2, -height / 2);
-				const { local: localAnimation } = GlitterAnimation.splitSample(animation);
-				GlitterAnimation.applyToContext(ctx, localAnimation, width, height);
+				const { local } = GlitterAnimation.splitSample(animation);
+				GlitterAnimation.applyToContext(ctx, local, width, height);
 				ctx.translate(width / 2, height / 2);
 			}
-
-			ctx.drawImage(
-				sourceCanvas,
-				-width / 2 - padX,
-				-height / 2 - padY,
-				width + padX * 2,
-				height + padY * 2
-			);
-
+			if (canvasSpace) {
+				ctx.scale(1 / metrics.signedScaleX, 1 / metrics.signedScaleY);
+				if (metrics.rotationRad !== 0) ctx.rotate(-metrics.rotationRad);
+				ctx.translate(-metrics.centerX, -metrics.centerY);
+			}
+			draw();
 			ctx.restore();
 		}
 	}
@@ -430,8 +423,44 @@ class SceneCompositor {
 		return getLayerAnimationSamplingContext(this.editor, layer);
 	}
 
+	_sampleLayerAnimation(layer, timestamp, sourceSelectionMap) {
+		const context = this._buildAnimationSamplingContext(layer);
+		const samples = layer.animations.map((animation, index) => ({ animation, index }))
+			.filter(({ animation }) => GlitterAnimation.isActive(animation))
+			.map(({ animation, index }) => sourceSelectionMap?.get(`__anim_${layer.id}_${index}`)?.sample || GlitterAnimation.sampleAt(animation, timestamp, context));
+		return GlitterAnimation.composeSamples(samples, { origin: context.origin });
+	}
+
+	_drawCanvasSpaceSample(ctx, canvas, layer, sample) {
+		const frame = getLayerFrame(this.editor, layer);
+		if (!frame) return;
+		const metrics = computeLayerTransform(getLayerTransform(layer), frame);
+		this._drawComposedCanvas(ctx, canvas, layer, metrics, frame.width, frame.height, sample, { canvasSpace: true }, () => ctx.drawImage(canvas, 0, 0));
+	}
+
 	_renderLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap = null, resolvedFramesBySource = null, scratch = null, timestamp = 0) {
 		const { isAnimated, width, height } = layer.stickerData;
+		if (this._bodyOnly) {
+			const canvas = scratch.sourceCanvas;
+			ensureCanvasSize(canvas, width, height);
+			const target = canvas.getContext('2d');
+			resetCanvasContext(target, width, height);
+			const frames = isAnimated ? this.decodedSources.get(layer.stickerData.url)?.frames || [] : [layer.stickerData.staticImageData];
+			for (const frame of frames) {
+				const pixels = this._getFrameImageData(frame);
+				if (!pixels) continue;
+				ensureCanvasSize(scratch.unionFrameCanvas, pixels.width, pixels.height);
+				scratch.unionFrameCanvas.getContext('2d').putImageData(pixels, 0, 0);
+				this.editor.stickerManager.drawStickerImage(target, scratch.unionFrameCanvas, layer, width, height);
+			}
+			target.globalCompositeOperation = 'source-in';
+			target.fillStyle = '#fff';
+			target.fillRect(0, 0, width, height);
+			target.globalCompositeOperation = 'source-over';
+			this._renderStickerEffects(layer, ctx, canvas, 0, null, null, scratch);
+			this._drawTransformedCanvas(ctx, canvas, layer, width, height, { smooth: layer.stickerData.isPixelated === false });
+			return;
+		}
 
 		// Determine which frame/image to use
 		let imageData;
@@ -558,6 +587,7 @@ class SceneCompositor {
 		const densityY = maskHeight / Math.max(1, layer.stickerData.height);
 		const previewPad = this.editor.stickerManager.getEffectPadding(layer);
 		buildSlotStack(layer, (entry) => this._getSlotSource(layer, entry)).forEach((item) => {
+			if (this._bodyOnly && !isClipBodyEntry(item)) return;
 			if ((phase === 'front') !== (item.role === 'bevel')) return;
 			const effectRadius = item.role === 'shadow' ? Number(item.data.spread) || 0 : item.role === 'border' ? Number(item.data.widthPx) || 0 : 0;
 			const pad = Math.ceil(item.role === 'shadow' ? getShadowCanvasPadding(item.data, { x: 0, y: 0, width: maskWidth, height: maskHeight }) : effectRadius + 2);
@@ -582,7 +612,7 @@ class SceneCompositor {
 			// A shadow's offset is baked into its mask (the padding covers it); the
 			// texture origin moves with it.
 			if (item.offsetX || item.offsetY) mask = createOffsetMaskCanvas(mask, Math.round(item.offsetX), Math.round(item.offsetY), scratch.offsetMaskCanvas);
-			this._renderFilledMaskInto(scratch.shadowFillCanvas, mask, item.source, layer, frameIndex, item.sourceKey, sourceSelectionMap, resolvedFramesBySource);
+			this._renderFilledMaskInto(scratch.shadowFillCanvas, mask, this._bodyOnly ? { mode: 'solid', color: '#fff', opacity: 1 } : item.source, layer, frameIndex, item.sourceKey, sourceSelectionMap, resolvedFramesBySource);
 			this._drawTransformedCanvas(ctx, scratch.shadowFillCanvas, layer, layer.stickerData.width, layer.stickerData.height, {
 				smooth: layer.stickerData.isPixelated === false,
 				padX: pad / densityX,
@@ -607,7 +637,7 @@ class SceneCompositor {
 		if (!compositeCanvas || !fillCanvas) throw new Error(`Missing slot scratch for layer ${layer.id}`);
 		// Sparkles may paint past the mask canvas; the preview's span stack
 		// does not clip them, so the composite grows by their padding.
-		const pad = Math.ceil(this._getSparklePadding(layer));
+		const pad = this._bodyOnly ? 0 : Math.ceil(this._getSparklePadding(layer));
 		ensureCanvasSize(compositeCanvas, width + pad * 2, height + pad * 2);
 		ensureCanvasSize(fillCanvas, width, height);
 		const compositeCtx = scratch.compositeCtx;
@@ -617,9 +647,10 @@ class SceneCompositor {
 		if (pad) this._drawLayerSparkles(compositeCtx, layer, 'behind', frame, placement);
 		const buildStack = scratch.buildStack || ((resolveSource) => buildSlotStack(layer, resolveSource));
 		buildStack((entry) => this._getSlotSource(layer, entry)).forEach((item) => {
+			if (this._bodyOnly && !isClipBodyEntry(item)) return;
 			const maskCanvas = slotMasks[item.key];
 			if (!maskCanvas) return;
-			this._renderFilledMaskInto(fillCanvas, maskCanvas, item.source, layer, frameIndex, item.sourceKey, sourceSelectionMap, resolvedFramesBySource);
+			this._renderFilledMaskInto(fillCanvas, maskCanvas, this._bodyOnly ? { mode: 'solid', color: '#fff', opacity: 1 } : item.source, layer, frameIndex, item.sourceKey, sourceSelectionMap, resolvedFramesBySource);
 			compositeCtx.drawImage(fillCanvas, pad, pad, width, height);
 		});
 		if (pad) this._drawLayerSparkles(compositeCtx, layer, 'front', frame, placement);
@@ -795,7 +826,18 @@ class SceneCompositor {
 	_buildLayerExportPlan(layer) {
 		const manager = getLayerManagerForType(this.editor, layer?.type);
 		if (!manager?.buildExportPlan) throw new Error(`Layer type ${layer?.type || 'unknown'} has no export-plan builder`);
-		return manager.buildExportPlan(layer, { compositor: this });
+		const plan = manager.buildExportPlan(layer, { compositor: this });
+		if (LAYER_UI_CONFIG[layer.type]?.clipBase) {
+			const drawBody = plan.renderBody;
+			if (!drawBody) throw new Error(`Clip base ${layer.type} has no renderBody export plan`);
+			plan.renderBody = (args) => {
+				const previous = this._bodyOnly;
+				this._bodyOnly = true;
+				try { return drawBody(args); }
+				finally { this._bodyOnly = previous; }
+			};
+		}
+		return plan;
 	}
 
 	_buildBaseImageExportPlan(layer) {
@@ -843,7 +885,7 @@ class SceneCompositor {
 			})
 		};
 		scratch.compositeCtx = scratch.compositeCanvas.getContext('2d', { alpha: true });
-		return {
+		const plan = {
 			prepareMasks: async ({ maskDataMap, maskCanvases, slotMaskCanvases, canvasData, callbacks }) => {
 				const rawMask = callbacks.createMask(layer);
 				maskDataMap.set(layer.id, rawMask);
@@ -867,8 +909,9 @@ class SceneCompositor {
 				);
 			}
 		};
+		plan.renderBody = plan.render;
+		return plan;
 	}
-
 	// buildStack(resolveSource) replaces buildSlotStack for a type whose paint
 	// list is not one item per slot (a frame's shade bands); its items name
 	// the slotMasks key they paint through.
@@ -881,7 +924,7 @@ class SceneCompositor {
 			buildStack
 		};
 		scratch.compositeCtx = scratch.compositeCanvas.getContext('2d', { alpha: true });
-		return {
+		const plan = {
 			// The layer's manager builds every slot mask (the same masks its
 			// preview uses), so preview and export never diverge.
 			prepareMasks: async ({ slotMaskCanvases, callbacks }) => {
@@ -895,8 +938,9 @@ class SceneCompositor {
 				this._renderSlotStackToCanvas(layer, ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, slotMaskCanvases?.get(layer.id), scratch, timestamp);
 			}
 		};
+		plan.renderBody = plan.render;
+		return plan;
 	}
-
 	_buildStickerExportPlan(layer) {
 		const getAuthoredSources = (library) => this._getSlotAuthoredSources(layer, library);
 		const scratch = {
@@ -909,7 +953,7 @@ class SceneCompositor {
 			sparkleCanvas: createAppCanvas(0, 0, 'export/SceneCompositor')
 		};
 		scratch.shadowMaskCtx = scratch.shadowMaskCanvas.getContext('2d', { alpha: true });
-		return {
+		const plan = {
 			prepareMasks: async () => {},
 			prepareStaticResources: async ({ callbacks }) => {
 				const stickerData = layer.stickerData;
@@ -936,8 +980,9 @@ class SceneCompositor {
 				this._renderLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, scratch, timestamp);
 			}
 		};
+		plan.renderBody = plan.render;
+		return plan;
 	}
-
 	_buildFilterExportPlan(layer) {
 		return {
 			prepareMasks: async () => {},
@@ -947,7 +992,7 @@ class SceneCompositor {
 				if (!GlitterFilter.isActive(layer.filterData, layer.opacity)) return;
 				const caption = GlitterFilter.resolve(layer.filterData).caption;
 				const captionSpec = caption ? GlitterFilter.nameCaptionSpec(caption, { width, height }) : null;
-				await GlitterFilter.renderToCanvas(ctx, width, height, layer.filterData, layer.opacity / 100, {
+				await GlitterFilter.renderRegionToCanvas(ctx, width, height, layer, {
 					keepAlpha,
 					alphaThreshold,
 					frameIndex: sourceSelectionMap?.get(`__filter_anim_${layer.id}`)?.frameIndex ?? frameIndex,
@@ -1242,7 +1287,8 @@ class SceneCompositor {
 	async _prepareExportContext(params) {
 		const { visibleLayers, glitterGifs, canvasData, exportSettings, callbacks } = params;
 		const settingsSnapshot = Object.freeze({ ...exportSettings });
-		const layerPlans = visibleLayers.map((layer) => ({ layer, plan: this._buildLayerExportPlan(layer) }));
+		const renderLayers = visibleLayers.filter(layer => getClipBase(this.editor.layers, layer)?.visible !== false);
+		const layerPlans = renderLayers.map((layer) => ({ layer, plan: this._buildLayerExportPlan(layer) }));
 		const authoredSources = this._collectAuthoredSources(layerPlans, glitterGifs, { includeBaseImage: settingsSnapshot.baseImage, baseAnimation: canvasData.baseAnimation });
 		const sourceKeys = new Set(authoredSources.map((descriptor) => descriptor.key));
 		for (const descriptor of authoredSources) {
@@ -1287,7 +1333,7 @@ class SceneCompositor {
 			layerPlans,
 			masks,
 			authoredSources,
-			proceduralSources: this._collectProceduralSources(visibleLayers, {
+			proceduralSources: this._collectProceduralSources(renderLayers, {
 				includeBaseImage: settingsSnapshot.baseImage,
 				canvasData
 			}),
@@ -1562,6 +1608,8 @@ class SceneCompositor {
 		// 5. Composite Glitter and Sticker Layers (in correct z-order)
 		for (const { layer, plan } of layerPlans) {
 			if (layer.visible === false) continue;
+			const clipBase = getClipBase(this.editor.layers, layer);
+			if (clipBase?.visible === false) continue;
 			if (layer.type === LayerType.BASE_IMAGE && !exportSettings.baseImage) continue;
 			const blendMode = LAYER_UI_CONFIG[layer.type]?.blendable
 				? GlitterBlendModes.forLayer(layer)
@@ -1585,21 +1633,19 @@ class SceneCompositor {
 			for (const unit of animationUnits) {
 				renderCtx.save();
 				if (unit.animData) {
-					const samplingContext = this._buildAnimationSamplingContext(layer);
-					const { origin } = samplingContext;
-					const sampled = unit.animData.map((animation, index) => ({ animation, index }))
-						.filter(({ animation }) => GlitterAnimation.isActive(animation))
-						.map(({ animation, index }) =>
-							sourceSelectionMap?.get(`__anim_${layer.id}_${index}`)?.sample
-							|| GlitterAnimation.sampleAt(animation, timestamp, samplingContext)
-						);
-					const sample = GlitterAnimation.composeSamples(sampled, { origin });
-					this._activeLayerAnimation = { layer, sample };
+					this._activeLayerAnimation = { layer, sample: this._sampleLayerAnimation(layer, timestamp, sourceSelectionMap) };
 				}
 				const layerStart = performance.now();
 				try {
+					let clipCtx = null;
+					if (clipBase) {
+						this.clipGroupCanvas ||= createAppCanvas(width, height, 'export/clip-group');
+						ensureCanvasSize(this.clipGroupCanvas, width, height);
+						clipCtx = this.clipGroupCanvas.getContext('2d');
+						resetCanvasContext(clipCtx, width, height);
+					}
 					const renderResult = plan.render({
-						ctx: renderCtx,
+						ctx: clipCtx || renderCtx,
 						frameIndex,
 						timestamp,
 						sourceSelectionMap,
@@ -1614,6 +1660,14 @@ class SceneCompositor {
 						matteColor: exportSettings.matteColor
 					});
 					if (renderResult?.then) await renderResult;
+					if (clipCtx) {
+						const body = await this.editor.getClipBodyCache().get(clipBase, { prepared: { compositor: this, context } });
+						clipCtx.globalCompositeOperation = 'destination-in';
+						clipCtx.drawImage(body, 0, 0);
+						clipCtx.globalCompositeOperation = 'source-over';
+						const sample = GlitterAnimation.isActive(clipBase.animations) ? this._sampleLayerAnimation(clipBase, timestamp, sourceSelectionMap) : null;
+						this._drawCanvasSpaceSample(renderCtx, this.clipGroupCanvas, clipBase, sample);
+					}
 				} finally {
 					this._activeLayerAnimation = null;
 					renderCtx.restore();
@@ -1686,14 +1740,15 @@ class SceneCompositor {
 			onStatus: () => {},
 			ensureTextFont: async () => {}
 		};
-		const layerPlans = layers.map((layer) => ({ layer, plan: this._buildLayerExportPlan(layer) }));
+		const renderLayers = layers.filter(layer => getClipBase(this.editor.layers, layer)?.visible !== false);
+		const layerPlans = renderLayers.map((layer) => ({ layer, plan: this._buildLayerExportPlan(layer) }));
 		const descriptors = this._collectAuthoredSources(layerPlans, library, { includeBaseImage: baseImage, baseAnimation });
 		for (const descriptor of descriptors) {
 			await descriptor.ensureLoaded(callbacks, { timingOnly: true });
 		}
 		const timelines = [
 			...descriptors.map((descriptor) => this._createAuthoredTimingSource(descriptor, fallbackDuration)),
-			...this._createProceduralTimelines(this._collectProceduralSources(layers, { includeBaseImage: baseImage }))
+			...this._createProceduralTimelines(this._collectProceduralSources(renderLayers, { includeBaseImage: baseImage }))
 		];
 		const timelineConfig = CONFIG.export.timeline;
 		const requestedFidelity = Number(exportFidelity);

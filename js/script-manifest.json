@@ -1,7 +1,12 @@
 {
 	"bundle": {
 		"output": "js/dist/boot.js",
-		"localHosts": ["localhost", "127.0.0.1", "::1", "[::1]"],
+		"localHosts": [
+			"localhost",
+			"127.0.0.1",
+			"::1",
+			"[::1]"
+		],
 		"sourceParam": "src",
 		"bundleParam": "bundle"
 	},
@@ -27,6 +32,7 @@
 		"js/systems/CanvasBounds.js",
 		"js/ui/panel-schemas.js",
 		"js/paint/paint-slots.js",
+		"js/paint/clip-mask.js",
 		"js/layers/types/base-image.js",
 		"js/layers/types/filter.js",
 		"js/layers/types/glitter-fill.js",
@@ -142,6 +148,7 @@
 		"js/export/DeferredExporter.js",
 		"js/export/GifEncodingPipeline.js",
 		"js/systems/AnimationTicker.js",
+		"js/systems/ClipPreview.js",
 		"js/systems/AnimationPanelController.js",
 		"js/ui/task-progress-presenter.js",
 		"js/export/ExportProgressPresenter.js",

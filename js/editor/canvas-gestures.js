@@ -1,4 +1,28 @@
 const CANVAS_GESTURE_METHODS = {
+	getClipBodyCache() {
+		return this.clipBodyCache ||= new ClipBodyCache(this);
+	},
+
+	canToggleClippingMask(layers = this.layerManager.getSelectedLayers()) {
+		return layers.length > 0 && layers.every(layer => canEditLayerInStack(layer) && getClipBase(this.layers, layer, { requireClipped: false }));
+	},
+
+	toggleClippingMask(layers = this.layerManager.getSelectedLayers()) {
+		if (!this.canToggleClippingMask(layers)) return;
+		const release = layers.every(layer => layer.clipped);
+		layers.forEach(layer => { layer.clipped = !release; });
+		this.layerManager.renderLayersList();
+		this.requestPreviewUpdate();
+		this.saveState(release ? 'Release clip' : 'Clip layer');
+		this.updateStatus(release ? 'Clipping released' : 'Clipped to layer below');
+	},
+	handleLayerDoubleClick(layer) {
+		if (!layer || isLayerFullyLocked(layer) || this.layerManager.hasMultiSelection()) return;
+		if (this.layerManager.activeLayerId !== layer.id) this.layerManager.selectLayerFromCanvas(layer.id);
+		const action = LAYER_UI_CONFIG[layer.type]?.onDoubleClick;
+		if (action) action(this, layer);
+		else this.layerManager.goToLayerSource(layer.id);
+	},
 	// Tool settings remain editable in a sheet, but its hidden tool cannot draw.
 	isCanvasToolSuspended() {
 		return Boolean(this.mobileManager?.isMobile && this.mobileManager.activeDrawer && this.currentTool !== ToolType.SELECT);
@@ -105,7 +129,7 @@ togglePreview() {
 			if (this.currentTool !== ToolType.SELECT || !this.originalImage || e.target.closest('.ui-ignore-gestures')) return;
 			const point = this.viewport.screenToCanvas(e.clientX, e.clientY);
 			const layer = this.layerManager.getTopVisibleLayerAtPoint(point.x, point.y, { includeBase: false, excludeLocked: true });
-			if (layer) LAYER_UI_CONFIG[layer.type]?.onDoubleClick?.(this, layer);
+			this.handleLayerDoubleClick(layer);
 		});
 
 		// The move cursor for a canvas-picked layer follows the same test as the
@@ -255,35 +279,29 @@ togglePreview() {
 
 		this.cancelCreationGesture();
 
-		const rect = this.previewContainer.getBoundingClientRect();
-		const preview = document.createElement('div');
-		preview.className = 'creation-drag-preview';
-		this.previewContainer.appendChild(preview);
-
-		this.creationGesture = {
+		const overlay = this.viewport.selectionOverlay;
+		const chrome = new SelectionChrome(overlay, { readOnly: true, handles: [], className: 'transform-handles creation-chrome ui-ignore-gestures' });
+		const session = this.creationGesture = {
 			startCanvas: this.viewport.screenToCanvas(clientX, clientY),
-			startScreen: { x: clientX - rect.left, y: clientY - rect.top },
-			containerRect: rect,
-			preview,
+			chrome,
+			model: null,
 			suppressNextClick: options.suppressNextClick !== false
 		};
+		session.sync = () => { if (session.model) chrome.render(session.model); };
+		overlay.addSyncer(session.sync);
+		chrome.element.hidden = true;
 
 		return true;
 	},
 
-	getCreationBox(clientX, clientY, useCanvas = false, shiftKey = false) {
+	getCreationBox(clientX, clientY, shiftKey = false) {
 		const session = this.creationGesture;
 		if (!session) {
 			return null;
 		}
 
-		const pointA = useCanvas ? session.startCanvas : session.startScreen;
-		const pointB = useCanvas
-			? this.viewport.screenToCanvas(clientX, clientY)
-			: {
-				x: clientX - session.containerRect.left,
-				y: clientY - session.containerRect.top
-			};
+		const pointA = session.startCanvas;
+		const pointB = this.viewport.screenToCanvas(clientX, clientY);
 
 		let width = Math.abs(pointB.x - pointA.x);
 		let height = Math.abs(pointB.y - pointA.y);
@@ -306,12 +324,10 @@ togglePreview() {
 
 	// Where a line-shaped creation drag ends: the pointer, or with Shift the
 	// nearest angle step around the start.
-	getCreationLineEnd(clientX, clientY, useCanvas = false, shiftKey = false) {
+	getCreationLineEnd(clientX, clientY, shiftKey = false) {
 		const session = this.creationGesture;
-		const start = useCanvas ? session.startCanvas : session.startScreen;
-		const end = useCanvas
-			? this.viewport.screenToCanvas(clientX, clientY)
-			: { x: clientX - session.containerRect.left, y: clientY - session.containerRect.top };
+		const start = session.startCanvas;
+		const end = this.viewport.screenToCanvas(clientX, clientY);
 		return shiftKey ? PathGeometry.constrainAngle(start, end, CONFIG.tools.path.line.angleStepDeg) : end;
 	},
 
@@ -321,26 +337,24 @@ togglePreview() {
 			return;
 		}
 
-		if (TOOLS[this.currentTool]?.dragPreview === 'line') {
-			const start = session.startScreen;
-			const end = this.getCreationLineEnd(clientX, clientY, false, shiftKey);
-			session.preview.classList.add('is-line');
-			session.preview.style.left = `${start.x}px`;
-			session.preview.style.top = `${start.y}px`;
-			session.preview.style.width = `${Math.hypot(end.x - start.x, end.y - start.y)}px`;
-			session.preview.style.transform = `rotate(${Math.atan2(end.y - start.y, end.x - start.x)}rad)`;
-			return;
+		const box = this.getCreationBox(clientX, clientY, shiftKey);
+		const isLine = TOOLS[this.currentTool]?.dragPreview === 'line';
+		session.chrome.element.hidden = Math.max(box.width, box.height) < CONFIG.ui.gestures.creationDragThreshold;
+		session.chrome.element.classList.toggle('is-line', isLine);
+		let frame = { ...box, rotation: 0 };
+		const size = TOOLS[this.currentTool]?.creationSize?.(box, this) || box;
+		let text = formatSizeBadge(size.width, size.height);
+		if (isLine) {
+			const start = { x: Math.round(session.startCanvas.x), y: Math.round(session.startCanvas.y) };
+			const point = this.getCreationLineEnd(clientX, clientY, shiftKey);
+			const end = { x: Math.round(point.x), y: Math.round(point.y) };
+			const angle = Math.atan2(end.y - start.y, end.x - start.x) * 180 / Math.PI;
+			const length = Math.hypot(end.x - start.x, end.y - start.y);
+			frame = { centerX: (start.x + end.x) / 2, centerY: (start.y + end.y) / 2, width: length, height: 0, rotation: angle };
+			text = `${Math.round(length)} px · ${Math.round(normalizeRotationDeg(angle))}°`;
 		}
-
-		const box = this.getCreationBox(clientX, clientY, false, shiftKey);
-		if (!box) {
-			return;
-		}
-
-		session.preview.style.left = `${box.left}px`;
-		session.preview.style.top = `${box.top}px`;
-		session.preview.style.width = `${box.width}px`;
-		session.preview.style.height = `${box.height}px`;
+		session.model = { frame, badge: { mode: 'size', text } };
+		session.sync();
 	},
 
 	cancelCreationGesture() {
@@ -349,7 +363,8 @@ togglePreview() {
 			return;
 		}
 
-		session.preview?.remove();
+		this.viewport.selectionOverlay.removeSyncer(session.sync);
+		session.chrome.remove();
 		this.creationGesture = null;
 	},
 
@@ -359,8 +374,8 @@ togglePreview() {
 			return null;
 		}
 
-		const box = this.getCreationBox(clientX, clientY, true, Boolean(options.shiftKey));
-		const end = this.getCreationLineEnd(clientX, clientY, true, Boolean(options.shiftKey));
+		const box = this.getCreationBox(clientX, clientY, Boolean(options.shiftKey));
+		const end = this.getCreationLineEnd(clientX, clientY, Boolean(options.shiftKey));
 		const suppressNextClick = options.suppressNextClick ?? session.suppressNextClick;
 
 		this.cancelCreationGesture();

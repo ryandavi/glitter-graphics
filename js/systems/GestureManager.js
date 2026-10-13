@@ -660,14 +660,13 @@ class GestureManager {
 			return;
 		}
 
-		if (route?.type === 'layerDrag') {
+		if (route?.type === 'layerDrag' || route?.type === 'layerSelect') {
 			const layer = this.getLayerById(route.layerId);
 			if (!layer) {
 				return;
 			}
 
-			this.editor.layerManager.selectLayerFromCanvas(layer.id);
-			LAYER_UI_CONFIG[layer.type]?.onDoubleClick?.(this.editor, layer);
+			this.editor.handleLayerDoubleClick(layer);
 
 			return;
 		}

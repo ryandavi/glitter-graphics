@@ -336,7 +336,12 @@ function getLayerCanvasBox(editor, layer, { visual = false } = {}) {
 	const manager = getLayerManagerForType(editor, layer.type);
 	const transform = manager?.layerTransforms?.get(layer.id) || new LayerTransform(layer, editor);
 	const metrics = visual ? transform.getFrameMetrics(undefined, transform.getVisualBounds()) : transform.getFrameMetrics();
-	return { left: metrics.minX, top: metrics.minY, right: metrics.maxX, bottom: metrics.maxY };
+	const box = { left: metrics.minX, top: metrics.minY, right: metrics.maxX, bottom: metrics.maxY };
+	const base = visual && getClipBase(editor.layers, layer);
+	if (!base) return box;
+	if (base.visible === false || base.opacity <= 0) return null;
+	const body = editor.clipBodyCache?.peek(base)?._clipBounds || getLayerCanvasBox(editor, base);
+	return body ? { left: Math.max(box.left, body.left), top: Math.max(box.top, body.top), right: Math.max(Math.max(box.left, body.left), Math.min(box.right, body.right)), bottom: Math.max(Math.max(box.top, body.top), Math.min(box.bottom, body.bottom)) } : box;
 }
 
 function getLayersCanvasBox(editor, layers, options = {}) {
@@ -353,6 +358,8 @@ function getLayersCanvasBox(editor, layers, options = {}) {
 // travels the canvas (Marquee, Ricochet, Wander) is shaped by it, so it
 // claims the whole canvas: cropping into it would change the motion.
 function getLayerMotionBox(editor, layer, steps = 64) {
+	const clipBase = getClipBase(editor.layers, layer);
+	if (clipBase) return getClippedLayerMotionBox(editor, layer, clipBase, steps);
 	const rest = getLayerCanvasBox(editor, layer, { visual: true });
 	const animations = GlitterAnimation.normalizeAnimations(layer.animations).filter((animation) => GlitterAnimation.isActive(animation));
 	if (!rest || !animations.length) return rest;
@@ -376,6 +383,41 @@ function getLayerMotionBox(editor, layer, steps = 64) {
 		});
 	}
 	return box;
+}
+
+function getClippedLayerMotionBox(editor, layer, base, steps) {
+	if (base.visible === false || base.opacity <= 0) return null;
+	const own = GlitterAnimation.normalizeAnimations(layer.animations).filter(GlitterAnimation.isActive);
+	const inherited = GlitterAnimation.normalizeAnimations(base.animations).filter(GlitterAnimation.isActive);
+	const animations = [...own, ...inherited];
+	if (!animations.length) return getLayerCanvasBox(editor, layer, { visual: true });
+	if (animations.some(animation => GlitterAnimation.MOTION_REGISTRY[animation.type].needsBounds)) return { left: 0, top: 0, right: editor.originalCanvas.width, bottom: editor.originalCanvas.height };
+	const manager = getLayerManagerForType(editor, layer.type);
+	const transform = manager?.layerTransforms?.get(layer.id) || new LayerTransform(layer, editor);
+	const metrics = transform.getFrameMetrics(undefined, transform.getVisualBounds());
+	const corners = [[metrics.minX, metrics.minY], [metrics.maxX, metrics.minY], [metrics.maxX, metrics.maxY], [metrics.minX, metrics.maxY]];
+	const body = editor.clipBodyCache?.peek(base)?._clipBounds || getLayerCanvasBox(editor, base);
+	const duration = Math.max(...animations.map(animation => animation.delayMs + animation.periodMs * (Number.isFinite(animation.iterations) ? animation.iterations : 1))) * animations.length;
+	const ownContext = getLayerAnimationSamplingContext(editor, layer), baseContext = getLayerAnimationSamplingContext(editor, base);
+	let box = null;
+	for (let index = 0; index <= steps * animations.length; index++) {
+		const time = duration * index / (steps * animations.length);
+		const sample = GlitterAnimation.sampleAt(own, time, ownContext), baseSample = GlitterAnimation.sampleAt(inherited, time, baseContext);
+		for (const copy of sample.copies || [{ x: 0, y: 0 }]) {
+			const points = corners.map(([x, y]) => getClipMovedPoint(editor, layer, sample, x, y));
+			const left = Math.max(body.left, Math.min(...points.map(point => point.x + copy.x))), right = Math.min(body.right, Math.max(...points.map(point => point.x + copy.x)));
+			const top = Math.max(body.top, Math.min(...points.map(point => point.y + copy.y))), bottom = Math.min(body.bottom, Math.max(...points.map(point => point.y + copy.y)));
+			if (right <= left || bottom <= top) continue;
+			for (const inheritedCopy of baseSample.copies || [{ x: 0, y: 0 }]) {
+				for (const [x, y] of [[left, top], [right, top], [right, bottom], [left, bottom]]) {
+					const point = getClipMovedPoint(editor, base, baseSample, x, y);
+					const px = point.x + inheritedCopy.x, py = point.y + inheritedCopy.y;
+					box = unionBoxes(box, { left: px, top: py, right: px, bottom: py });
+				}
+			}
+		}
+	}
+	return box || { left: body.left, top: body.top, right: body.left, bottom: body.top };
 }
 
 function getLayerAnimationSamplingContext(editor, layer) {

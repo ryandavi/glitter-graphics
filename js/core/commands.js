@@ -78,6 +78,11 @@ const COMMANDS = {
 		when: (editor) => editor.getSelectedActionableLayers().length > 0,
 		run: (editor) => editor.cloneSelectedLayers()
 	},
+	toggleClippingMask: {
+		label: 'Clip to Layer Below / Release Clip', group: 'Transform', keys: ['mod+alt+g'], displayKey: 'Ctrl/Cmd + Alt + G',
+		when: editor => editor.canToggleClippingMask(),
+		run: editor => editor.toggleClippingMask()
+	},
 	flipHorizontal: {
 		label: 'Flip Horizontal', group: 'Transform', keys: ['shift+h'], displayKey: 'Shift + H',
 		when: (editor) => editor.getSelectedActionableLayers().length === 1 && Boolean(editor.getMovableLayerContext(editor.layerManager.getActiveLayer())),

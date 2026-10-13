@@ -7,6 +7,10 @@ function formatDimensions(width, height, unit = 'px') {
 	return `${width}<span class="setting-separator"> × </span>${height}<span class="setting-unit">${unit}</span>`;
 }
 
+function formatSizeBadge(width, height) {
+	return `${Math.round(width)} × ${Math.round(height)}`;
+}
+
 // A slider whose raw value is an opaque internal range (Auto Glitter / Canvas
 // pixel-effects "Combine Similar" run 0.01–0.12) reads as its 0–100 % position
 // through that range instead. One home for the maths so the boot text, the live
