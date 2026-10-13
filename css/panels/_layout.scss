@@ -412,7 +412,8 @@ body.no-document .app-header {
 // ===== Sidebar resize handles ==============================================
 
 .panel-resize-handle,
-.library-split-handle {
+.library-split-handle,
+.timeline-resize-handle {
 	pointer-events: auto;
 	touch-action: none;
 	background: transparent;
@@ -455,6 +456,19 @@ body.no-document .app-header {
 		&::before { background: var(--color-accent); opacity: 1; }
 		&::after { opacity: 0.7; }
 	}
+}
+
+// A handle between two stacked regions: its own strip, with the grip and the
+// line lying along it.
+.library-split-handle,
+.timeline-resize-handle {
+	--split-grip-width: var(--spacing-xl);
+	--split-grip-height: var(--spacing-2xs);
+	--split-line-width: 100%;
+	--split-line-height: var(--spacing-2xs);
+	position: relative;
+	flex: 0 0 var(--spacing-base);
+	cursor: row-resize;
 }
 
 .panel-resize-handle {

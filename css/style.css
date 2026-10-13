@@ -3251,7 +3251,8 @@ body.no-document .app-header > .app-header-right > .app-header-project {
 }
 
 .panel-resize-handle,
-.library-split-handle {
+.library-split-handle,
+.timeline-resize-handle {
   pointer-events: auto;
   touch-action: none;
   background: transparent;
@@ -3260,12 +3261,15 @@ body.no-document .app-header > .app-header-right > .app-header-project {
   transition: opacity var(--transition-fast);
 }
 .panel-resize-handle.is-dragging,
-.library-split-handle.is-dragging {
+.library-split-handle.is-dragging,
+.timeline-resize-handle.is-dragging {
   opacity: 1;
 }
 .panel-resize-handle::before, .panel-resize-handle::after,
 .library-split-handle::before,
-.library-split-handle::after {
+.library-split-handle::after,
+.timeline-resize-handle::before,
+.timeline-resize-handle::after {
   content: "";
   position: absolute;
   top: 50%;
@@ -3276,14 +3280,16 @@ body.no-document .app-header > .app-header-right > .app-header-project {
   transition: opacity var(--transition-fast), background-color var(--transition-fast);
 }
 .panel-resize-handle::before,
-.library-split-handle::before {
+.library-split-handle::before,
+.timeline-resize-handle::before {
   width: var(--split-grip-width, var(--spacing-2xs));
   height: var(--split-grip-height, var(--spacing-xl));
   background: var(--color-text-tertiary);
   opacity: 0.55;
 }
 .panel-resize-handle::after,
-.library-split-handle::after {
+.library-split-handle::after,
+.timeline-resize-handle::after {
   width: var(--split-line-width, var(--spacing-2xs));
   height: var(--split-line-height, 100%);
   background: var(--color-accent);
@@ -3292,15 +3298,32 @@ body.no-document .app-header > .app-header-right > .app-header-project {
 .panel-resize-handle:hover::before, .panel-resize-handle:focus-visible::before, .panel-resize-handle.is-dragging::before,
 .library-split-handle:hover::before,
 .library-split-handle:focus-visible::before,
-.library-split-handle.is-dragging::before {
+.library-split-handle.is-dragging::before,
+.timeline-resize-handle:hover::before,
+.timeline-resize-handle:focus-visible::before,
+.timeline-resize-handle.is-dragging::before {
   background: var(--color-accent);
   opacity: 1;
 }
 .panel-resize-handle:hover::after, .panel-resize-handle:focus-visible::after, .panel-resize-handle.is-dragging::after,
 .library-split-handle:hover::after,
 .library-split-handle:focus-visible::after,
-.library-split-handle.is-dragging::after {
+.library-split-handle.is-dragging::after,
+.timeline-resize-handle:hover::after,
+.timeline-resize-handle:focus-visible::after,
+.timeline-resize-handle.is-dragging::after {
   opacity: 0.7;
+}
+
+.library-split-handle,
+.timeline-resize-handle {
+  --split-grip-width: var(--spacing-xl);
+  --split-grip-height: var(--spacing-2xs);
+  --split-line-width: 100%;
+  --split-line-height: var(--spacing-2xs);
+  position: relative;
+  flex: 0 0 var(--spacing-base);
+  cursor: row-resize;
 }
 
 .panel-resize-handle {
@@ -3716,14 +3739,7 @@ body:not(.phone-bar) .main-content > .design-panel.library-window:not(.is-open) 
   }
 }
 .library-split-handle {
-  --split-grip-width: var(--spacing-xl);
-  --split-grip-height: var(--spacing-2xs);
-  --split-line-width: 100%;
-  --split-line-height: var(--spacing-2xs);
-  position: relative;
   display: none;
-  flex: 0 0 var(--spacing-base);
-  cursor: row-resize;
 }
 
 @media (min-width: 1041px) {
@@ -4976,6 +4992,203 @@ body.tool-select :is(.sticker-element, .text-glitter-element, .shape-glitter-ele
 }
 body.tool-select .preview-container.is-over-picked-layer {
   cursor: move;
+}
+
+.timeline-dock {
+  container: timeline/inline-size;
+  position: relative;
+  flex: 0 0 auto;
+  height: var(--timeline-height);
+  margin-inline: var(--canvas-inset-left, 0) var(--canvas-inset-right, 0);
+  padding-bottom: var(--spacing-base);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.timeline-dock > .timeline-section {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+}
+.timeline-dock .section-header-action:disabled {
+  opacity: var(--opacity-disabled);
+}
+.timeline-dock .timeline-body {
+  --timeline-label-column: var(--timeline-label-width);
+  --timeline-info-column: var(--timeline-info-width);
+  --timeline-label-inset: calc(var(--spacing-sm) + var(--font-size-md) + 3 * var(--spacing-xs));
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.timeline-dock .timeline-ruler, .timeline-dock .timeline-row {
+  display: grid;
+  grid-template-columns: var(--timeline-label-column) var(--timeline-track-width) var(--timeline-info-column);
+  width: calc(var(--timeline-label-column) + var(--timeline-track-width) + var(--timeline-info-column));
+  min-width: 100%;
+}
+.timeline-dock .timeline-ruler {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--color-bg-primary);
+}
+.timeline-dock .timeline-ruler-track {
+  grid-column: 2;
+  position: relative;
+  overflow: hidden;
+}
+.timeline-dock .timeline-ruler-ticks {
+  display: block;
+}
+.timeline-dock .timeline-loop-end {
+  position: absolute;
+  inset: 0 auto 0 var(--timeline-loop-x);
+  border-left: 1px solid var(--color-text-secondary);
+  padding-left: var(--spacing-xs);
+  font-size: var(--font-size-xs);
+  background: var(--color-bg-primary);
+}
+.timeline-dock .timeline-group-header {
+  position: sticky;
+  left: 0;
+  width: 100%;
+  min-height: var(--timeline-group-height);
+  height: var(--timeline-group-height);
+  gap: var(--spacing-xs);
+  background: var(--color-bg-secondary);
+}
+.timeline-dock .timeline-group-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding: 0;
+  text-align: left;
+  color: var(--color-text-primary);
+}
+.timeline-dock .timeline-group.is-collapsed .timeline-row {
+  display: none;
+}
+.timeline-dock .timeline-group.is-locked .timeline-group-name::after {
+  content: " · Locked";
+  color: var(--color-text-secondary);
+}
+.timeline-dock .timeline-row {
+  position: relative;
+  min-height: var(--timeline-row-height);
+  align-items: center;
+}
+.timeline-dock .timeline-row-label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  text-align: left;
+  padding: 0 var(--spacing-base) 0 var(--timeline-label-inset);
+  height: var(--timeline-row-height);
+  background: var(--color-bg-primary);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-normal);
+}
+.timeline-dock .timeline-track {
+  position: relative;
+  grid-column: 2;
+  height: var(--timeline-row-height);
+  overflow: hidden;
+}
+.timeline-dock .timeline-track::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 var(--timeline-loop-x);
+  border-left: 1px solid var(--color-text-secondary);
+  pointer-events: none;
+}
+.timeline-dock .timeline-bar, .timeline-dock .timeline-bar-ghost {
+  position: absolute;
+  top: var(--spacing-2xs);
+  height: calc(var(--timeline-row-height) - 2 * var(--spacing-2xs));
+  background: var(--color-bg-tertiary);
+  border: 0;
+  border-radius: var(--radius-xs);
+  padding: 0;
+  color: var(--color-text-secondary);
+  overflow: hidden;
+}
+.timeline-dock .timeline-bar {
+  cursor: pointer;
+}
+.timeline-dock .timeline-row:hover .timeline-bar, .timeline-dock .timeline-row:focus-within .timeline-bar, .timeline-dock .is-selected .timeline-bar {
+  background: var(--color-accent);
+  color: var(--color-text-on-accent);
+}
+.timeline-dock .timeline-bar-ghost {
+  opacity: 0.35;
+  pointer-events: none;
+}
+.timeline-dock .timeline-bar-marks {
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(to right, currentColor 0 1px, transparent 1px var(--cycle-px));
+  background-position: var(--cycle-offset-px) 0;
+  pointer-events: none;
+}
+.timeline-dock .timeline-cycle-mark {
+  position: absolute;
+  top: 50%;
+  bottom: 0;
+  width: 1px;
+  background: currentColor;
+}
+.timeline-dock .timeline-bar-seam {
+  position: absolute;
+  left: var(--timeline-loop-x);
+  transform: translateX(-100%);
+  z-index: 1;
+  color: var(--color-warning);
+  pointer-events: auto;
+}
+.timeline-dock .timeline-row-info {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding: 0 var(--spacing-base);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+.timeline-dock .timeline-row-lane {
+  grid-column: 2;
+}
+@container timeline (max-width: 600px) {
+  .timeline-dock .section-header-title-text {
+    display: none;
+  }
+  .timeline-dock .timeline-body {
+    --timeline-label-column: 0px;
+    --timeline-info-column: 0px;
+    --timeline-label-inset: var(--spacing-base);
+  }
+  .timeline-dock .timeline-row-info {
+    display: none;
+  }
+  .timeline-dock .timeline-row:is(:hover, :focus-within, .is-selected) .timeline-row-label {
+    background: var(--color-accent);
+    color: var(--color-text-on-accent);
+  }
+  .timeline-dock .timeline-row-label {
+    position: absolute;
+    left: var(--timeline-bar-left);
+    top: var(--spacing-2xs);
+    width: max-content;
+    max-width: calc(var(--timeline-loop-x) - var(--timeline-bar-left));
+    height: calc(var(--timeline-row-height) - 2 * var(--spacing-2xs));
+    background: var(--color-bg-tertiary);
+  }
 }
 
 .workspace-start {
@@ -6846,7 +7059,8 @@ body.tool-pen .preview-container[data-path-hover=empty] #canvasElementsContainer
 }
 
 .layers-panel > .section,
-.design-panel > .section {
+.design-panel > .section,
+.timeline-dock > .section {
   pointer-events: auto;
   border: 1px solid var(--color-window-border);
   border-radius: var(--radius-panel);
@@ -8011,7 +8225,8 @@ body.tool-text .text-hover-baselines {
 
 .property-panel,
 .property-section,
-.layers-panel {
+.layers-panel,
+.timeline-dock {
   --property-gutter: var(--spacing-lg);
 }
 
@@ -12021,6 +12236,16 @@ body.modal-open {
   }
 }
 
+@media (min-width: 1041px) {
+  [data-layout=phone] {
+    display: none !important;
+  }
+}
+@media (max-width: 1040px) {
+  [data-layout=desktop] {
+    display: none !important;
+  }
+}
 .mobile-bottom-nav,
 .mobile-sheet-handle,
 .phone-chip-bar {

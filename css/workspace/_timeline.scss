@@ -6,44 +6,32 @@
 	position: relative;
 	flex: 0 0 auto;
 	height: var(--timeline-height);
+	// Sits in the canvas column with a panel's margin below it; the resize
+	// strip is the gap above. The box, bar and handle are the panels' own.
 	margin-inline: var(--canvas-inset-left, 0) var(--canvas-inset-right, 0);
+	padding-bottom: var(--spacing-base);
 	display: flex;
 	flex-direction: column;
 	min-width: 0;
-	background: var(--color-bg-primary);
-	color: var(--color-text-primary);
-	font-size: var(--font-size-sm);
-	border: 1px solid var(--color-window-border);
-	border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 
-	.timeline-resize-handle {
-		position: absolute;
-		inset: calc(-1 * var(--spacing-xs)) 0 auto;
-		height: var(--spacing-base);
-		z-index: 3;
-		cursor: row-resize;
-		touch-action: none;
-		&:hover, &:focus-visible, &.is-dragging { background: var(--color-accent); }
-	}
-
-	.timeline-header {
-		@include bar-base;
+	> .timeline-section {
+		flex: 1;
+		min-height: 0;
 		display: flex;
-		align-items: center;
-		gap: var(--spacing-base);
-		padding: var(--spacing-xs) var(--spacing-base);
-		flex: 0 0 auto;
-		border-radius: inherit;
-		color: var(--bar-title-color);
+		flex-direction: column;
+		background: var(--color-bg-primary);
+		color: var(--color-text-primary);
+		font-size: var(--font-size-sm);
 	}
 
-	.timeline-title { font-weight: var(--font-weight-semibold); }
-	.timeline-readout { flex: 1; min-width: 0; font-size: var(--font-size-xs); }
-	.timeline-actions { display: flex; gap: var(--spacing-2xs); margin-left: auto; }
+	.section-header-action:disabled { opacity: var(--opacity-disabled); }
 
 	.timeline-body {
 		--timeline-label-column: var(--timeline-label-width);
 		--timeline-info-column: var(--timeline-info-width);
+		// Row labels start where the group name does: past the row's inset,
+		// the chevron and the gap after it.
+		--timeline-label-inset: calc(var(--spacing-sm) + var(--font-size-md) + 3 * var(--spacing-xs));
 		flex: 1;
 		min-height: 0;
 		overflow: auto;
@@ -82,7 +70,12 @@
 		gap: var(--spacing-xs);
 		background: var(--color-bg-secondary);
 	}
-	.timeline-group-name { @include truncate; text-align: left; }
+	.timeline-group-name {
+		@include truncate;
+		padding: 0;
+		text-align: left;
+		color: var(--color-text-primary);
+	}
 	.timeline-group.is-collapsed .timeline-row { display: none; }
 	.timeline-group.is-locked .timeline-group-name::after { content: ' · Locked'; color: var(--color-text-secondary); }
 
@@ -93,10 +86,11 @@
 		left: 0;
 		z-index: 1;
 		text-align: left;
-		padding: 0 var(--spacing-base);
+		padding: 0 var(--spacing-base) 0 var(--timeline-label-inset);
 		height: var(--timeline-row-height);
 		background: var(--color-bg-primary);
-		color: var(--color-text-primary);
+		color: var(--color-text-secondary);
+		font-weight: var(--font-weight-normal);
 	}
 	.timeline-track {
 		position: relative;
@@ -144,8 +138,8 @@
 	.timeline-row-lane { grid-column: 2; }
 
 	@container timeline (max-width: #{tokens.$timeline-narrow-width}) {
-		.timeline-title { display: none; }
-		.timeline-body { --timeline-label-column: 0px; --timeline-info-column: 0px; }
+		.section-header-title-text { display: none; }
+		.timeline-body { --timeline-label-column: 0px; --timeline-info-column: 0px; --timeline-label-inset: var(--spacing-base); }
 		.timeline-row-info { display: none; }
 		.timeline-row:is(:hover, :focus-within, .is-selected) .timeline-row-label { background: var(--color-accent); color: var(--color-text-on-accent); }
 		.timeline-row-label {

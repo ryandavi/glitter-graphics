@@ -29,6 +29,8 @@ async function verifyTimelineDock() {
 		await page.click('#timelineToggle');
 		await page.waitForFunction(() => editor.timelineDock?.isOpen);
 		await page.waitForTimeout(200);
+		await page.evaluate(() => editor.updateExportDuration());
+		assert(await page.locator('#timelineDock .property-empty').isVisible(), 'A document with nothing animated must say so');
 		assert((await page.locator('#previewContainer').evaluate(node => node.clientHeight)) < fullHeight);
 		assert.strictEqual(await page.evaluate(() => editor.viewport.lastViewportHeight), await page.locator('#previewContainer').evaluate(node => node.clientHeight), 'Opening must use the viewport resize path');
 		const sources = await page.evaluate(async () => {

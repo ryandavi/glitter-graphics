@@ -40,7 +40,8 @@
 // Layers headers share the inset used by property rows, titles and notes.
 .property-panel,
 .property-section,
-.layers-panel {
+.layers-panel,
+.timeline-dock {
 	--property-gutter: var(--spacing-lg);
 }
 

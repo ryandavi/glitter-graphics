@@ -148,6 +148,54 @@ function writeLibrarySplit(share) {
 	writePanelWidths(widths);
 }
 
+// The one pointer drag behind every resize separator. `move` receives each
+// pointer event of the drag; `end` receives true when the drag was abandoned
+// (Escape, a cancelled pointer, the window losing focus) and the size it
+// started from must come back.
+function bindResizeHandleDrag(handle, { canStart = () => true, bodyClass = null, start = () => {}, move, end = () => {} }) {
+	let pointerId = null;
+	const onMove = (event) => {
+		if (event.pointerId === pointerId) move(event);
+	};
+	const finish = (cancelled) => {
+		if (pointerId === null) return;
+		try { handle.releasePointerCapture(pointerId); } catch (error) { /* already released */ }
+		pointerId = null;
+		handle.classList.remove('is-dragging');
+		if (bodyClass) document.body.classList.remove(bodyClass);
+		window.removeEventListener('pointermove', onMove);
+		window.removeEventListener('pointerup', onUp);
+		window.removeEventListener('pointercancel', onCancel);
+		window.removeEventListener('blur', onCancel);
+		document.removeEventListener('keydown', onKey, true);
+		end(cancelled);
+	};
+	const onUp = (event) => {
+		if (event.pointerId === pointerId) finish(false);
+	};
+	const onCancel = () => finish(true);
+	const onKey = (event) => {
+		if (event.key !== 'Escape') return;
+		event.preventDefault();
+		event.stopPropagation();
+		finish(true);
+	};
+	handle.addEventListener('pointerdown', (event) => {
+		if (event.button !== 0 || pointerId !== null || !canStart(event)) return;
+		event.preventDefault();
+		pointerId = event.pointerId;
+		handle.setPointerCapture(pointerId);
+		handle.classList.add('is-dragging');
+		if (bodyClass) document.body.classList.add(bodyClass);
+		start(event);
+		window.addEventListener('pointermove', onMove);
+		window.addEventListener('pointerup', onUp);
+		window.addEventListener('pointercancel', onCancel);
+		window.addEventListener('blur', onCancel);
+		document.addEventListener('keydown', onKey, true);
+	});
+}
+
 function buildPanelResizeHandle(key) {
 	const config = PANEL_RESIZE_TARGETS[key];
 	const handle = document.createElement('div');
@@ -205,42 +253,27 @@ function initializePanelResize(editor) {
 
 		let startX = 0;
 		let startWidth = 0;
-		let pointerId = null;
 
-		const onMove = (event) => {
-			// Dragging the Inspector's handle rightwards makes it narrower; the
-			// layers handle works the other way round.
-			const delta = config.edge === 'start' ? startX - event.clientX : event.clientX - startX;
-			const raw = startWidth + delta;
-			applyPanelWidth(key, clampPanelWidth(key, snapPanelWidth(key, raw, event.altKey)));
-		};
-
-		const onUp = () => {
-			if (pointerId === null) return;
-			try { handle.releasePointerCapture(pointerId); } catch (error) { /* already released */ }
-			pointerId = null;
-			handle.classList.remove('is-dragging');
-			document.body.classList.remove('is-resizing-panel');
-			window.removeEventListener('pointermove', onMove);
-			window.removeEventListener('pointerup', onUp);
-			window.removeEventListener('pointercancel', onUp);
-			if (key !== 'inspector' || getPanelWidth(key) !== startWidth) setPanelWidth(key, getPanelWidth(key));
-			editor.viewport.endPanelResize();
-		};
-
-		handle.addEventListener('pointerdown', (event) => {
-			if (event.button !== 0 || editor?.mobileManager?.isMobile) return;
-			event.preventDefault();
-			pointerId = event.pointerId;
-			handle.setPointerCapture(pointerId);
-			startX = event.clientX;
-			startWidth = getPanelWidth(key);
-			editor.viewport.beginPanelResize();
-			handle.classList.add('is-dragging');
-			document.body.classList.add('is-resizing-panel');
-			window.addEventListener('pointermove', onMove);
-			window.addEventListener('pointerup', onUp);
-			window.addEventListener('pointercancel', onUp);
+		bindResizeHandleDrag(handle, {
+			canStart: () => !editor?.mobileManager?.isMobile,
+			bodyClass: 'is-resizing-panel',
+			start: (event) => {
+				startX = event.clientX;
+				startWidth = getPanelWidth(key);
+				editor.viewport.beginPanelResize();
+			},
+			move: (event) => {
+				// Dragging the Inspector's handle rightwards makes it narrower; the
+				// layers handle works the other way round.
+				const delta = config.edge === 'start' ? startX - event.clientX : event.clientX - startX;
+				const raw = startWidth + delta;
+				applyPanelWidth(key, clampPanelWidth(key, snapPanelWidth(key, raw, event.altKey)));
+			},
+			end: (cancelled) => {
+				if (cancelled) applyPanelWidth(key, startWidth);
+				if (key !== 'inspector' || getPanelWidth(key) !== startWidth) setPanelWidth(key, getPanelWidth(key));
+				editor.viewport.endPanelResize();
+			}
 		});
 
 		// Double-click returns the panel to the stylesheet's responsive default.

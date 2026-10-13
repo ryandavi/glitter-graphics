@@ -67,27 +67,24 @@ class LibraryWindow {
 		const stored = readLibrarySplit();
 		applyShare(stored ?? limits.defaultShare, stored !== null);
 		document.getElementById('flyoutSection').after(handle);
-		let pointer = null;
-		handle.addEventListener('pointerdown', (event) => {
-			if (event.button !== 0 || this.editor.mobileManager?.isMobile) return;
-			event.preventDefault();
-			pointer = event.pointerId;
-			handle.setPointerCapture(pointer);
-			handle.classList.add('is-dragging');
+		let startShare = share;
+		let startChosen = false;
+		bindResizeHandleDrag(handle, {
+			canStart: () => !this.editor.mobileManager?.isMobile,
+			start: () => {
+				startShare = share;
+				startChosen = this.element.classList.contains('has-chosen-split');
+			},
+			move: (event) => {
+				const bounds = this.element.getBoundingClientRect();
+				setShare((event.clientY - bounds.top) / bounds.height * 100);
+			},
+			end: (cancelled) => {
+				if (!cancelled) return;
+				if (startChosen) setShare(startShare);
+				else resetShare();
+			}
 		});
-		handle.addEventListener('pointermove', (event) => {
-			if (event.pointerId !== pointer) return;
-			const bounds = this.element.getBoundingClientRect();
-			setShare((event.clientY - bounds.top) / bounds.height * 100);
-		});
-		const finish = (event) => {
-			if (event.pointerId !== pointer) return;
-			pointer = null;
-			handle.classList.remove('is-dragging');
-		};
-		handle.addEventListener('pointerup', finish);
-		handle.addEventListener('pointercancel', finish);
-		handle.addEventListener('lostpointercapture', finish);
 		handle.addEventListener('dblclick', resetShare);
 		handle.addEventListener('keydown', (event) => {
 			if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
