@@ -117,7 +117,11 @@
 	.timeline-stage {
 		--timeline-label-column: var(--timeline-label-width);
 		--timeline-info-column: 0px;
-		--timeline-columns: var(--timeline-label-column) var(--timeline-track-width) var(--timeline-info-column);
+		// A gutter on each side of the track: a bar at either end keeps its rim,
+		// its grips and the playhead's head clear of the columns beside it.
+		--timeline-columns: var(--timeline-label-column) var(--timeline-track-pad) var(--timeline-track-width) var(--timeline-track-pad) var(--timeline-info-column);
+		// Where time 0 is, from the stage's left edge.
+		--timeline-track-origin: calc(var(--timeline-label-column) + var(--timeline-track-pad));
 		// Row labels start where the group name does: past the row's inset,
 		// the chevron, the eye, the thumbnail and the gap after each.
 		--timeline-label-inset: calc(var(--spacing-sm) + var(--font-size-md) + var(--control-height) + var(--timeline-group-media) + 5 * var(--spacing-xs));
@@ -156,7 +160,7 @@
 	// One line over the ruler and the rows, moved by a transform.
 	.timeline-playhead, .timeline-snap-guide {
 		position: absolute;
-		inset: 0 auto 0 var(--timeline-label-column);
+		inset: 0 auto 0 var(--timeline-track-origin);
 		z-index: 3;
 		width: 1px;
 		pointer-events: none;
@@ -202,7 +206,7 @@
 	.timeline-row, .timeline-group-header {
 		display: grid;
 		grid-template-columns: var(--timeline-columns);
-		width: calc(var(--timeline-label-column) + var(--timeline-track-width) + var(--timeline-info-column));
+		width: calc(var(--timeline-label-column) + var(--timeline-track-width) + 2 * var(--timeline-track-pad) + var(--timeline-info-column));
 		min-width: 100%;
 	}
 
@@ -216,6 +220,7 @@
 	.timeline-ruler-track {
 		position: relative;
 		width: var(--timeline-track-width);
+		margin-left: var(--timeline-track-pad);
 		overflow: hidden;
 		cursor: ew-resize;
 		touch-action: none;
@@ -338,7 +343,7 @@
 	.timeline-row.is-selected .timeline-row-label { color: var(--color-text-primary); }
 	.timeline-track {
 		position: relative;
-		grid-column: 2;
+		grid-column: 3;
 		height: var(--timeline-row-height);
 		overflow: hidden;
 		// Past the loop's end: the line, and the next pass set back behind it.
@@ -457,7 +462,7 @@
 		color: var(--color-warning);
 		pointer-events: auto;
 	}
-	.timeline-row-info { @include truncate; padding: 0 var(--spacing-base); font-size: var(--font-size-xs); font-variant-numeric: tabular-nums; color: var(--color-text-tertiary); }
+	.timeline-row-info { @include truncate; grid-column: 5; padding: 0 var(--spacing-base); font-size: var(--font-size-xs); font-variant-numeric: tabular-nums; color: var(--color-text-tertiary); }
 	// The selected Custom bar's keys: a row of its own under the bar, on the
 	// same columns, with one cycle of the bar opened up in its track.
 	.timeline-row-lane {
@@ -527,6 +532,7 @@
 		// No label column: the lane's name and buttons sit on a line of their
 		// own at the track's left edge, clear of the keys under them.
 		.timeline-row-lane { display: block; }
+		.timeline-key-cell { margin-inline: var(--timeline-track-pad); }
 		.timeline-key-label {
 			width: max-content;
 			padding-left: var(--timeline-label-inset);
@@ -536,7 +542,7 @@
 		// The label sits inside its bar, on the bar's own fill.
 		.timeline-row-label {
 			position: absolute;
-			left: var(--timeline-bar-left);
+			left: calc(var(--timeline-track-pad) + var(--timeline-bar-left));
 			top: var(--timeline-bar-inset);
 			width: max-content;
 			max-width: calc(var(--timeline-loop-x) - var(--timeline-bar-left));

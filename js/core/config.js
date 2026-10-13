@@ -757,6 +757,8 @@ const CONFIG = deepFreeze({
 			defaultZoom: 'fit', minTickPx: 4, maxMarksPerBar: 600, nextLoopFraction: 0.25,
 			// A bar is never drawn narrower than this; a grip is this wide to the pointer.
 			barMinPx: 12, gripPx: 8, keySize: 10,
+			// The gutter on each side of the tracks.
+			trackPadPx: 8,
 			// Output frames this wide are drawn whether or not Frame ticks is on.
 			frameTickAutoPx: 12,
 			// What the rows draw besides their bars, as the options menu lists it.

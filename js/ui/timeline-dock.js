@@ -9,7 +9,7 @@ class TimelineDock {
 		this.listedIds = new Set();
 		for (const [key, value] of Object.entries({
 			'row-height': this.config.rowHeight, 'group-height': this.config.groupHeight, 'ruler-height': this.config.rulerHeight,
-			'group-media': this.config.groupMedia, 'info-width': this.config.infoWidth, 'grip': this.config.gripPx, 'key-size': this.config.keySize
+			'group-media': this.config.groupMedia, 'info-width': this.config.infoWidth, 'grip': this.config.gripPx, 'key-size': this.config.keySize, 'track-pad': this.config.trackPadPx
 		})) host.style.setProperty(`--timeline-${key}`, `${value}px`);
 		this.resizeHandle = this.element('timeline-resize-handle');
 		this.resizeHandle.tabIndex = 0;
@@ -301,8 +301,9 @@ class TimelineDock {
 		const { canvas, text, line, font } = this.rulerTicks;
 		const height = this.config.rulerHeight;
 		const ratio = window.devicePixelRatio || 1;
-		const left = this.body.scrollLeft;
-		const width = Math.max(0, Math.min(this.trackWidth - left, this.ruler.clientWidth - this.labelColumn));
+		const pad = this.config.trackPadPx;
+		const left = Math.max(0, this.body.scrollLeft - pad);
+		const width = Math.max(0, Math.min(this.trackWidth - left, this.ruler.clientWidth - this.labelColumn - Math.max(0, pad - this.body.scrollLeft)));
 		canvas.width = Math.ceil(width * ratio); canvas.height = Math.ceil(height * ratio);
 		canvas.style.width = `${width}px`; canvas.style.height = `${height}px`;
 		canvas.style.transform = `translateX(${left}px)`;
@@ -339,7 +340,7 @@ class TimelineDock {
 		const x = TimelineView.timeToX(Math.min(ms, loopMs), this.scale) - this.body.scrollLeft;
 		this.playhead.style.transform = `translateX(${x}px)`;
 		// The label column covers whatever has scrolled under it.
-		this.playhead.hidden = x < 0;
+		this.playhead.hidden = x < -this.config.trackPadPx;
 		// The output frame under the playhead, from its start to the next one's:
 		// the last frame ends on the loop line.
 		const starts = this.model.frameStarts;
@@ -531,7 +532,7 @@ class TimelineDock {
 		}
 		const style = getComputedStyle(this.body);
 		this.labelColumn = parseFloat(style.getPropertyValue('--timeline-label-column'));
-		const columns = this.labelColumn + parseFloat(style.getPropertyValue('--timeline-info-column'));
+		const columns = this.labelColumn + 2 * this.config.trackPadPx + parseFloat(style.getPropertyValue('--timeline-info-column'));
 		this.fitScale = timed ? Math.max(1, this.body.clientWidth - columns) / (loopMs * (1 + this.nextLoopShare) / 1000) : 1;
 		const zoom = PREFERENCES.get('timelineZoom');
 		// A stored zoom is never further out than fit: a shorter loop or a wider
@@ -978,13 +979,13 @@ class TimelineDock {
 		if (!this.dragReadout) { this.dragReadout = this.element('timeline-drag-readout badge'); this.host.appendChild(this.dragReadout); }
 		this.dragReadout.textContent = text;
 		const box = this.host.getBoundingClientRect();
-		const origin = this.stage.getBoundingClientRect().left + this.labelColumn - this.body.scrollLeft - box.left;
+		const origin = this.stage.getBoundingClientRect().left + this.labelColumn + this.config.trackPadPx - this.body.scrollLeft - box.left;
 		const x = origin + TimelineView.timeToX(edgeMs, this.scale);
 		this.dragReadout.style.left = `${Math.min(this.host.clientWidth - this.dragReadout.offsetWidth, Math.max(0, x))}px`;
 		this.dragReadout.style.top = `${Math.max(0, anchor.getBoundingClientRect().top - box.top - this.dragReadout.offsetHeight)}px`;
-		const guideX = guideMs == null ? -1 : TimelineView.timeToX(guideMs, this.scale) - this.body.scrollLeft;
-		this.snapGuide.hidden = guideX < 0;
-		if (guideX >= 0) this.snapGuide.style.transform = `translateX(${guideX}px)`;
+		const guideX = guideMs == null ? -Infinity : TimelineView.timeToX(guideMs, this.scale) - this.body.scrollLeft;
+		this.snapGuide.hidden = guideX < -this.config.trackPadPx;
+		if (!this.snapGuide.hidden) this.snapGuide.style.transform = `translateX(${guideX}px)`;
 	}
 
 	clearDragFeedback() {
