@@ -412,6 +412,7 @@ function bindPaintSlotControls(host) {
 				return host.apply(layer, () => {
 					const data = host.ensureSlot(layer, key);
 					data.mode = mode;
+					delete data.gifCycleMs;
 					if (mode === 'glitter' && !data.glitterId) data.glitterId = getPaintSlotDefaultGlitterId(host.type, definition);
 					if (mode === 'gradient') data.gradient = normalizeEffectGradient(data.gradient);
 					if (mode === 'pattern') data.pattern = normalizeEffectPattern(data.pattern);
@@ -421,6 +422,14 @@ function bindPaintSlotControls(host) {
 
 		[`${prefix}GlitterChip`, `${prefix}GlitterChange`].forEach((id) => {
 			byId(id)?.addEventListener('click', () => withLayer(() => host.armPicker(key)));
+		});
+
+		host.editor.bindGifCycleControl(`${prefix}GifCycle`, () => {
+			const layer = host.getLayer();
+			const entry = layer && getLayerPaintSlots(layer).find((candidate) => candidate.key === key);
+			if (!entry?.renders) return null;
+			if (entry.data.mode === 'glitter') return getPaintSlotSourceKey(layer, entry);
+			return entry.data.mode === 'image' ? `${getPaintSlotSourceKey(layer, entry)}:image` : null;
 		});
 
 		// A color drag repaints once per frame; closing the picker applies the
@@ -585,6 +594,7 @@ function syncPaintSlotControls(host, layer) {
 		syncSlotTextureCoordinateControls(prefix, shown);
 		syncEffectPatternEditor(prefix, shown);
 	});
+	editor.syncGifCycleControls();
 }
 
 function syncLayerFieldControls(host, layer) {

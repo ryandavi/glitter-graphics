@@ -24,6 +24,8 @@ const FIELDS = Object.freeze({
 	patternSpacing: { label: 'Spacing', unit: '%', min: 0, max: 200, step: 1, value: 0 },
 	patternRotation: { label: 'Rotation', unit: '\u00b0', min: 0, max: 359, step: 1, value: 0 },
 	patternScrollCycle: { label: 'Cycle', unit: 'ms', min: 100, max: 20000, step: 100, value: 2000, scale: 'log' },
+	// The track's range is set per GIF, from the cycles that file can be stretched to.
+	gifCycle: { label: 'Cycle', unit: 's', min: 0.04, max: 20, step: 0.01, value: 1, cost: 'raster' },
 	areaModifyAmount: { label: 'Amount', unit: 'px', min: 1, max: 100, step: 1, value: 4, cost: 'compute' },
 	recolorHue: { label: 'Hue', unit: '°', min: -180, max: 180, step: 1, value: 0 },
 	recolorSaturation: { label: 'Saturation', unit: '%', min: -100, max: 100, step: 1, value: 0 },

@@ -1062,6 +1062,15 @@ function buildGlitterAdvancedSets(slot, options = {}) {
 	return [colorSet, textureSet];
 }
 
+// The speed of an animated GIF source (glitter or image). The loop estimate
+// shows it for a slot whose GIF can be stretched (syncGifCycleControls).
+function buildGifCycleSet(slot, schema) {
+	return buildPanelSet({
+		feature: 'gifCycle', label: 'Animation', hidden: true, attrs: { 'data-gif-cycle-set': '' },
+		rows: [{ kind: 'slider', id: `${slot.idPrefix}GifCycle`, slider: 'gifCycle' }]
+	}, schema);
+}
+
 // The one disclosure a section may end with, always labelled "Advanced". It
 // holds sets, as the body does. The vacancy observer hides it while every
 // set in it is hidden.
@@ -1223,7 +1232,7 @@ function buildPaintSlotSection(spec, schema) {
 	const ownGradient = addGradient(slot);
 	if (!slot.noSlotOpacity) body.append(...ownGradient, wrapPropertySet([buildPaintOpacityRow(slot)], 'paint-slot-primary-row'));
 	const advanced = (slot.advanced || []).map((set) => buildPanelSet(set, schema));
-	advanced.push(...buildGlitterAdvancedSets(slot));
+	advanced.push(...buildGlitterAdvancedSets(slot), buildGifCycleSet(slot, schema));
 	(slot.sets || []).forEach((set) => {
 		if (!set.paint) {
 			body.appendChild(buildPanelSet(set, schema));
@@ -1231,7 +1240,7 @@ function buildPaintSlotSection(spec, schema) {
 		}
 		const paint = withPaintSlotModes(set.paint, schema);
 		body.append(buildNestedPaintSet(paint), ...addGradient(paint, { owner: paint.id }));
-		advanced.push(...buildGlitterAdvancedSets(paint, { owner: paint.id }));
+		advanced.push(...buildGlitterAdvancedSets(paint, { owner: paint.id }), buildGifCycleSet(paint, schema));
 	});
 	if (slot.noSlotOpacity) body.append(...ownGradient);
 	advanced.push(...gradients);

@@ -78,6 +78,10 @@ class StickerManager {
 
 		this.fieldHost = this.createFieldHost();
 		bindFieldControls(this.fieldHost);
+		this.editor.bindGifCycleControl('stickerGifCycle', () => {
+			const layer = this.fieldHost.getLayer();
+			return layer?.stickerData.isAnimated ? layer.id : null;
+		});
 		[this.ui.assetThumbnail, this.ui.assetChange].filter(Boolean).forEach((control) => {
 			control.addEventListener('click', () => pressAssetRow(this.editor, this, () => this.armAssetPicker()));
 		});
@@ -490,6 +494,7 @@ class StickerManager {
 		// scaled-up) size, not always the base — same rule commitResolutionSwap
 		// applies after a resize gesture.
 		activeLayer.stickerData.url = nextUrl;
+		delete activeLayer.stickerData.gifCycleMs;
 
 		// Clear the cached still frame when changing sticker
 		activeLayer.stickerData.staticImageData = null;
@@ -654,7 +659,7 @@ class StickerManager {
 		}
 
 		// Reassigning an identical URL restarts animated GIFs in some browsers.
-		const previewUrl = (layer.stickerData.isAnimated && this.editor.animationPanel?.getPreviewImageUrl(layer.stickerData.url)) || layer.stickerData.url;
+		const previewUrl = (layer.stickerData.isAnimated && this.editor.animationPanel?.getPreviewImageUrl(layer.stickerData.url, { element: img, timingRecord: layer.stickerData, sourceIdentity: layer.stickerData })) || layer.stickerData.url;
 		if (img.dataset.sourceUrl !== previewUrl) {
 			img.src = previewUrl;
 			img.dataset.sourceUrl = previewUrl;

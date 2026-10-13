@@ -91,9 +91,10 @@ class BaseBackgroundManager {
 		}
 		const canvas = this.editor.previewCanvas;
 		if (canvas.nextSibling !== image) canvas.after(image);
-		if (image.dataset.source !== animation.url) {
-			image.dataset.source = animation.url;
-			image.src = animation.url;
+		const url = this.editor.animationPanel?.getPreviewImageUrl(animation.url, { element: image, timingRecord: layer.background, sourceIdentity: animation.file }) || animation.url;
+		if (image.dataset.source !== url) {
+			image.dataset.source = url;
+			image.src = url;
 		}
 		const { x, y, width, height, clip } = animation.placement;
 		image.style.left = `${x}px`;

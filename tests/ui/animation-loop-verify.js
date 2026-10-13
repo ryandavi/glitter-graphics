@@ -257,6 +257,199 @@ async function verifyTimingModel() {
 	} finally { await browser.close(); }
 }
 
+async function verifyGifCycle() {
+	const { browser, page, errors } = await openApp({ viewport: { width: 1600, height: 900 }, document: { width: 200, height: 160 } });
+	let stickerIds = [];
+	const readPreview = () => page.evaluate(async (ids) => Promise.all(ids.map(async (id) => {
+		const image = editor.stickerManager.layerElements.get(id).querySelector('img.sticker-image');
+		const timing = readGifTiming(await fetchGifBytes(image.src));
+		return { src: image.getAttribute('src'), delays: timing.frameDelays, cycle: timing.frameDelays.reduce((sum, delay) => sum + delay, 0) };
+	})), stickerIds);
+	const exportPlan = () => page.evaluate(async () => {
+		const { plan } = await editor.sceneCompositor.planAnimation({ ...editor.getSceneSnapshotParams(editor.layers.filter(layer => layer.visible)), exportSettings: { ...editor.exportSettings, watermarkEnabled: false }, schedule: true });
+		return { duration: plan.totalDuration, exact: plan.loopSeam.exact };
+	});
+	try {
+		const fixture = await page.evaluate(async () => {
+			const e = editor;
+			const asset = e.stickerLibrary.content.find(item => item.isAnimated);
+			await e.stickerLibrary.ensureAssetDetails(asset.id);
+			const sticker = e.stickerManager.createLayer(asset.id);
+			e.layerManager.insertLayer(sticker);
+			e.layerManager.setActiveLayer(sticker.id);
+			e.stickerManager.renderLayer(sticker);
+			const image = e.stickerManager.layerElements.get(sticker.id).querySelector('img.sticker-image');
+			window.stickerSources = [image.getAttribute('src')];
+			new MutationObserver(() => window.stickerSources.push(image.getAttribute('src'))).observe(image, { attributes: true, attributeFilter: ['src'] });
+			e.saveState('Sticker fixture');
+			await e.updateExportDuration();
+			const source = e.loopEstimate.loopFit.sources.find(entry => entry.key === sticker.id);
+			const slider = document.getElementById('stickerGifCycle');
+			return {
+				id: sticker.id, assetId: asset.id, url: sticker.stickerData.url, kind: source.kind, native: source.cycleDuration, file: source.fileCycleDuration,
+				range: source.periodRange, settable: typeof source.setPeriod === 'function',
+				row: !slider.closest('.property-row').hidden,
+				slider: { min: Number(slider.min), max: Number(slider.max), value: Number(slider.value) }
+			};
+		});
+		stickerIds = [fixture.id];
+		assert.strictEqual(fixture.kind, 'authored', 'A GIF must stay an authored source');
+		assert(fixture.settable && fixture.file === fixture.native, 'An animated sticker must offer its cycle');
+		assert(fixture.row, 'The Cycle row must show for an animated sticker');
+		assert.deepStrictEqual(fixture.slider, { min: fixture.range.min / 1000, max: fixture.range.max / 1000, value: fixture.native / 1000 });
+		assert.strictEqual((await exportPlan()).duration, fixture.native);
+
+		// Fit stretches the sticker to the chosen loop, in one step.
+		const target = Math.ceil(fixture.native * 1.05 / 10) * 10;
+		const fitted = await page.evaluate(async ({ id, target }) => {
+			const e = editor;
+			e.setDocumentLoop({ mode: 'set', durationMs: target });
+			await e.updateExportDuration();
+			const note = document.getElementById('animationLoopChanges').textContent;
+			const start = e.historyManager.historyIndex;
+			e.fitAnimationsToLoop();
+			const steps = e.historyManager.historyIndex - start;
+			await e.updateExportDuration();
+			await new Promise(resolve => requestAnimationFrame(resolve));
+			await e.animationPanel.retimedPreviewsSettled();
+			await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+			const layer = e.layerManager.getLayerById(id);
+			const source = e.loopEstimate.loopFit.sources.find(entry => entry.key === id);
+			return {
+				note, steps, stored: layer.stickerData.gifCycleMs, before: layer.loopOriginalPeriods?.[id], exact: e.loopEstimate.exact, duration: e.loopEstimate.duration,
+				delays: source.frameDurations, kind: source.kind, value: Number(document.getElementById('stickerGifCycle').value),
+				readout: document.getElementById('stickerGifCycleValue').textContent, revert: !document.getElementById('resetStickerGifCycle').disabled,
+				sources: window.stickerSources.slice()
+			};
+		}, { id: fixture.id, target });
+		assert(fitted.note.includes(`${(fixture.native / 1000).toFixed(2)} s to ${(target / 1000).toFixed(2)} s`), `Fit must list the GIF change: ${fitted.note}`);
+		assert.strictEqual(fitted.steps, 1);
+		assert.strictEqual(fitted.stored, target);
+		assert.strictEqual(fitted.before, fixture.native);
+		assert(fitted.exact && fitted.duration === target, 'The fitted loop must read Seamless');
+		assert.strictEqual(fitted.kind, 'authored');
+		assert.strictEqual(fitted.value, target / 1000);
+		assert(fitted.readout.includes((target / 1000).toFixed(2)) && fitted.readout.includes(`(${Math.round(target / fixture.native * 100)}%)`), `Readout must show the cycle and the change: ${fitted.readout}`);
+		assert(fitted.revert, 'A stretched GIF must offer its revert');
+		const stretched = await exportPlan();
+		assert(stretched.duration === target && stretched.exact, 'The export must run the stretched cycle');
+		const [preview] = await readPreview();
+		assert(preview.src.startsWith('blob:'), 'The preview must play the retimed copy');
+		assert.deepStrictEqual(preview.delays, fitted.delays, 'Preview file and export timing source must hold the same delays');
+		assert.strictEqual(preview.cycle, target);
+		assert.deepStrictEqual(fitted.sources, [fixture.url, preview.src], 'The preview must swap once, straight from the file to the decoded copy');
+
+		// The same sticker on a second layer keeps its own cycle.
+		const second = await page.evaluate(async ({ assetId, cycle }) => {
+			const e = editor;
+			const sticker = e.stickerManager.createLayer(assetId);
+			e.layerManager.insertLayer(sticker);
+			e.saveState('Second sticker');
+			await e.updateExportDuration();
+			e.loopEstimate.loopFit.sources.find(entry => entry.key === sticker.id).setPeriod(cycle);
+			e.requestPreviewUpdate();
+			e.saveState('Change animation speed');
+			await e.updateExportDuration();
+			await new Promise(resolve => requestAnimationFrame(resolve));
+			await e.animationPanel.retimedPreviewsSettled();
+			await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+			return { id: sticker.id, stored: sticker.stickerData.gifCycleMs, keys: e.loopEstimate.loopFit.sources.map(entry => entry.key) };
+		}, { assetId: fixture.assetId, cycle: fixture.range.max });
+		stickerIds = [fixture.id, second.id];
+		assert.strictEqual(second.stored, fixture.range.max);
+		assert(second.keys.includes(fixture.id) && second.keys.includes(second.id), 'Each use of a GIF must be its own timeline');
+		const pair = await readPreview();
+		assert.deepStrictEqual(pair.map(entry => entry.cycle), [target, fixture.range.max], 'Two uses of one GIF must keep two cycle lengths');
+		assert.notStrictEqual(pair[0].src, pair[1].src);
+
+		const project = await page.evaluate(async () => JSON.parse(JSON.stringify(await editor.projectSerializer.serialize())));
+		const saved = project.layers.filter(layer => layer.type === 'sticker').map(layer => layer.stickerData.gifCycleMs);
+		assert.deepStrictEqual(saved.slice().sort(), [target, fixture.range.max].sort(), 'The cycle must be saved with the layer');
+
+		// The panel field: one step, and its revert clears the stored cycle.
+		const edited = await page.evaluate(async ({ id, seconds }) => {
+			const e = editor;
+			e.layerManager.setActiveLayer(id);
+			await e.updateExportDuration();
+			const slider = document.getElementById('stickerGifCycle');
+			const start = e.historyManager.historyIndex;
+			slider.value = String(seconds);
+			slider.dispatchEvent(new Event('input', { bubbles: true }));
+			slider.dispatchEvent(new Event('change', { bubbles: true }));
+			await new Promise(resolve => setTimeout(resolve, 500));
+			const stored = e.layerManager.getLayerById(id).stickerData.gifCycleMs;
+			const steps = e.historyManager.historyIndex - start;
+			await e.updateExportDuration();
+			document.getElementById('resetStickerGifCycle').click();
+			await new Promise(resolve => setTimeout(resolve, 500));
+			await e.updateExportDuration();
+			return { stored, steps, cleared: !('gifCycleMs' in e.layerManager.getLayerById(id).stickerData), revert: document.getElementById('resetStickerGifCycle').disabled };
+		}, { id: fixture.id, seconds: fixture.range.min / 1000 });
+		assert.strictEqual(edited.stored, fixture.range.min);
+		assert.strictEqual(edited.steps, 1, 'A Cycle edit must be one history step');
+		assert(edited.cleared && edited.revert, 'The row revert must clear the stored cycle');
+		await page.evaluate(async () => {
+			await editor.undo();
+			await editor.undo();
+			await editor.updateExportDuration();
+		});
+		assert.strictEqual(await page.evaluate(id => editor.layerManager.getLayerById(id).stickerData.gifCycleMs, fixture.id), target, 'Undo must bring the cycle back');
+
+		// Restore previous timing puts the fitted GIF back on the file.
+		const restored = await page.evaluate(async (id) => {
+			const e = editor;
+			e.resetAnimationLoop();
+			await e.updateExportDuration();
+			await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+			const layer = e.layerManager.getLayerById(id);
+			return { stored: layer.stickerData.gifCycleMs, src: e.stickerManager.layerElements.get(id).querySelector('img.sticker-image').getAttribute('src'), cycle: e.loopEstimate.loopFit.sources.find(entry => entry.key === id).cycleDuration };
+		}, fixture.id);
+		assert.strictEqual(restored.stored, undefined, 'Restore must clear the fitted cycle');
+		assert.strictEqual(restored.cycle, fixture.native);
+		assert.strictEqual(restored.src, fixture.url, 'Restore must show the file again');
+		assert.deepStrictEqual(errors, []);
+
+		// A deployed host hides the control and still honors the stored cycle.
+		const originalUrl = process.env.GLITTER_URL;
+		try {
+			process.env.GLITTER_URL = 'http://timeline.test/glitter/';
+			const deployed = await openApp({ document: { width: 200, height: 160 }, setup: async page => {
+				await routeDeployedHost(page);
+			} });
+			try {
+				const result = await deployed.page.evaluate(async (project) => {
+					const e = editor;
+					e.isSaved = true;
+					await e.projectSerializer.load(project);
+					await e.updateExportDuration();
+					const stickers = e.layers.filter(layer => layer.type === LayerType.STICKER);
+					const { plan } = await e.sceneCompositor.planAnimation({ ...e.getSceneSnapshotParams([stickers[0]]), exportSettings: { ...e.exportSettings, watermarkEnabled: false }, schedule: true });
+					e.requestPreviewUpdate();
+					await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+					await e.animationPanel.retimedPreviewsSettled();
+					await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+					return {
+						stored: stickers.map(layer => layer.stickerData.gifCycleMs), first: stickers[0].stickerData.gifCycleMs, duration: plan.totalDuration,
+						settable: e.loopEstimate.loopFit.sources.some(source => typeof source.setPeriod === 'function'),
+						fixed: e.loopEstimate.loopFit.fixed.length, control: Boolean(document.getElementById('stickerGifCycle')),
+						src: e.stickerManager.layerElements.get(stickers[0].id).querySelector('img.sticker-image').getAttribute('src')
+					};
+				}, { ...project, loop: { mode: 'auto', durationMs: null } });
+				assert.deepStrictEqual(result.stored, saved, 'A stored cycle must load on a non-local host');
+				assert.strictEqual(result.duration, result.first, 'A stored cycle must export on a non-local host');
+				assert(!result.settable && result.fixed === 2, 'A non-local host must leave GIFs fixed in Fit');
+				assert(!result.control, 'A non-local host must not build the Cycle row');
+				assert(result.src.startsWith('blob:'), 'A stored cycle must preview on a non-local host');
+				assert.deepStrictEqual(deployed.errors, []);
+			} finally { await closeDeployedHost(deployed); }
+		} finally {
+			if (originalUrl === undefined) delete process.env.GLITTER_URL;
+			else process.env.GLITTER_URL = originalUrl;
+		}
+		console.log('PASS GIF cycle: Fit and Restore, matching preview and export delays, one swap, per-use cycles, panel field, saved projects and a non-local host');
+	} finally { await browser.close(); }
+}
+
 (async () => {
 	const { browser, page, errors } = await openApp({ viewport: { width: 1280, height: 800 }, document: { width: 32, height: 24, color: '#a348cd' } });
 	try {
@@ -412,6 +605,7 @@ async function verifyTimingModel() {
 		assert.deepStrictEqual(slow, [...Array.from({ length: 16 }, (_, index) => index / 4), 0], 'Slow crawl must advance uniformly through the wrap');
 		await verifyTimelineDock();
 		await verifyTimingModel();
+		await verifyGifCycle();
 		await page.setViewportSize({ width: 390, height: 844 });
 		await page.waitForFunction(() => editor.mobileManager.isMobile);
 		await page.evaluate(() => editor.openAnimationLoop());

@@ -50,7 +50,8 @@ function resolveEffectPaintSource(effectData, options = {}) {
 			offsetYPercent: normalizeImagePositionPercent(effectData.offsetYPercent),
 			tile: Boolean(effectData.tile ?? CONFIG.tools.shapes.imageFill.defaultTile),
 			imageRendering: normalizeImageRendering(effectData.imageRendering),
-			opacity: opacity / 100
+			opacity: opacity / 100,
+			gifCycleMs: effectData.gifCycleMs
 		};
 	}
 
@@ -63,7 +64,8 @@ function resolveEffectPaintSource(effectData, options = {}) {
 			colorAdjust,
 			textureAnchor,
 			textureOffsetX,
-			textureOffsetY
+			textureOffsetY,
+			gifCycleMs: effectData.gifCycleMs
 		};
 	}
 

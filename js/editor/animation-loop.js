@@ -43,8 +43,67 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		document.getElementById('animationLoopCandidate')?.focus({ preventScroll: true });
 		this.updateExportDuration();
 	},
+	// A Cycle row sets how long one pass of the GIF its section shows takes.
+	// It writes through that source's own setter, the one Fit and Restore call,
+	// so there is one writer and one range. `getKey` returns the timeline key of
+	// the GIF the section is showing, or null.
+	bindGifCycleControl(id, getKey) {
+		const slider = document.getElementById(id);
+		if (!slider) return;
+		const control = { slider, getKey, source: null };
+		control.binding = bindSlider(slider, document.getElementById(`${id}Value`), {
+			parseValue: Number,
+			cost: FIELDS.gifCycle.cost,
+			formatValue: (seconds) => (control.source
+				? `${formatUnit(seconds.toFixed(2), FIELDS.gifCycle.unit)} (${Math.round(seconds * 1000 / control.source.fileCycleDuration * 100)}%)`
+				: ''),
+			resetValue: () => (control.source ? this.getGifCycleDefault(control.source) : undefined),
+			resetButton: document.getElementById(`reset${id.charAt(0).toUpperCase()}${id.slice(1)}`),
+			apply: async (seconds) => {
+				const source = control.source;
+				const layer = source && this.layers.find((entry) => entry.id === source.ownerLayerId);
+				if (!layer) return;
+				source.setPeriod(seconds * 1000);
+				getLayerManagerForType(this, layer.type)?.renderLayer?.(layer);
+				this.requestPreviewUpdate();
+				// The run lasts until the retimed image is on screen, so a slow
+				// file waits for the value to settle.
+				await this.animationPanel.retimedPreviewsSettled();
+			},
+			onCommit: () => this.saveState('Change animation speed')
+		});
+		(this.gifCycleControls ||= []).push(control);
+	},
+	// The slider value that puts a GIF back on its own timing.
+	getGifCycleDefault(source) {
+		return roundTo(source.fileCycleDuration, CONFIG.export.timeline.renderClock.gifDelayQuantumMs) / 1000;
+	},
+	// Rows follow the estimate, which is where the sources and their ranges
+	// come from. While it is being recomputed a row keeps the source it has,
+	// unless its section now shows a different GIF.
+	syncGifCycleControls() {
+		(this.gifCycleControls || []).forEach((control) => {
+			const key = control.getKey();
+			if (key == null || this.loopEstimate) {
+				control.source = key == null ? null : this.loopEstimate.loopFit.sources.find((source) => source.key === key && source.fileCycleDuration && typeof source.setPeriod === 'function') || null;
+			} else if (control.source?.key !== key) control.source = null;
+			const { slider, source } = control;
+			(slider.closest('[data-gif-cycle-set]') || slider.closest('.property-row')).hidden = !source;
+			// The same source means the same estimate: the value on the track
+			// is then newer than the one the source was built with.
+			if (!source || control.synced === source) return;
+			control.synced = source;
+			slider.min = String(source.periodRange.min / 1000);
+			slider.max = String(source.periodRange.max / 1000);
+			const seconds = source.naturalPeriod / 1000;
+			writeSliderValue(slider, seconds);
+			control.binding.updateDisplay(seconds);
+			control.binding.syncResetButton(seconds);
+		});
+	},
 	syncAnimationLoop(estimate, message = 'No animation sources.') {
 		this.loopEstimate = estimate;
+		this.syncGifCycleControls();
 		if (isFeatureAvailable('timeline')) this.timelineDock?.sync(estimate);
 		const status = document.getElementById('animationLoopStatus');
 		const sources = document.getElementById('animationLoopSources');

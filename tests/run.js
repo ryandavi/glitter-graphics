@@ -6,6 +6,7 @@ const path = require('path');
 const SUITES = [
 	{ file: 'unit/timeline-view-unit.js', tags: ['unit', 'quick'] },
 	{ file: 'unit/features-unit.js', tags: ['unit', 'quick'] },
+	{ file: 'unit/gif-retime-unit.js', tags: ['unit', 'quick', 'export'] },
 	{ file: 'ui/clipping-preview-verify.js', tags: ['layers', 'touch', 'export'] },
 	{ file: 'parity/regional-look-verify.js', tags: ['effects', 'export'] },
 	{ file: 'parity/clipping-edge-verify.js', tags: ['layers', 'export'] },

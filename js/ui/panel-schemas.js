@@ -594,7 +594,8 @@ const PANEL_SCHEMAS = {
 						{ kind: 'assetInfo', info: 'frameImageInfo', thumbnail: 'frameImageThumbnail', name: 'frameImageName', badges: 'frameImageBadges', change: 'frameImageChange', compact: true, hidden: true, title: 'Choose another frame image' }
 					] },
 					{ attrs: { 'data-frame-kind': 'image', hidden: 'hidden' }, rows: [
-						{ kind: 'segmented', label: 'Fit', get options() { return createRegistryOptionEntries('frameFit', 'frameFit'); } }
+						{ kind: 'segmented', label: 'Fit', get options() { return createRegistryOptionEntries('frameFit', 'frameFit'); } },
+						{ kind: 'slider', id: 'frameGifCycle', slider: 'gifCycle', feature: 'gifCycle', hidden: true }
 					] },
 					// Fit to canvas leads the set: it decides whether the sizes
 					// under it follow the canvas or the frame's own box.
@@ -805,7 +806,8 @@ const PANEL_SCHEMAS = {
 						{ kind: 'assetInfo', info: 'stickerAssetInfo', thumbnail: 'stickerAssetThumbnail',
 							name: 'stickerAssetName', badges: 'stickerAssetBadges', change: 'stickerAssetChange',
 							size: 'stickerAssetSize', frames: 'stickerAssetFrames', title: 'Choose another sticker' },
-						{ kind: 'toggle', id: 'stickerSliceEnabled', label: 'Smart stretch', checked: true }
+						{ kind: 'toggle', id: 'stickerSliceEnabled', label: 'Smart stretch', checked: true },
+						{ kind: 'slider', id: 'stickerGifCycle', slider: 'gifCycle', feature: 'gifCycle', hidden: true }
 					] },
 					{ actions: [{ id: 'stickerRemoveBackground', label: 'Remove background', icon: 'eraser' }] }
 				], advanced: [

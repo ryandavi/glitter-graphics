@@ -167,6 +167,8 @@ const CONFIG = deepFreeze({
 
 	tools: {
 		nineSlice: { maxTiles: 256 },
+		// How far a GIF's cycle may be stretched, as a share of the file's own.
+		gifCycle: { stretchRange: { min: 0.5, max: 2 } },
 		autoGlitter: {
 			// `glitterScope` is a Library rail selection: the style (and set) matches are drawn from.
 			defaults: { sourceAdjust: { hue: FIELDS.hue.value, saturation: FIELDS.saturation.value, brightness: FIELDS.brightness.value }, colorLayers: FIELDS.paletteColorCount.value, autoColorCount: true, glitterScope: { root: 'sparkle', set: null }, paletteStyle: 'natural', mergeDistinctness: FIELDS.paletteMerge.value, maxHueShift: FIELDS.paletteHueLimit.value, maxSaturationShift: FIELDS.paletteSaturationLimit.value, maxBrightnessShift: FIELDS.paletteBrightnessLimit.value, cleanEdges: true, detail: FIELDS.paletteDetail.value },
@@ -1225,7 +1227,9 @@ const CONFIG = deepFreeze({
 		minHistorySteps: 5,
 		// A GIF export holds every composed frame (RGBA) plus its indexed copy.
 		gifBytesPerPixel: 5,
-		stickerEffectMaskCacheEntries: 8
+		stickerEffectMaskCacheEntries: 8,
+		// Retimed copies of preview GIFs kept as object URLs.
+		retimedGifEntries: 24
 	},
 
 	debug: {

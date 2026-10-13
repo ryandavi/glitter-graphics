@@ -1,6 +1,6 @@
 // Export timeline planning primitives. Loaded before SceneCompositor and the exporters.
 class AuthoredAnimationSource {
-	constructor({ key, label = null, rowLabel = null, ownerLayerId = null, effectSlot = null, frameCount = 0, frameDurations = [], fallbackDuration = 100 }) {
+	constructor({ key, label = null, rowLabel = null, ownerLayerId = null, effectSlot = null, frameCount = 0, frameDurations = [], fallbackDuration = 100, fileCycleDuration = null, periodRange = null, resolvePeriod = null, setPeriod = null }) {
 		this.kind = 'authored';
 		this.key = key;
 		this.label = label;
@@ -19,6 +19,11 @@ class AuthoredAnimationSource {
 		});
 		this.cycleDuration = this.isStatic ? Infinity : this.cumulativeBoundaries.at(-1);
 		this.cycleMarks = this.cumulativeBoundaries.slice(1, -1).map(ms => ms / this.cycleDuration);
+		// A GIF whose cycle can be set reads like any source with a speed:
+		// loop fitting takes its period, range and setter by the same names.
+		// The kind stays authored, so only a user action ever calls the setter.
+		this.naturalPeriod = this.cycleDuration;
+		Object.assign(this, { fileCycleDuration, periodRange, resolvePeriod, setPeriod });
 	}
 
 	static normalizeDuration(duration, fallback = 100) {

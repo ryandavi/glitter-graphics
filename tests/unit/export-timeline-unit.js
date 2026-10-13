@@ -531,4 +531,24 @@ main().catch((error) => {
 	const oneShot = writable(1000, { min: 400, max: 8000 }); oneShot.nonLooping = true;
 	assert(planLoopFit([fixed, oneShot], { config }).oneShots.length === 1, 'One shots must not be fitted');
 	assert(!planLoopFit([], { config }).candidates.length, 'Still scenes need no loop candidates');
+	// A GIF with a cycle setter joins loop fitting, and only loop fitting.
+	const stretchable = () => new AuthoredAnimationSource({
+		key: 'sticker', frameCount: 12, frameDurations: new Array(12).fill(80),
+		fileCycleDuration: 960, periodRange: { min: 480, max: 1920 }, resolvePeriod: (ms) => Math.round(ms / 10) * 10, setPeriod: () => {}
+	});
+	const glitter = timeline('glitter', 10, new Array(10).fill(100));
+	const stretched = planLoopFit([stretchable(), glitter], { config });
+	const oneSecond = stretched.candidates.find((candidate) => candidate.duration === 1000);
+	assert(stretched.fixed.length === 1 && stretched.fixed[0].key === 'glitter', 'A GIF with a setter must not be listed as fixed');
+	assert(oneSecond?.exact && oneSecond.canApply && oneSecond.fits[0].source.key === 'sticker' && oneSecond.fits[0].fittedPeriod === 1000, 'A settable GIF must be fitted to the loop');
+	assert(stretchable().kind === 'authored' && stretchable().naturalPeriod === 960, 'A settable GIF stays an authored source');
+	const scheduleOptions = {
+		outputFormat: 'gif', fallbackDuration: 100, maxLoopDurationMs: 12000,
+		maxSamplingFps: 30, manualFrameSkip: 1, preferredFrameBudget: 1000, hardFrameLimit: 1000
+	};
+	const unstretched = createPlanner().planSchedule({ ...scheduleOptions, timelines: [stretchable(), procedural('motion', 1000)] });
+	assert(unstretched.timingResolution.proceduralPeriodFits.every((fit) => fit.key !== 'sticker'), 'The export planner must never fit a GIF by itself');
+	assert(unstretched.sourceAnalysis.find((entry) => entry.key === 'sticker').nativeCycleDuration === 960, 'The export planner must keep a GIF on its own cycle');
+	const withinTolerance = createPlanner().planSchedule({ ...scheduleOptions, timelines: [stretchable(), procedural('motion', 1000)], loopDurationMs: 1000 });
+	assert(withinTolerance.loopSeam.duration === 1000 && !withinTolerance.loopSeam.exact, 'A set loop must report the seam of a GIF it does not stretch');
 }

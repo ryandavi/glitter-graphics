@@ -240,6 +240,7 @@ class SlotGlitterPicker {
 		data.glitterId = glitterId;
 		data.mode = 'glitter';
 		data.colorAdjust = null;
+		delete data.gifCycleMs;
 		this.pendingPick = Promise.resolve(this.onPicked(layer, glitterId, previousId));
 		return true;
 	}

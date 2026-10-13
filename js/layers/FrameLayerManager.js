@@ -32,6 +32,10 @@ class FrameLayerManager {
 		this.setupUI();
 		this.fieldHost = this.createFieldHost();
 		bindFieldControls(this.fieldHost);
+		this.editor.bindGifCycleControl('frameGifCycle', () => {
+			const layer = this.getActiveLayer();
+			return layer?.frameData.kind === 'image' && layer.frameData.image?.isAnimated ? `${layer.id}:image` : null;
+		});
 		this.setupEventListeners();
 	}
 
@@ -506,7 +510,7 @@ class FrameLayerManager {
 					const place = getFrameImagePlacement(data.fit, data.image?.width, data.image?.height, width, height);
 					Object.assign(image.style, { left: `${place.x}px`, top: `${place.y}px`, width: `${place.width}px`, height: `${place.height}px`, backgroundSize: '100% 100%', backgroundPosition: '0 0' });
 				}
-				const previewUrl = this.editor.animationPanel?.getPreviewImageUrl(data.image?.url) || data.image?.url;
+				const previewUrl = this.editor.animationPanel?.getPreviewImageUrl(data.image?.url, { element: image, timingRecord: data.image, sourceIdentity: data.image }) || data.image?.url;
 				const background = previewUrl ? `url("${previewUrl}")` : 'none';
 				if (image.style.backgroundImage !== background) image.style.backgroundImage = background;
 				image.classList.toggle('pixelated', data.image?.isPixelated !== false);
@@ -712,7 +716,7 @@ class FrameLayerManager {
 			label: image.name || 'Frame',
 			ownerLayerId: layer.id,
 			effectSlot: null,
-			role: 'sticker', rowLabel: 'Frame',
+			role: 'sticker', rowLabel: 'Frame', timingRecord: image,
 			replayPolicy: 'native-layer',
 			sourceIdentity: image,
 			ensureLoaded: async (callbacks, { timingOnly = false } = {}) => {

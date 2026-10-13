@@ -33,6 +33,14 @@ const PREVIEW_EXPORT_TWINS = [
 		export: ['SceneCompositor._drawBaseAnimationFrame']
 	},
 	{
+		// A stretched GIF: the preview plays a copy of the file with the delays
+		// the export's timing source was built from written into it.
+		feature: 'GIF cycle delays',
+		shared: 'getAuthoredPassTiming',
+		preview: ['AnimationPanelController.buildRetimedPreview'],
+		export: ['SceneCompositor._createAuthoredTimingSource']
+	},
+	{
 		feature: 'paint source',
 		shared: 'resolvePaintSlotSource',
 		preview: ['paintSlots.resolvePaintSlotPreviewSource'],

@@ -689,7 +689,7 @@ class SceneCompositor {
 					label: suffix ? `${name} (${suffix})` : undefined,
 					ownerLayerId: layer.id,
 					effectSlot: entry.definition.wholeLayer ? null : entry.key,
-					rowLabel: panelCap(entry.definition.label), glitterId: source.glitterId
+					rowLabel: panelCap(entry.definition.label), glitterId: source.glitterId, timingRecord: entry.data
 				}));
 			} else if (entry.data.mode === 'image') {
 				const asset = this.resolveImageFill(entry.data.imageRef);
@@ -699,14 +699,14 @@ class SceneCompositor {
 		return [...images, ...glitters];
 	}
 
-	_createGlitterDescriptor(library, { key, label, rowLabel, ownerLayerId, effectSlot = null, glitterId }) {
+	_createGlitterDescriptor(library, { key, label, rowLabel, ownerLayerId, effectSlot = null, glitterId, timingRecord }) {
 		const glitter = library.find((item) => item.id === glitterId);
 		return {
 			key,
 			label: label || glitter?.name || String(glitterId),
 			ownerLayerId,
 			effectSlot,
-			role: 'glitter', rowLabel,
+			role: 'glitter', rowLabel, timingRecord,
 			replayPolicy: 'derived-glitter',
 			sourceIdentity: glitter,
 			ensureLoaded: async (callbacks, { timingOnly = false } = {}) => {
@@ -740,7 +740,7 @@ class SceneCompositor {
 			label: stickerData.name,
 			ownerLayerId: layer.id,
 			effectSlot: null,
-			role: 'sticker', rowLabel: 'Image',
+			role: 'sticker', rowLabel: 'Image', timingRecord: stickerData,
 			replayPolicy: 'native-layer',
 			sourceIdentity: stickerData,
 			ensureLoaded: async (callbacks, { timingOnly = false } = {}) => {
@@ -764,7 +764,7 @@ class SceneCompositor {
 			label: `${layer.name || 'Shape'} ${entry.key} image`,
 			ownerLayerId: layer.id,
 			effectSlot: entry.key,
-			role: 'shape-fill-image', rowLabel: panelCap(entry.definition.label),
+			role: 'shape-fill-image', rowLabel: panelCap(entry.definition.label), timingRecord: entry.data,
 			replayPolicy: 'native-layer',
 			sourceIdentity: asset,
 			ensureLoaded: async (callbacks, { timingOnly = false } = {}) => {
@@ -782,16 +782,51 @@ class SceneCompositor {
 		const animation = descriptor.getAnimation();
 		const frameCount = animation?.frameCount ?? animation?.frames?.length;
 		if (!frameCount) throw new Error(`Missing animation data for ${descriptor.key}`);
-		const timing = this._reconcileAuthoredTiming(descriptor, animation, fallbackDuration);
+		const timing = this.getAuthoredPassTiming(descriptor, animation, fallbackDuration);
 		return new AuthoredAnimationSource({
 			key: descriptor.key,
 			label: descriptor.label, rowLabel: descriptor.rowLabel,
 			ownerLayerId: descriptor.ownerLayerId,
 			effectSlot: descriptor.effectSlot,
 			frameCount,
-			frameDurations: timing.frameDurations,
-			fallbackDuration: timing.fallbackDuration
+			frameDurations: timing.delays,
+			...this._createGifCycleControls(descriptor, timing)
 		});
+	}
+
+	// The delays one pass of an authored source plays with: the file's own
+	// (`file`), or those stretched to the cycle stored on the record that names
+	// this use of the GIF. The planner and the retimed preview file both read
+	// `delays` from here, so a stretched GIF previews exactly as it exports.
+	// A stored cycle outside what the file can take is ignored.
+	getAuthoredPassTiming(descriptor, animation, fallbackDuration) {
+		const frameCount = animation.frameCount ?? animation.frames.length;
+		const timing = this._reconcileAuthoredTiming(descriptor, animation, fallbackDuration);
+		const file = Array.from({ length: frameCount }, (_, index) => normalizeFrameDuration(timing.frameDurations[index], timing.fallbackDuration));
+		const range = animation.canRetime ? getGifCycleRange(file) : null;
+		const cycle = descriptor.timingRecord?.gifCycleMs;
+		const retimed = range && cycle >= range.min && cycle <= range.max ? retimeGifDelays(file, cycle) : null;
+		return { file, delays: retimed || file, range };
+	}
+
+	// What makes a GIF's speed editable. Only the controls are gated: a stored
+	// cycle is honored above whether or not anything here is offered.
+	_createGifCycleControls(descriptor, timing) {
+		const record = descriptor.timingRecord;
+		const layer = this.editor?.layers.find((entry) => entry.id === descriptor.ownerLayerId);
+		if (!timing.range || !record || !layer || isLayerFullyLocked(layer) || !isFeatureEnabled('gifCycle')) return {};
+		const quantum = CONFIG.export.timeline.renderClock.gifDelayQuantumMs;
+		const fileCycleDuration = timing.file.reduce((sum, duration) => sum + duration, 0);
+		return {
+			fileCycleDuration,
+			periodRange: timing.range,
+			resolvePeriod: (ms) => roundTo(ms, quantum),
+			setPeriod: (ms) => {
+				const cycle = clampNumber(roundTo(ms, quantum), timing.range.min, timing.range.max);
+				if (cycle === roundTo(fileCycleDuration, quantum)) delete record.gifCycleMs;
+				else record.gifCycleMs = cycle;
+			}
+		};
 	}
 
 	// Archival assets carry a curated frameRate/isVariableFramerate in their manifest
@@ -1278,7 +1313,7 @@ class SceneCompositor {
 			label: animation.name,
 			ownerLayerId: layer.id,
 			effectSlot: null,
-			role: 'base-image', rowLabel: 'Image',
+			role: 'base-image', rowLabel: 'Image', timingRecord: layer.background,
 			replayPolicy: 'native-layer',
 			sourceIdentity: animation.file,
 			ensureLoaded: async (callbacks, { timingOnly = false } = {}) => {
