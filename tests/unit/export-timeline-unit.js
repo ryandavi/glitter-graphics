@@ -16,8 +16,8 @@ const context = { ImageData: ImageDataPolyfill, Uint8ClampedArray, Map, Set, Mat
 vm.createContext(context);
 vm.runInContext(fs.readFileSync(path.join(__dirname, '..', '..', 'js', 'core', 'gif-decode.js'), 'utf8'), context);
 const source = fs.readFileSync(path.join(__dirname, '..', '..', 'js', 'export', 'ExportTimeline.js'), 'utf8');
-vm.runInContext(`${source}\nglobalThis.timelineExports = { AuthoredAnimationSource, ProceduralAnimationSource, CompositeFrameReducer, CompositeTimelinePlanner, planLoopFit };`, context);
-const { AuthoredAnimationSource, ProceduralAnimationSource, CompositeFrameReducer, CompositeTimelinePlanner, planLoopFit } = context.timelineExports;
+vm.runInContext(`${source}\nglobalThis.timelineExports = { AuthoredAnimationSource, ProceduralAnimationSource, CompositeFrameReducer, CompositeTimelinePlanner, planLoopFit, planFrameOptions };`, context);
+const { AuthoredAnimationSource, ProceduralAnimationSource, CompositeFrameReducer, CompositeTimelinePlanner, planLoopFit, planFrameOptions } = context.timelineExports;
 
 for (const file of ['core/releases.js', 'core/fields.js', 'core/math.js', 'core/area.js', 'core/config.js', 'effects/easing.js', 'effects/animation.js', 'export/SceneCompositor.js']) {
 	vm.runInContext(fs.readFileSync(path.join(__dirname, '..', '..', 'js', file), 'utf8'), context);
@@ -557,3 +557,44 @@ main().catch((error) => {
 	const withinTolerance = createPlanner().planSchedule({ ...scheduleOptions, timelines: [stretchable(), procedural('motion', 1000)], loopDurationMs: 1000 });
 	assert(withinTolerance.loopSeam.duration === 1000 && !withinTolerance.loopSeam.exact, 'A set loop must report the seam of a GIF it does not stretch');
 }
+
+// Frame options: a timing is offered when it exports fewer frames, planned
+// the way the export plans, and never past the allowed change of speed.
+(async () => {
+	const config = { ...createPlanner().config, maxLoopDurationMs: 12000 };
+	const options = { candidateLimit: 8, minimumSaving: 0.2, maximumSpeedChange: 0.25 };
+	const retimeGifDelays = vm.runInContext('retimeGifDelays', context);
+	const sticker = (cycle = 960) => {
+		const file = new Array(12).fill(80);
+		return new AuthoredAnimationSource({
+			key: 'sticker', frameCount: 12, frameDurations: retimeGifDelays(file, cycle),
+			fileCycleDuration: 960, periodRange: { min: 480, max: 1920 }, resolvePeriod: (ms) => Math.round(ms / 10) * 10,
+			setPeriod: () => {}, retimeDelays: (target) => retimeGifDelays(file, target)
+		});
+	};
+	const glitter = timeline('glitter', 8, new Array(8).fill(100));
+	const plan = (timelines) => buildPlan(timelines);
+	const measure = async (timelines, extra = {}) => {
+		const current = await plan(timelines);
+		return { current, result: await planFrameOptions(timelines, planLoopFit(timelines, { config }), current.frameCount, { config: options, plan, ...extra }) };
+	};
+	const retimed = sticker().atPeriod(800);
+	assert(retimed.cycleDuration === 800 && retimed.frameCount === 12 && typeof retimed.setPeriod === 'function', 'A retimed copy must play one pass in the new cycle and keep its controls');
+	assert(procedural('motion', 900).atPeriod(1000).naturalPeriod === 1000, 'A retimed procedural copy must own the new period');
+
+	// 960 ms against 800 ms only closes after 4.8 s.
+	const clash = await measure([sticker(), glitter]);
+	const fewest = clash.result.options.at(-1);
+	assert(clash.current.loopSeam.duration === 4800 && clash.result.optimizable && fewest.kind === 'fewest', 'Cycles that only close on a long loop must offer a timing with fewer frames');
+	assert(fewest.duration === 800 && fewest.fits.length === 1 && fewest.fits[0].fittedPeriod === 800, 'The offered timing must be the loop fit that closes');
+	const applied = await plan([sticker(800), glitter]);
+	assert(fewest.frameCount === applied.frameCount && fewest.frameCount < clash.current.frameCount * 0.8, 'An option must report the frame count its fit exports');
+	assert((await measure([sticker(800), glitter])).result.options.length === 0, 'A fitted timing must offer nothing');
+	const capped = await measure([sticker(), glitter], { originalPeriod: (source) => (source.key === 'sticker' ? 1200 : source.naturalPeriod) });
+	assert(!capped.result.optimizable, 'An option must stay inside the allowed change from the original speed');
+	assert(!(await measure([timeline('a', 12, new Array(12).fill(80)), glitter])).result.optimizable, 'Fixed sources must offer nothing');
+	console.log('PASS frame options: retimed copies, export-planned counts, speed cap, fixed and already-fitted timing.');
+})().catch((error) => {
+	console.error(error.stack || String(error));
+	process.exit(1);
+});

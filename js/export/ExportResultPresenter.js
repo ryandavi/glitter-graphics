@@ -4,7 +4,7 @@
 // footer actions. What is shown, and when, is decided in export-report.js.
 class ExportResultPresenter {
 	// onFit(goal) re-exports under a size target's limit.
-	constructor({ onStatus = () => {}, onShow = () => {}, onFit = null, onFixLoop = null } = {}) { this.previewBlobUrl = null; this.onStatus = onStatus; this.onShow = onShow; this.onFit = onFit; this.onFixLoop = onFixLoop; }
+	constructor({ onStatus = () => {}, onShow = () => {}, onFit = null, onFixLoop = null, getFrameOptions = () => null } = {}) { this.previewBlobUrl = null; this.onStatus = onStatus; this.onShow = onShow; this.onFit = onFit; this.onFixLoop = onFixLoop; this.getFrameOptions = getFrameOptions; }
 	clear() { if (this.previewBlobUrl) URL.revokeObjectURL(this.previewBlobUrl); this.previewBlobUrl = null; }
 	show({ blob, file, target, width, height, frameCount = null, duration = null, timelinePlan = null, colorAnalysis = null, fit = null }) {
 		this.clear();
@@ -20,7 +20,7 @@ class ExportResultPresenter {
 		let canShare = false;
 		try { canShare = Boolean(navigator.canShare?.({ files: [file] })); } catch (error) { canShare = false; }
 		const report = buildExportReport({
-			blob, fileName: file.name, target, width, height, frameCount, duration, timelinePlan, colorAnalysis, fit,
+			blob, fileName: file.name, target, width, height, frameCount, duration, timelinePlan, colorAnalysis, fit, frameOptions: this.getFrameOptions(),
 			platform: { isIOS: CONFIG.debug.forceIOSExportPreview || isIOSDevice(), canShare }
 		});
 

@@ -49,7 +49,7 @@ function plan(overrides = {}) {
 	};
 }
 
-function report({ target = 'animation:gif', size = 1024, timelinePlan = plan(), platform = desktop, colorAnalysis = null } = {}) {
+function report({ target = 'animation:gif', size = 1024, timelinePlan = plan(), platform = desktop, colorAnalysis = null, frameOptions = null } = {}) {
 	const resolved = EXPORT_TARGETS[target];
 	return buildExportReport({
 		blob: { size },
@@ -61,6 +61,7 @@ function report({ target = 'animation:gif', size = 1024, timelinePlan = plan(), 
 		duration: resolved.isStill ? null : 3.3,
 		timelinePlan: resolved.isStill ? null : timelinePlan,
 		colorAnalysis,
+		frameOptions,
 		platform
 	});
 }
@@ -87,6 +88,13 @@ for (const [id, overrides, level] of noticeCases) {
 }
 const every = report({ timelinePlan: plan({ loopSeam: { exact: false }, reduction: { durationPreserved: false, budgetCompromiseRequired: true } }) });
 assert(noticeIds(every) === 'speed,motion,seam', `Notices are out of order: ${noticeIds(every)}`);
+
+// Frames: only when a timing would export fewer frames than this export has.
+const frameOptions = (frameCount) => ({ optimizable: true, options: [{ frameCount: 40 }, { frameCount }] });
+const fewer = report({ timelinePlan: plan(), frameOptions: frameOptions(20) });
+assert(noticeIds(fewer) === 'frames' && fewer.notices[0].action.id === 'fix-loop' && fewer.notices[0].text.includes('about 20 frames instead of 55'), 'A smaller timing must be offered with its frame count');
+assert(noticeIds(report({ timelinePlan: plan(), frameOptions: { optimizable: true, options: [{ frameCount: 55 }] } })) === '', 'A timing that saves nothing must not be offered');
+assert(noticeIds(report({ timelinePlan: plan(), frameOptions: { optimizable: false, options: [] } })) === '', 'No frame options must say nothing');
 
 // Colors: only when the palette limited the image, and only for GIFs.
 const colorCases = [

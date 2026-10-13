@@ -423,6 +423,7 @@ const PANEL_SCHEMAS = {
 						{ kind: 'note', id: 'animationLoopChanges', classes: 'is-result' }
 					] }, { id: 'animationLoopActionSet', hidden: true, actions: [
 						{ id: 'fitAnimationsToLoop', label: 'Fit animations to loop', primary: true },
+						{ id: 'animationFrameOptions', label: 'Frame options', title: 'Timings that export fewer frames', menu: true },
 						{ id: 'resetAnimationLoop', label: 'Restore previous timing', title: 'Restore the timing saved before the first loop fit' }
 					] }] }
 				] }

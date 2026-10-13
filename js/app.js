@@ -257,7 +257,7 @@ class GlitterEditor {
 		initPixelScaler();
 		initTooltips();
 		installClipboardHandlers(this);
-		this.exportResultPresenter = new ExportResultPresenter({ onFixLoop: () => this.openAnimationLoop(), onStatus: (message) => this.updateStatus(message), onShow: () => this.modalManager.open('exportPreviewModal'), onFit: (goal) => { this.modalManager.close('exportPreviewModal'); this.exportCurrentTarget({ fit: goal }); } });
+		this.exportResultPresenter = new ExportResultPresenter({ onFixLoop: () => this.openAnimationLoop(), getFrameOptions: () => this.loopEstimate?.frameOptions, onStatus: (message) => this.updateStatus(message), onShow: () => this.modalManager.open('exportPreviewModal'), onFit: (goal) => { this.modalManager.close('exportPreviewModal'); this.exportCurrentTarget({ fit: goal }); } });
 		this.exportProgressPresenter = new ExportProgressPresenter(this);
 		this.gifEncodingPipeline = new GifEncodingPipeline();
 		this.authoredFrameResolver = new AuthoredFrameResolver();

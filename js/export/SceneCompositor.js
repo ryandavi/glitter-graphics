@@ -823,6 +823,7 @@ class SceneCompositor {
 			fileCycleDuration,
 			periodRange: timing.range,
 			resolvePeriod: (ms) => roundTo(ms, quantum),
+			retimeDelays: (cycle) => retimeGifDelays(timing.file, cycle),
 			setPeriod: (ms) => {
 				const cycle = clampNumber(roundTo(ms, quantum), timing.range.min, timing.range.max);
 				if (cycle === roundTo(fileCycleDuration, quantum)) delete record.gifCycleMs;
@@ -1808,8 +1809,10 @@ class SceneCompositor {
 			Number.isFinite(requestedFidelity) ? requestedFidelity : CONFIG.export.defaults.exportFidelity
 		));
 		const fidelity = timelineConfig.fidelityStops[fidelityIndex];
-		const plan = await new CompositeTimelinePlanner(timelineConfig).plan({
-			timelines,
+		const planner = new CompositeTimelinePlanner(timelineConfig);
+		// The frame options plan copies of these sources the same way.
+		const planFrames = (sources) => planner.plan({
+			timelines: sources,
 			outputFormat,
 			fallbackDuration,
 			maxLoopDurationMs: timelineConfig.maxLoopDurationMs,
@@ -1824,8 +1827,8 @@ class SceneCompositor {
 			preferredFrameBudget: maxFrames,
 			hardFrameLimit: timelineConfig.hardFrameLimit,
 			renderFrame: (_timestamp, selection) => {
-				const data = new Uint8ClampedArray(Math.max(1, timelines.length) * 4);
-				timelines.forEach((timeline, index) => {
+				const data = new Uint8ClampedArray(Math.max(1, sources.length) * 4);
+				sources.forEach((timeline, index) => {
 					const selected = selection.get(timeline.key);
 					if (timeline.kind === 'authored') {
 						data[index * 4] = Math.round((selected?.frameIndex || 0) / Math.max(1, timeline.frameCount - 1) * 255);
@@ -1841,13 +1844,19 @@ class SceneCompositor {
 					}
 					data[index * 4 + 3] = 255;
 				});
-				return new ImageData(data, Math.max(1, timelines.length), 1);
+				return new ImageData(data, Math.max(1, sources.length), 1);
 			}
 		});
+		const plan = await planFrames(timelines);
+		const loopFit = planLoopFit(timelines, { config: timelineConfig, fallbackDuration, loopDurationMs: this._loopDurationMs() });
 		return {
 			...plan.loopSeam,
 			sourceAnalysis: plan.sourceAnalysis,
-			loopFit: planLoopFit(timelines, { config: timelineConfig, fallbackDuration, loopDurationMs: this._loopDurationMs() }),
+			loopFit,
+			frameOptions: await planFrameOptions(timelines, loopFit, plan.frameCount, {
+				config: timelineConfig.frameOptions, plan: planFrames,
+				originalPeriod: (source) => this.editor.layers.find((layer) => layer.id === source.ownerLayerId)?.loopOriginalPeriods?.[source.key] ?? source.naturalPeriod
+			}),
 			duration: plan.totalDuration,
 			estimatedFrameCount: plan.frameCount,
 			maximumVisualError: plan.reduction.maximumVisualError,

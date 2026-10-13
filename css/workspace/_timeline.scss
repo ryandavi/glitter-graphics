@@ -70,10 +70,27 @@
 		flex: 1;
 		min-width: 0;
 	}
+	.timeline-frames { min-width: 0; }
+	// A button as quiet as the text it was, until a timing with fewer frames
+	// exists: then it wears the warning badge's colors.
 	.timeline-readout {
 		@include truncate;
+		padding: 2px var(--spacing-sm);
+		border: 1px solid transparent;
+		border-radius: var(--radius-xs);
+		background: none;
 		font-size: var(--font-size-xs);
 		color: var(--bar-icon-color);
+		cursor: pointer;
+
+		&:not(:disabled):hover,
+		&:focus-visible { border-color: var(--color-border); }
+
+		&.is-warning {
+			border-color: var(--color-warning-border);
+			background: var(--color-warning-surface);
+			color: var(--color-warning-emphasis);
+		}
 	}
 
 	// Minimized, the dock is its bar.

@@ -24,9 +24,7 @@ class TimelineDock {
 		this.title.append(icon, this.element('section-header-title-text', 'Timeline', 'span'));
 		// What the export would write, and whether it closes.
 		this.summary = this.element('timeline-summary');
-		this.readout = this.element('timeline-readout', undefined, 'span');
-		this.readout.setAttribute('aria-live', 'polite');
-		this.summary.append(this.readout);
+		this.summary.append(this.buildFrameReadout());
 		const actions = this.element('section-header-actions');
 		const action = 'section-header-action btn-icon-simple icon-wrapper sm visible';
 		// Shows the same state as the view menu's Pause motion.
@@ -117,6 +115,21 @@ class TimelineDock {
 		return button;
 	}
 
+	// The frame count is a button: it lists the timings that would export
+	// fewer frames, and is marked while one exists.
+	buildFrameReadout() {
+		const root = this.element('timeline-frames app-menu');
+		this.readout = this.element('timeline-readout', undefined, 'button');
+		this.readout.type = 'button'; this.readout.hidden = true;
+		this.readout.setAttribute('aria-haspopup', 'menu');
+		this.readout.setAttribute('aria-expanded', 'false');
+		const panel = this.element('app-menu-panel'); panel.hidden = true;
+		panel.setAttribute('role', 'menu');
+		root.append(this.readout, panel);
+		this.frameMenu = setupMenuPopover({ root, trigger: this.readout, panel, fixed: true, beforeOpen: () => this.editor.fillFrameOptionsMenu(panel) });
+		return root;
+	}
+
 	// The header's one menu: the two whole-timeline actions, then what the
 	// rows draw. The view choices are stored together as `timelineShow`.
 	buildOptionsMenu() {
@@ -204,6 +217,7 @@ class TimelineDock {
 		this.keyLane.finish(true);
 		this.finishDrag(true);
 		this.menu?.close();
+		this.frameMenu.close();
 		this.frameView.invalidate();
 		this.host.hidden = true;
 		const ticker = this.editor.animationTicker;
@@ -416,6 +430,8 @@ class TimelineDock {
 		this.keyRecording.validate();
 		this.frameView.invalidate({ keepFrame: this.keyRecording.active });
 		this.host.classList.add('is-stale');
+		this.frameMenu.close();
+		this.readout.disabled = true;
 		this.fit.disabled = true;
 	}
 
@@ -433,6 +449,7 @@ class TimelineDock {
 		if (this.drag || this.keyLane.drag) return;
 		this.menu?.close();
 		this.menuPanel?.remove();
+		this.frameMenu.close();
 		const scrollTop = this.body.scrollTop;
 		const scrollLeft = this.body.scrollLeft;
 		const rulerFocused = Boolean(this.rulerTrack) && document.activeElement === this.rulerTrack;
@@ -451,7 +468,8 @@ class TimelineDock {
 		for (const group of this.model.groups) for (const row of group.rows) row.originalPeriod = this.editor.layerManager.getLayerById(group.layerId)?.loopOriginalPeriods?.[row.key];
 		this.listedIds = new Set(this.model.groups.map(group => group.layerId));
 		this.body.replaceChildren();
-		this.readout.textContent = '';
+		this.readout.hidden = true;
+		this.readout.disabled = false;
 		this.seamBadge?.remove();
 		this.seamBadge = null;
 		this.stage.classList.toggle('is-empty', !this.model.groups.length);
@@ -468,7 +486,11 @@ class TimelineDock {
 		// With every animated layer hidden there are rows and nothing to time.
 		const timed = loopMs > 0;
 		if (timed) {
+			const optimizable = estimate.frameOptions.optimizable;
 			this.readout.textContent = `about ${frameCount} frames, ${outputFormat.toUpperCase()}`;
+			this.readout.hidden = false;
+			this.readout.classList.toggle('is-warning', optimizable);
+			this.readout.title = optimizable ? 'A change of timing would export fewer frames. Press for the options.' : 'Frame options';
 			this.seamBadge = this.element(`badge ${exact ? 'is-accent' : 'is-warning'}`, exact ? 'Seamless' : 'Visible seam', 'span');
 			this.summary.appendChild(this.seamBadge);
 		}

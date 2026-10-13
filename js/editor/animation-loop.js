@@ -22,6 +22,10 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		});
 		document.getElementById('fitAnimationsToLoop')?.addEventListener('click', () => this.fitAnimationsToLoop());
 		document.getElementById('resetAnimationLoop')?.addEventListener('click', () => this.resetAnimationLoop());
+		const frames = document.getElementById('animationFrameOptions');
+		const root = frames?.closest('.app-menu-popover');
+		const panel = root?.querySelector('.app-menu-panel');
+		if (panel) setupMenuPopover({ root, trigger: frames, panel, fixed: true, beforeOpen: () => this.fillFrameOptionsMenu(panel) });
 		this.scheduleExportDuration();
 	},
 	openAnimationLoop() {
@@ -205,21 +209,62 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		button.hidden = button.disabled;
 		const reset = document.getElementById('resetAnimationLoop');
 		if (reset) {
-			reset.disabled = !(fit?.sources || []).some((source) => {
-				const before = this.layers.find((layer) => layer.id === source.ownerLayerId)?.loopOriginalPeriods?.[source.key];
-				return typeof source.setPeriod === 'function' && before != null && Math.abs(before - source.naturalPeriod) > 0.01;
-			});
+			reset.disabled = !this.hasLoopTimingToRestore();
 			reset.hidden = reset.disabled;
 		}
+		// Offered here only when there is a timing to choose; the timeline's
+		// frame count opens the same menu.
+		const frames = document.getElementById('animationFrameOptions')?.closest('.app-menu-popover');
+		if (frames) frames.hidden = !this.loopEstimate?.frameOptions.options.length;
 		document.getElementById('animationLoopLengthSet').hidden = isFeatureEnabled('loopLength') ? !fit?.sources.length : !fit?.candidates.some((entry) => entry.canApply);
-		document.getElementById('animationLoopActionSet').hidden = button.hidden && (!reset || reset.hidden);
+		document.getElementById('animationLoopActionSet').hidden = button.hidden && (!reset || reset.hidden) && (!frames || frames.hidden);
+	},
+	hasLoopTimingToRestore() {
+		return (this.loopEstimate?.loopFit.sources || []).some((source) => {
+			const before = this.layers.find((layer) => layer.id === source.ownerLayerId)?.loopOriginalPeriods?.[source.key];
+			return typeof source.setPeriod === 'function' && before != null && Math.abs(before - source.naturalPeriod) > 0.01;
+		});
+	},
+	// The frame count's menu: what the export would write now, the timings
+	// that would write fewer frames, and the way back to the saved timing.
+	fillFrameOptionsMenu(panel) {
+		const options = this.loopEstimate?.frameOptions;
+		const labels = CONFIG.export.timeline.frameOptions.labels;
+		const item = (label, run = null, title = '') => {
+			const button = document.createElement('button');
+			button.type = 'button'; button.className = 'app-menu-item'; button.textContent = label;
+			button.setAttribute('role', 'menuitem');
+			if (title) button.title = title;
+			if (run) button.addEventListener('click', run);
+			else button.disabled = true;
+			return button;
+		};
+		const heading = document.createElement('div');
+		heading.className = 'app-menu-group-label';
+		heading.textContent = options ? `About ${options.frameCount} ${options.frameCount === 1 ? 'frame' : 'frames'} now` : 'Measuring the animation';
+		const seconds = (ms) => `${(ms / 1000).toFixed(2)} s`;
+		const entries = (options?.options || []).map((option) => item(
+			`${labels[option.kind]}: about ${option.frameCount} ${option.frameCount === 1 ? 'frame' : 'frames'}, ${seconds(option.duration)} loop`,
+			() => this.applyFrameOption(option),
+			option.fits.map((fit) => `${fit.source.label || fit.source.key}: ${seconds(fit.source.naturalPeriod)} to ${seconds(fit.fittedPeriod)}`).join('\n')
+		));
+		if (options && !options.optimizable) entries.push(item('No timing found with fewer frames'));
+		if (this.hasLoopTimingToRestore()) entries.push(item('Restore previous timing', () => this.resetAnimationLoop(), 'Restore the timing saved before the first loop fit'));
+		panel.replaceChildren(heading, ...entries);
+	},
+	applyFrameOption(option) {
+		if (this.loopEstimate?.frameOptions.options.includes(option)) this.applyLoopFits(option.fits, 'Change animation timing', `Animation timing changed: about ${option.frameCount} ${option.frameCount === 1 ? 'frame' : 'frames'}`);
 	},
 	fitAnimationsToLoop() {
 		const candidate = this.getLoopCandidate();
-		if (!candidate?.canApply) return;
+		if (candidate?.canApply) this.applyLoopFits(candidate.fits, 'Fit animations to loop', 'Animation speeds fitted to the loop');
+	},
+	// Writes fitted periods as one undo step, saving each source's timing
+	// from before its first fit.
+	applyLoopFits(fits, label, status) {
 		// A queued estimate is invalidated on every document commit or restore,
 		// so these setters always belong to the current layer objects.
-		candidate.fits.forEach((fit) => {
+		fits.forEach((fit) => {
 			if (Math.abs(fit.fittedPeriod - fit.source.naturalPeriod) < 0.01) return;
 			const layer = this.layers.find((entry) => entry.id === fit.source.ownerLayerId);
 			if (!layer) return;
@@ -230,8 +275,8 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		this.layerManager.renderLayersList();
 		this.refreshInspector();
 		this.requestPreviewUpdate();
-		this.saveState('Fit animations to loop');
-		this.updateStatus('Animation speeds fitted to the loop');
+		this.saveState(label);
+		this.updateStatus(status);
 	},
 	resetAnimationLoop() {
 		let changed = false;

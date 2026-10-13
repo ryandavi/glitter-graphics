@@ -1084,6 +1084,15 @@ const CONFIG = deepFreeze({
 				cadenceShortfallTolerance: 0.05,
 				loopCandidateShortlist: 4
 			},
+			// Timings offered for a smaller export (planFrameOptions). An option
+			// must save `minimumSaving` of the frames, and never moves a speed
+			// further than `maximumSpeedChange` from where it was before any fit.
+			frameOptions: {
+				candidateLimit: 8,
+				minimumSaving: 0.2,
+				maximumSpeedChange: 0.25,
+				labels: { closest: 'Closest to original', fewest: 'Fewest frames' }
+			},
 			fidelityStops: EXPORT_FIDELITY_STOPS,
 			fidelityEndLabels: ['Best quality', 'Smallest file'],
 

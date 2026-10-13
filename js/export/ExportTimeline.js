@@ -1,6 +1,6 @@
 // Export timeline planning primitives. Loaded before SceneCompositor and the exporters.
 class AuthoredAnimationSource {
-	constructor({ key, label = null, rowLabel = null, ownerLayerId = null, effectSlot = null, frameCount = 0, frameDurations = [], fallbackDuration = 100, fileCycleDuration = null, periodRange = null, resolvePeriod = null, setPeriod = null }) {
+	constructor({ key, label = null, rowLabel = null, ownerLayerId = null, effectSlot = null, frameCount = 0, frameDurations = [], fallbackDuration = 100, fileCycleDuration = null, periodRange = null, resolvePeriod = null, setPeriod = null, retimeDelays = null }) {
 		this.kind = 'authored';
 		this.key = key;
 		this.label = label;
@@ -23,7 +23,12 @@ class AuthoredAnimationSource {
 		// loop fitting takes its period, range and setter by the same names.
 		// The kind stays authored, so only a user action ever calls the setter.
 		this.naturalPeriod = this.cycleDuration;
-		Object.assign(this, { fileCycleDuration, periodRange, resolvePeriod, setPeriod });
+		Object.assign(this, { fileCycleDuration, periodRange, resolvePeriod, setPeriod, retimeDelays });
+	}
+
+	// A copy playing one pass in `period`, as its setter would leave it.
+	atPeriod(period) {
+		return new AuthoredAnimationSource({ ...this, frameDurations: this.retimeDelays?.(period) || this.frameDurations });
 	}
 
 	static normalizeDuration(duration, fallback = 100) {
@@ -114,6 +119,11 @@ class ProceduralAnimationSource {
 		});
 	}
 
+	// A copy with `period` as its own, as its setter would leave it.
+	atPeriod(period) {
+		return new ProceduralAnimationSource({ ...this, naturalPeriod: period, resolvedPeriod: period });
+	}
+
 	sampleAt(timestamp) {
 		return this.sampler(timestamp, this.resolvedPeriod, this.phase);
 	}
@@ -201,6 +211,42 @@ function planLoopFit(timelines, { config, maxLoopDurationMs = config.maxLoopDura
 		};
 	});
 	return { candidates, fixed: fixed.map((entry) => entry.source), oneShots, fixedLoop, sources: animated };
+}
+
+// Timings that would export fewer frames. Each loop candidate that closes is
+// applied to copies of the sources and planned by `plan`, the export's own
+// planner, so an option's frame count is the one that fit would produce.
+// Speed changes are measured against `originalPeriod`, the timing from before
+// any fit, and capped. The option nearest that timing is listed first.
+async function planFrameOptions(timelines, loopFit, currentFrameCount, { config, plan, originalPeriod = (source) => source.naturalPeriod }) {
+	const adjustable = loopFit.sources.filter((source) => typeof source.setPeriod === 'function' && !source.nonLooping);
+	const candidates = loopFit.candidates.filter((candidate) => candidate.exact && candidate.canApply).map((candidate) => {
+		const fits = candidate.fits.filter((fit) => Math.abs(fit.fittedPeriod - fit.source.naturalPeriod) > 0.01);
+		const periods = new Map(fits.map((fit) => [fit.source, fit.fittedPeriod]));
+		const speedChange = adjustable.reduce((most, source) => {
+			const original = originalPeriod(source);
+			return Math.max(most, Math.abs((periods.get(source) ?? source.naturalPeriod) - original) / original);
+		}, 0);
+		return { fits, periods, speedChange, duration: candidate.duration };
+	}).filter((candidate) => candidate.speedChange <= config.maximumSpeedChange)
+		// A shorter loop is where the frames are saved.
+		.sort((left, right) => left.duration - right.duration)
+		.slice(0, config.candidateLimit);
+	const saving = [];
+	for (const candidate of candidates) {
+		const result = await plan(timelines.map((source) => (candidate.periods.has(source) ? source.atPeriod(candidate.periods.get(source)) : source)));
+		if (!result.loopSeam.exact || result.frameCount > currentFrameCount * (1 - config.minimumSaving)) continue;
+		saving.push({ fits: candidate.fits, speedChange: candidate.speedChange, duration: result.totalDuration, frameCount: result.frameCount });
+	}
+	const first = (...keys) => [...saving].sort((left, right) => keys.reduce((order, key) => order || left[key] - right[key], 0))[0];
+	const options = [];
+	if (saving.length) {
+		const closest = first('speedChange', 'frameCount');
+		const fewest = first('frameCount', 'speedChange');
+		if (closest !== fewest) options.push({ kind: 'closest', ...closest });
+		options.push({ kind: 'fewest', ...fewest });
+	}
+	return { frameCount: currentFrameCount, optimizable: options.length > 0, options };
 }
 
 // A committed clock is the single owner of displayed time: its frame-start

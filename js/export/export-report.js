@@ -156,7 +156,7 @@ function buildFitTable(fit) {
 	};
 }
 
-function buildExportReport({ blob, fileName, target, width, height, frameCount = null, duration = null, timelinePlan = null, colorAnalysis = null, fit = null, platform = {} }) {
+function buildExportReport({ blob, fileName, target, width, height, frameCount = null, duration = null, timelinePlan = null, colorAnalysis = null, fit = null, frameOptions = null, platform = {} }) {
 	const plan = target.isAnimation ? timelinePlan : null;
 	const analysis = target.isGif ? (colorAnalysis || plan?.colorAnalysis || null) : null;
 	const uploadLimits = target.isVector ? [] : resolveUploadLimits(blob.size, CONFIG.export.sizeTargets);
@@ -190,6 +190,9 @@ function buildExportReport({ blob, fileName, target, width, height, frameCount =
 		if (!reduction.durationPreserved) notices.push({ id: 'speed', level: 'warning', text: 'The exported animation may play at a different speed than the preview.' });
 		if (reduction.budgetCompromiseRequired) notices.push({ id: 'motion', level: 'warning', text: 'This animation is longer than the export limit allows, so some motion detail may be reduced.' });
 		if (!plan.loopSeam.exact) notices.push({ id: 'seam', level: 'info', action: { id: 'fix-loop', label: 'Fix loop' }, text: 'The animations repeat at different times, so the beginning and ending may not match perfectly.' });
+		// The same place as Fix loop: the Animation loop section lists the timings.
+		const fewest = frameOptions?.optimizable ? Math.min(...frameOptions.options.map((option) => option.frameCount)) : Infinity;
+		if (fewest < frameCount) notices.push({ id: 'frames', level: 'info', action: { id: 'fix-loop', label: 'Frame options' }, text: `A change of animation timing would export about ${fewest} ${fewest === 1 ? 'frame' : 'frames'} instead of ${frameCount}.` });
 	}
 	// The observed count is a sampled lower bound, so this never fires on an
 	// image the palette could hold.

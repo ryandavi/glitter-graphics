@@ -636,7 +636,7 @@ initializeExportSettings() {
 			}
 			if (fidelityOutput) {
 				fidelityOutput.textContent = estimate.sourceAnalysis?.length || estimate.loopFit?.oneShots.length || estimate.estimatedFrameCount > 1
-					? `About ${estimate.estimatedFrameCount} ${estimate.estimatedFrameCount === 1 ? 'frame' : 'frames'} in a ${loopDurationSeconds.toFixed(1)} s loop.`
+					? `About ${estimate.estimatedFrameCount} ${estimate.estimatedFrameCount === 1 ? 'frame' : 'frames'} in a ${loopDurationSeconds.toFixed(1)} s loop.${estimate.frameOptions.optimizable ? ` Animation Loop has a timing with about ${Math.min(...estimate.frameOptions.options.map((option) => option.frameCount))}.` : ''}`
 					: getActiveExportTarget(this.exportSettings).isGif
 						? 'Nothing in this project is animated, so the GIF has one frame.'
 						: 'Nothing in this project is animated.';

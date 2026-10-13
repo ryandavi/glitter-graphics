@@ -5068,12 +5068,28 @@ body.tool-select .preview-container.is-over-picked-layer {
   flex: 1;
   min-width: 0;
 }
+.timeline-dock .timeline-frames {
+  min-width: 0;
+}
 .timeline-dock .timeline-readout {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  padding: 2px var(--spacing-sm);
+  border: 1px solid transparent;
+  border-radius: var(--radius-xs);
+  background: none;
   font-size: var(--font-size-xs);
   color: var(--bar-icon-color);
+  cursor: pointer;
+}
+.timeline-dock .timeline-readout:not(:disabled):hover, .timeline-dock .timeline-readout:focus-visible {
+  border-color: var(--color-border);
+}
+.timeline-dock .timeline-readout.is-warning {
+  border-color: var(--color-warning-border);
+  background: var(--color-warning-surface);
+  color: var(--color-warning-emphasis);
 }
 .timeline-dock.is-minimized {
   height: auto;
