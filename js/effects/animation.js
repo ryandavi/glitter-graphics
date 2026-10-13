@@ -11,14 +11,15 @@ const GlitterAnimation = (() => {
 		pose
 	});
 	const MOTION_DEFINITIONS = Object.freeze({
-		breath: motion(({ out, amount, oscillation }) => { out.scaleX = out.scaleY = 1 + amount / 100 * oscillation; }, { label: 'Breath', group: 'Ambient', fields: ['amount'] }),
+		custom: motion(({ out, data, p }) => sampleKeys(out, data, p), { label: 'Custom', group: 'Custom', feature: 'timeline', keyed: true, activeWhen: () => true }),
+		breath: motion(({ out, amount, oscillation }) => { out.scaleX = out.scaleY = 1 + amount / 100 * oscillation; }, { label: 'Breath', convertible: true, group: 'Ambient', fields: ['amount'] }),
 		float: motion(({ out, amount, oscillation, angle }) => {
 			const lift = amount * oscillation;
 			out.tx += Math.cos(angle) * lift;
 			out.ty += Math.sin(angle) * lift;
-		}, { label: 'Float', group: 'Ambient', fields: ['amount', 'angle'], targets: ['layer', 'particle'], particleLabel: 'Float' }),
-		sway: motion(({ out, amount, oscillation }) => { out.rotate = amount * oscillation; }, { label: 'Sway', group: 'Ambient', fields: ['amount'] }),
-		dim: motion(({ out, data, wave }) => { out.opacity = 1 - (1 - data.opacityFloor / 100) * wave; }, { label: 'Dim', group: 'Ambient', fields: ['opacityFloor'], activeWhen: (data) => data.opacityFloor < 100 }),
+		}, { label: 'Float', convertible: true, group: 'Ambient', fields: ['amount', 'angle'], targets: ['layer', 'particle'], particleLabel: 'Float' }),
+		sway: motion(({ out, amount, oscillation }) => { out.rotate = amount * oscillation; }, { label: 'Sway', convertible: true, group: 'Ambient', fields: ['amount'] }),
+		dim: motion(({ out, data, wave }) => { out.opacity = 1 - (1 - data.opacityFloor / 100) * wave; }, { label: 'Dim', convertible: true, group: 'Ambient', fields: ['opacityFloor'], activeWhen: (data) => data.opacityFloor < 100 }),
 		drift: motion(({ data, p, vector }) => vector(Number(data.distance) * p), { label: 'Drift', group: 'Ambient', fields: ['angle', 'distance'], travels: true, activeWhen: (data) => data.distance !== 0 }),
 		twinkle: motion(({ out, data, p, random }) => {
 			out.opacity = random(2) < (data.duty / 50 - 1) ? 1 : data.opacityFloor / 100;
@@ -33,7 +34,7 @@ const GlitterAnimation = (() => {
 			out.opacity = flare > 0 ? 1 : 0;
 			out.rotate = p < window ? amount * (p / window - 0.5) : 0;
 		}, { label: 'Glint', group: 'Ambient', fields: ['amount', 'duty'], targets: ['layer', 'particle'], activeWhen: () => true, particleLabel: 'Glint' }),
-		pulse: motion(({ out, amount, wave }) => { out.scaleX = out.scaleY = 1 + amount / 100 * wave; }, { label: 'Pulse', group: 'Ambient', fields: ['amount'], targets: ['layer', 'particle'], particleLabel: 'Pulse' }),
+		pulse: motion(({ out, amount, wave }) => { out.scaleX = out.scaleY = 1 + amount / 100 * wave; }, { label: 'Pulse', convertible: true, group: 'Ambient', fields: ['amount'], targets: ['layer', 'particle'], particleLabel: 'Pulse' }),
 		heartbeat: motion(({ out, amount, p }) => {
 			const thump = p < 0.18 ? Math.sin(p / 0.18 * Math.PI) : p < 0.42 ? Math.sin((p - 0.24) / 0.18 * Math.PI) * 0.7 : 0;
 			out.scaleX = out.scaleY = 1 + Math.max(0, thump) * amount / 100;
@@ -48,7 +49,7 @@ const GlitterAnimation = (() => {
 		swing: motion(({ out, amount, p }) => { out.rotate = amount * Math.sin(4 * Math.PI * p) * (1 - p); }, { label: 'Swing', group: 'Attention', fields: ['amount'] }),
 		'rubber-band': motion(({ out, amount, oscillation, p }) => { out.scaleX = 1 + amount / 100 * oscillation * (1 - p); out.scaleY = 1 - amount / 140 * oscillation * (1 - p); }, { label: 'Rubber band', group: 'Attention', fields: ['amount'] }),
 		// OpacityFloor adds a fade synchronized with the movement wave.
-		move: motion(({ out, data, wave, vector }) => { vector(Number(data.distance) * wave); if (data.opacityFloor) out.opacity = 1 - (1 - data.opacityFloor / 100) * wave; }, { label: 'Move', group: 'Movement', fields: ['angle', 'distance', 'opacityFloor'], travels: true, activeWhen: (data) => data.distance !== 0 }),
+		move: motion(({ out, data, wave, vector }) => { vector(Number(data.distance) * wave); if (data.opacityFloor) out.opacity = 1 - (1 - data.opacityFloor / 100) * wave; }, { label: 'Move', convertible: true, group: 'Movement', fields: ['angle', 'distance', 'opacityFloor'], travels: true, activeWhen: (data) => data.distance !== 0 }),
 		// The orbit center offsets the path independently of the transform anchor.
 		orbit: motion(({ out, data, p }) => {
 			const [anchorX, anchorY] = resolveOrigin(data, 'orbitCenter');
@@ -56,14 +57,14 @@ const GlitterAnimation = (() => {
 			out.ty = (anchorY - 0.5) * 2 * data.radius + data.radius * Math.sin(2 * Math.PI * p);
 		}, { label: 'Orbit', group: 'Movement', fields: ['radius'], travels: true, targets: ['layer', 'particle'], activeWhen: (data) => data.radius !== 0, anchor: { stores: 'motion', label: 'Orbit center', note: 'Sets the center of the orbit path.' }, particleLabel: 'Orbit' }),
 		// Amount adds a scale pulse to the spin.
-		rotate: motion(({ out, data, amount, oscillation, p }) => { out.rotate = data.turns * 360 * p; if (amount) out.scaleX = out.scaleY = 1 + amount / 100 * oscillation; }, { label: 'Rotate', group: 'Movement', fields: ['amount', 'turns'], targets: ['layer', 'particle'], activeWhen: (data) => data.turns !== 0, particleLabel: 'Spin' }),
+		rotate: motion(({ out, data, amount, oscillation, p }) => { out.rotate = data.turns * 360 * p; if (amount) out.scaleX = out.scaleY = 1 + amount / 100 * oscillation; }, { label: 'Rotate', convertible: true, group: 'Movement', fields: ['amount', 'turns'], targets: ['layer', 'particle'], activeWhen: (data) => data.turns !== 0, particleLabel: 'Spin' }),
 		// Angle selects the closest horizontal or vertical flip axis.
 		flip: motion(({ out, data, angle, p }) => {
 			const flipScale = Math.cos(data.turns * 2 * Math.PI * p);
 			if (Math.abs(Math.sin(angle)) > Math.abs(Math.cos(angle))) out.scaleY = flipScale;
 			else out.scaleX = flipScale;
 		}, { label: 'Flip', group: 'Movement', fields: ['angle', 'turns'], activeWhen: (data) => data.turns !== 0 }),
-		zoom: motion(({ out, amount, wave }) => { out.scaleX = out.scaleY = 1 + amount / 100 * wave; }, { label: 'Zoom', group: 'Movement', fields: ['amount'] }),
+		zoom: motion(({ out, amount, wave }) => { out.scaleX = out.scaleY = 1 + amount / 100 * wave; }, { label: 'Zoom', convertible: true, group: 'Movement', fields: ['amount'] }),
 		ping: motion(({ out, data, p }) => { out.scaleX = out.scaleY = 1 + data.radius / 100 * p; out.opacity = 1 - (1 - data.opacityFloor / 100) * p; }, { label: 'Ping', group: 'Movement', fields: ['radius', 'opacityFloor'], activeWhen: (data) => data.radius !== 0 }),
 		// Repeat picks the wrap: none, a copy on the opposite edge, or a tiled row.
 		// Repeated copies exchange places at the wrap, including shadows.
@@ -96,7 +97,7 @@ const GlitterAnimation = (() => {
 			});
 		}, { label: 'Wander', group: 'Ambient', fields: ['amount'], targets: ['layer', 'particle'], needsBounds: true }),
 		// Hue wraps at a full turn; both renderers compose it with static color.
-		rainbow: motion(({ out, p }) => { out.hue = 360 * p; }, { label: 'Rainbow', group: 'Color', fields: [], activeWhen: () => true })
+		rainbow: motion(({ out, p }) => { out.hue = 360 * p; }, { label: 'Rainbow', convertible: true, group: 'Color', fields: [], activeWhen: () => true })
 	});
 	const MOTION_REGISTRY = Object.freeze(Object.fromEntries(Object.entries(MOTION_DEFINITIONS).map(([id, definition]) => [
 		id,
@@ -114,9 +115,16 @@ const GlitterAnimation = (() => {
 		['anchor', 'Anchor'], ['snapMode', 'SnapMode'], ['repeat', 'Repeat']
 	].map(([key, suffix, field, scale = 1]) => Object.freeze({ key, suffix, field, scale })));
 	const ANIMATION_TYPES = Object.freeze(Object.keys(MOTION_REGISTRY));
+	const POSE_CHANNELS = Object.freeze(Object.fromEntries([
+		['tx', 'Position X', 'px', 0, 'number', 'add', 'animKeyOffset'], ['ty', 'Position Y', 'px', 0, 'number', 'add', 'animKeyOffset'],
+		['rotate', 'Rotation', '°', 0, 'angle', 'matrix', 'animKeyAngle'],
+		['scaleX', 'Scale X', '', 1, 'number', 'multiply', 'animKeyScale', 100], ['scaleY', 'Scale Y', '', 1, 'number', 'multiply', 'animKeyScale', 100],
+		['skewX', 'Skew X', '°', 0, 'angle', 'matrix', 'animKeySkew'], ['skewY', 'Skew Y', '°', 0, 'angle', 'matrix', 'animKeySkew'],
+		['opacity', 'Opacity', '', 1, 'number', 'multiply', 'layerOpacity', 100], ['hue', 'Hue', '°', 0, 'angle', 'add', 'animKeyAngle']
+	].map(([id, label, unit, rest, interpolation, composition, field, displayScale = 1]) => [id, Object.freeze({ id, label, unit, rest, interpolation, composition, field, displayScale })])));
 	const IDENTITY = Object.freeze({
-		tx: 0, ty: 0, rotate: 0, scaleX: 1, scaleY: 1,
-		skewX: 0, skewY: 0, opacity: 1, originX: 0.5, originY: 0.5, hue: 0
+		...Object.fromEntries(Object.entries(POSE_CHANNELS).filter(([id]) => id !== 'hue').map(([id, channel]) => [id, channel.rest])),
+		originX: 0.5, originY: 0.5, hue: POSE_CHANNELS.hue.rest
 	});
 	const BASE_DEFAULTS = Object.freeze({
 		periodMs: 1000, easing: 'linear', steps: 2, direction: 'normal', iterations: Infinity,
@@ -124,6 +132,7 @@ const GlitterAnimation = (() => {
 		radius: 0, turns: 0, duty: 50, opacityFloor: 0, repeat: 'none', gap: 0,
 		orbitCenter: 'center', orbitCenterX: 0.5, orbitCenterY: 0.5, snapMode: 'smooth'
 	});
+	const CONVERT_TIMING_KEYS = Object.freeze(['periodMs', 'easing', 'steps', 'direction', 'iterations', 'delayMs', 'phase', 'fillMode', 'snapMode']);
 	function mod(value, span) { return ((value % span) + span) % span; }
 
 	function wrap(u0, span, progress) { return span > 0 ? mod(u0 + span * progress, span) - u0 : 0; }
@@ -205,7 +214,51 @@ const GlitterAnimation = (() => {
 		if (requested.iterations == null || requested.iterations === 'Infinity') {
 			normalized.iterations = cfg.presets[type].iterations;
 		}
+		if (MOTION_REGISTRY[type].keyed) normalized.keys = normalizeKeys(normalized.keys);
 		return normalized;
+	}
+
+	function normalizeKeys(keys) {
+		const byPosition = new Map();
+		if (!Array.isArray(keys)) return [];
+		keys.forEach((key) => {
+			if (!key || !Number.isFinite(key.at) || key.at < 0 || key.at > 1) return;
+			const at = key.at === 1 ? 0 : key.at;
+			const previous = byPosition.get(at);
+			const values = { ...previous?.values };
+			Object.entries(key.values && typeof key.values === 'object' ? key.values : {}).forEach(([id, value]) => {
+				if (!Object.hasOwn(POSE_CHANNELS, id) || !Number.isFinite(value)) return;
+				values[id] = id === 'opacity' ? Math.max(0, Math.min(1, value)) : value;
+			});
+			const easing = Object.hasOwn(GlitterEasing.EASINGS, key.easing) || key.easing === 'steps' ? key.easing : previous?.easing || 'linear';
+			byPosition.set(at, { at, easing, values });
+		});
+		return [...byPosition.values()].sort((a, b) => a.at - b.at);
+	}
+
+	function interpolateChannel(channel, from, to, progress) {
+		let difference = to - from;
+		if (channel.interpolation === 'angle') {
+			difference = mod(difference + 180, 360) - 180;
+			if (difference === -180) difference = 180;
+		}
+		return from + difference * progress;
+	}
+
+	function sampleKeys(out, data, progress) {
+		const p = mod(progress, 1);
+		Object.entries(POSE_CHANNELS).forEach(([id, channel]) => {
+			const keys = data.keys.filter((key) => Object.hasOwn(key.values, id));
+			if (!keys.length) return;
+			if (keys.length === 1) { out[id] = keys[0].values[id]; return; }
+			const index = keys.findLastIndex((key) => key.at <= p);
+			const from = keys[index < 0 ? keys.length - 1 : index];
+			const to = keys[(index + 1) % keys.length];
+			const length = mod(to.at - from.at, 1);
+			const fraction = mod(p - from.at, 1) / length;
+			const eased = GlitterEasing.easingFn(from.easing, { steps: data.steps })(fraction);
+			out[id] = interpolateChannel(channel, from.values[id], to.values[id], eased);
+		});
 	}
 
 	function normalizeAnimations(value = []) {
@@ -314,9 +367,13 @@ const GlitterAnimation = (() => {
 		return reverse ? 1 - progress : progress;
 	}
 
-	function pose(data, progress, tMs, options) {
+	function easedProgress(data, progress) {
 		let p = GlitterEasing.easingFn(data.easing, { steps: data.steps })(progress);
 		if (data.snapMode === 'step' && data.easing !== 'steps') p = GlitterEasing.stepsEase(p, data.steps);
+		return p;
+	}
+
+	function pose(data, progress, tMs, options, p = easedProgress(data, progress)) {
 		const out = { ...IDENTITY };
 		[out.originX, out.originY] = options.origin || [0.5, 0.5];
 		const amount = Number(data.amount) || 0;
@@ -339,6 +396,67 @@ const GlitterAnimation = (() => {
 		return out;
 	}
 
+	function progressAt(data, tMs, fill) {
+		const period = Math.max(1, Number(data.periodMs));
+		const localTime = Number(tMs) - Number(data.delayMs);
+		if (!fill && localTime < 0) return null;
+		let u = localTime / period + Number(data.phase || 0);
+		let held = false;
+		if (u < 0) {
+			if (!fill || !['backwards', 'both'].includes(data.fillMode)) return null;
+			u = 0;
+			held = true;
+		}
+		const iterations = data.iterations === Infinity ? Infinity : Math.max(0, Number(data.iterations));
+		if (Number.isFinite(iterations) && u >= iterations) {
+			if (!fill || !['forwards', 'both'].includes(data.fillMode)) return null;
+			const finalCycle = Math.max(0, Math.ceil(iterations) - 1);
+			const finalProgress = directedProgress(iterations - Math.floor(iterations) || 1, finalCycle, data.direction);
+			return { cycle: finalCycle, progress: finalProgress, eased: easedProgress(data, finalProgress), held: true };
+		}
+		const cycle = Math.floor(u);
+		const progress = directedProgress(u - cycle, cycle, data.direction);
+		return { cycle, progress, eased: easedProgress(data, progress), held };
+	}
+
+	function cycleProgress(value, tMs, { fill = true } = {}) {
+		return progressAt(normalizeAnimation(value), tMs, fill);
+	}
+
+	// A key's intrinsic position can occur more than once under elastic or
+	// bounce easing. Pick the nearest occurrence in the current repetition.
+	function timeAtProgress(value, at, timestamp) {
+		const data = normalizeAnimation(value);
+		const current = progressAt(data, timestamp, false);
+		if (!current || data.easing === 'steps' || data.snapMode === 'step' || !Number.isFinite(at)) return null;
+		const { samples, iterations, tolerance } = config().keySeek;
+		const keyAt = mod(at, 1);
+		const evaluate = (fraction) => easedProgress(data, directedProgress(fraction, current.cycle, data.direction));
+		const candidates = [];
+		const add = (fraction) => {
+			const time = Number(data.delayMs) + (current.cycle + fraction - Number(data.phase)) * data.periodMs;
+			if (progressAt(data, time, false)) candidates.push(time);
+		};
+		let left = 0, leftValue = evaluate(left);
+		for (let index = 1; index <= samples; index++) {
+			const right = index / samples, rightValue = evaluate(right);
+			for (let turn = Math.ceil(Math.min(leftValue, rightValue) - keyAt - tolerance); turn <= Math.floor(Math.max(leftValue, rightValue) - keyAt + tolerance); turn++) {
+				const target = keyAt + turn;
+				if (Math.abs(leftValue - target) <= tolerance) { add(left); continue; }
+				if (Math.abs(rightValue - target) <= tolerance) { add(right); continue; }
+				let low = left, high = right, lowValue = leftValue;
+				for (let step = 0; step < iterations; step++) {
+					const middle = (low + high) / 2, middleValue = evaluate(middle);
+					if ((middleValue - target) * (lowValue - target) > 0) { low = middle; lowValue = middleValue; }
+					else high = middle;
+				}
+				add((low + high) / 2);
+			}
+			left = right; leftValue = rightValue;
+		}
+		return candidates.sort((a, b) => Math.abs(a - timestamp) - Math.abs(b - timestamp))[0] ?? null;
+	}
+
 	function sampleAt(value, tMs, options = {}) {
 		if (Array.isArray(value)) {
 			return composeSamples(
@@ -347,23 +465,58 @@ const GlitterAnimation = (() => {
 			);
 		}
 		const data = normalizeAnimation(value);
-		const period = Math.max(1, Number(data.periodMs));
-		const localTime = Number(tMs) - Number(data.delayMs);
-		let u = localTime / period + Number(data.phase || 0);
-		if (u < 0) {
-			if (!['backwards', 'both'].includes(data.fillMode)) return { ...IDENTITY, originX: options.origin?.[0] ?? 0.5, originY: options.origin?.[1] ?? 0.5 };
-			u = 0;
+		const position = progressAt(data, tMs, true);
+		return position ? pose(data, position.progress, tMs, options, position.eased)
+			: { ...IDENTITY, originX: options.origin?.[0] ?? 0.5, originY: options.origin?.[1] ?? 0.5 };
+	}
+
+	// Samples a preset into evenly spaced linear keys: the fewest that reach the
+	// channel tolerances, else the most the ladder allows. The result keeps the
+	// preset's timing, so key positions sit before its easing. Null when the
+	// preset has no keyed form or the keyed motion strays past the limit, as a
+	// half-wave does under an easing that overshoots.
+	function convertToKeys(value) {
+		const cfg = config().convert;
+		const data = normalizeAnimation(value);
+		if (!MOTION_REGISTRY[data.type].convertible || !isActive(data)) return null;
+		const smooth = { ...data, snapMode: data.snapMode === 'pixel-snap' ? 'smooth' : data.snapMode };
+		const channels = Object.values(POSE_CHANNELS);
+		const difference = (channel, a, b) => {
+			const distance = Math.abs(a - b);
+			return channel.interpolation === 'angle' ? Math.min(mod(distance, 360), 360 - mod(distance, 360)) : distance;
+		};
+		const positions = Array.from({ length: cfg.samples }, (_unused, index) => index / cfg.samples);
+		const source = positions.map((p) => pose(smooth, p, 0, {}, p));
+		const used = channels.filter((channel) => source.some((sample) => difference(channel, sample[channel.id], channel.rest) > cfg.exactError));
+		const timing = Object.fromEntries(CONVERT_TIMING_KEYS.map((key) => [key, data[key]]));
+		const build = (count) => normalizeAnimation({ ...timing, type: 'custom', keys: Array.from({ length: count }, (_unused, index) => {
+			const sample = pose(smooth, index / count, 0, {}, index / count);
+			return { at: index / count, easing: 'linear', values: Object.fromEntries(used.map((channel) => [channel.id, sample[channel.id]])) };
+		}) });
+		// The worst channel, as a multiple of its tolerance.
+		const measure = (pairs) => pairs.reduce((worst, [a, b]) => channels.reduce((current, channel) => {
+			const error = difference(channel, a[channel.id], b[channel.id]);
+			return error / cfg.tolerance[channel.id] > current.ratio ? { ratio: error / cfg.tolerance[channel.id], channel: channel.id, value: error } : current;
+		}, worst), { ratio: 0, channel: null, value: 0 });
+		const counts = cfg.keyCounts.filter((count) => count <= config().maxKeys);
+		let animation, fit;
+		// A turning channel keeps its winding only while neighbouring keys sit
+		// under a half turn apart, where the shortest path is unambiguous.
+		const winds = (count) => used.some((channel) => channel.interpolation === 'angle' && Array.from({ length: count }, (_unused, index) =>
+			Math.abs(pose(smooth, (index + 1) / count, 0, {}, (index + 1) / count)[channel.id] - pose(smooth, index / count, 0, {}, index / count)[channel.id])).some((turn) => turn >= 180 - cfg.exactError));
+		for (const count of counts) {
+			if (winds(count) && count !== counts.at(-1)) continue;
+			animation = build(count);
+			fit = measure(positions.map((p, index) => [source[index], pose(animation, p, 0, {}, p)]));
+			if (fit.ratio <= 1) break;
 		}
-		const iterations = data.iterations === Infinity ? Infinity : Math.max(0, Number(data.iterations));
-		if (Number.isFinite(iterations) && u >= iterations) {
-			if (!['forwards', 'both'].includes(data.fillMode)) return { ...IDENTITY, originX: options.origin?.[0] ?? 0.5, originY: options.origin?.[1] ?? 0.5 };
-			const finalCycle = Math.max(0, Math.ceil(iterations) - 1);
-			const finalProgress = directedProgress(iterations - Math.floor(iterations) || 1, finalCycle, data.direction);
-			return pose(data, finalProgress, tMs, options);
-		}
-		const cycle = Math.floor(u);
-		const progress = directedProgress(u - cycle, cycle, data.direction);
-		return pose(data, progress, tMs, options);
+		// Two repetitions under the motion's own easing and direction, seam included.
+		const played = (entry) => ({ ...entry, snapMode: smooth.snapMode, delayMs: 0, phase: 0, iterations: Infinity });
+		const times = Array.from({ length: cfg.samples * 2 + 1 }, (_unused, index) => index * data.periodMs / cfg.samples);
+		const run = measure(times.map((time) => [sampleAt(played(data), time), sampleAt(played(animation), time)]));
+		const worst = run.ratio > fit.ratio ? run : fit;
+		if (worst.ratio > cfg.maxError) return null;
+		return { animation, error: worst.value > cfg.exactError ? { channel: worst.channel, value: worst.value } : null };
 	}
 
 	function multiplyMatrices(left, right) {
@@ -454,9 +607,9 @@ const GlitterAnimation = (() => {
 	}
 
 	return {
-		ANIMATION_TYPES, MOTION_REGISTRY, ANIMATION_CONTROLS, normalizeAnimation, normalizeAnimations, isActive, includesOffCanvas, summaryText, loopDurationMs,
+		ANIMATION_TYPES, MOTION_REGISTRY, ANIMATION_CONTROLS, POSE_CHANNELS, normalizeAnimation, normalizeAnimations, normalizeKeys, interpolateChannel, cycleProgress, timeAtProgress, convertToKeys, isActive, includesOffCanvas, summaryText, loopDurationMs,
 		isSeamlessLoop, runTiming, iterationsForRun, travelSpeed, sampleAt, composeSamples, seededRandom01, domTransformString, applyToContext, resolveOrigin,
-		hashString, mulberry32, createSamplingContext, splitSample, wrap, reflect
+		hashString, mulberry32, createSamplingContext, splitSample, sampleMatrix, multiplyMatrices, wrap, reflect
 	};
 })();
 

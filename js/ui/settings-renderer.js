@@ -193,7 +193,12 @@ function buildSettingsFieldRow(row, rowReverts = true) {
 
 function buildSettingsRow(row, rowReverts = true) {
 	if (row.host) return cloneSettingsTemplate(row.host);
-	return buildSettingsFieldRow(row, rowReverts);
+	const node = buildSettingsFieldRow(row, rowReverts);
+	if (row.feature) {
+		node.dataset.feature = row.feature;
+		applyFeatureGates(node);
+	}
+	return node;
 }
 
 function buildGovernedHeader(governed) {

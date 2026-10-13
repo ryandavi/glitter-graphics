@@ -140,6 +140,7 @@ class SelectionChrome {
 		const rad = rotation * Math.PI / 180;
 		const cos = Math.cos(rad);
 		const sin = Math.sin(rad);
+		const basis = frame.matrix || { a: cos, b: sin, c: -sin, d: cos };
 		const toScreenFrame = (source) => {
 			const center = overlay.toScreen({ x: source.centerX, y: source.centerY }, view);
 			return { center, hw: Math.abs(source.width) * view.zoom / 2, hh: Math.abs(source.height) * view.zoom / 2 };
@@ -148,11 +149,12 @@ class SelectionChrome {
 		const resize = resizeFrame === frame ? main : toScreenFrame(resizeFrame);
 		// Local offsets from a screen-space center, rotated with the frame.
 		const at = (base, x, y) => ({
-			x: base.center.x + x * cos - y * sin,
-			y: base.center.y + x * sin + y * cos
+			x: base.center.x + x * basis.a + y * basis.c,
+			y: base.center.y + x * basis.b + y * basis.d
 		});
 
 		overlay.placeFrame(this.box, frame, view);
+		this.box.style.pointerEvents = this.readOnly || model.disabled ? 'none' : '';
 		this.box.classList.toggle('has-shade', Boolean(model.shade));
 		this.box.querySelectorAll('.slice-resize-guide').forEach((guide) => guide.remove());
 		['xs', 'ys'].forEach((axis) => (model.guides === 'thirds' ? [1 / 3, 2 / 3] : model.sliceGuides?.[axis] || []).forEach((fraction) => {
@@ -187,7 +189,7 @@ class SelectionChrome {
 		// Stalk base on the top edge. When unrotated, center it on a device pixel
 		// so the 1px stalk and the odd-sized circle share one crisp center line.
 		const stalkBase = at(main, 0, -main.hh);
-		if (rotation % 360 === 0) {
+		if (!frame.matrix && rotation % 360 === 0) {
 			stalkBase.x = SelectionOverlay.snapToPixelCenter(stalkBase.x);
 			stalkBase.y = SelectionOverlay.snap(stalkBase.y);
 			points.rotation = { x: stalkBase.x, y: stalkBase.y - config.rotationHandleDistance };
@@ -217,6 +219,8 @@ class SelectionChrome {
 		const compactWidth = main.hw * 2 < minSpan;
 		const compactHeight = main.hh * 2 < minSpan;
 		const isEnabled = (handleType) => {
+			if (model.disabled) return false;
+			if (model.keepHandles) return true;
 			if (handleType.startsWith('corner-')) return isTouch
 				? !(compactWidth || compactHeight)
 				: !(compactWidth && compactHeight);
@@ -264,7 +268,8 @@ class SelectionChrome {
 			if (handleType === 'edge-left' || handleType === 'edge-right') height = Math.max(size, resize.hh * 2 - this.getHitSize('corner-tl'));
 			wrapper.style.width = `${width}px`;
 			wrapper.style.height = `${height}px`;
-			wrapper.style.transform = `translate(-50%, -50%) rotate(${handleType.startsWith('edge-') ? rotation : 0}deg)`;
+			const edgeRotation = frame.matrix && (handleType === 'edge-left' || handleType === 'edge-right') ? Math.atan2(basis.d, basis.c) * 180 / Math.PI - 90 : rotation;
+			wrapper.style.transform = `translate(-50%, -50%) rotate(${handleType.startsWith('edge-') ? edgeRotation : 0}deg)`;
 			const visual = wrapper.firstElementChild;
 			const vx = point.x - hitPoint.x;
 			const vy = point.y - hitPoint.y;
@@ -292,7 +297,7 @@ class SelectionChrome {
 			this.badgeEdge = null;
 		}
 
-		this.screen = { center: main.center, hw: main.hw, hh: main.hh, cos, sin, handles: placed };
+		this.screen = { center: main.center, hw: main.hw, hh: main.hh, cos, sin, basis: frame.matrix ? basis : null, disabled: model.disabled, handles: placed };
 	}
 
 	// The badge sits outside the edge that faces down on screen, centered on it
@@ -357,14 +362,15 @@ class SelectionChrome {
 	// always moves, so handles never swallow a drag on a small layer.
 	hitTest(clientX, clientY, pointerType) {
 		const screen = this.screen;
-		if (this.readOnly || !screen) return null;
+		if (this.readOnly || !screen || screen.disabled) return null;
 		const origin = this.overlay.element.getBoundingClientRect();
 		const x = clientX - origin.left;
 		const y = clientY - origin.top;
 		const dx = x - screen.center.x;
 		const dy = y - screen.center.y;
-		const localX = dx * screen.cos + dy * screen.sin;
-		const localY = -dx * screen.sin + dy * screen.cos;
+		const determinant = screen.basis ? screen.basis.a * screen.basis.d - screen.basis.b * screen.basis.c : 1;
+		const localX = screen.basis ? (screen.basis.d * dx - screen.basis.c * dy) / determinant : dx * screen.cos + dy * screen.sin;
+		const localY = screen.basis ? (-screen.basis.b * dx + screen.basis.a * dy) / determinant : -dx * screen.sin + dy * screen.cos;
 
 		if (pointerType === 'touch' && Math.abs(localX) <= screen.hw / 2 && Math.abs(localY) <= screen.hh / 2) return 'move';
 

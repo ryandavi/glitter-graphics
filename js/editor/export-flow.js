@@ -62,6 +62,7 @@ const EDITOR_EXPORT_FLOW_METHODS = {
 	// own snapshot and never writes to the stored export settings.
 	async exportCurrentTarget({ fit = null } = {}) {
 		if (this.exportInProgress) return;
+		this.timelineKeyRecording?.end();
 		const selectedTarget = getActiveExportTarget(this.exportSettings, { mp4Supported: this.mp4ExportSupported !== false });
 		if (selectedTarget.isVector && !SvgExporter.count(this.layers).vectors) { this.showError('No visible vector layers to export.'); return; }
 		// Filter visible layers (ephemeral Auto Glitter previews never export)

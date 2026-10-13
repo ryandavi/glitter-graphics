@@ -58,7 +58,6 @@ const CONFIG = deepFreeze({
 			// Master gate for opening the Welcome modal on load. While false the
 			// start card is the first screen, and the per-user "show on startup"
 			// preference and its controls are hidden rather than consulted.
-			showWelcome: false,
 			layers: {
 				createDefaultGlitterFill: false,
 				createBaseImage: true
@@ -75,7 +74,6 @@ const CONFIG = deepFreeze({
 
 	experimental: {
 		htmlScene: {
-			localHosts: ['localhost', '127.0.0.1', '::1'],
 			defaults: {
 				responsive: true,
 				stickerSizing: 'scale',
@@ -376,7 +374,18 @@ const CONFIG = deepFreeze({
 		animation: {
 			defaultType: 'pulse',
 			maxStackSize: 3,
+			maxKeys: 64,
+			defaultKeyChannels: ['tx', 'ty'],
+			keySeek: { samples: 128, iterations: 24, tolerance: 1e-7 },
+			// Convert to custom tries each key count until every channel is within
+			// its tolerance (pose units: px, degrees, scale and opacity factors).
+			// maxError, in tolerances, is where a conversion is refused instead.
+			convert: {
+				keyCounts: [2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64], samples: 768, maxError: 4, exactError: 1e-6,
+				tolerance: { tx: 0.25, ty: 0.25, rotate: 0.25, scaleX: 0.002, scaleY: 0.002, skewX: 0.25, skewY: 0.25, opacity: 0.004, hue: 0.5 }
+			},
 			presets: {
+				custom: { periodMs: 1400, easing: 'linear', direction: 'normal', iterations: Infinity, keys: [{ at: 0, easing: 'linear', values: {} }] },
 				breath: { periodMs: 4000, easing: 'easeInOut', amount: 6, direction: 'alternate', iterations: Infinity },
 				float: { periodMs: 3600, easing: 'linear', amount: 14, angle: 270, direction: 'normal', iterations: Infinity },
 				sway: { periodMs: 2600, easing: 'linear', amount: 8, direction: 'normal', iterations: Infinity },
@@ -740,13 +749,18 @@ const CONFIG = deepFreeze({
 
 	ui: {
 		timeline: {
-			defaultHeight: 240, minHeight: 140, maxHeightFraction: 0.6,
-			rowHeight: 24, groupHeight: 26, groupMedia: 20, rulerHeight: 28, infoWidth: 120,
+			defaultHeight: 280, minHeight: 140, maxHeightFraction: 0.6,
+			rowHeight: 28, groupHeight: 32, groupMedia: 20, rulerHeight: 28, infoWidth: 120,
 			// The label column: its default, and how far its handle drags.
 			labelWidth: 220, labelMinWidth: 140, labelMaxFraction: 0.5,
 			pxPerSecondStops: [40, 60, 90, 135, 200, 300, 450, 680, 1000],
 			defaultZoom: 'fit', minTickPx: 4, maxMarksPerBar: 600, nextLoopFraction: 0.25,
+			// What the rows draw besides their bars, as the options menu lists it.
+			show: { cycles: true, frames: false, details: true },
+			showLabels: { cycles: 'Cycle marks', frames: 'Frame ticks', details: 'Details column' },
 			snapPx: 8, dragThresholdPx: 3,
+			keyPositionTolerance: 0.001, keyNudgeStep: 0.01, keyFastNudgeStep: 0.05,
+			keySingularTolerance: 1e-8,
 			frameViewMaxSide: 500,
 			// A Space press released this soon, with no pan, plays and pauses.
 			spaceTapMs: 250
@@ -874,7 +888,7 @@ const CONFIG = deepFreeze({
 		},
 		// Bottom context bars. Keep eligibility here so adding a bar or extending
 		// one to another movable layer does not require another app.js branch.
-		// `mobile: false` drops a control from the bar at phone width; it must
+		// `layout: 'desktop'` hides a control at phone width; it must
 		// stay reachable from the layer's panel.
 		nudge: { step: 1, fastStep: 10 },
 		contextToolbars: [
@@ -883,11 +897,11 @@ const CONFIG = deepFreeze({
 				{ kind: 'button', id: 'contextTextBold', glyph: 'B', name: 'Bold', title: 'Bold', textAction: 'bold', action: 'textToggleBold' },
 				{ kind: 'button', id: 'contextTextItalic', glyph: 'I', name: 'Italic', title: 'Italic', textAction: 'italic', action: 'textToggleItalic' },
 				{ kind: 'button', id: 'contextTextUnderline', glyph: 'U', name: 'Underline', title: 'Underline', textAction: 'underline', action: 'textToggleUnderline' },
-				{ kind: 'button', id: 'contextTextStrikethrough', glyph: 'S', name: 'Strikethrough', title: 'Strikethrough', textAction: 'strikethrough', action: 'textToggleStrikethrough', mobile: false },
+				{ kind: 'button', id: 'contextTextStrikethrough', glyph: 'S', name: 'Strikethrough', title: 'Strikethrough', textAction: 'strikethrough', action: 'textToggleStrikethrough', layout: 'desktop' },
 				{ kind: 'button', id: 'contextTextLeft', icon: 'text-align-left', name: 'Left', title: 'Align left', textAction: 'align:left', action: 'textAlignLeft' },
 				{ kind: 'button', id: 'contextTextCenter', icon: 'text-align-center', name: 'Center', title: 'Align center', textAction: 'align:center', action: 'textAlignCenter' },
 				{ kind: 'button', id: 'contextTextRight', icon: 'text-align-right', name: 'Right', title: 'Align right', textAction: 'align:right', action: 'textAlignRight' },
-				{ kind: 'button', id: 'contextTextJustify', icon: 'text-align-justify', name: 'Justify', title: 'Align justify', textAction: 'align:justify', action: 'textAlignJustify', mobile: false }
+				{ kind: 'button', id: 'contextTextJustify', icon: 'text-align-justify', name: 'Justify', title: 'Align justify', textAction: 'align:justify', action: 'textAlignJustify', layout: 'desktop' }
 			] },
 			{ id: 'cropEditControls', session: 'crop', when: editor => editor.getActiveSession() === 'crop', controls: [
 				{ kind: 'button', id: 'contextCropRatio', icon: 'crop', name: 'Ratio', title: 'Crop ratio or size', action: 'canvasBoundsRatioMenu' },

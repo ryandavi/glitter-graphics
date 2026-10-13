@@ -7,7 +7,7 @@ const vm = require('vm');
 
 const root = path.join(__dirname, '..', '..');
 const source = fs.readFileSync(path.join(root, 'js/core/commands.js'), 'utf8');
-const context = {};
+const context = { isFeatureAvailable: () => false };
 vm.createContext(context);
 vm.runInContext(fs.readFileSync(path.join(root, 'js/core/area.js'), 'utf8'), context);
 vm.runInContext(fs.readFileSync(path.join(root, 'js/core/tools.js'), 'utf8'), context);

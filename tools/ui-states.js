@@ -485,6 +485,18 @@ async function clippingStates(page, visit, tag) {
 async function timelineStates(page, visit, viewport) {
 	await page.evaluate(async () => {
 		await editor.loadBlankImage(200, 160, '#ffffff');
+		await editor.ensureTimelineDock();
+		PREFERENCES.set('timelineOpen', true);
+		await editor.updateExportDuration();
+	});
+	await wait(page);
+	await visit(`${viewport} timeline empty`, { shot: '#timelineDock' });
+	await page.evaluate(async () => {
+		const circle = editor.shapeGlitterManager.createLayer({ shapeId: 'circle', width: 40, height: 40, position: { x: 40, y: 40 } });
+		getLayerFillSlot(circle).mode = 'solid';
+		circle.animations = [GlitterAnimation.normalizeAnimation({ type: 'rotate', periodMs: 1600 })];
+		editor.layerManager.insertLayer(circle);
+		editor.shapeGlitterManager.renderLayer(circle);
 		const shape = editor.shapeGlitterManager.createLayer({ shapeId: 'square', width: 60, height: 60, position: { x: 100, y: 80 } });
 		getLayerFillSlot(shape).mode = 'solid';
 		shape.animations = [GlitterAnimation.normalizeAnimation({ type: 'pulse', periodMs: 1000, iterations: 2, delayMs: 600 }), GlitterAnimation.normalizeAnimation({ type: 'rotate', periodMs: 1200 })];
@@ -501,6 +513,31 @@ async function timelineStates(page, visit, viewport) {
 	await page.evaluate(() => { editor.timelineDock.host.style.width = '480px'; editor.timelineDock.resync(); });
 	await wait(page);
 	await visit(`${viewport} timeline narrow`, { shot: '#timelineDock' });
+	await page.evaluate(async () => {
+		editor.timelineDock.host.style.removeProperty('width');
+		const layer = editor.layers.find(entry => entry.animations?.length > 1);
+		layer.animations[0] = GlitterAnimation.normalizeAnimation({ type: 'custom', periodMs: 1600, keys: [
+			{ at: 0, values: { tx: 0, rotate: 0 } }, { at: 0.35, values: { tx: 40, rotate: 20 } }, { at: 0.7, values: { tx: -30, rotate: -10 } }
+		] });
+		editor.layerManager.setActiveLayer(layer.id);
+		editor.animationPanel.selectedByLayer.set(layer.id, 0);
+		editor.saveState('Custom motion');
+		await editor.updateExportDuration();
+		editor.animationPanel.load(layer);
+		editor.timelineDock.selectMotion(layer.id, 0);
+		editor.animationPanel.setPaused(true); editor.animationTicker.seek(500);
+	});
+	await wait(page);
+	await visit(`${viewport} timeline keys`, { shot: '#timelineDock' });
+	await page.evaluate(() => { editor.timelineDock.host.style.width = '480px'; editor.timelineDock.resync(); });
+	await wait(page);
+	await visit(`${viewport} timeline keys narrow`, { shot: '#timelineDock' });
+	await page.evaluate(() => {
+		editor.timelineDock.host.style.removeProperty('width'); editor.timelineDock.resync();
+		editor.timelineDock.openRowSection(editor.timelineDock.keyLane.row);
+	});
+	await wait(page);
+	await visit(`${viewport} timeline key fields`, { shot: '#flyoutSection', tall: true });
 }
 
 module.exports = { routeSourceSnapshot, chromium, URL, VIEWPORTS, boot, wait, desktopStates, phoneStates, recolorStates, backgroundRemovalStates, animatedFilterStates, patternStates, creationStates, clippingStates, timelineStates };

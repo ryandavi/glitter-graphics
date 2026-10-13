@@ -3,7 +3,13 @@
 const FEATURES = Object.freeze({
 	timeline: Object.freeze({ stage: 'local', layouts: Object.freeze(['desktop']) }),
 	loopLength: Object.freeze({ stage: 'local' }),
-	gifCycle: Object.freeze({ stage: 'local' })
+	gifCycle: Object.freeze({ stage: 'local' }),
+	history: Object.freeze({ stage: 'local' }),
+	personalWeb: Object.freeze({ stage: 'local' }),
+	htmlScene: Object.freeze({ stage: 'local' }),
+	stylePresetCopy: Object.freeze({ stage: 'debug' }),
+	memoryOverlay: Object.freeze({ stage: 'debug' }),
+	welcomeOnStartup: Object.freeze({ stage: 'off' })
 });
 
 const FEATURE_ENABLED = new Map();

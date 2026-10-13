@@ -110,7 +110,10 @@ class SelectionOverlay {
 		const height = frame.height * view.zoom;
 		const rotation = Number(frame.rotation) || 0;
 		const style = element.style;
-		if (rotation % 360 === 0) {
+		if (frame.matrix) {
+			const { a, b, c, d } = frame.matrix;
+			Object.assign(style, { left: `${center.x - width / 2}px`, top: `${center.y - height / 2}px`, width: `${width}px`, height: `${height}px`, transform: `matrix(${a}, ${b}, ${c}, ${d}, 0, 0)` });
+		} else if (rotation % 360 === 0) {
 			const left = snap(center.x - width / 2);
 			const top = snap(center.y - height / 2);
 			style.left = `${left}px`;

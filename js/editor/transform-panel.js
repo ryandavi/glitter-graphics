@@ -259,6 +259,7 @@ renderTransformPanels() {
 		this.syncTransformAlignmentButtons(prefix, this.getTransformAlignmentState(layer));
 
 		this.syncResetTransformState(prefix, layer);
+		this.timelineKeyRecording?.syncControls();
 	},
 
 	syncTransformHandlesForActiveLayer() {

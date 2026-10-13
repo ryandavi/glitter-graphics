@@ -189,6 +189,11 @@ class HistoryManager {
 
 	enqueueRestore(direction) {
 		if (this.editor.modalManager?.isAnyOpen()) return Promise.resolve();
+		if (this.editor.timelineKeyRecording?.active) {
+			const dragging = Boolean(this.editor.timelineKeyRecording.drag);
+			this.editor.timelineKeyRecording.end();
+			if (dragging) return Promise.resolve();
+		}
 		if (ESCAPE_HANDLERS.find(entry => entry.id === 'drag').handle(this.editor)) return Promise.resolve();
 		const result = this.restoreQueue.then(() => this.stepHistory(direction));
 		// A failed restore rejects its caller, but does not poison later requests.

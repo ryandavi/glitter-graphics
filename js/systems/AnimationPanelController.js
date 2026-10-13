@@ -8,6 +8,7 @@ class AnimationPanelController {
 			.map(([type, config]) => [type, config.transformPrefix]));
 
 		this.selectedByLayer = new Map();
+		this.selectedKeys = new WeakMap();
 		this.previewFrames = new Map();
 		// Least recently asked for first.
 		this.retimedPreviews = new Map();
@@ -25,6 +26,7 @@ class AnimationPanelController {
 	// With the timeline open a pause holds the playhead; otherwise it shows
 	// the rest pose.
 	setPaused(paused) {
+		if (!paused) this.editor.timelineKeyRecording?.end();
 		const dock = isFeatureAvailable('timeline') && this.editor.timelineDock?.isOpen ? this.editor.timelineDock : null;
 		this.editor.animationTicker.setPaused(paused, { hold: Boolean(dock) });
 		dock?.syncPlayback();
@@ -158,12 +160,225 @@ class AnimationPanelController {
 
 	_selectedIndex(layer) {
 		const animations = this._animations(layer);
-		const requested = this.selectedByLayer.get(layer.id) || 0;
+		const requested = this.selectedByLayer.get(layer?.id) || 0;
 		return Math.max(0, Math.min(animations.length - 1, requested));
 	}
 
 	_selected(layer) {
 		return this._animations(layer)[this._selectedIndex(layer)] || null;
+	}
+
+	canEditKeys(layer, animation) {
+		return isFeatureAvailable('timeline') && this.editor.layers.includes(layer)
+			&& layer.animations?.includes(animation) && GlitterAnimation.MOTION_REGISTRY[animation?.type]?.keyed
+			&& this.editor.canEditLayer(layer);
+	}
+
+	keyIndex(animation) {
+		const keys = GlitterAnimation.normalizeKeys(animation?.keys);
+		const at = this.selectedKeys.get(animation);
+		const index = keys.findIndex((key) => key.at === at);
+		return index < 0 ? (keys.length ? 0 : -1) : index;
+	}
+
+	selectKey(layer, animation, at, { seek = false } = {}) {
+		this.selectedKeys.set(animation, at);
+		this.selectedByLayer.set(layer.id, layer.animations.indexOf(animation));
+		this.editor.timelineDock?.selectMotion(layer.id, this._selectedIndex(layer));
+		if (seek && this.editor.timelineDock?.available && !this.editor.timelineDock.host.classList.contains('is-stale')) {
+			const ticker = this.editor.animationTicker;
+			const time = GlitterAnimation.timeAtProgress({ ...animation, periodMs: this.keyPeriod(layer, animation) }, at, ticker.getPlayheadTime());
+			if (time != null) { this.setPaused(true); ticker.seek(time); }
+		}
+		this.load(layer);
+		this.editor.timelineDock?.syncKeys();
+	}
+
+	keyPeriod(layer, animation) {
+		const row = this.editor.timelineDock?.model?.groups.find((group) => group.layerId === layer.id)?.rows.find((entry) => entry.source.keyTrack?.entry === animation);
+		return row?.exportCycleMs || animation.periodMs;
+	}
+
+	keyProgress(layer, animation) {
+		return GlitterAnimation.cycleProgress({ ...animation, periodMs: this.keyPeriod(layer, animation) }, this.editor.animationTicker.getPlayheadTime(), { fill: false });
+	}
+
+	setKeys(layer, animation, keys, { commit = true, rollback = false, label = 'Edit motion key', at, coalesceKey } = {}) {
+		if (!this.canEditKeys(layer, animation) && !(rollback && this.editor.layers.includes(layer) && layer.animations?.includes(animation))) return false;
+		const next = GlitterAnimation.normalizeKeys(keys);
+		if (JSON.stringify(next) === JSON.stringify(GlitterAnimation.normalizeKeys(animation.keys))) return false;
+		animation.keys = next;
+		if (at != null) this.selectedKeys.set(animation, at);
+		if (!rollback) {
+			this.selectedByLayer.set(layer.id, layer.animations.indexOf(animation));
+			this.editor.timelineDock?.selectMotion(layer.id, this._selectedIndex(layer));
+		}
+		this._renderLayer(layer);
+		this.editor.requestPreviewUpdate();
+		this.load(layer);
+		this.editor.timelineDock?.frameView.invalidate({ keepFrame: Boolean(this.editor.timelineKeyRecording?.active) });
+		this.editor.timelineDock?.syncKeys();
+		if (commit) this.editor.saveState(label, { coalesceKey });
+		return true;
+	}
+
+	retimeKey(layer, animation, index, requested, options = {}) {
+		const keys = GlitterAnimation.normalizeKeys(animation.keys);
+		if (!keys[index] || !Number.isFinite(requested)) return null;
+		const tolerance = CONFIG.ui.timeline.keyPositionTolerance;
+		const at = ((requested % 1) + 1) % 1;
+		const others = keys.filter((_key, candidate) => candidate !== index);
+		const distance = (a, b) => Math.min(Math.abs(a - b), 1 - Math.abs(a - b));
+		const candidates = [at, ...others.flatMap((key) => [((key.at - tolerance) % 1 + 1) % 1, (key.at + tolerance) % 1])];
+		const position = candidates.filter((candidate) => others.every((key) => distance(candidate, key.at) >= tolerance - 1e-9))
+			.sort((a, b) => distance(a, at) - distance(b, at))[0];
+		if (position == null) return null;
+		keys[index].at = position;
+		this.setKeys(layer, animation, keys, { ...options, at: position, label: 'Retime motion key' });
+		return position;
+	}
+
+	addKey(layer, animation) {
+		if (!this.canEditKeys(layer, animation) || !this.editor.timelineDock?.available || this.editor.timelineDock.host.classList.contains('is-stale')) return;
+		const progress = this.keyProgress(layer, animation);
+		if (!progress) return;
+		const at = ((progress.eased % 1) + 1) % 1;
+		const keys = GlitterAnimation.normalizeKeys(animation.keys);
+		const existing = keys.find((key) => Math.min(Math.abs(key.at - at), 1 - Math.abs(key.at - at)) < CONFIG.ui.timeline.keyPositionTolerance);
+		if (existing) { this.selectKey(layer, animation, existing.at); return; }
+		if (keys.length >= CONFIG.tools.animation.maxKeys) { this.editor.updateStatus(`Maximum of ${CONFIG.tools.animation.maxKeys} motion keys`); return; }
+		const selected = keys[this.keyIndex(animation)];
+		const channels = selected && Object.keys(selected.values).length ? Object.keys(selected.values) : CONFIG.tools.animation.defaultKeyChannels;
+		const sample = GlitterAnimation.sampleAt({ ...animation, periodMs: this.keyPeriod(layer, animation) }, this.editor.animationTicker.getPlayheadTime(), getLayerAnimationSamplingContext(this.editor, layer));
+		keys.push({ at, easing: 'linear', values: Object.fromEntries(channels.map((id) => [id, sample[id]])) });
+		this.setKeys(layer, animation, keys, { label: 'Add motion key', at });
+	}
+
+	deleteKey(layer, animation, index = this.keyIndex(animation)) {
+		const keys = GlitterAnimation.normalizeKeys(animation.keys);
+		if (!keys[index]) return;
+		keys.splice(index, 1);
+		this.setKeys(layer, animation, keys, { label: 'Delete motion key', at: keys[Math.min(index, keys.length - 1)]?.at });
+	}
+
+	// Replaces one preset entry with the keys measured from it, in place in
+	// the stack. Timing, anchor and the rest transform are untouched.
+	convertToCustom(layer, animation) {
+		const index = this._animations(layer).indexOf(animation);
+		if (index < 0 || !isFeatureAvailable('timeline') || !this.editor.layers.includes(layer) || !this.editor.canEditLayer(layer)) return;
+		const result = GlitterAnimation.convertToKeys(animation);
+		if (!result) return;
+		layer.animations[index] = result.animation;
+		this.selectedByLayer.set(layer.id, index);
+		this._render(layer);
+		this.editor.saveState('Convert to custom motion');
+		const channel = GlitterAnimation.POSE_CHANNELS[result.error?.channel];
+		this.editor.updateStatus(channel
+			? `Converted to an approximate custom motion: ${channel.label} is within ${Number((result.error.value * channel.displayScale).toPrecision(2))}${channel.unit || '%'}`
+			: 'Converted to a custom motion');
+	}
+
+	_loadConvertControl(prefix, layer, animation) {
+		const set = this._id(prefix, 'ConvertActions'), button = this._id(prefix, 'Convert');
+		if (!set || !button) return;
+		set.hidden = !animation || !GlitterAnimation.MOTION_REGISTRY[animation.type]?.convertible || !isFeatureAvailable('timeline');
+		if (set.hidden) return;
+		const result = GlitterAnimation.convertToKeys(animation);
+		button.disabled = !result || !this.editor.canEditLayer(layer);
+		button.title = result
+			? (result.error ? `Replace this preset with ${result.animation.keys.length} editable keys that closely follow it` : `Replace this preset with ${result.animation.keys.length} editable keys`)
+			: 'Keys cannot follow this animation with its current settings. Try another easing.';
+	}
+
+	_loadKeyControls(prefix, layer, data) {
+		const animation = this._selected(layer);
+		this._loadConvertControl(prefix, layer, animation);
+		const keyed = GlitterAnimation.MOTION_REGISTRY[data?.type]?.keyed === true;
+		for (const suffix of ['KeySet', 'KeyActions']) {
+			const node = this._id(prefix, suffix);
+			if (node) node.hidden = !keyed;
+		}
+		if (!keyed) return;
+		const editable = this.canEditKeys(layer, animation);
+		const keys = GlitterAnimation.normalizeKeys(animation.keys);
+		const key = keys[this.keyIndex(animation)];
+		const select = this._id(prefix, 'KeySelect');
+		if (select) {
+			select.replaceChildren(...keys.map((entry) => {
+				const option = document.createElement('option');
+				option.value = entry.at; option.textContent = `${Number((entry.at * 100).toFixed(1))}%`;
+				return option;
+			}));
+			select.value = key?.at ?? ''; select.disabled = !editable || !key;
+		}
+		for (const [suffix, value] of [['KeyPosition', key ? key.at * 100 : 0], ['KeyEasing', key?.easing || 'linear']]) {
+			const input = this._id(prefix, suffix);
+			if (input) { input.value = value; input.disabled = !editable || !key; }
+		}
+		for (const channel of Object.values(GlitterAnimation.POSE_CHANNELS)) {
+			const enabled = Boolean(key && Object.hasOwn(key.values, channel.id));
+			const toggle = this._id(prefix, `KeyUse${channel.id}`), input = this._id(prefix, `KeyValue${channel.id}`);
+			if (toggle) { toggle.checked = enabled; toggle.disabled = !editable || !key; }
+			if (input) { input.disabled = !editable || !enabled; input.value = (enabled ? key.values[channel.id] : channel.rest) * channel.displayScale; }
+		}
+		const add = this._id(prefix, 'KeyAdd'), remove = this._id(prefix, 'KeyDelete');
+		if (add) { add.disabled = !editable || !this.editor.timelineDock?.available || !this.keyProgress(layer, animation); add.title = add.disabled ? 'Open the timeline and move the playhead inside this animation' : 'Add a key at the playhead'; }
+		if (remove) remove.disabled = !editable || !key;
+		const record = this._id(prefix, 'KeyRecord'), recording = this.editor.timelineKeyRecording;
+		if (record) {
+			const active = recording?.active && recording.entry === animation;
+			record.disabled = !active && (!recording || !recording.canBegin(layer, animation));
+			record.querySelector('.name').textContent = active ? 'Done' : 'Edit keys';
+			record.classList.toggle('active', Boolean(active));
+		}
+	}
+
+	_bindKeys(type, prefix) {
+		const target = () => { const layer = this._active(type); return { layer, animation: this._selected(layer) }; };
+		this._id(prefix, 'KeySelect')?.addEventListener('change', (event) => {
+			const { layer, animation } = target();
+			if (this.canEditKeys(layer, animation)) this.selectKey(layer, animation, Number(event.target.value), { seek: true });
+		});
+		this._id(prefix, 'KeyPosition')?.addEventListener('change', (event) => {
+			const { layer, animation } = target();
+			if (!this.canEditKeys(layer, animation)) return;
+			const value = event.target.valueAsNumber;
+			if (!Number.isFinite(value)) { this.load(layer); return; }
+			this.retimeKey(layer, animation, this.keyIndex(animation), clampNumber(value, FIELDS.animKeyPosition.min, FIELDS.animKeyPosition.max) / 100);
+		});
+		this._id(prefix, 'KeyEasing')?.addEventListener('change', (event) => {
+			const { layer, animation } = target();
+			if (!this.canEditKeys(layer, animation)) return;
+			const keys = GlitterAnimation.normalizeKeys(animation.keys), key = keys[this.keyIndex(animation)];
+			if (key) { key.easing = event.target.value; this.setKeys(layer, animation, keys); }
+		});
+		for (const channel of Object.values(GlitterAnimation.POSE_CHANNELS)) {
+			const edit = (event, toggle) => {
+				const { layer, animation } = target();
+				if (!this.canEditKeys(layer, animation)) return;
+				const keys = GlitterAnimation.normalizeKeys(animation.keys), key = keys[this.keyIndex(animation)];
+				if (!key) return;
+				if (toggle && !event.target.checked) delete key.values[channel.id];
+				else if (toggle) {
+					const sample = GlitterAnimation.sampleAt({ ...animation, phase: key.at, easing: 'linear', snapMode: 'smooth', delayMs: 0, direction: 'normal', iterations: Infinity }, 0);
+					key.values[channel.id] = sample[channel.id];
+				} else {
+					const field = FIELDS[channel.field], value = event.target.valueAsNumber;
+					if (!Number.isFinite(value)) { this.load(layer); return; }
+					key.values[channel.id] = clampNumber(value, field.min, field.max) / channel.displayScale;
+				}
+				this.setKeys(layer, animation, keys);
+			};
+			this._id(prefix, `KeyUse${channel.id}`)?.addEventListener('change', event => edit(event, true));
+			this._id(prefix, `KeyValue${channel.id}`)?.addEventListener('change', event => edit(event, false));
+		}
+		this._id(prefix, 'KeyAdd')?.addEventListener('click', () => { const { layer, animation } = target(); this.addKey(layer, animation); });
+		this._id(prefix, 'KeyDelete')?.addEventListener('click', () => { const { layer, animation } = target(); if (animation) this.deleteKey(layer, animation); });
+		this._id(prefix, 'Convert')?.addEventListener('click', () => { const { layer, animation } = target(); if (animation) this.convertToCustom(layer, animation); });
+		this._id(prefix, 'KeyRecord')?.addEventListener('click', () => {
+			const { layer, animation } = target(), recording = this.editor.timelineKeyRecording;
+			if (recording?.active) recording.end(); else recording?.begin(layer, animation);
+		});
 	}
 
 	_createDefault(layer, type = CONFIG.tools.animation.defaultType) {
@@ -187,6 +402,7 @@ class AnimationPanelController {
 			button.textContent = `${index + 1}. ${GlitterAnimation.summaryText(animation)}`;
 			button.addEventListener('click', () => {
 				this.selectedByLayer.set(layer.id, index);
+				this.editor.timelineDock?.selectMotion(layer.id, index);
 				this.load(layer);
 			});
 			host.appendChild(button);
@@ -208,6 +424,7 @@ class AnimationPanelController {
 
 	_render(layer, commit = false) {
 		this._renderLayer(layer);
+		this.editor.timelineDock?.selectMotion(layer.id, this._selectedIndex(layer));
 		this.load(layer);
 		if (commit) this.editor.saveState('Edit animation');
 	}
@@ -225,6 +442,7 @@ class AnimationPanelController {
 
 	_bind(type) {
 		const prefix = this.prefixByType.get(type);
+		this._bindKeys(type, prefix);
 		this._id(prefix, 'Enabled')?.addEventListener('change', (event) => {
 			const layer = this._active(type);
 			if (!layer) return;
@@ -241,16 +459,34 @@ class AnimationPanelController {
 			const layer = this._active(type);
 			const animation = this._selected(layer);
 			if (!animation) return;
+			const feature = GlitterAnimation.MOTION_REGISTRY[event.target.value]?.feature;
+			if (feature && !isFeatureAvailable(feature)) { this.load(layer); return; }
 			layer.animations[this._selectedIndex(layer)] = this._createDefault(layer, event.target.value);
 			this._render(layer, true);
 		});
 		this._id(prefix, 'Add')?.addEventListener('click', () => {
 			const layer = this._active(type);
-			if (!layer || this._animations(layer).length >= CONFIG.tools.animation.maxStackSize) return;
-			layer.animations ||= [];
-			layer.animations.push(this._createDefault(layer));
-			this.selectedByLayer.set(layer.id, layer.animations.length - 1);
-			this._render(layer, true);
+			if (!layer || !this.editor.canEditLayer(layer) || this._animations(layer).length >= CONFIG.tools.animation.maxStackSize) return;
+			const append = (motionType) => {
+				if (!this.editor.layers.includes(layer) || !this.editor.canEditLayer(layer) || this._animations(layer).length >= CONFIG.tools.animation.maxStackSize) return;
+				const feature = GlitterAnimation.MOTION_REGISTRY[motionType].feature;
+				if (feature && !isFeatureAvailable(feature)) return;
+				layer.animations ||= [];
+				layer.animations.push(this._createDefault(layer, motionType));
+				this.selectedByLayer.set(layer.id, layer.animations.length - 1);
+				this._render(layer, true);
+			};
+			if (!isFeatureAvailable('timeline')) { append(CONFIG.tools.animation.defaultType); return; }
+			const trigger = this._id(prefix, 'Add'), root = trigger.closest('.app-menu'), panel = root.querySelector('.app-menu-panel');
+			panel.replaceChildren(...[CONFIG.tools.animation.defaultType, 'custom'].map((motionType) => {
+				const button = document.createElement('button');
+				button.type = 'button'; button.className = 'app-menu-item';
+				button.textContent = GlitterAnimation.MOTION_REGISTRY[motionType].label;
+				button.addEventListener('click', () => append(motionType));
+				return button;
+			}));
+			root._animationMenu ||= setupMenuPopover({ root, trigger, panel, bindTrigger: false });
+			root._animationMenu.open();
 		});
 		this._id(prefix, 'Remove')?.addEventListener('click', () => {
 			const layer = this._active(type);
@@ -263,8 +499,11 @@ class AnimationPanelController {
 		const cyclePreset = (direction) => {
 			const select = this._id(prefix, 'Type');
 			if (!select?.options.length) return;
-			const current = select.selectedIndex < 0 ? 0 : select.selectedIndex;
-			select.selectedIndex = (current + direction + select.options.length) % select.options.length;
+			const options = [...select.options].filter((option) => !option.disabled && (!option.dataset.feature || isFeatureAvailable(option.dataset.feature)));
+			if (!options.length) return;
+			const current = options.findIndex((option) => option.selected);
+			const start = current < 0 ? (direction > 0 ? -1 : 0) : current;
+			select.value = options[(start + direction + options.length) % options.length].value;
 			select.dispatchEvent(new Event('change', { bubbles: true }));
 		};
 		this._id(prefix, 'PresetPrev')?.addEventListener('click', () => cyclePreset(-1));
@@ -350,6 +589,7 @@ class AnimationPanelController {
 	}
 
 	load(layer) {
+		this.editor.timelineKeyRecording?.validate();
 		const prefix = this.prefixByType.get(layer?.type);
 		if (!prefix) return;
 		const enabled = GlitterAnimation.isActive(layer.animations);
@@ -358,9 +598,9 @@ class AnimationPanelController {
 		// so there's no separate content wrapper to toggle by hand here.
 		syncPanelEffectToggle(this._id(prefix, 'Enabled'), enabled);
 		this._syncSummary(prefix, layer.animations, this._selected(layer));
+		this._loadKeyControls(prefix, layer, this._selected(layer));
 		if (!enabled) return;
-		layer.animations = GlitterAnimation.normalizeAnimations(layer.animations);
-		const data = this._selected(layer);
+		const data = GlitterAnimation.normalizeAnimation(this._selected(layer));
 		this._renderStack(prefix, layer);
 		const anchorControl = this._id(prefix, 'Anchor');
 		const anchorRow = anchorControl?.closest('.property-row');
@@ -370,7 +610,14 @@ class AnimationPanelController {
 		const note = this._id(prefix, 'AnchorNote');
 		if (note) note.textContent = anchor.note;
 		const typeControl = this._id(prefix, 'Type');
-		if (typeControl) typeControl.value = data.type;
+		if (typeControl) {
+			for (const option of typeControl.options) if (option.dataset.feature) {
+				const available = isFeatureAvailable(option.dataset.feature);
+				option.hidden = !available;
+				option.disabled = !available;
+			}
+			typeControl.value = data.type;
+		}
 		GlitterAnimation.ANIMATION_CONTROLS.filter((control) => !control.field).forEach(({ suffix, key }) => {
 			const control = this._id(prefix, suffix);
 			if (control) control.value = key === 'anchor' ? this._selectedAnchorPreset(layer, data) : data[key];

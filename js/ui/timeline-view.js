@@ -35,6 +35,8 @@ const TimelineView = {
 	},
 	timeToX(ms, pxPerSecond) { return ms * pxPerSecond / 1000; },
 	xToTime(px, pxPerSecond) { return px * 1000 / pxPerSecond; },
+	keyToX(at, width, trackLength) { return at / trackLength * width; },
+	xToKey(x, width, trackLength) { return Math.max(0, Math.min(trackLength, x / width * trackLength)); },
 	snapTime(ms, targets, thresholdMs) {
 		const nearby = targets.filter(target => Math.abs(target.ms - ms) <= thresholdMs);
 		nearby.sort((a, b) => (a.exact === true ? 0 : 1) - (b.exact === true ? 0 : 1) || Math.abs(a.ms - ms) - Math.abs(b.ms - ms));

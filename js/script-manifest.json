@@ -68,6 +68,7 @@
 		"js/ui/template-library.js",
 		"js/effects/color-adjust.js",
 		"js/paint/mask-raster.js",
+		"js/transforms/pose-geometry.js",
 		"js/paint/mask-surface.js",
 		"js/paint/mask-geometry.js",
 		"js/paint/bevel.js",
@@ -222,6 +223,8 @@
 	"timeline": [
 		"js/ui/timeline-view.js",
 		"js/ui/timeline-frame-view.js",
+		"js/ui/timeline-key-lane.js",
+		"js/ui/timeline-key-recording.js",
 		"js/ui/timeline-dock.js",
 		"js/ui/timeline-group.js"
 	],

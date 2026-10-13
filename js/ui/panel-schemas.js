@@ -75,8 +75,15 @@ const TEXT_BACKGROUND_PRESET_OPTIONS = [
 const ANIMATION_PRESET_OPTIONS = Object.values(GlitterAnimation.MOTION_REGISTRY)
 	.filter((motion) => motion.targets.includes('layer')).map((motion) => ({
 		value: motion.id, label: motion.label, group: motion.group,
+		...(motion.feature ? { feature: motion.feature } : {}),
 		selected: motion.id === CONFIG.tools.animation.defaultType
 	}));
+
+const ANIMATION_EASING_OPTIONS = [
+	{ value: 'linear', label: 'Linear' }, { value: 'ease', label: 'Ease' }, { value: 'easeIn', label: 'Ease in' },
+	{ value: 'easeOut', label: 'Ease out' }, { value: 'easeInOut', label: 'Ease in-out' },
+	{ value: 'bounceOut', label: 'Bounce out' }, { value: 'elasticOut', label: 'Elastic out' }, { value: 'steps', label: 'Steps' }
+];
 
 const ANCHOR_SELECT_OPTIONS = Object.freeze([
 	...ANCHOR_POINTS.map((anchor) => ({ value: `${anchor.fx},${anchor.fy}`, label: anchor.label })),
@@ -288,16 +295,30 @@ function createAnimationSectionSpec(prefix) {
 					hint: 'None leaves the canvas before it returns. Wrap enters the opposite edge as it leaves. Tile fills the canvas with copies.',
 					options: [{ value: 'none', label: 'None' }, { value: 'wrap', label: 'Wrap' }, { value: 'tile', label: 'Tile' }] },
 				...sliders(['gap'], true)
+			] },
+			{ id: id('KeySet'), label: 'Key', feature: 'timeline', hidden: true, rows: [
+				{ kind: 'select', id: id('KeySelect'), label: 'Key', options: [] },
+				{ kind: 'field', id: id('KeyPosition'), type: 'number', ...FIELDS.animKeyPosition },
+				{ kind: 'select', id: id('KeyEasing'), label: 'Outgoing easing', options: ANIMATION_EASING_OPTIONS },
+				...Object.values(GlitterAnimation.POSE_CHANNELS).map((channel) => ({
+					kind: 'field', id: id(`KeyValue${channel.id}`), type: 'number', ...FIELDS[channel.field], label: `${channel.label} (${FIELDS[channel.field].unit})`,
+					toggle: { id: id(`KeyUse${channel.id}`), label: `Key ${channel.label}` }
+				})),
+				{ kind: 'note', id: id('KeyNote'), text: 'Enable a value to key it. Other channels keep their own keys.' }
+			] },
+			{ id: id('KeyActions'), feature: 'timeline', hidden: true, actions: [
+				{ id: id('KeyRecord'), label: 'Edit keys', icon: 'timeline' },
+				{ id: id('KeyAdd'), label: 'Add key', icon: 'plus' },
+				{ id: id('KeyDelete'), label: 'Delete key', icon: 'trash' }
+			] },
+			{ id: id('ConvertActions'), feature: 'timeline', hidden: true, actions: [
+				{ id: id('Convert'), label: 'Convert to custom', icon: 'timeline' }
 			] }
 		],
 		advancedId: id('Advanced'),
 		advanced: [
 			{ label: 'Timing', rows: [
-				{ kind: 'select', id: id('Easing'), label: 'Easing', options: [
-					{ value: 'linear', label: 'Linear' }, { value: 'ease', label: 'Ease' }, { value: 'easeIn', label: 'Ease in' },
-					{ value: 'easeOut', label: 'Ease out' }, { value: 'easeInOut', label: 'Ease in-out' },
-					{ value: 'bounceOut', label: 'Bounce out' }, { value: 'elasticOut', label: 'Elastic out' }, { value: 'steps', label: 'Steps' }
-				] },
+				{ kind: 'select', id: id('Easing'), label: 'Easing', options: ANIMATION_EASING_OPTIONS },
 				{ kind: 'field', id: id('Steps'), type: 'number', label: 'Steps', ...FIELDS.animSteps, rowId: id('StepsRow') },
 				{ kind: 'select', id: id('Direction'), label: 'Direction', options: [
 					{ value: 'normal', label: 'Normal' }, { value: 'reverse', label: 'Reverse' },
@@ -324,7 +345,7 @@ function createAnimationSectionSpec(prefix) {
 				] }
 			] },
 			{ classes: 'animation-stack-actions', actions: [
-				{ id: id('Add'), label: 'Add animation', icon: 'plus' },
+				{ id: id('Add'), label: 'Add animation', icon: 'plus', menu: true },
 				{ id: id('Remove'), label: 'Remove', icon: 'trash' }
 			] }
 		]
@@ -858,7 +879,7 @@ const PANEL_SCHEMAS = {
 					] },
 					{ classes: 'text-actions-group', actions: [
 						{ id: 'textSplit', label: 'Split text', title: 'Split into characters, words or lines', menu: true },
-						...(CONFIG.debug.enabled ? [{ id: 'textCopyStyleAsPreset', label: 'Copy style as preset', title: 'Copy the current style for the preset registry' }] : []),
+						{ id: 'textCopyStyleAsPreset', label: 'Copy style as preset', title: 'Copy the current style for the preset registry', feature: 'stylePresetCopy' },
 						{ id: 'textFitBoxToContent', label: 'Fit box to text', title: 'Resize the box to exactly fit the current text (keeps existing line breaks/wraps)' }
 					] }
 				] },

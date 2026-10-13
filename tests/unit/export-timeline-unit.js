@@ -30,6 +30,11 @@ const motionSources = vm.runInContext(`(animation) => {
 }`, context);
 
 const patternContext = require('../fixtures/pattern-source-context')();
+const keyedSource = motionSources({ type: 'custom', keys: [{ at: 0, values: { tx: 0 } }, { at: 0.5, values: { tx: 80 } }] })[0];
+assert(keyedSource.keyTrack?.entry.type === 'custom', 'Custom source retains its key-authoring capability');
+assert(JSON.stringify(keyedSource.cycleMarks) === '[0.5]', 'Custom source publishes intrinsic key marks');
+assert(keyedSource.withPeriod(2000).keyTrack === keyedSource.keyTrack, 'Fitting preserves key-track identity');
+assert(JSON.stringify(keyedSource.withPeriod(2000).cycleMarks) === '[0.5]', 'Fitting preserves key positions');
 const samplePattern = vm.runInContext('getPatternScrollOffset', patternContext);
 const scrollingPattern = new ProceduralAnimationSource({
 	key: 'pattern-scroll', naturalPeriod: 2000, preferredSamplingRate: 30,

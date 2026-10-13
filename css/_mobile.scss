@@ -14,10 +14,6 @@
 	display: none;
 }
 
-.mobile-only-action {
-	display: none;
-}
-
 @include mobile {
 	:root {
 		--mobile-floating-inset: var(--spacing-sm);
@@ -185,9 +181,9 @@
 		}
 	}
 
-	.mobile-only-action {
-		display: inline-flex;
-	}
+	.app-header-history,
+	#toolSwitch,
+	#layersBarClearAll { display: inline-flex; }
 
 	#dropzoneNewCanvasBtn {
 		margin-top: var(--spacing-md);
@@ -625,11 +621,4 @@
 		}
 	}
 
-	.desktop-only {
-		display: none !important;
-	}
-
-	.mobile-only {
-		display: block !important;
-	}
 }

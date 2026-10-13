@@ -61,7 +61,7 @@ async function main() {
 			'Saved theme was not applied by the head bootstrap before app initialization');
 		await startupPage.waitForFunction(() => window.editor != null, null, { timeout: 15000 });
 		await startupPage.waitForSelector('.workspace-start-preset[data-preset-id]');
-		assert(await startupPage.evaluate(() => !CONFIG.app.startup.showWelcome
+		assert(await startupPage.evaluate(() => !isFeatureEnabled('welcomeOnStartup')
 			&& !document.querySelector('.modal-overlay.visible')
 			&& !document.getElementById('workspaceStart').hidden),
 			'Startup did not land on the start card with no modal open');

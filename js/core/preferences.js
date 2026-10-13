@@ -25,6 +25,7 @@ const PREFERENCE_SCHEMA = Object.freeze({
 	timelineCollapsed: { default: () => ({}) },
 	timelineMinimized: { default: () => false },
 	timelineLabelWidth: { default: () => CONFIG.ui.timeline.labelWidth },
+	timelineShow: { default: () => ({ ...CONFIG.ui.timeline.show }) },
 	balanceSidebars: { default: () => true },
 	filterPreviewLevel: { default: () => 'still' },
 	// The Library view menu: tile size ('s' | 'm' | 'l') for every kind's grid,

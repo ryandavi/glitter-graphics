@@ -160,7 +160,7 @@ const APP_SETTINGS_LAYOUT = (() => {
 			toggle('showAllControls', 'Show All Controls', 'Keep every Advanced section open, in panels and in these windows.', { }),
 			toggle('confirmDestructiveActions', 'Confirm Before Deleting', 'Ask before deleting layers or clearing paint.', { }),
 			toggle('reduceMotion', 'Reduce Motion', 'Turn off interface transitions and animated previews. Exported animation is unaffected.', { aliases: 'animation accessibility motion transitions' }),
-			toggle('showWelcomeOnStartup', 'Welcome on Startup', 'Show the Welcome screen when Glitter Editor starts.', { hidden: !CONFIG.app.startup.showWelcome }),
+			toggle('showWelcomeOnStartup', 'Welcome on Startup', 'Show the Welcome screen when Glitter Editor starts.', { feature: 'welcomeOnStartup' }),
 			toggle('balanceSidebars', 'Balance Sidebar Widths', 'Keep the Inspector as wide as the toolbar and Layers together. Dragging the Inspector turns this off.', { aliases: 'panels layout symmetric widths resize' })
 		] },
 		{ title: 'Canvas', section: 'canvas', rows: [

@@ -17,6 +17,7 @@ const CANVAS_GESTURE_METHODS = {
 		this.updateStatus(release ? 'Clipping released' : 'Clipped to layer below');
 	},
 	handleLayerDoubleClick(layer) {
+		this.timelineKeyRecording?.end();
 		if (!layer || isLayerFullyLocked(layer) || this.layerManager.hasMultiSelection()) return;
 		if (this.layerManager.activeLayerId !== layer.id) this.layerManager.selectLayerFromCanvas(layer.id);
 		const action = LAYER_UI_CONFIG[layer.type]?.onDoubleClick;

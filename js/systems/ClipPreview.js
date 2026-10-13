@@ -132,7 +132,7 @@ class ClipPreview {
 	paintMotion(entry, elapsed) {
 		const { wrapper, base } = entry;
 		const context = getLayerAnimationSamplingContext(this.editor, base);
-		const sample = GlitterAnimation.sampleAt(GlitterAnimation.normalizeAnimations(base.animations), elapsed, context);
+		const sample = GlitterAnimation.sampleAt(GlitterAnimation.normalizeAnimations(this.editor.timelineKeyRecording?.previewAnimations(base) || base.animations), elapsed, context);
 		const frame = getLayerFrame(this.editor, base);
 		if (!frame) {
 			wrapper.style.opacity = '0';

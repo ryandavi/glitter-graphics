@@ -70,7 +70,7 @@ function renderShortcutReference() {
 	const { getShortcutGroups } = getAppRegistries();
 	// Same two-column guide-item as the hand-written sections: icon cell, then content.
 	const icons = { keyboard: 'keyboard', gesture: 'pointer' };
-	const block = (kind, render) => Array.from(getShortcutGroups(kind), ({ title, items }) => [
+	const block = (kind, render) => Array.from(getShortcutGroups(kind, { includeUnavailable: true }), ({ title, items }) => [
 		'            <div class="guide-item">',
 		'                <div class="guide-item-icon">',
 		'                    <span class="icon-wrapper sm">',
@@ -82,7 +82,7 @@ function renderShortcutReference() {
 		'                <div class="guide-item-content">',
 		`                    <p><strong>${escapeHtml(title)}</strong></p>`,
 		'                    <ul>',
-		...items.map(command => `                        <li><strong>${escapeHtml(command.label)}</strong> – ${command.instruction ? `${escapeHtml(command.instruction)} ` : ''}${render(command)}</li>`),
+		...items.map(command => `                        <li${command.feature ? ` data-feature="${escapeHtml(command.feature)}" hidden` : ''}><strong>${escapeHtml(command.label)}</strong> – ${command.instruction ? `${escapeHtml(command.instruction)} ` : ''}${render(command)}</li>`),
 		'                    </ul>',
 		'                </div>',
 		'            </div>'

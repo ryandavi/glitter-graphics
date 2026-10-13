@@ -11,12 +11,12 @@ const COMMANDS = {
 	removeBackground: { label: 'Remove background', group: 'Sticker', when: editor => editor.stickerManager.canRemoveBackground(), run: editor => editor.stickerManager.removeBackground() },
 	recolorGlitter: { label: 'Recolor a glitter', group: 'Library', run: (editor, target) => editor.glitterRecolor.command(target) },
 	copyStyleAsPreset: {
-		label: 'Copy style as preset', group: 'Text',
-		when: editor => CONFIG.debug.enabled && Boolean(editor.textGlitterManager?.getActiveTextLayer()),
+		label: 'Copy style as preset', group: 'Text', feature: 'stylePresetCopy',
+		when: editor => Boolean(editor.textGlitterManager?.getActiveTextLayer()),
 		async run(editor) {
 			const manager = editor.textGlitterManager;
 			const layer = manager?.getActiveTextLayer();
-			if (!CONFIG.debug.enabled || !layer) return;
+			if (!isFeatureAvailable('stylePresetCopy') || !layer) return;
 			try {
 				const entry = createStylePresetEntryFromLayer(layer, key => getSlotDefaults(layer.type, key));
 				await navigator.clipboard.writeText(JSON.stringify(entry, null, '\t') + ',');
@@ -43,12 +43,10 @@ const COMMANDS = {
 	zoomDouble: { run: (editor) => editor.viewport.setZoom(2, null, null, { animate: true }) },
 	zoomFill: { run: (editor) => editor.viewport.zoomToFill({ animate: true }) },
 	toggleMemoryOverlay: {
+		feature: 'memoryOverlay',
 		label: 'Toggle Memory Overlay', group: 'View', keys: ['mod+shift+alt+m'], displayKey: 'Ctrl/Cmd + Alt + Shift + M',
 		run: (editor) => {
-			if (!CONFIG.debug.enabled) {
-				editor.updateStatus('Memory overlay is available when debug mode is enabled');
-				return;
-			}
+			if (!isFeatureAvailable('memoryOverlay')) return;
 			APP_MEMORY_LEDGER.toggleOverlay();
 		}
 	},
@@ -193,10 +191,10 @@ function isGestureCommand(command) {
 	return command.binding?.type === 'gesture';
 }
 
-function getShortcutGroups(kind = 'keyboard') {
+function getShortcutGroups(kind = 'keyboard', { includeUnavailable = false } = {}) {
 	const groups = new Map();
 	[...Object.values(COMMANDS), ...SESSIONS.flatMap((session) => session.shortcuts || [])].filter((command) => {
-		if (!command.label || (command.feature && !isFeatureAvailable(command.feature))) return false;
+		if (!command.label || (!includeUnavailable && command.feature && !isFeatureAvailable(command.feature))) return false;
 		return kind === 'gesture' ? isGestureCommand(command) : Boolean(command.displayKey) && !isGestureCommand(command);
 	}).forEach((command) => {
 		const group = kind === 'gesture'

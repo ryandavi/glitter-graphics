@@ -9,6 +9,12 @@ const context = vm.createContext({ isLayerFullyLocked: layer => layer.locked });
 for (const file of ['js/core/gif-decode.js', 'js/export/ExportTimeline.js', 'js/ui/timeline-view.js']) vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), context);
 const { view, Authored, Procedural } = vm.runInContext('({ view: TimelineView, Authored: AuthoredAnimationSource, Procedural: ProceduralAnimationSource })', context);
 const json = value => JSON.parse(JSON.stringify(value));
+for (const length of [1, 2400]) for (const fraction of [0, 0.15, 0.5, 1]) {
+	assert.strictEqual(view.keyToX(length * fraction, 500, length), 500 * fraction);
+	assert.strictEqual(view.xToKey(500 * fraction, 500, length), length * fraction);
+}
+assert.strictEqual(view.xToKey(-10, 500, 2400), 0);
+assert.strictEqual(view.xToKey(510, 500, 2400), 2400);
 for (const ms of [-500, 0, 600, 4800]) assert.strictEqual(view.xToTime(view.timeToX(ms, 135), 135), ms);
 const row = { startMs: 0, endMs: 4800, cycleMs: 1400, phase: 0 };
 assert.deepStrictEqual(json(view.cycleStarts(row, 4800)), [1400, 2800, 4200]);

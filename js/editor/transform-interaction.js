@@ -555,7 +555,7 @@ snapTransformPosition(transform, position, options = {}) {
 	},
 	initializeAltDuplicateFeedback() {
 		const sync = (armed) => this.previewContainer?.classList.toggle(
-			'alt-duplicate-armed', Boolean(armed) && this.currentTool === ToolType.SELECT
+			'alt-duplicate-armed', Boolean(armed) && this.currentTool === ToolType.SELECT && !this.timelineKeyRecording?.active
 		);
 		document.addEventListener('keydown', (event) => {
 			if (event.key === 'Alt' && !event.repeat) sync(true);

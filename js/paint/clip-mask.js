@@ -2,7 +2,8 @@
 
 function getClipBase(layers, layer, { requireClipped = true } = {}) {
 	if (!layer || (requireClipped && !layer.clipped) || layer.isPreview || !LAYER_UI_CONFIG[layer.type]?.clippable) return null;
-	for (let index = layers.indexOf(layer) - 1; index >= 0; index--) {
+	const ownIndex = layers.indexOf(layer);
+	for (let index = (ownIndex < 0 ? layers.findIndex(candidate => candidate.id === layer.id) : ownIndex) - 1; index >= 0; index--) {
 		const candidate = layers[index];
 		if (candidate.isPreview) continue;
 		if (candidate.clipped) continue;
@@ -29,7 +30,8 @@ function getClipInsertion(layers, layer, index) {
 }
 
 function getClipRestPoints(editor, base, x, y) {
-	const sample = GlitterAnimation.sampleAt(GlitterAnimation.normalizeAnimations(base.animations), editor.animationTicker.getCurrentTime(), getLayerAnimationSamplingContext(editor, base));
+	const animations = editor.timelineKeyRecording?.previewAnimations(base) || base.animations;
+	const sample = GlitterAnimation.sampleAt(GlitterAnimation.normalizeAnimations(animations), editor.animationTicker.getCurrentTime(), getLayerAnimationSamplingContext(editor, base));
 	if (sample.opacity <= 0 || base.opacity <= 0) return [];
 	const frame = getLayerFrame(editor, base);
 	if (!frame) return [];

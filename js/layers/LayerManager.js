@@ -532,6 +532,7 @@ class LayerManager {
 			if (options.source === 'canvas') this.revealLayerInList(nextActiveId);
 			return;
 		}
+		this.editor.timelineKeyRecording?.selectionWillChange(normalized, nextActiveId);
 
 		if (this.editor.textGlitterManager?.editSession?.layerId !== nextActiveId) this.editor.textGlitterManager?.endTextEdit();
 		if (this.editor.pathEdit?.session && this.editor.pathEdit.session.layerId !== nextActiveId) this.editor.pathEdit.end();

@@ -27,6 +27,14 @@
 	flex-direction: column;
 	min-width: 0;
 
+	// One hairline for every row, quieter than a panel's border. A bar takes
+	// its hue from what it is: a file's own frames, or something computed.
+	--timeline-line: color-mix(in srgb, var(--color-border) 60%, transparent);
+	--timeline-row-bg: color-mix(in srgb, var(--color-bg-secondary) 40%, var(--color-bg-primary));
+	--timeline-bar-inset: var(--spacing-xs);
+	--timeline-hue-authored: var(--color-info);
+	--timeline-hue-procedural: var(--color-success);
+
 	> .timeline-section {
 		flex: 1;
 		min-height: 0;
@@ -39,10 +47,34 @@
 
 	.section-header-action:disabled { opacity: var(--opacity-disabled); }
 
-	// The time, play and the view actions sit on the actions' own spacing.
+	// Name, transport, what the export would write, then the view actions.
 	// The bar is the toggle, as on a panel section.
-	> .timeline-section > .section-header { gap: var(--spacing-sm); cursor: pointer; }
+	> .timeline-section > .section-header {
+		gap: var(--spacing-md);
+		cursor: pointer;
+
+		> .section-header-title { flex: 0 0 auto; }
+		> .section-header-actions { gap: var(--spacing-2xs); }
+	}
 	.section-header-action.collapsed .icon { transform: rotate(-90deg); }
+	// A toggle that is on stays as quiet as the buttons beside it.
+	.section-header-action.active {
+		background: var(--color-accent-surface-strong);
+		color: var(--color-accent);
+	}
+	.timeline-summary {
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		gap: var(--spacing-base);
+		flex: 1;
+		min-width: 0;
+	}
+	.timeline-readout {
+		@include truncate;
+		font-size: var(--font-size-xs);
+		color: var(--bar-icon-color);
+	}
 
 	// Minimized, the dock is its bar.
 	&.is-minimized {
@@ -55,19 +87,19 @@
 	.timeline-transport {
 		display: flex;
 		align-items: center;
-		gap: var(--spacing-sm);
+		gap: var(--spacing-xs);
 	}
 	.timeline-time {
-		font-size: var(--font-size-xs);
+		font-size: var(--font-size-sm);
 		font-variant-numeric: tabular-nums;
 		white-space: nowrap;
-		color: var(--color-text-secondary);
+		color: var(--color-text-primary);
 	}
 
 	// The ruler over the scrolling rows, with the playhead across both.
 	.timeline-stage {
 		--timeline-label-column: var(--timeline-label-width);
-		--timeline-info-column: var(--timeline-info-width);
+		--timeline-info-column: 0px;
 		// Row labels start where the group name does: past the row's inset,
 		// the chevron, the eye, the thumbnail and the gap after each.
 		--timeline-label-inset: calc(var(--spacing-sm) + var(--font-size-md) + var(--control-height) + var(--timeline-group-media) + 5 * var(--spacing-xs));
@@ -86,10 +118,14 @@
 			inset: 0 auto 0 0;
 			box-sizing: border-box;
 			width: var(--timeline-label-column);
-			border-right: 1px solid var(--color-border);
-			background: var(--color-bg-secondary);
+			border-right: 1px solid var(--timeline-line);
+			background: var(--timeline-row-bg);
 		}
+		// Nothing to label: the empty state has the whole stage.
+		&.is-empty::before { content: none; }
 	}
+	&.shows-details .timeline-stage { --timeline-info-column: var(--timeline-info-width); }
+	&:not(.shows-details) .timeline-row-info { display: none; }
 
 	.timeline-ruler, .timeline-body { position: relative; }
 
@@ -105,7 +141,7 @@
 		inset: 0 auto 0 var(--timeline-label-column);
 		z-index: 3;
 		width: 1px;
-		background: var(--color-text-primary);
+		background: var(--color-accent);
 		pointer-events: none;
 
 		// The output frame it is in, marked on the ruler.
@@ -117,6 +153,17 @@
 			width: var(--timeline-frame-width);
 			height: var(--timeline-ruler-height);
 			background: var(--color-accent-surface-strong);
+		}
+		// Its head, on the ruler.
+		&::after {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: calc(-1 * var(--spacing-xs));
+			width: calc(2 * var(--spacing-xs) + 1px);
+			height: var(--spacing-base);
+			border-radius: 0 0 var(--radius-xs) var(--radius-xs);
+			background: var(--color-accent);
 		}
 	}
 
@@ -141,30 +188,54 @@
 	// transform, clipped to the track column.
 	.timeline-ruler {
 		flex: 0 0 auto;
-		border-bottom: 1px solid var(--color-border);
+		border-bottom: 1px solid var(--timeline-line);
 	}
 	.timeline-ruler-view { margin-left: var(--timeline-label-column); overflow: hidden; }
-	.timeline-ruler-track { position: relative; width: var(--timeline-track-width); overflow: hidden; cursor: ew-resize; touch-action: none; }
-	.timeline-ruler-ticks { display: block; }
-	.timeline-loop-end {
-		position: absolute;
-		inset: 0 auto 0 var(--timeline-loop-x);
-		border-left: 1px solid var(--color-text-secondary);
-		padding-left: var(--spacing-xs);
-		font-size: var(--font-size-xs);
-		background: var(--color-bg-primary);
+	.timeline-ruler-track {
+		position: relative;
+		width: var(--timeline-track-width);
+		overflow: hidden;
 		cursor: ew-resize;
 		touch-action: none;
+
+		// The loop, as a strip along the ruler's top edge.
+		&::before {
+			content: '';
+			position: absolute;
+			inset: 0 auto auto 0;
+			width: var(--timeline-loop-x);
+			height: var(--spacing-2xs);
+			background: var(--color-accent);
+			opacity: 0.6;
+		}
+	}
+	.timeline-ruler-ticks { display: block; }
+	// The loop's end: a handle on the ruler, and everything past it set back.
+	.timeline-loop-end {
+		position: absolute;
+		inset: 0 0 0 var(--timeline-loop-x);
+		display: flex;
+		align-items: center;
+		border-left: 2px solid var(--color-text-secondary);
+		padding-left: var(--spacing-sm);
+		font-size: var(--font-size-xs);
+		font-weight: var(--font-weight-semibold);
+		font-variant-numeric: tabular-nums;
+		color: var(--color-text-secondary);
+		background: var(--color-bg-secondary);
+		cursor: ew-resize;
+		touch-action: none;
+
+		&:hover { border-left-color: var(--color-accent); color: var(--color-text-primary); }
 	}
 
 	// A layer's row: the layer in the label column, the span of its
 	// animations on the track. The row is as wide as the tracks, so the line
 	// between groups is its own.
 	.timeline-group-header {
+		border-bottom: 1px solid var(--timeline-line);
 		background: var(--color-bg-secondary);
-		cursor: pointer;
 	}
-	.timeline-group + .timeline-group > .timeline-group-header { border-top: 1px solid var(--color-border); }
 	.timeline-group-label {
 		--list-row-media: var(--timeline-group-media);
 		position: sticky;
@@ -174,7 +245,7 @@
 		min-height: var(--timeline-group-height);
 		padding-block: var(--spacing-2xs);
 		gap: var(--spacing-xs);
-		border-right: 1px solid var(--color-border);
+		border-right: 1px solid var(--timeline-line);
 		// Opaque: it stays put while the tracks scroll under it.
 		background: var(--color-bg-secondary);
 
@@ -188,7 +259,7 @@
 		height: var(--spacing-xs);
 		transform: translateY(-50%);
 		border-radius: var(--radius-xs);
-		background: var(--color-text-tertiary);
+		background: var(--color-border-hover);
 		pointer-events: none;
 	}
 	.timeline-group-select {
@@ -213,7 +284,13 @@
 	}
 	.timeline-group.is-collapsed .timeline-row { display: none; }
 
-	.timeline-row { position: relative; min-height: var(--timeline-row-height); align-items: center; }
+	.timeline-row {
+		position: relative;
+		min-height: var(--timeline-row-height);
+		align-items: center;
+		border-bottom: 1px solid var(--timeline-line);
+		background: var(--timeline-row-bg);
+	}
 	.timeline-row-label {
 		@include truncate;
 		position: sticky;
@@ -222,62 +299,99 @@
 		text-align: left;
 		padding: 0 var(--spacing-base) 0 var(--timeline-label-inset);
 		height: var(--timeline-row-height);
-		border-right: 1px solid var(--color-border);
-		background: var(--color-bg-secondary);
+		border-right: 1px solid var(--timeline-line);
+		background: var(--timeline-row-bg);
 		color: var(--color-text-secondary);
 		font-weight: var(--font-weight-normal);
 	}
+	.timeline-row.is-selected .timeline-row-label { color: var(--color-text-primary); }
 	.timeline-track {
 		position: relative;
 		grid-column: 2;
 		height: var(--timeline-row-height);
 		overflow: hidden;
+		// Past the loop's end: the line, and the next pass set back behind it.
 		&::after {
 			content: '';
 			position: absolute;
-			inset: 0 auto 0 var(--timeline-loop-x);
+			inset: 0 0 0 var(--timeline-loop-x);
 			border-left: 1px solid var(--color-text-secondary);
+			background: color-mix(in srgb, var(--color-bg-secondary) 55%, transparent);
 			pointer-events: none;
 		}
 	}
 	.timeline-bar, .timeline-bar-ghost {
+		--timeline-bar-hue: var(--timeline-hue-procedural);
+		--timeline-bar-strength: 34%;
 		position: absolute;
-		top: var(--spacing-2xs);
-		height: calc(var(--timeline-row-height) - 2 * var(--spacing-2xs));
-		background: var(--color-bg-tertiary);
+		top: var(--timeline-bar-inset);
+		height: calc(var(--timeline-row-height) - 2 * var(--timeline-bar-inset));
+		background: color-mix(in srgb, var(--timeline-bar-hue) var(--timeline-bar-strength), var(--color-bg-tertiary));
 		border: 0;
-		border-radius: var(--radius-xs);
+		border-radius: var(--radius-sm);
 		padding: 0;
-		color: var(--color-text-secondary);
 		overflow: hidden;
+		transition: background-color var(--transition-fast);
 	}
-	.timeline-bar { cursor: pointer; touch-action: none; }
+	.timeline-bar {
+		cursor: pointer;
+		touch-action: none;
+		&.is-authored { --timeline-bar-hue: var(--timeline-hue-authored); }
+		&.is-trimmed { cursor: grab; }
+		&:focus-visible { outline: none; box-shadow: inset var(--control-focus-ring); }
+	}
+	.timeline-row:is(:hover, :focus-within) .timeline-bar { --timeline-bar-strength: 50%; }
+	.timeline-row:is(.is-selected, .is-dragging) .timeline-bar {
+		--timeline-bar-strength: 78%;
+		box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-text-primary) 70%, transparent);
+	}
+	// An edge or a cycle boundary that can be dragged: a wide target around a
+	// thin grip, drawn on the bar under the pointer and on the selected bar.
 	.timeline-bar-handle, .timeline-period-notch {
 		position: absolute;
 		top: 0;
 		bottom: 0;
-		width: var(--spacing-sm);
+		width: var(--spacing-base);
 		cursor: ew-resize;
 		opacity: 0;
-		background: currentColor;
 		z-index: 1;
+		transition: opacity var(--transition-fast);
+
+		&::before {
+			content: '';
+			position: absolute;
+			inset: 25% auto 25% 50%;
+			width: var(--spacing-2xs);
+			margin-left: calc(var(--spacing-2xs) / -2);
+			border-radius: var(--radius-xs);
+			background: var(--color-text-primary);
+		}
 	}
 	.timeline-bar-handle.is-left { left: 0; }
 	.timeline-bar-handle.is-right { right: 0; }
-	.timeline-period-notch { top: 50%; transform: translateX(-50%); }
-	.timeline-row:is(:hover, :focus-within, .is-selected) {
-		.timeline-bar-handle, .timeline-period-notch { opacity: 0.4; }
+	.timeline-period-notch { transform: translateX(-50%); cursor: col-resize; }
+	.timeline-row:is(:hover, :focus-within, .is-selected, .is-dragging) {
+		.timeline-bar-handle, .timeline-period-notch { opacity: 0.85; }
+	}
+	// One cursor for the whole of a drag, whatever it passes over.
+	&[data-dragging] {
+		&, .timeline-bar, .timeline-stage { cursor: ew-resize; }
+	}
+	&[data-dragging="move"] {
+		&, .timeline-bar, .timeline-stage { cursor: grabbing; }
 	}
 	.timeline-drag-readout { position: absolute; z-index: 5; pointer-events: none; font-variant-numeric: tabular-nums; }
-	.timeline-row:hover .timeline-bar, .timeline-row:focus-within .timeline-bar, .is-selected .timeline-bar { background: var(--color-accent); color: var(--color-text-on-accent); }
-	.timeline-bar-ghost { opacity: 0.35; pointer-events: none; }
+	.timeline-bar-ghost { --timeline-bar-strength: 22%; pointer-events: none; }
+	// Each repeat, as a gap cut into the bar.
 	.timeline-bar-marks {
 		@include cover;
-		background-image: repeating-linear-gradient(to right, currentColor 0 1px, transparent 1px var(--cycle-px));
-		background-position: var(--cycle-offset-px) 0;
 		pointer-events: none;
 	}
-	.timeline-cycle-mark { position: absolute; top: 50%; bottom: 0; width: 1px; background: currentColor; }
+	&.shows-cycles .timeline-bar-marks {
+		background-image: repeating-linear-gradient(to right, var(--timeline-row-bg) 0 1px, transparent 1px var(--cycle-px));
+		background-position: var(--cycle-offset-px) 0;
+	}
+	.timeline-cycle-mark { position: absolute; top: 60%; bottom: 0; width: 1px; background: var(--timeline-row-bg); opacity: 0.7; }
 	.timeline-bar-seam {
 		position: absolute;
 		left: var(--timeline-loop-x);
@@ -286,28 +400,74 @@
 		color: var(--color-warning);
 		pointer-events: auto;
 	}
-	.timeline-row-info { @include truncate; padding: 0 var(--spacing-base); font-size: var(--font-size-xs); color: var(--color-text-secondary); }
-	.timeline-row-lane { grid-column: 2; }
+	.timeline-row-info { @include truncate; padding: 0 var(--spacing-base); font-size: var(--font-size-xs); font-variant-numeric: tabular-nums; color: var(--color-text-tertiary); }
+	.timeline-row-lane {
+		grid-column: 2;
+		width: min(var(--timeline-track-width), calc(100cqw - var(--timeline-label-column) - var(--timeline-info-column)));
+		padding: var(--spacing-xs) var(--spacing-md) var(--spacing-base);
+		border-top: 1px solid var(--timeline-line);
+	}
+	.timeline-key-heading {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--spacing-base);
+		color: var(--color-text-secondary);
+		font-size: var(--font-size-xs);
+	}
+	.timeline-key-track {
+		position: relative;
+		height: var(--timeline-row-height);
+		margin-inline: var(--spacing-base);
+		touch-action: none;
+		&::before {
+			content: '';
+			position: absolute;
+			inset: 50% 0 auto;
+			border-top: 1px solid var(--color-border);
+		}
+	}
+	.timeline-key {
+		position: absolute;
+		top: 50%;
+		width: var(--spacing-md);
+		height: var(--spacing-md);
+		transform: translate(-50%, -50%) rotate(45deg);
+		border: 1px solid var(--color-text-secondary);
+		background: var(--color-bg-secondary);
+		border-radius: var(--radius-xs);
+		&.active { background: var(--color-accent); border-color: var(--color-accent); }
+		&.is-ghost { opacity: var(--opacity-disabled); pointer-events: none; }
+	}
+	.timeline-key-playhead {
+		position: absolute;
+		inset: 0 auto 0;
+		border-left: 1px solid var(--color-accent);
+		pointer-events: none;
+	}
 
 	@container timeline (max-width: #{tokens.$timeline-narrow-width}) {
 		.section-header-title-text { display: none; }
-		.timeline-readout, .section-header-title > .badge { display: none; }
-		.timeline-stage { --timeline-label-column: 0px; --timeline-info-column: 0px; --timeline-label-inset: var(--spacing-base); }
+		// The summary stays as the spacer between the transport and the actions.
+		.timeline-readout, .timeline-summary > .badge { display: none; }
+		.timeline-stage { --timeline-label-column: 0px; --timeline-label-inset: var(--spacing-base); }
+		&.shows-details .timeline-stage { --timeline-info-column: 0px; }
 		.timeline-row-info { display: none; }
 		// No label column: the layer's row is a bar across the visible width.
 		.timeline-group-header { display: block; position: sticky; left: 0; width: 100%; }
 		.timeline-group-track, .timeline-label-handle, .timeline-stage::before { display: none; }
 		.timeline-group-label { border-right: 0; }
-		.timeline-row:is(:hover, :focus-within, .is-selected) .timeline-row-label { background: var(--color-accent); color: var(--color-text-on-accent); }
+		// The label sits inside its bar, on the bar's own fill.
 		.timeline-row-label {
 			position: absolute;
 			left: var(--timeline-bar-left);
-			top: var(--spacing-2xs);
+			top: var(--timeline-bar-inset);
 			width: max-content;
 			max-width: calc(var(--timeline-loop-x) - var(--timeline-bar-left));
-			height: calc(var(--timeline-row-height) - 2 * var(--spacing-2xs));
+			height: calc(var(--timeline-row-height) - 2 * var(--timeline-bar-inset));
 			border-right: 0;
-			background: var(--color-bg-tertiary);
+			background: none;
+			color: var(--color-text-primary);
 			pointer-events: none;
 		}
 	}

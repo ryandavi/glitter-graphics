@@ -26,6 +26,8 @@ Every modal (history, personal-web, aylana, preservation, about, welcome, guide)
 
 Everything else is plain HTML.
 
+Content limited by release stage uses `data-feature="<id>" hidden` on its HTML wrapper, with an existing id from `FEATURES` (`js/core/features.js`). The modal loader and local reload apply the gate after inserting the content. Independent features use separate wrappers. This is an HTML attribute, not an authoring token.
+
 Local images get real `width` and `height` (scaled by `data-pixel-scale`), `loading="lazy"` and `decoding="async"` from the build. Authors leave these attributes to the builder.
 
 | Command | Does |

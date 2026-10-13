@@ -522,6 +522,9 @@ updateTransform(updates) {
 	 * @param {HTMLElement} element - Element to make draggable
 	 */
 setupMouseDrag(element) {
+	element.addEventListener('pointerdown', event => {
+		if (event.button === 0 && this.editor.timelineKeyRecording?.handles(this.layer)) this.editor.timelineKeyRecording.beginDrag(this, 'move', event, element);
+	});
 	let isDragging = false;
 	let didMove = false;
 	let startCanvasX = 0;
@@ -563,6 +566,7 @@ const swallowFollowupClick = () => {
 };
 
 	const handleMouseDown = (e) => {
+	if (this.editor.timelineKeyRecording?.handles(this.layer)) return;
 	if (TOOLS[this.editor.currentTool]?.onCanvasDrag) return;
 	if (e.button !== 0) return; // Left click only
 	const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
@@ -967,7 +971,7 @@ createTransformHandles() {
 	}
 
 	const readOnly = !isLayerTransformable(this.layer);
-	const handles = readOnly ? [] : ['corner-tl', 'corner-tr', 'corner-br', 'corner-bl'];
+	let handles = readOnly ? [] : ['corner-tl', 'corner-tr', 'corner-br', 'corner-bl'];
 	if (!readOnly && this.supportsEdgeResize()) handles.push('edge-top', 'edge-right', 'edge-bottom', 'edge-left');
 	if (!readOnly) handles.push(...(LAYER_UI_CONFIG[this.layer.type]?.selectionChrome?.handles || []));
 	if (!readOnly && this.supportsRotation()) handles.push('rotate-tl', 'rotate-tr', 'rotate-br', 'rotate-bl', 'rotation', 'anchor');
@@ -975,6 +979,7 @@ createTransformHandles() {
 		handles.push('radius-tl', 'radius-tr', 'radius-br', 'radius-bl');
 	}
 	// Selection chrome lives in the screen-space overlay, outside the zoom.
+	handles = this.editor.timelineKeyRecording?.filterHandles(this.layer, handles) || handles;
 	this.chrome = new SelectionChrome(this.editor.viewport.selectionOverlay, {
 		layerId: this.layer.id,
 		readOnly,
@@ -988,6 +993,10 @@ createTransformHandles() {
 		}
 	});
 	this.transformHandles = this.chrome.element;
+	if (this.editor.timelineKeyRecording?.handles(this.layer)) {
+		this.transformHandles.classList.add('is-recording-keys');
+		this.transformHandles.setAttribute('aria-label', 'Recording keys: move, rotate or scale to write a motion key');
+	}
 	this.editor.viewport.selectionOverlay.addSyncer(this.syncHandlePositions);
 
 	// Position handles - this will now use the correct transform that was just applied
@@ -1000,6 +1009,8 @@ createTransformHandles() {
 	// The chrome's description (see SelectionChrome): the frame, and for area
 	// text the box its edge handles resize.
 	getChromeModel() {
+		const recording = this.editor.timelineKeyRecording?.chromeModel(this);
+		if (recording) return recording;
 		const transform = this.getTransform();
 		const describe = (metrics) => ({
 			centerX: metrics.centerX,
@@ -1129,6 +1140,7 @@ removeTransformHandles() {
 
 		this.chrome.onPointerDown((handleType, e, handle) => this.beginHandleDrag(handleType, e, handle));
 		this.transformHandles.addEventListener('dblclick', (event) => {
+			if (this.editor.timelineKeyRecording?.handles(this.layer)) { event.preventDefault(); event.stopImmediatePropagation(); return; }
 			// An area text edge fits its box to the text on that side.
 			const handleType = this.chrome.handleTypeAt(event) || '';
 			if (handleType === 'move') {
@@ -1155,6 +1167,7 @@ removeTransformHandles() {
 	}
 
 	beginHandleDrag(handleType, e, handle) {
+		if (this.editor.timelineKeyRecording?.handles(this.layer)) { this.editor.timelineKeyRecording.beginDrag(this, handleType, e, handle); return; }
 		if (this.layer.locked) return;
 		if (e.pointerType === 'mouse' && e.button !== 0) return;
 

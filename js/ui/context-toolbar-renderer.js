@@ -294,7 +294,7 @@ class ContextToolbarRenderer {
 			const node = document.getElementById('tpl-context-button').content.firstElementChild.cloneNode(true);
 			node.id = control.id; node.title = control.title;
 			if (control.action) node.dataset.action = control.action;
-			if (control.mobile === false) node.classList.add('desktop-only');
+			if (control.layout) node.dataset.layout = control.layout;
 			if (control.textAction) node.dataset.textAction = control.textAction;
 			if (control.textAction) node.addEventListener('pointerdown', event => event.preventDefault());
 			if (control.glyph) { node.querySelector('svg').remove(); node.prepend(document.createTextNode(control.glyph)); node.classList.add('context-letter-button'); }

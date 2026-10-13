@@ -145,7 +145,7 @@ updateOrientationButtons(width, height) {
 		});
 
 		// Welcome modal opens from the header menu and the start card, and
-		// automatically on load only while CONFIG.app.startup.showWelcome is on.
+		// automatically on load only while welcomeOnStartup is enabled.
 		this.modalManager.register('welcomeModal', {
 			openBtnId: 'openWelcomeModal',
 			closeBtnId: 'closeWelcomeModal',
@@ -165,7 +165,7 @@ updateOrientationButtons(width, height) {
 			},
 			onOpen: () => {
 				document.querySelectorAll('#welcomeDontShowAgain, #welcomeDontShowAgainMobile').forEach((checkbox) => {
-					checkbox.closest('.welcome-checkbox').hidden = !CONFIG.app.startup.showWelcome;
+					checkbox.closest('.welcome-checkbox').hidden = !isFeatureEnabled('welcomeOnStartup');
 				});
 			},
 			onClose: () => {
@@ -385,7 +385,7 @@ openModalFromHash() {
 // when its generated file changes (node tools/build-modals.js --watch), keeping
 // the scroll position. Production never polls.
 watchModalSources() {
-	if (!['localhost', '127.0.0.1'].includes(location.hostname)) return;
+	if (!isLocalHost()) return;
 	window.setInterval(async () => {
 		if (document.visibilityState !== 'visible') return;
 		const config = [...this.modalManager.modals.values()].find(entry => entry.externalContentUrl && entry.contentLoaded && entry.modal.classList.contains('visible'));
@@ -399,6 +399,7 @@ watchModalSources() {
 			const scrollTop = modalBody.scrollTop;
 			config.cachedContent = html;
 			modalBody.innerHTML = html;
+			applyFeatureGates(modalBody);
 			// Navigation binds once per modal; a fresh copy lets it index the new headings.
 			const nav = config.modal.querySelector('.document-nav');
 			if (nav) {
@@ -435,7 +436,7 @@ async openDocumentAt(modalId, anchor) {
 
 async checkWelcomeModal() {
 
-	if (!CONFIG.app.startup.showWelcome) {
+	if (!isFeatureEnabled('welcomeOnStartup')) {
 		this.syncWhatsNewMarker();
 		return;
 	}

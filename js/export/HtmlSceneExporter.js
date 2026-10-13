@@ -10,7 +10,7 @@ class HtmlSceneExporter {
 	}
 
 	isAvailable() {
-		return this.config.localHosts.includes(window.location.hostname);
+		return isFeatureAvailable('htmlScene');
 	}
 
 	initialize() {

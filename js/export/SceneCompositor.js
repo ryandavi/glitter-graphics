@@ -230,6 +230,8 @@ class SceneCompositor {
 			.map(({ animation, index }) => ({
 				key: `__anim_${layer.id}_${index}`,
 				rowLabel: GlitterAnimation.summaryText(animation), direction: animation.direction,
+				cycleMarks: GlitterAnimation.MOTION_REGISTRY[animation.type].keyed ? animation.keys.map((key) => key.at).filter((at) => at > 0) : undefined,
+				keyTrack: GlitterAnimation.MOTION_REGISTRY[animation.type].keyed ? { entry: layer.animations[index], index } : null,
 				label: `${layer.name || 'Layer'} ${GlitterAnimation.summaryText(animation)}`,
 				ownerLayerId: layer.id,
 				effectSlot: `animation-${index}`,
@@ -1652,7 +1654,8 @@ class SceneCompositor {
 		// 5. Composite Glitter and Sticker Layers (in correct z-order)
 		for (const { layer, plan } of layerPlans) {
 			if (layer.visible === false) continue;
-			const clipBase = getClipBase(this.editor.layers, layer);
+			const storedBase = getClipBase(this.editor.layers, layer);
+			const clipBase = storedBase && (context.visibleLayers.find(entry => entry.id === storedBase.id) || storedBase);
 			if (clipBase?.visible === false) continue;
 			if (layer.type === LayerType.BASE_IMAGE && !exportSettings.baseImage) continue;
 			const blendMode = LAYER_UI_CONFIG[layer.type]?.blendable

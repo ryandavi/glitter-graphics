@@ -295,6 +295,7 @@ class ModalManager {
 			}
 
 			modalBody.innerHTML = html;
+			applyFeatureGates(modalBody);
 			if (config.onContentLoaded) await config.onContentLoaded(modalBody);
 		} catch (error) {
 			console.error(`Error loading modal content for ${config.id}:`, error);

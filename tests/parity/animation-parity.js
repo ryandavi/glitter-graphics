@@ -18,7 +18,7 @@ const presets = Object.fromEntries(types.map((type) => [type, {
 	duty: 50, opacityFloor: 20, direction: 'normal', iterations: Infinity,
 	maxTrips: 12, maxCopies: 48, harmonics: { x: [{ frequency: 1, weight: 0.6 }, { frequency: 2, weight: 0.4 }], y: [{ frequency: 1, weight: 0.6 }, { frequency: 3, weight: 0.4 }] }
 }]));
-global.CONFIG = { tools: { animation: { defaultType: 'pulse', presets, jitterQuantMs: 60 } } };
+global.CONFIG = { tools: { animation: { defaultType: 'pulse', presets, jitterQuantMs: 60, keySeek: { samples: 128, iterations: 24, tolerance: 1e-7 } } } };
 
 const keys = ['tx', 'ty', 'rotate', 'scaleX', 'scaleY', 'skewX', 'skewY', 'opacity', 'originX', 'originY', 'hue'];
 const near = (a, b, tolerance = 1e-6) => Math.abs(a - b) <= tolerance;
@@ -215,4 +215,140 @@ assert.strictEqual(repeatStack.copies.length, 5, 'overlapping repeat offsets mus
 const rotatedRepeat = Animation.sampleAt([{ type: 'rotate', turns: 1, amount: 0 }, { type: 'marquee', angle: 0, repeat: 'wrap' }], 250, bounds);
 assert(rotatedRepeat.copies.slice(1).every(({ x, y }) => near(x, 0) && near(Math.abs(y), 640)), 'stacked rotation must rotate repeat offsets');
 
-console.log(`animation-parity: ${types.length} presets passed`);
+const keyed = Animation.normalizeAnimation({ type: 'custom', keys: [
+	{ at: 0, easing: 'linear', values: { tx: 0, rotate: 350, opacity: 1 } },
+	{ at: 0.25, easing: 'linear', values: { scaleX: -1 } },
+	{ at: 0.5, easing: 'linear', values: { tx: 100, rotate: 10, opacity: 0.2 } },
+	{ at: 0.75, easing: 'linear', values: { scaleX: 1 } }
+] });
+const halfwayKey = Animation.sampleAt(keyed, 250);
+assert(near(halfwayKey.tx, 50));
+assert(near(halfwayKey.rotate, 360));
+assert(near(halfwayKey.opacity, 0.6));
+assert.strictEqual(halfwayKey.scaleX, -1);
+assert.strictEqual(Animation.sampleAt(keyed, 0).scaleX, 0, 'Signed scales interpolate across the closing segment');
+assert.strictEqual(Animation.sampleAt(keyed, 500).scaleX, 0);
+assert(near(Animation.sampleAt(keyed, 750).tx, 50), 'A missing channel does not add a rest-pose key');
+assert(Animation.isSeamlessLoop(keyed));
+assert.deepStrictEqual(Animation.sampleAt(keyed, 0), Animation.sampleAt(keyed, 1000));
+for (const channel of Object.values(Animation.POSE_CHANNELS)) {
+	assert(Object.isFrozen(channel));
+	assert.strictEqual(typeof channel.label, 'string');
+	assert(Number.isFinite(channel.rest));
+}
+assert.strictEqual(Animation.interpolateChannel(Animation.POSE_CHANNELS.rotate, 0, -180, 0.5), 90);
+assert.strictEqual(Animation.interpolateChannel(Animation.POSE_CHANNELS.scaleX, -1, 1, 0.5), 0);
+const emptyCustom = Animation.normalizeAnimation({ type: 'custom', keys: [] });
+assert(Animation.isActive(emptyCustom), 'An identity Custom still supplies an editable source');
+assert.deepStrictEqual(Animation.sampleAt(emptyCustom, 345), Animation.sampleAt({ type: 'custom', keys: [{ at: 0.8, values: {} }] }, 789));
+const singleCustom = { type: 'custom', keys: [{ at: 0.8, values: { ty: 12, hue: 90 } }] };
+for (const time of [0, 150, 800, 990, 1234]) {
+	assert.strictEqual(Animation.sampleAt(singleCustom, time).ty, 12);
+	assert.strictEqual(Animation.sampleAt(singleCustom, time).hue, 90);
+}
+const authoredKeys = Object.freeze([
+	Object.freeze({ at: 0.5, easing: 'easeIn', values: Object.freeze({ tx: 10, scaleX: -2 }) }),
+	Object.freeze({ at: 1, values: Object.freeze({ opacity: 5, __unknown: 9 }) }),
+	Object.freeze({ at: 0.5, easing: 'easeOut', values: Object.freeze({ ty: 20, tx: 30, hue: NaN }) }),
+	Object.freeze({ at: -0.1, values: { tx: 40 } }), { at: Infinity }, { at: '0.5' }, null
+]);
+const normalizedKeys = Animation.normalizeKeys(authoredKeys);
+assert.deepStrictEqual(normalizedKeys, [
+	{ at: 0, easing: 'linear', values: { opacity: 1 } },
+	{ at: 0.5, easing: 'easeOut', values: { tx: 30, scaleX: -2, ty: 20 } }
+]);
+normalizedKeys[1].values.tx = 999;
+assert.strictEqual(authoredKeys[0].values.tx, 10);
+const keyedEase = { type: 'custom', keys: [{ at: 0, easing: 'easeIn', values: { tx: 0 } }, { at: 0.5, values: { tx: 100 } }] };
+assert.strictEqual(Animation.sampleAt(keyedEase, 250).tx, 25, 'Outgoing segment easing applies once');
+const steppedKeys = { type: 'custom', steps: 1, keys: [{ at: 0, easing: 'steps', values: { opacity: 1 } }, { at: 0.5, easing: 'steps', values: { opacity: 0 } }] };
+assert.strictEqual(Animation.sampleAt(steppedKeys, 499).opacity, 1);
+assert.strictEqual(Animation.sampleAt(steppedKeys, 500).opacity, 0);
+assert.strictEqual(Animation.sampleAt(steppedKeys, 999).opacity, 0);
+for (const direction of ['normal', 'reverse', 'alternate', 'alternate-reverse']) {
+	const data = { ...keyed, direction, phase: 0.2, delayMs: 100, easing: 'easeInOut', iterations: 2.5, fillMode: 'both' };
+	for (const time of [0, 99, 100, 500, 1250, 2200, 2400, 4000]) {
+		const progress = Animation.cycleProgress(data, time);
+		const sample = Animation.sampleAt(data, time);
+		const intrinsic = Animation.sampleAt({ ...keyed, delayMs: 0, phase: progress.eased, direction: 'normal' }, 0);
+		assert(near(sample.tx, intrinsic.tx));
+			assert(near(sample.opacity, intrinsic.opacity));
+	}
+	assert.strictEqual(Animation.cycleProgress(data, 99, { fill: false }), null);
+	assert.strictEqual(Animation.cycleProgress(data, 2400, { fill: false }), null);
+}
+const spinKeys = { type: 'custom', keys: [0, 0.25, 0.5, 0.75].map(at => ({ at, values: { rotate: at * 360, hue: at * 360 } })) };
+for (const time of [125, 375, 625, 875]) {
+	assert.strictEqual(Animation.sampleAt(spinKeys, time).rotate, time * 0.36);
+	assert.strictEqual(Animation.sampleAt(spinKeys, time).hue, time * 0.36);
+}
+const customStack = Animation.sampleAt([keyed, { type: 'pulse', amount: 30 }], 250);
+for (const direction of ['normal', 'reverse', 'alternate', 'alternate-reverse']) {
+	for (const easing of ['linear', 'easeIn', 'easeInOut', 'bounceOut', 'elasticOut']) {
+		const data = { ...keyed, direction, easing, delayMs: 100, phase: 0.2 };
+		for (const time of [1100, 1600, 2450]) for (const at of [0, 0.25, 0.6]) {
+			const found = Animation.timeAtProgress(data, at, time);
+			assert.notStrictEqual(found, null, `${direction}/${easing}/${at} has an occurrence`);
+			const progress = Animation.cycleProgress(data, found, { fill: false });
+			const actual = ((progress.eased % 1) + 1) % 1;
+			assert(Math.min(Math.abs(actual - at), 1 - Math.abs(actual - at)) < 1e-6, `${direction}/${easing}/${at}: ${actual}`);
+		}
+	}
+}
+assert.strictEqual(Animation.timeAtProgress({ ...keyed, easing: 'steps' }, 0.25, 500), null);
+assert.strictEqual(Animation.timeAtProgress({ ...keyed, snapMode: 'step' }, 0.25, 500), null);
+assert.strictEqual(Animation.timeAtProgress({ ...keyed, delayMs: 100 }, 0.25, 99), null);
+assert.strictEqual(Animation.timeAtProgress({ ...keyed, delayMs: 100, phase: 0.2, easing: 'bounceOut' }, 0.25, 100), null, 'A key before the trimmed first repetition is selected without seeking outside its run');
+assert.deepStrictEqual(customStack, Animation.composeSamples([Animation.sampleAt(keyed, 250), Animation.sampleAt({ type: 'pulse', amount: 30 }, 250)]));
+const customCalls = [];
+const customContext = Object.fromEntries(['translate', 'rotate', 'scale', 'transform'].map(method => [method, (...args) => customCalls.push([method, ...args])]));
+Animation.applyToContext(customContext, halfwayKey, 80, 40);
+assert.deepStrictEqual(customCalls[0], ['translate', halfwayKey.tx, halfwayKey.ty]);
+assert.deepStrictEqual(customCalls[3], ['scale', halfwayKey.scaleX, halfwayKey.scaleY]);
+assert(Animation.domTransformString(halfwayKey).includes(`rotate(${halfwayKey.rotate}deg)`));
+
+// Convert to custom, measured against the shipped defaults and tolerances.
+{
+	const fs = require('fs'), path = require('path'), vm = require('vm');
+	const context = { Math, Number, Infinity, navigator: { hardwareConcurrency: 4, userAgent: 'node' } };
+	vm.createContext(context);
+	for (const file of ['core/releases.js', 'core/fields.js', 'core/math.js', 'core/area.js', 'core/config.js', 'effects/easing.js', 'effects/animation.js']) {
+		vm.runInContext(fs.readFileSync(path.join(__dirname, '..', '..', 'js', file), 'utf8'), context);
+	}
+	const { Shipped, convert } = vm.runInContext('({ Shipped: GlitterAnimation, convert: CONFIG.tools.animation.convert })', context);
+	const offered = Object.values(Shipped.MOTION_REGISTRY).filter(motion => motion.convertible).map(motion => motion.id);
+	assert.deepStrictEqual(offered, ['breath', 'float', 'sway', 'dim', 'pulse', 'move', 'rotate', 'zoom', 'rainbow']);
+	const angular = id => Shipped.POSE_CHANNELS[id].interpolation === 'angle';
+	const gap = (id, a, b) => { const d = Math.abs(a - b); return angular(id) ? Math.min(((d % 360) + 360) % 360, 360 - ((d % 360) + 360) % 360) : d; };
+	const variants = [{}, { direction: 'alternate' }, { direction: 'reverse', phase: 0.3, delayMs: 120 }, { easing: 'bounceOut' }, { easing: 'steps', steps: 5 }, { amount: 200, distance: 2000, turns: 8, opacityFloor: 0 }];
+	for (const type of offered) for (const variant of variants) {
+		const source = Shipped.normalizeAnimation({ type, ...variant }), frozen = JSON.stringify(source);
+		const result = Shipped.convertToKeys(source);
+		assert(result, `${type} converts: ${JSON.stringify(variant)}`);
+		assert.strictEqual(JSON.stringify(source), frozen, 'Conversion leaves its source untouched');
+		const custom = result.animation;
+		assert.strictEqual(custom.type, 'custom');
+		assert(custom.keys.length >= 2 && custom.keys.length <= 64 && custom.keys.every(key => key.easing === 'linear'));
+		for (const key of ['periodMs', 'easing', 'steps', 'direction', 'iterations', 'delayMs', 'phase', 'fillMode', 'snapMode']) assert.strictEqual(custom[key], source[key], `${type} keeps ${key}`);
+		let worst = 0;
+		for (let index = 0; index <= 4000; index++) {
+			const time = -200 + index * (source.periodMs * 3 + 400) / 4000;
+			const a = Shipped.sampleAt(source, time), b = Shipped.sampleAt(custom, time);
+			for (const id of Object.keys(Shipped.POSE_CHANNELS)) worst = Math.max(worst, gap(id, a[id], b[id]) / convert.tolerance[id]);
+		}
+		assert(worst <= convert.maxError * 1.05, `${type} stays within the conversion limit: ${worst} ${JSON.stringify(variant)}`);
+		if (!result.error) assert(worst < 1e-3, `${type} reports an exact conversion only when it is one: ${worst}`);
+		if (!Object.keys(variant).length && ['rotate', 'rainbow'].includes(type)) assert.strictEqual(result.error, null, `${type} winds exactly`);
+		if (!Object.keys(variant).length && ['breath', 'float', 'pulse'].includes(type)) assert(result.error && worst <= 1.05, `${type} is approximate and within tolerance: ${worst}`);
+	}
+	assert.strictEqual(Shipped.convertToKeys({ type: 'rotate', turns: 3 }).animation.keys.length, 8, 'Rotation keeps its winding with steps under a half turn');
+	const snapped = Shipped.convertToKeys({ type: 'float', snapMode: 'pixel-snap' });
+	assert.strictEqual(snapped.animation.snapMode, 'pixel-snap');
+	assert(snapped.animation.keys.some(key => !Number.isInteger(key.values.ty)), 'Keys hold the unsnapped curve; the motion snaps it');
+	for (const type of Shipped.ANIMATION_TYPES.filter(type => !offered.includes(type))) assert.strictEqual(Shipped.convertToKeys({ type }), null, `${type} is not offered`);
+	for (const type of ['pulse', 'move', 'zoom', 'dim']) assert.strictEqual(Shipped.convertToKeys({ type, easing: 'elasticOut' }), null, `${type} refuses an overshooting half-wave`);
+	assert(Shipped.convertToKeys({ type: 'sway', easing: 'elasticOut' }), 'A full wave survives an overshoot');
+	assert.strictEqual(Shipped.convertToKeys({ type: 'pulse', amount: 0 }), null, 'An inactive preset has nothing to convert');
+}
+
+console.log(`animation-parity: ${types.length} presets and sparse Custom keys and conversions passed`);

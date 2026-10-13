@@ -1363,7 +1363,10 @@ function buildActionSet(set) {
 	if (set.hidden) row.hidden = true;
 	Object.entries(set.attrs || {}).forEach(([name, value]) => row.setAttribute(name, value));
 	set.actions.forEach((action) => {
+		if (action.feature && !isFeatureEnabled(action.feature)) return;
 		const button = document.createElement('button');
+		const layout = action.feature ? featureLayout(action.feature) : null;
+		if (layout) button.dataset.layout = layout;
 		button.type = 'button';
 		// A panel body is the content layer: its buttons are flat, and
 		// `primary` marks the one main action of a form.
@@ -1625,6 +1628,11 @@ function buildPanelItemContent(item, schema) {
 				option.textContent = entry.label;
 				option.selected = Boolean(entry.selected || entry.active);
 				option.disabled = Boolean(entry.disabled);
+				if (entry.feature) {
+					option.dataset.feature = entry.feature;
+					applyFeatureGates(option);
+					option.disabled = !isFeatureAvailable(entry.feature);
+				}
 				let parent = select;
 				if (entry.group) {
 					parent = optgroups.get(entry.group);

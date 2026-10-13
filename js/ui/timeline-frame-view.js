@@ -17,12 +17,13 @@ class TimelineFrameView {
 		this.frames = [];
 		APP_MEMORY_LEDGER.register({ id: 'timeline-frames', label: 'Timeline frame view', category: 'Preview caches', measure: () => this.frames.reduce((bytes, frame) => bytes + frame.width * frame.height * 4, 0) + this.compositor.getDecodedSourceBytes() });
 		this.editor.previewWrapper.addEventListener('pointerdown', () => {
+			if (this.editor.timelineKeyRecording?.active) return;
 			this.invalidate();
 			this.blocked = true;
 		}, true);
 	}
 
-	invalidate() {
+	invalidate({ keepFrame = false } = {}) {
 		if (this.exact) this.editor.animationTicker.setLoop(this.normalLoopMs);
 		this.generation++;
 		this.pending = null;
@@ -34,9 +35,11 @@ class TimelineFrameView {
 		this.frames = [];
 		this.done?.(); this.done = null;
 		this.dock.exact?.classList.remove('active');
-		this.canvas.hidden = true;
-		this.canvas.width = this.canvas.height = 0;
-		this.editor.previewWrapper.classList.remove('timeline-frame-active');
+		if (!keepFrame) {
+			this.canvas.hidden = true;
+			this.canvas.width = this.canvas.height = 0;
+			this.editor.previewWrapper.classList.remove('timeline-frame-active');
+		}
 		this.compositor.releaseDecodedSources();
 	}
 
@@ -51,12 +54,12 @@ class TimelineFrameView {
 			if (index !== this.drawnIndex || this.canvas.hidden) { this.draw(this.frames[index]); this.drawnIndex = index; }
 			return;
 		}
-		if (!ticker.paused || !ticker.holding || ms === 0) {
+		if (!ticker.paused || !ticker.holding || (ms === 0 && !this.editor.timelineKeyRecording?.active)) {
 			this.hide();
 			this.lastTime = null;
 			return;
 		}
-		if (this.lastTime === ms || this.dock.host.classList.contains('is-stale')) return;
+		if (this.lastTime === ms || (this.dock.host.classList.contains('is-stale') && !this.editor.timelineKeyRecording?.active)) return;
 		this.lastTime = ms;
 		this.pending = { ms, generation: this.generation };
 		if (this.scrubbing) return;
@@ -65,7 +68,8 @@ class TimelineFrameView {
 	}
 
 	paramsFor(generation, exact = false) {
-		const layers = this.editor.layers.filter(layer => layer.visible !== false);
+		let layers = this.editor.layers.filter(layer => layer.visible !== false);
+		if (this.editor.timelineKeyRecording?.active) layers = this.editor.timelineKeyRecording.previewLayers(layers);
 		const params = this.editor.getSceneSnapshotParams(layers);
 		params.callbacks.isCancelled = () => generation !== this.generation;
 		if (exact) {
@@ -92,7 +96,7 @@ class TimelineFrameView {
 				}
 				const frame = await this.compositor.composeFrameAt({ ...this.params, preparedContext: this.prepared, timestamp: ms });
 				const ticker = this.editor.animationTicker;
-				if (generation !== this.generation || this.pending || !this.dock.available || !ticker.paused || !ticker.holding || ticker.getCurrentTime() !== ms || ms === 0 || this.blocked) continue;
+				if (generation !== this.generation || this.pending || !this.dock.available || !ticker.paused || !ticker.holding || ticker.getCurrentTime() !== ms || (ms === 0 && !this.editor.timelineKeyRecording?.active) || this.blocked) continue;
 				this.canvas.width = frame.width; this.canvas.height = frame.height;
 				this.canvas.getContext('2d').putImageData(frame.imageData, 0, 0);
 				this.canvas.hidden = false;
@@ -120,6 +124,7 @@ class TimelineFrameView {
 	}
 
 	playExact() {
+		this.editor.timelineKeyRecording?.end();
 		if (this.exact || this.done) { this.invalidate(); return; }
 		if (!this.dock.available || this.dock.host.classList.contains('is-stale')) return;
 		this.invalidate();

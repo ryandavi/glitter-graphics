@@ -66,6 +66,7 @@ class AnimationTicker {
 	// Moves the playhead. Frozen, every target is repainted there; playing,
 	// the clock carries on from there.
 	seek(ms) {
+		if (this.editor.timelineKeyRecording?.drag) this.editor.timelineKeyRecording.finish(true);
 		if (isFeatureAvailable('timeline')) this.editor.timelineDock?.frameView?.seek();
 		this.heldMs = this._wrap(Number(ms) || 0);
 		if (!this._isPreviewPaused() && this.timelineStartedAt != null) this.timelineStartedAt = performance.now() - this.heldMs;
@@ -192,6 +193,12 @@ function paintLayerAnimationPreview(layer, elapsed, wrapper, context) {
 		tx: (Math.cos(radians) * canvasTx - Math.sin(radians) * canvasTy) * (transform.flipX ? -1 : 1),
 		ty: (Math.sin(radians) * canvasTx + Math.cos(radians) * canvasTy) * (transform.flipY ? -1 : 1)
 	};
+	const raster = LAYER_UI_CONFIG[layer.type]?.rasterizesScale ? getCommittedRasterScale(context.editor, layer) : { x: 100, y: 100 };
+	const sx = transform.scale.x / raster.x, sy = transform.scale.y / raster.y;
+	if (Math.abs(sx - sy) > CONFIG.ui.timeline.keySingularTolerance) {
+		const matrix = local.matrix || GlitterAnimation.sampleMatrix(local);
+		domSample.matrix = { a: matrix.a, b: matrix.b * sy / sx, c: matrix.c * sx / sy, d: matrix.d, e: 0, f: 0 };
+	}
 	if (sample.matrix) domSample.matrix = { ...sample.matrix, e: domSample.tx, f: domSample.ty };
 	wrapper.style.transform = GlitterAnimation.domTransformString(domSample);
 	wrapper.style.opacity = String(sample.opacity);
@@ -277,7 +284,7 @@ function syncLayerAnimationPreview(element, layer, ticker) {
 	});
 	ticker.register(layer.id, {
 		targetId: layer.id,
-		getData: () => layer.animations,
+		getData: () => editor.timelineKeyRecording?.previewAnimations(layer) || layer.animations,
 		getLayer: () => layer,
 		getWrapper: () => wrapper
 	});

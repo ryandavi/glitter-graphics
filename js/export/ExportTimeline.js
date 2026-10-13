@@ -79,7 +79,7 @@ class AuthoredAnimationSource {
 }
 
 class ProceduralAnimationSource {
-	constructor({ key, label = null, rowLabel = null, ownerLayerId = null, effectSlot = null, naturalPeriod, phase = 0, direction = 'normal', cycleMarks, preferredSamplingRate, sampler, resolvedPeriod = null, setPeriod = null, setRun = null, setPhase = null, periodRange = null, resolvePeriod = null, nonLooping = false, run = null, closesAt = null }) {
+	constructor({ key, label = null, rowLabel = null, ownerLayerId = null, effectSlot = null, naturalPeriod, phase = 0, direction = 'normal', cycleMarks, keyTrack = null, preferredSamplingRate, sampler, resolvedPeriod = null, setPeriod = null, setRun = null, setPhase = null, periodRange = null, resolvePeriod = null, nonLooping = false, run = null, closesAt = null }) {
 		this.kind = 'procedural';
 		this.key = key;
 		this.label = label;
@@ -91,6 +91,7 @@ class ProceduralAnimationSource {
 		this.phase = Number(phase) || 0;
 		this.direction = direction;
 		this.cycleMarks = cycleMarks;
+		this.keyTrack = keyTrack;
 		this.preferredSamplingRate = Math.max(1, Number(preferredSamplingRate));
 		this.sampler = sampler;
 		Object.assign(this, { setPeriod, setRun, setPhase, periodRange, resolvePeriod, nonLooping, run, closesAt });
@@ -100,7 +101,7 @@ class ProceduralAnimationSource {
 		return new ProceduralAnimationSource({
 			key: this.key,
 			label: this.label,
-			rowLabel: this.rowLabel, cycleMarks: this.cycleMarks, direction: this.direction,
+			rowLabel: this.rowLabel, cycleMarks: this.cycleMarks, keyTrack: this.keyTrack, direction: this.direction,
 			ownerLayerId: this.ownerLayerId,
 			effectSlot: this.effectSlot,
 			naturalPeriod: this.naturalPeriod,
