@@ -16,6 +16,18 @@ function buildMenuItem({ label, run = null, title = '', role = 'menuitem', curre
 	return button;
 }
 
+function buildMenuSeparator() {
+	const node = document.createElement('div');
+	node.className = 'app-menu-separator'; node.setAttribute('role', 'separator');
+	return node;
+}
+
+function buildMenuLabel(text) {
+	const node = document.createElement('div');
+	node.className = 'app-menu-group-label'; node.textContent = text;
+	return node;
+}
+
 // `liftHost` is a bar that forms its own stacking context: it carries
 // `.has-open-menu` while the panel is open so the menu can rise above its
 // neighbours.

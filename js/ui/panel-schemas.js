@@ -79,10 +79,12 @@ const ANIMATION_PRESET_OPTIONS = Object.values(GlitterAnimation.MOTION_REGISTRY)
 		selected: motion.id === CONFIG.tools.animation.defaultType
 	}));
 
+const KEY_POSE_ACTION = Object.freeze({ label: 'Pose keys', icon: 'hand-pointer', history: 'Pose motion key' });
+
 const ANIMATION_EASING_OPTIONS = [
-	{ value: 'linear', label: 'Linear' }, { value: 'ease', label: 'Ease' }, { value: 'easeIn', label: 'Ease in' },
-	{ value: 'easeOut', label: 'Ease out' }, { value: 'easeInOut', label: 'Ease in-out' },
-	{ value: 'bounceOut', label: 'Bounce out' }, { value: 'elasticOut', label: 'Elastic out' }, { value: 'steps', label: 'Steps' }
+	{ value: 'linear', label: 'Linear', shape: 'diamond' }, { value: 'ease', label: 'Ease', shape: 'rounded' }, { value: 'easeIn', label: 'Ease in', shape: 'rounded' },
+	{ value: 'easeOut', label: 'Ease out', shape: 'rounded' }, { value: 'easeInOut', label: 'Ease in-out', shape: 'rounded' },
+	{ value: 'bounceOut', label: 'Bounce out', shape: 'rounded' }, { value: 'elasticOut', label: 'Elastic out', shape: 'rounded' }, { value: 'steps', label: 'Steps', shape: 'square' }
 ];
 
 const ANCHOR_SELECT_OPTIONS = Object.freeze([
@@ -296,7 +298,7 @@ function createKeyValueRows(id) {
 
 function createAnimationSectionSpec(prefix) {
 	const id = (suffix) => `${prefix}Anim${suffix}`;
-	const sliders = (keys, hidden = false) => GlitterAnimation.ANIMATION_CONTROLS.filter((control) => keys.includes(control.key))
+	const sliders = (keys, hidden = false) => keys.map(key => GlitterAnimation.ANIMATION_CONTROLS.find(control => control.key === key))
 		.map((control) => ({ kind: 'slider', id: id(control.suffix), slider: control.field, rowId: id(`${control.suffix}Row`), hidden }));
 	return {
 		// Toggle-gated like every effect section: the shared `is-collapsed`
@@ -306,7 +308,7 @@ function createAnimationSectionSpec(prefix) {
 		toggle: { id: id('Enabled'), label: '', title: 'Enable animation' },
 		sets: [
 			{ rows: [
-				{ kind: 'host', id: id('Stack'), classes: 'segmented-control animation-stack', attrs: { hidden: 'hidden' } },
+				{ kind: 'host', id: id('Stack'), classes: 'animation-stack', attrs: { hidden: 'hidden' } },
 				{ kind: 'select', id: id('Type'), label: 'Preset', ariaLabel: 'Animation type', options: ANIMATION_PRESET_OPTIONS,
 					stepper: {
 						prev: { id: id('PresetPrev'), label: 'Previous preset', icon: 'chevron-left', title: 'Previous preset' },
@@ -314,27 +316,31 @@ function createAnimationSectionSpec(prefix) {
 					} },
 				{ kind: 'note', id: id('LoopHint'), classes: 'animation-loop-hint' }
 			] },
+			{ label: 'Timing', rows: [
+				{ kind: 'host', id: id('TimingStrip'), classes: 'animation-timing-strip' },
+				...sliders(['delayMs', 'periodMs']),
+				{ kind: 'field', id: id('Iterations'), type: 'number', ...FIELDS.animIterations, toggle: { id: id('IterationsForever'), label: 'Forever', title: 'Repeat forever' } },
+				{ kind: 'select', id: id('Easing'), label: 'Easing', options: ANIMATION_EASING_OPTIONS },
+				{ kind: 'field', id: id('Steps'), type: 'number', label: 'Steps', ...FIELDS.animSteps, rowId: id('StepsRow') }
+			] },
 			{ label: 'Movement', rows: [
-				// Repeats follows Duration: one cycle's length, then how many.
-				...GlitterAnimation.ANIMATION_CONTROLS.filter((control) => control.field && !['gap', 'delayMs', 'phase', 'anchorX', 'anchorY'].includes(control.key))
-					.flatMap((control) => [
-						{ kind: 'slider', id: id(control.suffix), slider: control.field, rowId: id(`${control.suffix}Row`) },
-						...(control.key === 'periodMs' ? [{ kind: 'field', id: id('Iterations'), type: 'number', ...FIELDS.animIterations,
-							toggle: { id: id('IterationsForever'), label: 'Repeat forever', title: 'Repeat forever' } }] : [])
-					]),
+				...sliders(['amount', 'angle', 'distance', 'radius', 'turns', 'duty', 'opacityFloor']),
 				{ kind: 'select', id: id('Repeat'), label: 'Repeat', rowId: id('RepeatRow'), hidden: true,
 					hint: 'None leaves the canvas before it returns. Wrap enters the opposite edge as it leaves. Tile fills the canvas with copies.',
 					options: [{ value: 'none', label: 'None' }, { value: 'wrap', label: 'Wrap' }, { value: 'tile', label: 'Tile' }] },
 				...sliders(['gap'], true)
 			] },
+			{ rows: [{ kind: 'note', id: id('KeyDesktopNote'), hidden: true, text: 'Custom keys are edited on desktop.' }] },
 			{ id: id('KeySet'), label: 'Key', feature: 'timeline', hidden: true, rows: [
+				{ kind: 'host', id: id('KeyStrip'), classes: 'animation-key-strip' },
 				{ kind: 'select', id: id('KeySelect'), label: 'Key', options: [],
 					stepper: {
 						prev: { id: id('KeyPrev'), label: 'Previous key', icon: 'chevron-left', title: 'Previous key' },
 						next: { id: id('KeyNext'), label: 'Next key', icon: 'chevron-right', title: 'Next key' }
 					} },
 				{ kind: 'slider', id: id('KeyPosition'), slider: 'animKeyPosition' },
-				{ kind: 'select', id: id('KeyEasing'), label: 'Easing', hint: 'How it travels from this key to the next', options: ANIMATION_EASING_OPTIONS }
+				{ kind: 'select', id: id('KeyEasing'), label: 'Easing', hint: 'How it travels from this key to the next', options: ANIMATION_EASING_OPTIONS },
+				{ kind: 'field', id: id('KeySteps'), rowId: id('KeyStepsRow'), type: 'number', ...FIELDS.animSteps, hidden: true }
 			] },
 			{ id: id('KeyValues'), label: 'Values', feature: 'timeline', hidden: true, rows: [
 				...createKeyValueRows(id),
@@ -344,7 +350,7 @@ function createAnimationSectionSpec(prefix) {
 				{ id: id('KeyAddValue'), label: 'Add value', icon: 'plus', menu: true }
 			] },
 			{ id: id('KeyActions'), feature: 'timeline', hidden: true, actions: [
-				{ id: id('KeyRecord'), label: 'Edit keys', icon: 'timeline' },
+				{ id: id('KeyRecord'), label: KEY_POSE_ACTION.label, icon: KEY_POSE_ACTION.icon },
 				{ id: id('KeyAdd'), label: 'Add key', icon: 'plus' },
 				{ id: id('KeyDelete'), label: 'Delete key', icon: 'trash' }
 			] },
@@ -358,16 +364,12 @@ function createAnimationSectionSpec(prefix) {
 		],
 		advancedId: id('Advanced'),
 		advanced: [
-			{ label: 'Timing', rows: [
-				{ kind: 'select', id: id('Easing'), label: 'Easing', options: ANIMATION_EASING_OPTIONS },
-				{ kind: 'field', id: id('Steps'), type: 'number', label: 'Steps', ...FIELDS.animSteps, rowId: id('StepsRow') },
+			{ label: 'Playback', rows: [
+				...sliders(['phase']),
 				{ kind: 'select', id: id('Direction'), label: 'Direction', options: [
 					{ value: 'normal', label: 'Normal' }, { value: 'reverse', label: 'Reverse' },
 					{ value: 'alternate', label: 'Alternate' }, { value: 'alternate-reverse', label: 'Alternate reverse' }
-				] }
-			] },
-			{ label: 'Start', rows: [
-				...sliders(['delayMs', 'phase']),
+				] },
 				{ kind: 'select', id: id('FillMode'), label: 'Fill', ariaLabel: 'Fill mode',
 					hint: 'What the layer does before the delay and after the last repeat.',
 					options: [
@@ -435,6 +437,7 @@ const PANEL_SCHEMAS = {
 					] }, { id: 'animationLoopChangeSet', hidden: true, rows: [
 						{ kind: 'note', id: 'animationLoopChanges', classes: 'is-result' }
 					] }, { id: 'animationLoopActionSet', hidden: true, actions: [
+						{ id: 'animationOpenTimeline', label: 'Open timeline', icon: 'timeline', feature: 'timeline' },
 						{ id: 'fitAnimationsToLoop', label: 'Fit animations to loop', primary: true },
 						{ id: 'animationFrameOptions', label: 'Frame options', title: 'Timings that export fewer frames', menu: true },
 						{ id: 'resetAnimationLoop', label: 'Restore previous timing', title: 'Restore the timing saved before the first loop fit' }

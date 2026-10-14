@@ -9,7 +9,7 @@ const EDITOR_KEYBOARD_METHODS = {
 			window.removeEventListener('pointerdown', tap.use, { capture: true });
 			this.endTemporaryHandTool();
 			// A tap, not a hold or a pan, plays and pauses while the timeline is open.
-			if (!tap.used && performance.now() - tap.at <= CONFIG.ui.timeline.spaceTapMs && isFeatureAvailable('timeline') && this.timelineDock?.isOpen) {
+			if (!tap.used && performance.now() - tap.at <= CONFIG.ui.timeline.spaceTapMs && this.timelineDock?.available) {
 				this.animationPanel.setPaused(!this.animationTicker.paused);
 			}
 		}

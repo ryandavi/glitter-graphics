@@ -7,7 +7,7 @@ const vm = require('vm');
 const root = path.resolve(__dirname, '../..');
 const motion = { periodMs: 1000, easing: 'linear', amount: 10, direction: 'normal', iterations: Infinity };
 const context = vm.createContext({ isLayerFullyLocked: layer => layer.locked, CONFIG: { tools: { animation: { defaultType: 'pulse', presets: { pulse: motion, custom: motion }, jitterQuantMs: 60, keySeek: { samples: 128, iterations: 24, tolerance: 1e-7 } } } } });
-for (const file of ['js/core/format.js', 'js/core/gif-decode.js', 'js/export/ExportTimeline.js', 'js/core/math.js', 'js/effects/easing.js', 'js/effects/animation.js', 'js/ui/timeline-view.js']) vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), context);
+for (const file of ['js/core/fields.js', 'js/core/format.js', 'js/core/gif-decode.js', 'js/export/ExportTimeline.js', 'js/core/math.js', 'js/effects/easing.js', 'js/effects/animation.js', 'js/ui/timeline-view.js']) vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), context);
 const { view, Authored, Procedural } = vm.runInContext('({ view: TimelineView, Authored: AuthoredAnimationSource, Procedural: ProceduralAnimationSource })', context);
 const json = value => JSON.parse(JSON.stringify(value));
 assert.equal(vm.runInContext('formatSeconds(1230)', context), '1.23 s');
@@ -47,7 +47,7 @@ for (const [name, options] of Object.entries({
 	}
 }
 const stepped = keyed({ easing: 'steps', steps: 4 });
-assert.deepStrictEqual(json(view.keyToTime(keyRow(stepped), stepped, 0.35, 0)), { ms: 560, untimed: true }, 'A stepping motion draws its keys at their linear place');
+assert.deepStrictEqual(json(view.keyToTime(keyRow(stepped), stepped, 0.35, 0)), { ms: 560, untimed: false }, 'Key positions stay in time even when motion easing was Steps');
 assert(Math.abs(view.timeToKey(keyRow(stepped), stepped, 560, 0) - 0.35) < 1e-9);
 assert.strictEqual(view.timeToKey(keyRow(plain), plain, -50, 0), 0, 'A drag stays inside the cycle');
 for (const ms of [-500, 0, 600, 4800]) assert.strictEqual(view.xToTime(view.timeToX(ms, 135), 135), ms);
@@ -164,8 +164,8 @@ assert.equal(view.timeToCycle(outside, 4800), null, 'A delayed bar has no cycle 
 assert.deepEqual(json(view.cycleStarts(outside, 4800)), []);
 assert.deepEqual(json(view.barBox(outside, 100, config)), { left: 600, width: 12, gripsOutside: true, leftGripInside: false });
 vm.runInContext(fs.readFileSync(path.join(root, 'js/ui/timeline-dock.js'), 'utf8'), context);
-const seamTitle = vm.runInContext('TimelineDock.prototype.seamTitle', context);
-assert.equal(seamTitle.call({ model: { loopMs: 4800 } }, outside), 'Starts after the loop ends, so it never plays.');
+const seamTitle = view.seamTitle;
+assert.equal(seamTitle.call(view, outside, 4800), 'Starts after the loop ends, so it never plays.');
 assert.equal(view.hasGripRoom(23.99, config), false, 'A cycle needs room for two grips and a body');
 assert.equal(view.hasGripRoom(24, config), true);
 for (const cycleMs of [0, -1, Infinity, NaN]) {
@@ -228,4 +228,10 @@ assert.strictEqual(view.dragReadout('key', full, 0.35, 0.2, { kind: 'key' }), 'K
 assert.strictEqual(view.rowInfo({ kind: 'authored', frameCount: 12, cycleMs: 960 }), '12 frames · 0.96 s');
 assert.strictEqual(view.rowInfo({ kind: 'procedural', cycleMs: 1000, phase: 0, source: { run: { start: 0, end: 2000 } } }), '2.00 s · 2 × 1.00 s');
 assert.strictEqual(view.rowInfo({ kind: 'procedural', cycleMs: 1200, phase: 0, source: { run: { start: 0, end: Infinity } } }), '1.20 s');
+assert.deepEqual(json(view.wheelZoom(0, 3, 100)), { steps: 0, remainder: 3 });
+assert.deepEqual(json(view.wheelZoom(97, 6, 100)), { steps: 1, remainder: 3 });
+assert.deepEqual(json(view.wheelZoom(90, -3, 100)), { steps: 0, remainder: -3 });
+assert.deepEqual(json(view.wheelZoom(-90, -220, 100)), { steps: -3, remainder: -10 });
+assert(view.handleTitle({ can: { run: true, period: true } }, 'right').includes('keeping its repeat count'));
+assert(view.barTitle({ label: 'Rotate', cycleMs: 1200, exportCycleMs: 1000, closes: true, can: { run: true }, source: { run: { start: 0, end: Infinity } } }, 4800).includes('Export uses 1.00 s.'));
 console.log('PASS timeline grouping, metadata, seams, geometry, cycle and key conversions, playhead, gesture math and drag words');

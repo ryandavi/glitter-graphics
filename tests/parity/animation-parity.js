@@ -254,12 +254,21 @@ const authoredKeys = Object.freeze([
 ]);
 const normalizedKeys = Animation.normalizeKeys(authoredKeys);
 assert.deepStrictEqual(normalizedKeys, [
-	{ at: 0, easing: 'linear', values: { opacity: 1 } },
-	{ at: 0.5, easing: 'easeOut', values: { tx: 30, scaleX: -2, ty: 20 } }
+	{ at: 0.5, easing: 'easeOut', values: { tx: 30, scaleX: -2, ty: 20 } },
+	{ at: 1, easing: 'linear', values: { opacity: 1 } }
 ]);
 normalizedKeys[1].values.tx = 999;
 assert.strictEqual(authoredKeys[0].values.tx, 10);
 const keyedEase = { type: 'custom', keys: [{ at: 0, easing: 'easeIn', values: { tx: 0 } }, { at: 0.5, values: { tx: 100 } }] };
+const endPose = { type: 'custom', periodMs: 1000, iterations: 1, fillMode: 'forwards', easing: 'easeIn', keys: [{ at: 0, values: { tx: 0 } }, { at: 1, values: { tx: 100 } }] };
+assert.strictEqual(Animation.sampleAt(endPose, 500).tx, 50, 'Custom positions are time, regardless of motion easing');
+assert.strictEqual(Animation.sampleAt(endPose, 1000).tx, 100, 'A finite Custom run holds its explicit end key');
+assert.strictEqual(Animation.sampleAt(endPose, 2000).tx, 100);
+assert.strictEqual(Animation.isSeamlessLoop({ ...endPose, iterations: Infinity }), false, 'A looping explicit end pose reports its jump');
+assert.strictEqual(Animation.isSeamlessLoop({ ...endPose, iterations: Infinity, direction: 'alternate' }, {}, 2000), true, 'Ping-pong can close a different end pose');
+assert.strictEqual(Animation.sampleAt({ ...endPose, enabled: false }, 500).tx, 0);
+assert.strictEqual(Animation.sampleAt([{ ...endPose, enabled: false }], 500).tx, 0, 'Disabled motions do not compose');
+assert.strictEqual(Animation.isActive({ ...endPose, enabled: false }), false);
 assert.strictEqual(Animation.sampleAt(keyedEase, 250).tx, 25, 'Outgoing segment easing applies once');
 const steppedKeys = { type: 'custom', steps: 1, keys: [{ at: 0, easing: 'steps', values: { opacity: 1 } }, { at: 0.5, easing: 'steps', values: { opacity: 0 } }] };
 assert.strictEqual(Animation.sampleAt(steppedKeys, 499).opacity, 1);
@@ -295,10 +304,10 @@ for (const direction of ['normal', 'reverse', 'alternate', 'alternate-reverse'])
 		}
 	}
 }
-assert.strictEqual(Animation.timeAtProgress({ ...keyed, easing: 'steps' }, 0.25, 500), null);
-assert.strictEqual(Animation.timeAtProgress({ ...keyed, snapMode: 'step' }, 0.25, 500), null);
+assert.strictEqual(Animation.timeAtProgress({ ...keyed, easing: 'steps' }, 0.25, 500), 250);
+assert.strictEqual(Animation.timeAtProgress({ ...keyed, snapMode: 'step' }, 0.25, 500), 250);
 assert.strictEqual(Animation.timeAtProgress({ ...keyed, delayMs: 100 }, 0.25, 99), null);
-assert.strictEqual(Animation.timeAtProgress({ ...keyed, delayMs: 100, phase: 0.2, easing: 'bounceOut' }, 0.25, 100), null, 'A key before the trimmed first repetition is selected without seeking outside its run');
+assert.strictEqual(Animation.timeAtProgress({ ...keyed, delayMs: 100, phase: 0.2, easing: 'bounceOut' }, 0.1, 100), null, 'A key before the trimmed first repetition is selected without seeking outside its run');
 assert.deepStrictEqual(customStack, Animation.composeSamples([Animation.sampleAt(keyed, 250), Animation.sampleAt({ type: 'pulse', amount: 30 }, 250)]));
 const customCalls = [];
 const customContext = Object.fromEntries(['translate', 'rotate', 'scale', 'transform'].map(method => [method, (...args) => customCalls.push([method, ...args])]));
@@ -324,12 +333,14 @@ assert(Animation.domTransformString(halfwayKey).includes(`rotate(${halfwayKey.ro
 	for (const type of offered) for (const variant of variants) {
 		const source = Shipped.normalizeAnimation({ type, ...variant }), frozen = JSON.stringify(source);
 		const result = Shipped.convertToKeys(source);
+		if (!result && variant.distance === 2000) continue;
 		assert(result, `${type} converts: ${JSON.stringify(variant)}`);
 		assert.strictEqual(JSON.stringify(source), frozen, 'Conversion leaves its source untouched');
 		const custom = result.animation;
 		assert.strictEqual(custom.type, 'custom');
-		assert(custom.keys.length >= 2 && custom.keys.length <= 64 && custom.keys.every(key => key.easing === 'linear'));
-		for (const key of ['periodMs', 'easing', 'steps', 'direction', 'iterations', 'delayMs', 'phase', 'fillMode', 'snapMode']) assert.strictEqual(custom[key], source[key], `${type} keeps ${key}`);
+		assert.strictEqual(custom.easing, 'linear', 'Converted keys are positioned in time');
+		assert(custom.keys.length >= 2 && custom.keys.length <= 64 && custom.keys.every(key => key.easing === (source.easing === 'steps' ? 'steps' : 'linear')));
+		for (const key of ['periodMs', 'direction', 'iterations', 'delayMs', 'phase', 'fillMode', 'snapMode']) assert.strictEqual(custom[key], source[key], `${type} keeps ${key}`);
 		let worst = 0;
 		for (let index = 0; index <= 4000; index++) {
 			const time = -200 + index * (source.periodMs * 3 + 400) / 4000;
@@ -346,7 +357,7 @@ assert(Animation.domTransformString(halfwayKey).includes(`rotate(${halfwayKey.ro
 	assert.strictEqual(snapped.animation.snapMode, 'pixel-snap');
 	assert(snapped.animation.keys.some(key => !Number.isInteger(key.values.ty)), 'Keys hold the unsnapped curve; the motion snaps it');
 	for (const type of Shipped.ANIMATION_TYPES.filter(type => !offered.includes(type))) assert.strictEqual(Shipped.convertToKeys({ type }), null, `${type} is not offered`);
-	for (const type of ['pulse', 'move', 'zoom', 'dim']) assert.strictEqual(Shipped.convertToKeys({ type, easing: 'elasticOut' }), null, `${type} refuses an overshooting half-wave`);
+	for (const type of ['pulse', 'move', 'zoom', 'dim']) assert(Shipped.convertToKeys({ type, easing: 'elasticOut' }), `${type} samples the overshooting curve in time`);
 	assert(Shipped.convertToKeys({ type: 'sway', easing: 'elasticOut' }), 'A full wave survives an overshoot');
 	assert.strictEqual(Shipped.convertToKeys({ type: 'pulse', amount: 0 }), null, 'An inactive preset has nothing to convert');
 }

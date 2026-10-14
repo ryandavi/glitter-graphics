@@ -114,6 +114,8 @@
 		"js/ui/settings-renderer.js",
 		"js/ui/settings-store.js",
 		"js/ui/menu-popover.js",
+		"js/ui/timeline-view.js",
+		"js/ui/key-strip.js",
 		"js/ui/keyboard.js",
 		"js/ui/clipboard.js",
 		"js/editor/document-io.js",
@@ -221,7 +223,6 @@
 		"js/app.js"
 	],
 	"timeline": [
-		"js/ui/timeline-view.js",
 		"js/ui/timeline-frame-view.js",
 		"js/ui/timeline-key-lane.js",
 		"js/ui/timeline-key-recording.js",

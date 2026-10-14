@@ -1,11 +1,11 @@
 'use strict';
 
 const DRAG_KINDS = {
-	left: { capability: 'run', setter: 'setRun', commitLabel: 'Trim animation', label: 'Starts at', text: (row, run) => formatSeconds(run.start) },
-	move: { capability: 'run', setter: 'setRun', commitLabel: 'Move animation', label: 'Starts at', text: (row, run) => formatSeconds(run.start) },
-	right: { capability: 'run', setter: 'setRun', commitLabel: 'Trim animation', label: 'Repeats', text: (row, run) => TimelineView.repeatsText(TimelineView.repeats(row, run)) },
-	slip: { capability: 'phase', setter: 'setPhase', commitLabel: 'Slip animation', label: 'Start offset', text: (row, value) => `${Number((value * 100).toFixed(1))}%` },
-	period: { capability: 'period', setter: 'setPeriod', commitLabel: 'Change animation speed', label: 'Cycle', text: (row, ms) => formatSeconds(ms) },
+	left: { capability: 'run', setter: 'setRun', commitLabel: 'Trim animation', label: FIELDS.animDelay.label, text: (row, run) => formatSeconds(run.start) },
+	move: { capability: 'run', setter: 'setRun', commitLabel: 'Move animation', label: FIELDS.animDelay.label, text: (row, run) => formatSeconds(run.start) },
+	right: { capability: 'run', setter: 'setRun', commitLabel: 'Trim animation', label: FIELDS.animIterations.label, text: (row, run) => TimelineView.repeatsText(TimelineView.repeats(row, run)) },
+	slip: { capability: 'phase', setter: 'setPhase', commitLabel: 'Slip animation', label: FIELDS.animPhase.label, text: (row, value) => `${Number((value * 100).toFixed(1))}%` },
+	period: { capability: 'period', setter: 'setPeriod', commitLabel: 'Change animation speed', label: FIELDS.animDuration.label, text: (row, ms) => formatSeconds(ms) },
 	duration: {
 		capability: 'period', commitLabel: 'Change animation length', label: 'Lasts',
 		setter: (dock, value, row) => { row.source.setPeriod(value.period); row.source.setRun(value.run); },
@@ -40,7 +40,7 @@ const TimelineView = {
 				frameCount: source.frameCount, cycleMarks: source.cycleMarks || [],
 				closes: sourceSeamError(source, loopMs, exportCycleMs) < 1e-8, nonLooping: source.nonLooping,
 				can: { period: typeof source.setPeriod === 'function', run: typeof source.setRun === 'function', phase: typeof source.setPhase === 'function' },
-				source
+				curve: this.motionCurve(source, cycleMs), source
 			});
 			groups.set(source.ownerLayerId, rows);
 		});
@@ -51,6 +51,29 @@ const TimelineView = {
 				layerId: layer.id, name: layer.name, locked: isLayerFullyLocked(layer), rows: groups.get(layer.id) || []
 			}))
 		};
+	},
+	motionCurve(source, cycleMs) {
+		if (source.kind !== 'procedural' || !source.sampler || !/^animation-\d+$/.test(source.effectSlot)) return null;
+		const count = CONFIG.ui.timeline.curveSamples;
+		const samples = Array.from({ length: count + 1 }, (_, i) => source.sampler((source.run?.start || 0) + (Math.ceil(source.phase || 0) - (source.phase || 0) + i / count) * cycleMs, cycleMs)?.sample);
+		if (!samples.every(Boolean)) return null;
+		let best = null;
+		for (const id of Object.keys(GlitterAnimation.POSE_CHANNELS)) {
+			const values = samples.map(sample => sample[id]), min = Math.min(...values), max = Math.max(...values);
+			const range = (max - min) / CONFIG.tools.animation.convert.tolerance[id];
+			if (range > (best?.range || 0)) best = { range, min, max, values };
+		}
+		if (!best) return null;
+		const points = best.values.map((value, i) => `${i / count * 100},${90 - (value - best.min) / (best.max - best.min) * 80}`).join(' ');
+		return `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points="${points}" fill="none" stroke="white" stroke-opacity=".35" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg>`)}")`;
+	},
+	modelSignature(model) {
+		return JSON.stringify({ ...model, loopFit: undefined, groups: model.groups.map(group => ({ ...group, rows: group.rows.map(row => ({ ...row, source: { run: row.source.run, keys: row.source.keyTrack?.entry?.keys }, curve: row.curve })) })) });
+	},
+	wheelZoom(travel, delta, threshold) {
+		const total = travel && Math.sign(travel) !== Math.sign(delta) ? delta : travel + delta;
+		const steps = Math.trunc(total / threshold);
+		return { steps, remainder: total - steps * threshold };
 	},
 	timeToX(ms, pxPerSecond) { return ms * pxPerSecond / 1000; },
 	xToTime(px, pxPerSecond) { return px * 1000 / pxPerSecond; },
@@ -95,6 +118,37 @@ const TimelineView = {
 		const count = this.repeats({ ...row, cycleMs: period }, run);
 		return `${formatSeconds(run.end - run.start)} · ${this.repeatsText(count)} × ${formatSeconds(period)}`;
 	},
+	seamTitle(row, loopMs) {
+		if (row.startMs > loopMs) return 'Starts after the loop ends, so it never plays.';
+		if (row.nonLooping) return 'Still holding its last pose when the loop restarts.';
+		const time = TimelineView.timeToCycle({ ...row, cycleMs: row.exportCycleMs, endMs: Infinity }, loopMs);
+		if (!time) return 'Starts after the loop ends, so it never plays.';
+		return `Ends ${formatSeconds(time.progress * row.exportCycleMs)} into a ${formatSeconds(row.exportCycleMs)} cycle, so it jumps when the loop restarts.`;
+	},
+
+	barTitle(row, loopMs) {
+		let text = `${row.label}: ${this.rowInfo(row)}`;
+		const body = this.bodyDrag(row, false);
+		if (row.exportCycleMs !== row.cycleMs) text += `. Export uses ${formatSeconds(row.exportCycleMs)}.`;
+		if (!row.closes) text += ` ${TimelineView.seamTitle(row, loopMs)}`;
+		if (body === 'move') text += row.can.phase ? ' Drag to move it. Alt-drag to slip the motion inside it.' : ' Drag to move it.';
+		else if (body === 'slip') text += ' Drag to slip the motion inside it.';
+		return text;
+	},
+	handleTitle(row, side) {
+		let text = '';
+			if (side === 'left') text = 'Drag to change when it starts.';
+			else {
+				const kind = TimelineView.edgeDrag(row, side);
+				text = kind === 'duration' ? 'Drag to set how long it lasts, keeping its repeat count.'
+					: kind === 'period' ? 'Drag to stretch the cycle.' : 'Drag to trim repeats.';
+				if (row.can.run && row.can.period) {
+					text += ' Shift: change repeats at the same speed.';
+				}
+			}
+			text += ' Alt: no snapping';
+		return text;
+	},
 	rowInfo(row) {
 		if (row.kind === 'authored') return `${row.frameCount} frames · ${formatSeconds(row.cycleMs)}`;
 		return Number.isFinite(row.source.run?.end)
@@ -130,9 +184,7 @@ const TimelineView = {
 		const snap = typeof word === 'function' ? word(target) : word;
 		return `${label} ${now}${now === before ? '' : ` (was ${before})`}${snap ? ` · ${snap}` : ''}`;
 	},
-	// A key lives at a fraction of its motion's cycle; the lane draws it at the
-	// time the motion reaches that fraction in one cycle of the bar. A motion
-	// that steps has no such time, so its keys sit at their linear place.
+	// Key positions are times within a cycle; direction only reverses their placement.
 	keyDrawing(row) { return { ...row, cycleMs: row.exportCycleMs, endMs: Infinity }; },
 	keyEntry(row, entry) { return { ...entry, periodMs: row.exportCycleMs }; },
 	// The cycle the lane opens: the one a moment is in, or the first whole one.
@@ -147,22 +199,12 @@ const TimelineView = {
 		return { start, end: start + row.exportCycleMs };
 	},
 	keyToTime(row, entry, at, index) {
-		const { start, end } = this.cycleSpan(row, index);
-		const runEnd = row.source.run?.end ?? Infinity;
-		// A moment inside both the cycle and the run, for the search to start from.
-		const reference = Math.max(row.startMs, Math.min((start + end) / 2, runEnd - 1e-6));
-		const timed = reference >= start && reference < end ? GlitterAnimation.timeAtProgress(this.keyEntry(row, entry), at, reference) : null;
-		if (timed != null) return { ms: Math.max(start, Math.min(end, timed)), untimed: false };
-		return { ms: this.cycleToTime(this.keyDrawing(row), index, at), untimed: true };
+		return { ms: this.cycleToTime(this.keyDrawing(row), index, at), untimed: false };
 	},
 	timeToKey(row, entry, ms, index) {
-		const { start, end } = this.cycleSpan(row, index);
-		const time = Math.max(start, Math.min(end - 1e-6, ms));
-		const data = this.keyEntry(row, entry);
-		const stepped = data.easing === 'steps' || data.snapMode === 'step';
-		const progress = stepped ? null : GlitterAnimation.cycleProgress(data, time, { fill: false });
-		const at = progress ? progress.eased : this.timeToCycle(this.keyDrawing(row), Math.max(row.startMs, time))?.progress ?? 0;
-		return Math.max(0, Math.min(1, ((at % 1) + 1) % 1));
+		const span = this.cycleSpan(row, index);
+		const fraction = clampNumber((ms - span.start) / row.exportCycleMs, 0, 1);
+		return this.isReversed(row, index) ? 1 - fraction : fraction;
 	},
 	snapTime(ms, targets, thresholdMs) {
 		const nearby = targets.filter(target => Math.abs(target.ms - ms) <= thresholdMs);
@@ -228,21 +270,36 @@ const TimelineView = {
 	},
 	phaseFromSlip(row, deltaMs) { return ((row.phase - deltaMs / row.cycleMs) % 1 + 1) % 1; },
 	periodFromNotch(row, notchIndex, timeMs) { return (timeMs - row.startMs) / (notchIndex - row.phase); },
-	barActions(row, model) {
+	barActions(row, model, context = {}) {
 		const actions = [];
+		const playhead = context.playhead ?? 0;
+		if (row.can.run) {
+			actions.push({ id: 'once', label: 'Play once', checked: Math.abs(this.repeats(row) - 1) < 1e-6, run: () => row.source.setRun({ start: row.startMs, end: row.startMs + (1 - row.phase) * row.cycleMs }) },
+				{ id: 'forever', label: 'Repeat forever', checked: !Number.isFinite(row.source.run.end), run: () => row.source.setRun({ start: row.startMs, end: Infinity }) },
+				{ id: 'start', label: 'Start at playhead', run: () => row.source.setRun({ start: clampNumber(playhead, 0, FIELDS.animDelay.max * 1000), end: row.source.run.end }) },
+				{ id: 'end', label: 'End at playhead', disabled: playhead <= row.startMs, run: () => row.source.setRun({ start: row.startMs, end: playhead }) });
+		}
+		if (row.source.setDirection) for (const [direction, label] of [['normal', 'Normal'], ['reverse', 'Reverse'], ['alternate', 'Ping-pong']]) actions.push({ id: `direction-${direction}`, label, checked: row.direction === direction, run: () => row.source.setDirection(direction) });
 		const writePeriod = period => row.source.setPeriod(row.source.resolvePeriod ? row.source.resolvePeriod(period) : period);
 		if (row.can.period) {
 			const fit = model.loopFit?.candidates.find(candidate => candidate.duration === model.loopMs)?.fits.find(entry => entry.source.key === row.key && entry.fitted);
 			if (fit) actions.push({ id: 'fit', label: 'Fit to loop', changesPeriod: true, run: () => writePeriod(fit.fittedPeriod) });
-			actions.push({ id: 'match', label: 'Match cycle to...', commitLabel: 'Match cycle', choices: model.groups.flatMap(group => group.rows).filter(other => other.key !== row.key && other.cycleMs >= row.source.periodRange.min && other.cycleMs <= row.source.periodRange.max).map(other => ({ id: `match-${other.key}`, label: `${other.label} (${formatSeconds(other.cycleMs)})`, changesPeriod: true, run: () => writePeriod(other.cycleMs) })) });
 			if (row.source.fileCycleDuration) actions.push({ id: 'reset-speed', label: 'Reset speed', changesPeriod: true, run: () => writePeriod(row.source.fileCycleDuration) });
 		}
 		if (row.can.run) actions.push({ id: 'fill', label: 'Fill the loop', run: () => row.source.setRun({ start: 0, end: Infinity }) });
 		if (row.can.run || row.can.phase || row.can.period) actions.push({ id: 'reset', label: 'Reset timing', run: () => {
 			if (row.can.run) row.source.setRun({ start: 0, end: Infinity });
 			if (row.can.phase) row.source.setPhase(0);
+			if (row.source.setDirection) row.source.setDirection('normal');
 		} });
-		return actions;
+		if (context.copy) actions.push({ id: 'copy', label: 'Copy timing', commits: false, run: () => context.copy(row) }, { id: 'paste', label: 'Paste timing', disabled: !context.clipboard, changesPeriod: row.can.period, run: () => {
+			const timing = context.clipboard;
+			if (row.can.period) writePeriod(clampNumber(timing.cycle, row.source.periodRange.min, row.source.periodRange.max));
+			if (row.can.phase) row.source.setPhase(timing.phase);
+			if (row.source.setDirection) row.source.setDirection(timing.direction);
+			if (row.can.run && timing.run) row.source.setRun({ ...timing.run });
+		} });
+		return actions.map(action => ({ ...action, group: ['once', 'forever', 'start', 'end'].includes(action.id) ? 'Run' : action.id.startsWith('direction-') ? 'Direction' : ['copy', 'paste'].includes(action.id) ? 'Timing clipboard' : 'Loop' }));
 	},
 	cycleStarts(row, untilMs) {
 		const starts = [];

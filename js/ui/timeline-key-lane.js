@@ -29,7 +29,7 @@ class TimelineKeyLane {
 			this.ghost = null;
 			const action = 'btn-icon-simple icon-wrapper sm';
 			const label = this.dock.element('timeline-key-label');
-			this.record = this.dock.button(action, '', 'hand-pointer', () => {
+			this.record = this.dock.button(action, '', KEY_POSE_ACTION.icon, () => {
 				const recording = this.dock.keyRecording;
 				if (recording.active) recording.end(); else recording.begin(this.layer, this.entry);
 			});
@@ -39,7 +39,11 @@ class TimelineKeyLane {
 			// The cycle the keys are drawn in.
 			this.track = this.dock.element('timeline-key-track');
 			this.track.setAttribute('role', 'group'); this.track.setAttribute('aria-label', 'Motion keys inside one cycle');
-			this.track.addEventListener('pointerdown', event => this.begin(event));
+			const rowLayer = () => this.layer, rowEntry = () => this.entry;
+			this.strip = new KeyStrip(this.track, this.panel, {
+				get layer() { return rowLayer(); }, get entry() { return rowEntry(); },
+				begin: event => this.begin(event), place: (node, at) => this.place(node, at), dragging: () => Boolean(this.drag)
+			});
 			cell.appendChild(this.track);
 			this.cell = cell;
 			this.host.replaceChildren(label, cell);
@@ -51,49 +55,17 @@ class TimelineKeyLane {
 		if (!this.host?.isConnected || this.drag) return;
 		const keys = GlitterAnimation.normalizeKeys(this.entry.keys);
 		const focused = Boolean(document.activeElement?.closest('.timeline-key-track'));
-		const selected = this.panel.keyIndex(this.entry);
-		if (keys.length !== this.buttons.length || !this.ghost) {
-			this.buttons = keys.map(() => this.buildKey());
+		this.cycle = TimelineView.keyCycle(this.row, this.dock.editor.animationTicker.getPlayheadTime());
+		this.strip.update(); this.buttons = this.strip.buttons;
+		if (!this.ghost) {
 			this.ghost = this.dock.element('timeline-key is-ghost', undefined, 'span');
-			this.ghost.title = '100% repeats the key at 0%';
-			this.track.replaceChildren(...this.buttons, this.ghost);
+			this.ghost.title = '100% repeats the key at 0%'; this.track.appendChild(this.ghost);
 		}
-		keys.forEach((key, index) => {
-			const easing = ANIMATION_EASING_OPTIONS.find(option => option.value === key.easing).label;
-			const label = `Key at ${Number((key.at * 100).toFixed(1))}%, ${easing} outgoing easing`;
-			const button = this.buttons[index];
-			button.title = label; button.setAttribute('aria-label', label);
-			button.dataset.keyAt = key.at;
-			button.classList.toggle('active', index === selected);
-			button.setAttribute('aria-pressed', String(index === selected));
-			button.disabled = !this.editable;
-		});
-		this.ghost.hidden = !keys.some(key => key.at === 0);
+		this.ghost.hidden = !keys.some(key => key.at === 0) || keys.some(key => key.at === 1);
 		this.cycle = TimelineView.keyCycle(this.row, this.dock.editor.animationTicker.getPlayheadTime());
 		this.layout();
 		if (focused) this.focusSelected();
 		this.syncState();
-	}
-
-	buildKey() {
-		const button = this.dock.button('timeline-key btn-icon-simple', '', null, () => {
-			this.panel.selectKey(this.layer, this.entry, Number(button.dataset.keyAt), { seek: true });
-		});
-		button.addEventListener('keydown', event => {
-			if (!this.editable || event.ctrlKey || event.metaKey || event.altKey) return;
-			if (!['Delete', 'Backspace', 'ArrowLeft', 'ArrowRight'].includes(event.key)) return;
-			event.preventDefault(); event.stopPropagation();
-			if (this.drag) return;
-			this.panel.setKeySelection(this.entry, Number(button.dataset.keyAt));
-			const current = this.panel.keyIndex(this.entry);
-			if (event.key === 'Delete' || event.key === 'Backspace') this.panel.deleteKey(this.layer, this.entry, current);
-			else {
-				const step = event.shiftKey ? CONFIG.ui.timeline.keyFastNudgeStep : CONFIG.ui.timeline.keyNudgeStep;
-				const coalesceKey = this.dock.editor.historyManager.burstCoalesceKey(`motion-key-nudge:${this.row.layerId}`);
-				this.panel.retimeKey(this.layer, this.entry, current, Number(button.dataset.keyAt) + (event.key === 'ArrowRight' ? step : -step), { coalesceKey });
-			}
-		});
-		return button;
 	}
 
 	focusSelected() { this.buttons?.[this.panel.keyIndex(this.entry)]?.focus({ preventScroll: true }); }
@@ -108,6 +80,7 @@ class TimelineKeyLane {
 	}
 
 	layout() {
+		if (!this.track || !this.row) return;
 		const { scale } = this.dock;
 		const span = TimelineView.cycleSpan(this.row, this.cycle);
 		this.track.style.left = `${TimelineView.timeToX(span.start, scale)}px`;
@@ -120,7 +93,7 @@ class TimelineKeyLane {
 	syncState() {
 		if (!this.host?.isConnected || this.host.hidden) return;
 		const recording = this.dock.keyRecording, active = Boolean(recording?.active && recording.entry === this.entry);
-		const title = active ? 'Done editing keys on the canvas' : 'Edit keys on the canvas';
+		const title = active ? 'Done posing keys' : KEY_POSE_ACTION.label;
 		this.record.title = title; this.record.setAttribute('aria-label', title);
 		this.record.classList.toggle('active', active); this.record.setAttribute('aria-pressed', String(active));
 		this.record.disabled = !active && !recording?.canBegin(this.layer, this.entry);

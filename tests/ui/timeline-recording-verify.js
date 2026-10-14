@@ -17,7 +17,7 @@ const { openApp } = require('../lib/app');
 			// Opening the dock schedules a debounced refit; settle it before fixing the zoom.
 			clearTimeout(editor.viewport.resizeTimeout); editor.viewport.setZoom(1, null, null, { animate: false });
 		});
-		const ready = () => page.waitForFunction(() => editor.timelineDock.available && !editor.timelineDock.host.classList.contains('is-stale'));
+		const ready = () => page.waitForFunction(() => editor.timelineDock.available && !editor.timelineDock.stale);
 		const state = () => page.evaluate(() => {
 			const layer = editor.layerManager.getActiveLayer();
 			return { rest: JSON.stringify(layer.transform), geometry: JSON.stringify({ width: layer.shapeData.width, height: layer.shapeData.height, radius: layer.shapeData.cornerRadiusPx }), keys: layer.animations[0].keys, history: editor.historyManager.historyIndex };
@@ -55,7 +55,7 @@ const { openApp } = require('../lib/app');
 		const isolated = await page.evaluate(() => ({ original: editor.layerManager.getActiveLayer().animations.length,
 			preview: editor.timelineDock.frameView.params.visibleLayers.find(layer => layer.id === editor.activeLayerId).animations.length,
 			label: document.getElementById('canvasActivityModeLabel').textContent }));
-		assert.deepStrictEqual(isolated, { original: 2, preview: 1, label: 'Recording keys' });
+		assert.deepStrictEqual(isolated, { original: 2, preview: 1, label: 'Pose keys' });
 		const scrubWork = await page.evaluate(() => {
 			const record = editor.timelineKeyRecording, lane = editor.timelineDock.keyLane;
 			const buttons = [...lane.buttons], validate = record.validate, refresh = lane.refresh;
@@ -142,16 +142,16 @@ const { openApp } = require('../lib/app');
 		const converted = await stack(), custom = JSON.parse(converted.entries)[1];
 		assert.deepStrictEqual([converted.types, converted.selected, converted.history, converted.rest], [['custom', 'custom'], 1, preset.history + 1, preset.rest]);
 		assert.strictEqual(JSON.stringify(JSON.parse(converted.entries)[0]), JSON.stringify(JSON.parse(preset.entries)[0]), 'Other stack entries are untouched');
-		for (const key of ['periodMs', 'easing', 'direction', 'delayMs', 'phase', 'fillMode']) assert.strictEqual(custom[key], pulse[key], `Conversion keeps ${key}`);
+		for (const key of ['periodMs', 'direction', 'delayMs', 'phase', 'fillMode']) assert.strictEqual(custom[key], pulse[key], `Conversion keeps ${key}`);
 		(await sampled()).forEach((value, index) => assert(Math.abs(value - pulseSamples[index]) <= CONFIG_SCALE_TOLERANCE, `The converted motion follows the preset: ${value} vs ${pulseSamples[index]}`));
 		assert(await page.evaluate(() => { const layer = editor.layerManager.getActiveLayer(); return editor.timelineKeyRecording.canBegin(layer, layer.animations[1]); }), 'A converted motion is editable on the canvas');
 		await page.evaluate(() => editor.historyManager.undo()); await ready();
 		assert.strictEqual((await stack()).entries, preset.entries, 'One Undo restores the preset');
 		await page.evaluate(() => { const layer = editor.layerManager.getActiveLayer(); editor.animationPanel.selectedByLayer.set(layer.id, 1); layer.animations[1].easing = 'elasticOut'; editor.animationPanel.load(layer); });
 		const refused = await stack();
-		assert.deepStrictEqual([refused.offered, refused.enabled], [true, false], 'An overshooting half-wave is offered but refused');
+		assert.deepStrictEqual([refused.offered, refused.enabled], [true, true], 'Time sampling follows an overshooting half-wave');
 		await page.evaluate(() => { const layer = editor.layerManager.getActiveLayer(); editor.animationPanel.convertToCustom(layer, layer.animations[1]); });
-		assert.deepStrictEqual([(await stack()).types, (await stack()).history], [['custom', 'pulse'], refused.history], 'A refused conversion keeps the preset and saves nothing');
+		assert.deepStrictEqual([(await stack()).types, (await stack()).history], [['custom', 'custom'], refused.history + 1], 'Time sampling converts the preset in one history step');
 		await page.evaluate(() => { const layer = editor.layerManager.getActiveLayer(); layer.animations[1] = GlitterAnimation.normalizeAnimation({ type: 'shake' }); editor.animationPanel.load(layer); });
 		assert.strictEqual((await stack()).offered, false, 'A seeded preset is not offered');
 		assert.deepStrictEqual(errors, []);

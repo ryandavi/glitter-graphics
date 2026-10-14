@@ -106,13 +106,13 @@ async function verifyTimelineDock() {
 		assert.equal(Number(await labels.getAttribute('aria-valuenow')), await page.evaluate(() => CONFIG.ui.timeline.labelWidth), 'The shared label separator resets and announces its width');
 		await page.setViewportSize({ width: 1600, height: 900 });
 		await page.waitForTimeout(250);
-		const zoomState = () => page.evaluate(() => { const dock = editor.timelineDock; return { out: dock.zoomOut.disabled, in: dock.zoomIn.disabled, fit: dock.zoomFit.disabled }; });
-		assert.deepStrictEqual(await zoomState(), { out: true, in: false, fit: true }, 'At fit there is nothing to zoom out to');
-		await page.click('[aria-label="Zoom timeline in"]');
+		const zoomState = () => page.evaluate(() => ({ disabled: editor.timelineDock.zoom.disabled, value: Number(editor.timelineDock.zoom.value) }));
+		assert.deepStrictEqual(await zoomState(), { disabled: false, value: 0 }, 'Fit is the left end of the zoom slider');
+		await page.evaluate(() => { const zoom = editor.timelineDock.zoom; zoom.value = 0.5; zoom.dispatchEvent(new Event('input', { bubbles: true })); });
 		assert.strictEqual(await page.evaluate(() => typeof PREFERENCES.get('timelineZoom')), 'number');
-		assert.deepStrictEqual(await zoomState(), { out: false, in: false, fit: false });
+		assert((await zoomState()).value > 0);
 		await page.evaluate(() => editor.timelineDock.setZoom(CONFIG.ui.timeline.pxPerSecondStops.at(-1)));
-		assert.deepStrictEqual(await zoomState(), { out: false, in: true, fit: false }, 'The last stop has nothing to zoom in to');
+		assert.strictEqual((await zoomState()).value, 1, 'The final stop is the right end');
 		assert(await page.evaluate(() => !editor.timelineDock.showsFrames && !editor.timelineDock.show.frames), 'Close zoom leaves Output frames off');
 		await page.evaluate(() => editor.timelineDock.showItems.find(item => item.dataset.show === 'frames').click());
 		assert(await page.evaluate(() => editor.timelineDock.showsFrames && editor.timelineDock.body.querySelector('.timeline-cycle-mark')), 'Output frames enables both ruler cells and in-bar marks');
@@ -144,13 +144,13 @@ async function verifyTimelineDock() {
 		const cells = ruler.on.rectangles.filter(rect => rect.args[1] === 24);
 		assert.deepEqual(cells.slice(-4).map(rect => rect.args), [[0, 24, 6, 4], [6, 24, 54, 4], [60, 24, 60, 4], [120, 24, 1320, 4]], 'Narrow consecutive frames merge into one plain cell');
 		assert.notEqual(cells.at(-3).color, cells.at(-2).color, 'Readable output frame cells alternate');
-		await page.evaluate(() => editor.timelineDock.zoomFit.click());
+		await page.evaluate(() => editor.timelineDock.zoom.dispatchEvent(new MouseEvent('dblclick', { bubbles: true })));
 		assert.strictEqual(await page.evaluate(() => PREFERENCES.get('timelineZoom')), 'fit', 'Zoom to fit returns to fit');
 		const oldLoop = await page.evaluate(() => ({ ...editor.documentLoop }));
 		await page.evaluate(async () => { editor.setDocumentLoop({ mode: 'set', durationMs: 20000 }, { commit: false }); await editor.updateExportDuration(); });
 		assert(await page.evaluate(() => {
 			const dock = editor.timelineDock;
-			return dock.scale === CONFIG.ui.timeline.minPxPerSecond && dock.body.scrollWidth > dock.body.clientWidth && dock.zoomOut.disabled;
+			return dock.scale === CONFIG.ui.timeline.minPxPerSecond && dock.body.scrollWidth > dock.body.clientWidth && Number(dock.zoom.value) === 0;
 		}), 'A long loop at fit keeps readable seconds and scrolls');
 		await page.evaluate(() => { window.timelineResizeRow = editor.timelineDock.body.querySelector('.timeline-row'); editor.timelineDock.applyHeight(240); });
 		await page.waitForTimeout(100);
@@ -574,7 +574,7 @@ async function verifyGifCycle() {
 	try {
 		await page.evaluate(async () => { editor.openAnimationLoop(); await editor.updateExportDuration(); });
 		assert(await page.locator('#animationLoopStatus').isVisible());
-		for (const id of ['animationLoopSourceSet', 'animationLoopLengthSet', 'animationLoopChangeSet', 'animationLoopActionSet']) {
+		for (const id of ['animationLoopSourceSet', 'animationLoopLengthSet', 'animationLoopChangeSet']) {
 			assert(!(await page.locator(`#${id}`).isVisible()), `${id} must be hidden with no animation sources`);
 		}
 		const replay = await page.evaluate(async () => {

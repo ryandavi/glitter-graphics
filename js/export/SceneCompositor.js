@@ -168,7 +168,7 @@ class SceneCompositor {
 				...(LAYER_UI_CONFIG[layer.type]?.timelineSources?.(layer, { compositor: this, includeBaseImage, canvasData }) || []),
 				...this._createPatternTimelineSources(layer, includeBaseImage)
 			];
-			return isLayerFullyLocked(layer) ? sources.map((source) => ({ ...source, setPeriod: null, setRun: null, setPhase: null })) : sources;
+			return isLayerFullyLocked(layer) ? sources.map((source) => ({ ...source, setPeriod: null, setRun: null, setPhase: null, setDirection: null })) : sources;
 		});
 	}
 
@@ -241,7 +241,9 @@ class SceneCompositor {
 					const current = layer.animations[index];
 					current.delayMs = clampNumber(run.start, 0, FIELDS.animDelay.max * 1000);
 					current.iterations = GlitterAnimation.iterationsForRun(current, run);
+					return GlitterAnimation.runTiming(current);
 				},
+				setDirection: (direction) => { layer.animations[index].direction = direction; },
 				setPhase: (phase) => { layer.animations[index].phase = ((Number(phase) % 1) + 1) % 1; },
 				closesAt: (duration, period) => GlitterAnimation.isSeamlessLoop({ ...animation, periodMs: period }, samplingContext, duration),
 				nonLooping: Number.isFinite(animation.iterations),

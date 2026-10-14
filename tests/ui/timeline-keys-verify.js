@@ -21,7 +21,7 @@ const { openApp } = require('../lib/app');
 			await editor.updateExportDuration(); editor.animationPanel.load(layer); editor.timelineDock.selectMotion(layer.id, 0);
 			editor.animationPanel.setPaused(true); editor.animationTicker.seek(250);
 		});
-		const ready = () => page.waitForFunction(() => editor.timelineDock.available && !editor.timelineDock.host.classList.contains('is-stale')
+		const ready = () => page.waitForFunction(() => editor.timelineDock.available && !editor.timelineDock.stale
 			&& editor.timelineDock.keyLane.host?.isConnected && !editor.timelineDock.keyLane.host.hidden
 			&& editor.timelineDock.keyLane.entry === editor.animationPanel._selected(editor.layerManager.getActiveLayer()));
 		const state = () => page.evaluate(() => {
@@ -36,7 +36,7 @@ const { openApp } = require('../lib/app');
 		}, { id, value });
 		await ready();
 		await page.evaluate(() => { editor.timelineDock.selectedKey = null; editor.timelineDock.syncSelection(); });
-		await page.locator('.timeline-bar').first().focus(); await page.keyboard.press('Enter'); await ready();
+		await page.locator('#timelineDock .timeline-bar').first().focus(); await page.keyboard.press('Enter'); await ready();
 		assert(await page.locator('.timeline-row-lane:not([hidden])').isVisible(), 'Enter selects a Custom bar and opens its key lane');
 		assert(await page.evaluate(() => {
 			const dock = editor.timelineDock, lane = dock.keyLane, buttons = [...lane.buttons];
@@ -96,7 +96,7 @@ const { openApp } = require('../lib/app');
 			return dock.selectedKey === String(row.key) && dock.body.querySelectorAll('.timeline-row-lane:not([hidden])').length === 0;
 		}), 'Refreshing the Animation panel must not replace a selected fill bar with a motion bar');
 		await page.evaluate(() => editor.historyManager.undo());
-		await page.waitForFunction(() => !editor.timelineDock.host.classList.contains('is-stale'));
+		await page.waitForFunction(() => !editor.timelineDock.stale);
 		await page.evaluate(() => { const layer = editor.layerManager.getActiveLayer(); editor.timelineDock.selectMotion(layer.id, 0); }); await ready();
 		let menuBefore = await state();
 		await page.evaluate(() => {
@@ -113,8 +113,14 @@ const { openApp } = require('../lib/app');
 		assert.deepStrictEqual(await shown(), ['Position', 'Scale', 'Opacity'], 'The Values set lists what the key holds');
 		assert(await page.evaluate(() => !document.querySelector('#shapeAnimKeySet input[type="checkbox"], #shapeAnimKeyValues input[type="checkbox"]')
 			&& [...document.querySelectorAll('#shapeAnimKeyValues .property-label')].every(label => !/[(°%]|px/.test(label.textContent))), 'No switch and no unit in a label');
-		assert.deepStrictEqual(await page.evaluate(() => [...document.getElementById('shapeAnimKeySelect').options].map(option => option.textContent)), ['1 · 0%', '2 · 50%']);
+		assert.deepStrictEqual(await page.evaluate(() => [...document.getElementById('shapeAnimKeySelect').options].map(option => option.textContent)), ['1 · 0.00 s', '2 · 0.50 s']);
 		const initial = await state();
+		await change('shapeAnimKeyEasing', 'steps'); await ready();
+		assert(await page.evaluate(() => !document.getElementById('shapeAnimKeyStepsRow').hidden && document.getElementById('shapeAnimStepsRow').hidden), 'Custom Steps count lives beside the selected key easing');
+		await change('shapeAnimKeySteps', 4); await ready();
+		assert.strictEqual(await page.evaluate(() => editor.layerManager.getActiveLayer().animations[0].steps), 4);
+		await page.evaluate(() => editor.historyManager.undo()); await ready();
+		await page.evaluate(() => editor.historyManager.undo()); await ready();
 		const addValue = name => page.evaluate(name => {
 			const trigger = document.getElementById('shapeAnimKeyAddValue'); trigger.click();
 			const items = [...trigger.closest('.app-menu').querySelectorAll('.app-menu-item')];
@@ -127,6 +133,7 @@ const { openApp } = require('../lib/app');
 		assert.strictEqual((await state()).keys[0].values.hue, 0, 'A value is added where the motion has it');
 		await change('shapeAnimKeyPropHue', 90); await ready();
 		assert.strictEqual((await state()).keys[0].values.hue, 90);
+		assert.strictEqual((await state()).keys[1].values.hue, 0, 'First-use channels seed the other keys at their previous poses');
 		assert.deepStrictEqual(await shown(), ['Position', 'Scale', 'Opacity', 'Hue']);
 		await page.evaluate(() => document.querySelector('#shapeAnimKeyPropHueRow .property-revert').click()); await ready();
 		assert(!Object.hasOwn((await state()).keys[0].values, 'hue'), 'A row revert stops keying its value');
@@ -145,7 +152,7 @@ const { openApp } = require('../lib/app');
 		await page.evaluate(() => editor.animationTicker.seek(250)); await ready();
 		await change('shapeAnimKeyEasing', 'easeIn'); await ready();
 		assert.strictEqual((await state()).keys[0].easing, 'easeIn');
-		assert(await page.locator('.timeline-key-track button').first().getAttribute('title') === 'Key at 0%, Ease in outgoing easing', 'Key tooltips use the easing display name');
+		assert((await page.locator('.timeline-key-track button').first().getAttribute('title')).includes('Ease in outgoing easing'), 'Key tooltips use the easing display name');
 		await page.evaluate(() => document.getElementById('shapeAnimKeyAdd').click()); await ready();
 		let after = await state();
 		assert.deepStrictEqual(after.keys.map(key => key.at), [0, 0.25, 0.5]);
@@ -237,11 +244,36 @@ const { openApp } = require('../lib/app');
 		});
 		assert.deepStrictEqual(serialized.original, serialized.restored); assert.strictEqual(serialized.shared, false);
 		await page.evaluate(() => { PREFERENCES.set('timelineOpen', false); });
-		assert(await page.evaluate(() => document.getElementById('shapeAnimKeyAdd').disabled), 'Closing the dock immediately disables Add key in the inspector');
+		assert(await page.evaluate(() => !document.getElementById('shapeAnimKeyAdd').disabled), 'Add key works in the inspector with the dock closed');
+		const closedAdd = await page.evaluate(() => {
+			const layer = editor.layerManager.getActiveLayer(), animation = layer.animations[0], panel = editor.animationPanel;
+			animation.keys = [{ at: 0, easing: 'linear', values: { opacity: 1 } }, { at: 0.5, easing: 'linear', values: { opacity: 0.5 } }];
+			const keys = GlitterAnimation.normalizeKeys(animation.keys); panel.setKeySelection(animation, keys[0].at);
+			const at = (keys[0].at + (keys[1]?.at ?? 1)) / 2;
+			panel.addKey(layer, animation);
+			return { at, added: animation.keys.some(key => key.at === at), seeded: animation.keys.length };
+		});
+		assert(closedAdd.added, 'With the dock closed, Add key inserts halfway to the next key');
+		await page.evaluate(() => editor.historyManager.undo());
 		before = await state();
 		await change('shapeAnimKeyPropOpacity', 60);
 		assert.strictEqual((await state()).history, before.history + 1, 'Selected-key fields work with the dock closed');
 		assert.strictEqual((await state()).rest, initial.rest);
+		const stripBefore = await state();
+		await page.evaluate(() => { const section = document.getElementById('shapeAnimationSection'); if (editor.pickers.flyout !== section.dataset.flyoutKey) editor.pickers.toggleFlyout(section.dataset.flyoutKey); setPanelCardCollapsed(section, false); });
+		await page.locator('#shapeAnimKeyStrip').waitFor({ state: 'visible' });
+		await page.locator('#shapeAnimKeyStrip').scrollIntoViewIfNeeded();
+		await page.waitForTimeout(250);
+		const stripPoint = await page.evaluate(() => {
+			const strip = editor.animationPanel.keyStrips.get('shape'), box = strip.host.getBoundingClientRect(), key = strip.buttons[0].getBoundingClientRect();
+			return { x: key.left + key.width / 2, y: key.top + key.height / 2, target: box.left + box.width * 0.2 };
+		});
+		await page.mouse.move(stripPoint.x, stripPoint.y); await page.mouse.down();
+		await page.mouse.move(stripPoint.target, stripPoint.y, { steps: 5 }); await page.mouse.up();
+		assert((await state()).keys.some(key => Math.abs(key.at - 0.2) < 0.01), `The panel strip retimes a key without the dock: ${JSON.stringify({ point: stripPoint, state: await state(), errors })}`);
+		assert.strictEqual((await state()).history, stripBefore.history + 1, 'A panel-strip drag saves one history step');
+		await page.evaluate(() => editor.historyManager.undo());
+		assert.deepStrictEqual((await state()).keys, stripBefore.keys, 'One Undo restores panel-strip timing');
 		await page.evaluate(() => PREFERENCES.set('timelineOpen', true)); await ready();
 		await page.evaluate(() => {
 			const layer = editor.layerManager.getActiveLayer(), entry = layer.animations[0];

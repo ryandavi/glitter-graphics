@@ -509,7 +509,7 @@ async function timelineStates(page, visit, viewport) {
 		await editor.updateExportDuration();
 	});
 	await wait(page);
-	await page.locator('.timeline-bar').first().focus();
+	await page.locator('#timelineDock .timeline-bar').first().focus();
 	await visit(`${viewport} timeline`, { shot: '#timelineDock' });
 	await page.evaluate(() => {
 		PREFERENCES.set('timelineShow', { ...editor.timelineDock.show, frames: true });

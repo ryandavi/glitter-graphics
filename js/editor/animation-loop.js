@@ -26,6 +26,7 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		const root = frames?.closest('.app-menu-popover');
 		const panel = root?.querySelector('.app-menu-panel');
 		if (panel) setupMenuPopover({ root, trigger: frames, panel, fixed: true, beforeOpen: () => this.fillFrameOptionsMenu(panel) });
+		document.getElementById('animationOpenTimeline')?.addEventListener('click', () => PREFERENCES.set('timelineOpen', true));
 		this.scheduleExportDuration();
 	},
 	openAnimationLoop() {
@@ -109,7 +110,7 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		this.loopEstimate = estimate;
 		this.animationTicker.setLoop(estimate?.duration);
 		this.syncGifCycleControls();
-		if (isFeatureAvailable('timeline')) this.timelineDock?.sync(estimate);
+		this.timelineDock?.sync(estimate);
 		const status = document.getElementById('animationLoopStatus');
 		const sources = document.getElementById('animationLoopSources');
 		const select = document.getElementById('animationLoopCandidate');
@@ -124,7 +125,7 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 			const value = document.createElement('span'); value.className = 'property-result-value'; value.textContent = `${formatSeconds(estimate.duration)} loop`;
 			const badge = document.createElement('span'); badge.className = `badge ${clean ? 'is-accent' : 'is-warning'}`;
 			badge.textContent = clean ? 'Seamless' : 'Visible seam';
-			badge.title = clean ? 'The loop closes cleanly.' : 'The end does not match the start.';
+			badge.title = clean ? 'The loop closes cleanly.' : TimelineView.SEAM_TEXT;
 			status.append(value, badge);
 		} else status.textContent = message;
 		const analyses = new Map((estimate?.sourceAnalysis || []).map((entry) => [entry.key, entry]));
@@ -205,7 +206,7 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		note.hidden = !fit?.sources.length || !note.textContent;
 		document.getElementById('animationLoopChangeSet').hidden = note.hidden;
 		button.disabled = !candidate?.canApply;
-		if (isFeatureAvailable('timeline')) this.timelineDock?.syncControls();
+		this.timelineDock?.syncControls();
 		button.hidden = button.disabled;
 		const reset = document.getElementById('resetAnimationLoop');
 		if (reset) {
@@ -217,7 +218,9 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		const frames = document.getElementById('animationFrameOptions')?.closest('.app-menu-popover');
 		if (frames) frames.hidden = !this.loopEstimate?.frameOptions.options.length;
 		document.getElementById('animationLoopLengthSet').hidden = isFeatureEnabled('loopLength') ? !fit?.sources.length : !fit?.candidates.some((entry) => entry.canApply);
-		document.getElementById('animationLoopActionSet').hidden = button.hidden && (!reset || reset.hidden) && (!frames || frames.hidden);
+		document.getElementById('animationLoopActionSet').hidden = button.hidden && (!reset || reset.hidden) && (!frames || frames.hidden) && !isFeatureAvailable('timeline');
+		const layer = this.layerManager.getActiveLayer();
+		if (layer) { const prefix = this.animationPanel.prefixByType.get(layer.type); if (prefix) this.animationPanel.loadTimingStrip(prefix, layer); }
 	},
 	hasLoopTimingToRestore() {
 		return (this.loopEstimate?.loopFit.sources || []).some((source) => {
@@ -230,9 +233,7 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 	fillFrameOptionsMenu(panel) {
 		const options = this.loopEstimate?.frameOptions;
 		const labels = CONFIG.export.timeline.frameOptions.labels;
-		const heading = document.createElement('div');
-		heading.className = 'app-menu-group-label';
-		heading.textContent = options ? `About ${options.frameCount} ${options.frameCount === 1 ? 'frame' : 'frames'} now` : 'Measuring the animation';
+		const heading = buildMenuLabel(options ? `About ${options.frameCount} ${options.frameCount === 1 ? 'frame' : 'frames'} now` : 'Measuring the animation');
 		const entries = (options?.options || []).map(option => buildMenuItem({
 			label: `${labels[option.kind]}: about ${option.frameCount} ${option.frameCount === 1 ? 'frame' : 'frames'}, ${formatSeconds(option.duration)} loop`,
 			run: () => this.applyFrameOption(option),

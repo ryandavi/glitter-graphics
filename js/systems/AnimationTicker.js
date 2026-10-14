@@ -69,6 +69,7 @@ class AnimationTicker {
 	// the clock carries on from there.
 	seek(ms) {
 		for (const listener of this.seekListeners) listener();
+		if (this.paused) this.holding = true;
 		this.heldMs = this._wrap(Number(ms) || 0);
 		if (!this._isPreviewPaused() && this.timelineStartedAt != null) this.timelineStartedAt = performance.now() - this.heldMs;
 		this.refresh();
@@ -91,7 +92,7 @@ class AnimationTicker {
 	}
 
 	_timeAt(now) {
-		return this._isPreviewPaused() ? this.heldMs : this._elapsedAt(now);
+		return this._isPreviewPaused() ? (this.holding ? this.heldMs : 0) : this._elapsedAt(now);
 	}
 
 	subscribeTick(listener) {
@@ -135,10 +136,10 @@ class AnimationTicker {
 	syncFrozenState() {
 		const container = this.editor.canvasElementsContainer;
 		const frozen = Boolean(this._isPreviewPaused());
-		if (!container || (this.frozenState?.container === container && this.frozenState.frozen === frozen && this.frozenState.heldMs === this.heldMs)) return;
-		this.frozenState = { container, frozen, heldMs: this.heldMs };
-		container.classList.toggle('preview-motion-paused', frozen && !this.heldMs);
-		container.classList.toggle('preview-motion-held', frozen && this.heldMs > 0);
+		if (!container || (this.frozenState?.container === container && this.frozenState.frozen === frozen && this.frozenState.heldMs === this.heldMs && this.frozenState.holding === this.holding)) return;
+		this.frozenState = { container, frozen, heldMs: this.heldMs, holding: this.holding };
+		container.classList.toggle('preview-motion-paused', frozen && !this.holding);
+		container.classList.toggle('preview-motion-held', frozen && this.holding);
 		container.style.setProperty('--preview-held-ms', String(this.heldMs));
 	}
 

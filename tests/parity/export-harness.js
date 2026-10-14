@@ -5,7 +5,7 @@
 
 const crypto = require('crypto');
 
-const EXPORT_TIMEOUT_MS = 60000;
+const EXPORT_TIMEOUT_MS = Number(process.env.GLITTER_EXPORT_TIMEOUT_MS) || 60000;
 
 function hashBytes(bytes) {
 	return crypto.createHash('sha256').update(Buffer.from(bytes)).digest('hex');

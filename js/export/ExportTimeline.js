@@ -84,7 +84,7 @@ class AuthoredAnimationSource {
 }
 
 class ProceduralAnimationSource {
-	constructor({ key, label = null, rowLabel = null, ownerLayerId = null, effectSlot = null, naturalPeriod, phase = 0, direction = 'normal', cycleMarks, keyTrack = null, preferredSamplingRate, sampler, resolvedPeriod = null, setPeriod = null, setRun = null, setPhase = null, periodRange = null, resolvePeriod = null, nonLooping = false, run = null, closesAt = null }) {
+	constructor({ key, label = null, rowLabel = null, ownerLayerId = null, effectSlot = null, naturalPeriod, phase = 0, direction = 'normal', cycleMarks, keyTrack = null, preferredSamplingRate, sampler, resolvedPeriod = null, setPeriod = null, setRun = null, setPhase = null, setDirection = null, periodRange = null, resolvePeriod = null, nonLooping = false, run = null, closesAt = null }) {
 		this.kind = 'procedural';
 		this.key = key;
 		this.label = label;
@@ -99,7 +99,7 @@ class ProceduralAnimationSource {
 		this.keyTrack = keyTrack;
 		this.preferredSamplingRate = Math.max(1, Number(preferredSamplingRate));
 		this.sampler = sampler;
-		Object.assign(this, { setPeriod, setRun, setPhase, periodRange, resolvePeriod, nonLooping, run, closesAt });
+		Object.assign(this, { setPeriod, setRun, setPhase, setDirection, periodRange, resolvePeriod, nonLooping, run, closesAt });
 	}
 
 	withPeriod(resolvedPeriod) {
@@ -114,7 +114,7 @@ class ProceduralAnimationSource {
 			preferredSamplingRate: this.preferredSamplingRate,
 			sampler: this.sampler,
 			resolvedPeriod,
-			setPeriod: this.setPeriod, setRun: this.setRun, setPhase: this.setPhase, periodRange: this.periodRange, resolvePeriod: this.resolvePeriod, nonLooping: this.nonLooping,
+			setPeriod: this.setPeriod, setRun: this.setRun, setPhase: this.setPhase, setDirection: this.setDirection, periodRange: this.periodRange, resolvePeriod: this.resolvePeriod, nonLooping: this.nonLooping,
 			run: this.run, closesAt: this.closesAt
 		});
 	}

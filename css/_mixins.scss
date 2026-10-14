@@ -626,6 +626,12 @@ $modal-compact-breakpoint: 600px;
 	}
 }
 
+@mixin diamond($size) {
+	width: $size;
+	height: $size;
+	transform: translate(-50%, -50%) rotate(45deg);
+}
+
 // Export Ready and recolor share the preview surface inside the modal shell.
 @mixin modal-preview-stage($padding: var(--spacing-lg)) {
 	display: flex;

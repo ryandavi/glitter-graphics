@@ -152,7 +152,9 @@ async function main() {
 	mutation.source().setPhase(-0.25);
 	assert(mutation.layer.animations[0].phase === 0.75, 'Phase setter must wrap negative values');
 	const originalSource = mutation.source();
-	assert(originalSource.withPeriod(1200).setRun === originalSource.setRun && originalSource.withPeriod(1200).setPhase === originalSource.setPhase, 'Fitted source must retain timing setters');
+	const fittedSource = originalSource.withPeriod(1200);
+	const writtenRun = fittedSource.setRun({ start: 500, end: 1500 });
+	assert(writtenRun.start === mutation.run().start && writtenRun.end === mutation.run().end && fittedSource.setPhase === originalSource.setPhase && fittedSource.setRun === originalSource.setRun, 'Fitted source must retain timing setters and return their normalized run');
 	const returned = motionSources({ type: 'rotate', periodMs: 1000, iterations: 0.5, turns: 0.5, fillMode: 'none' })[0];
 	const held = motionSources({ type: 'rotate', periodMs: 1000, iterations: 0.5, turns: 0.5, fillMode: 'forwards' })[0];
 	assert(returned.closesAt(1000, 1000) && !held.closesAt(1000, 1000), 'Trimmed rest closes and held non-rest pose does not');

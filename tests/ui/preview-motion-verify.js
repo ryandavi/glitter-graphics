@@ -375,7 +375,8 @@ async function main() {
 			editor.animationTicker.seek(0);
 		});
 		await page.waitForFunction(() => !editor.timelineDock.frameView.scrubbing);
-		assert(await page.evaluate(() => editor.timelineDock.frameView.canvas.hidden), 'An older scrub cannot cover time zero');
+		await page.waitForFunction(() => !editor.timelineDock.frameView.canvas.hidden);
+		assert(await page.evaluate(() => editor.timelineDock.frameView.lastTime === 0 && editor.canvasElementsContainer.classList.contains('preview-motion-held')), 'Seeking zero shows the first frame, including after an older scrub');
 		await page.evaluate(() => {
 			window.originalTimelineBudget = getMemoryBudget;
 			getMemoryBudget = () => ({ ...window.originalTimelineBudget(), previewCacheBytes: 1 });
@@ -392,6 +393,7 @@ async function main() {
 		assert(await page.evaluate(() => !editor.timelineDock.frameView.exact && editor.timelineDock.frameView.frames.length === 0 && !editor.timelineDock.frameView.done), 'A document commit cancels pending exact playback');
 		await page.evaluate(() => { editor.animationTicker.seek(150); editor.previewWrapper.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); });
 		assert(await page.evaluate(() => editor.timelineDock.frameView.canvas.hidden && !editor.previewWrapper.classList.contains('timeline-frame-active')), 'A canvas gesture immediately returns to live layers');
+		assert(await page.evaluate(() => !editor.animationTicker.holding && editor.animationTicker.getCurrentTime() === 0 && editor.animationTicker.getPlayheadTime() === 150 && editor.timelineDock.time.textContent.endsWith('rest pose')), 'Rest editing retains the displayed playhead and samples the rest time');
 		console.log('PASS composed held-frame pixels, reusable preparation, latest-only scrubbing, exact bitmap playback, Escape and live editing');
 		await verifyPlayhead(browser);
 	} finally {

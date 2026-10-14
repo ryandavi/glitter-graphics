@@ -758,12 +758,12 @@ const CONFIG = deepFreeze({
 			followMarginPx: 24, edgeScrollPx: 24, edgeScrollPxPerSecond: 240,
 			defaultZoom: 'fit', minTickPx: 4, maxMarksPerBar: 600, nextLoopFraction: 0.25,
 			tickLabelMinPx: 110, tickSteps: [100, 200, 500, 1000, 2000, 5000],
-			rulerTextInsetPx: 4, minorTickHeight: 4, outputFrameStripHeight: 4, wheelLinePx: 28,
+			rulerTextInsetPx: 4, minorTickHeight: 4, outputFrameStripHeight: 4, wheelLinePx: 28, wheelZoomPx: 100, staleShowMs: 200, curveSamples: 64,
 			// A bar is never drawn narrower than this; a grip is this wide to the pointer.
 			barMinPx: 12, gripPx: 8,
 			// What the rows draw besides their bars, as the options menu lists it.
-			show: { cycles: true, frames: false, details: true, nextLoop: true },
-			showLabels: { cycles: 'Cycle marks', frames: 'Output frames', details: 'Details column', nextLoop: 'Next pass' },
+			show: { curves: true, cycles: true, frames: false, details: true, nextLoop: true },
+			showLabels: { curves: 'Motion curves', cycles: 'Cycle marks', frames: 'Output frames', details: 'Details column', nextLoop: 'Next pass' },
 			snapPx: 8, dragThresholdPx: 3,
 			keyPositionTolerance: 0.001, keyNudgeStep: 0.01, keyFastNudgeStep: 0.05,
 			keySingularTolerance: 1e-8,
@@ -1085,7 +1085,7 @@ const CONFIG = deepFreeze({
 				// decides between otherwise comparable clocks.
 				cadenceShortfallTolerance: 0.05,
 				loopCandidateShortlist: 4,
-				// TEMPORARY A/B switch (docs/plans/TIMELINE-AUDIT-2026-10-14.md, section 10).
+				// TEMPORARY A/B switch; remove after comparing glitter timing with the free grid.
 				// On: every glitter or GIF frame change starts an output frame, so
 				// each frame plays for its own time; motion is fitted around it.
 				// Off: the older free grid, where a frame change can show up to one

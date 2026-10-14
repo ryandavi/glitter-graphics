@@ -20,6 +20,8 @@ class TimelineFrameView {
 			if (this.editor.timelineKeyRecording?.active) return;
 			this.invalidate();
 			this.blocked = true;
+			const ticker = this.editor.animationTicker;
+			if (ticker.paused && ticker.holding) { ticker.holding = false; ticker.refresh(); }
 		}, true);
 	}
 
@@ -36,6 +38,8 @@ class TimelineFrameView {
 		this.frames = [];
 		this.done?.(); this.done = null;
 		this.dock.exact?.classList.remove('active');
+		this.dock.exact?.setAttribute('aria-pressed', 'false');
+		this.dock.exact?.setAttribute('aria-current', 'false');
 		if (!keepFrame) {
 			this.canvas.hidden = true;
 			this.canvas.width = this.canvas.height = 0;
@@ -55,7 +59,7 @@ class TimelineFrameView {
 			if (index !== this.drawnIndex || this.canvas.hidden) { this.draw(this.frames[index]); this.drawnIndex = index; }
 			return;
 		}
-		if (!ticker.paused || !ticker.holding || (ms === 0 && !this.editor.timelineKeyRecording?.active)) {
+		if (!ticker.paused || !ticker.holding) {
 			this.hide();
 			this.lastTime = null;
 			return;
@@ -97,7 +101,7 @@ class TimelineFrameView {
 				}
 				const frame = await this.compositor.composeFrameAt({ ...this.params, preparedContext: this.prepared, timestamp: ms });
 				const ticker = this.editor.animationTicker;
-				if (generation !== this.generation || this.pending || !this.dock.available || !ticker.paused || !ticker.holding || ticker.getCurrentTime() !== ms || (ms === 0 && !this.editor.timelineKeyRecording?.active) || this.blocked) continue;
+				if (generation !== this.generation || this.pending || !this.dock.available || !ticker.paused || !ticker.holding || ticker.getCurrentTime() !== ms || this.blocked) continue;
 				this.resize(frame.width, frame.height);
 				this.canvas.getContext('2d').putImageData(frame.imageData, 0, 0);
 				this.canvas.hidden = false;
@@ -169,6 +173,8 @@ class TimelineFrameView {
 				this.dock.syncClock();
 				this.drawnIndex = null;
 				this.dock.exact.classList.add('active');
+				this.dock.exact.setAttribute('aria-pressed', 'true');
+				this.dock.exact.setAttribute('aria-current', 'true');
 				this.normalLoopMs = this.editor.animationTicker.loopMs;
 				this.editor.animationTicker.setLoop(plan.totalDuration);
 				this.editor.animationTicker.seek(0);

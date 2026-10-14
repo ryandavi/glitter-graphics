@@ -127,7 +127,7 @@ class TimelineKeyRecording {
 		}
 		const host = controls[0];
 		if (host && !this.note?.isConnected) {
-			this.note = buildPanelItem({ kind: 'note', text: 'Done exits key recording and enables the rest transform.' });
+			this.note = buildPanelItem({ kind: 'note', text: 'Done exits Pose keys and enables the rest transform.' });
 			host.append(this.note);
 		}
 	}
@@ -140,10 +140,10 @@ class TimelineKeyRecording {
 		if (!this.active) return;
 		if (time != null && time === this.paintedTime && this.entry.keys === this.paintedKeys) return;
 		this.paintedTime = time; this.paintedKeys = this.entry.keys;
-		const progress = this.position(), percent = progress ? Number((((progress.eased % 1 + 1) % 1) * 100).toFixed(1)) : null;
+		const progress = this.position(), percent = progress ? Number((clampNumber(progress.eased, 0, 1) * 100).toFixed(1)) : null;
 		const badge = `${this.layer.name} · ${percent == null ? 'Outside run' : `${percent}%`}`;
 		if (this.mode?.badge !== badge) {
-			this.mode = { label: 'Recording keys', icon: 'timeline', badge, exitLabel: 'Done', onExit: () => this.end() };
+			this.mode = { label: KEY_POSE_ACTION.label, icon: KEY_POSE_ACTION.icon, badge, exitLabel: 'Done', onExit: () => this.end() };
 			this.editor.notifications.setMode(this.mode);
 		}
 		this.transform.updateHandlePositions();
@@ -153,7 +153,7 @@ class TimelineKeyRecording {
 		const geometry = PoseGeometry.frame(this.editor, transform, this.pose());
 		if (!geometry) return null;
 		const disabled = !this.drag && (geometry.singular || !this.position());
-		return { frame: geometry.frame, disabled, keepHandles: Boolean(this.drag), badge: { text: 'Recording keys', mode: 'keys' } };
+		return { frame: geometry.frame, disabled, keepHandles: Boolean(this.drag), badge: { text: KEY_POSE_ACTION.label, mode: 'keys' } };
 	}
 	filterHandles(layer, handles) {
 		return this.handles(layer)
@@ -181,9 +181,9 @@ class TimelineKeyRecording {
 		if (!geometry || geometry.singular || !geometry.inverseParent) {
 			this.editor.updateStatus('This pose has no invertible scale. Edit its key values first.'); return;
 		}
-		const keys = GlitterAnimation.normalizeKeys(this.entry.keys), at = (this.position().eased % 1 + 1) % 1;
+		const keys = GlitterAnimation.normalizeKeys(this.entry.keys), at = clampNumber(this.position().eased, 0, 1);
 		if (keys.length >= CONFIG.tools.animation.maxKeys
-			&& !keys.some(key => Math.min(Math.abs(key.at - at), 1 - Math.abs(key.at - at)) < CONFIG.ui.timeline.keyPositionTolerance)) {
+			&& !keys.some(key => Math.abs(key.at - at) < CONFIG.ui.timeline.keyPositionTolerance)) {
 			this.editor.updateStatus(`Maximum of ${CONFIG.tools.animation.maxKeys} motion keys`); return;
 		}
 		const point = this.editor.viewport.screenToCanvas(event.clientX, event.clientY);
@@ -195,11 +195,11 @@ class TimelineKeyRecording {
 	write(values, { commit = false, coalesceKey } = {}) {
 		const drag = this.drag, position = drag ? { eased: drag.at } : this.position();
 		if (!position) return false;
-		const at = (position.eased % 1 + 1) % 1, keys = GlitterAnimation.normalizeKeys(drag?.keys || this.entry.keys);
-		let key = keys.find(key => Math.min(Math.abs(key.at - at), 1 - Math.abs(key.at - at)) < CONFIG.ui.timeline.keyPositionTolerance);
+		const at = clampNumber(position.eased, 0, 1), keys = GlitterAnimation.normalizeKeys(drag?.keys || this.entry.keys);
+		let key = keys.find(key => Math.abs(key.at - at) < CONFIG.ui.timeline.keyPositionTolerance);
 		if (!key) { key = { at, easing: 'linear', values: {} }; keys.push(key); }
 		Object.assign(key.values, values);
-		return this.panel.setKeys(this.layer, this.entry, keys, { commit, at: key.at, label: 'Record motion key', coalesceKey });
+		return this.panel.setKeys(this.layer, this.entry, keys, { commit, at: key.at, label: KEY_POSE_ACTION.history, coalesceKey });
 	}
 	move(event) {
 		const drag = this.drag;
@@ -281,7 +281,7 @@ class TimelineKeyRecording {
 		drag.transform.isDraggingHandle = false; drag.transform.dragStartState = null;
 		if (drag.moved) {
 			if (cancel) this.panel.setKeys(this.layer, this.entry, drag.keys, { commit: false, rollback: true, at: drag.at });
-			else if (JSON.stringify(drag.keys) !== JSON.stringify(GlitterAnimation.normalizeKeys(this.entry.keys))) this.editor.saveState('Record motion key');
+			else if (JSON.stringify(drag.keys) !== JSON.stringify(GlitterAnimation.normalizeKeys(this.entry.keys))) this.editor.saveState(KEY_POSE_ACTION.history);
 		}
 		this.editor.clearSmartGuides();
 		this.refresh();

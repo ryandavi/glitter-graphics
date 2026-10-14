@@ -20,7 +20,7 @@ async function verifyTimelineGestures(browser) {
 			PREFERENCES.set('timelineOpen', true);
 			await editor.updateExportDuration();
 		});
-		const ready = () => page.waitForFunction(() => editor.timelineDock?.model?.groups.some(group => group.layerId === window.timelineFixtureId) && !editor.timelineDock.host.classList.contains('is-stale'));
+		const ready = () => page.waitForFunction(() => editor.timelineDock?.model?.groups.some(group => group.layerId === window.timelineFixtureId) && !editor.timelineDock.stale);
 		await ready();
 		const state = () => page.evaluate(() => {
 			const layer = editor.layerManager.getLayerById(window.timelineFixtureId), animation = layer.animations[0];
@@ -226,22 +226,24 @@ async function verifyTimelineGestures(browser) {
 		const menuBox = await page.locator('.app-menu-panel.is-fixed-menu:visible').boundingBox();
 		assert(Math.abs(menuBox.x - (menuBar.x + 30)) < 1, 'A zoomed-in bar menu opens at the right-click, rather than its distant end');
 		assert(menuBox.x + menuBox.width <= 1600 && menuBox.y >= 0 && menuBox.y + menuBox.height <= 900, 'A context menu stays within the viewport');
-		await page.getByRole('menuitem', { name: 'Match cycle to...', exact: true }).click();
-		assert(Math.abs((await page.locator('.app-menu-panel.is-fixed-menu:visible').boundingBox()).x - menuBox.x) < 1, 'Nested choices retain the right-click anchor');
 		await page.keyboard.press('Escape');
 		await gifBar.focus(); await page.keyboard.press('Shift+F10');
 		assert(Math.abs((await page.locator('.app-menu-panel.is-fixed-menu:visible').boundingBox()).x - menuBar.x) < 1, 'Keyboard menus anchor at the visible start of the bar');
 		await page.keyboard.press('Escape');
 		await page.evaluate(() => editor.timelineDock.setZoom('fit'));
+		await page.evaluate(() => {
+			const dock = editor.timelineDock, row = dock.model.groups.flatMap(group => group.rows).find(row => row.kind === 'procedural');
+			dock.barActions(row).find(action => action.id === 'copy').run();
+			dock.timingClipboard.cycle = 1200;
+		});
 		await gifBar.click({ button: 'right' });
-		await page.getByRole('menuitem', { name: 'Match cycle to...', exact: true }).click();
-		await page.getByRole('menuitem', { name: /1\.20 s/ }).click();
+		await page.getByRole('menuitem', { name: 'Paste timing', exact: true }).click();
 		await ready();
 		assert.equal(await page.evaluate(() => editor.layerManager.getLayerById(window.timelineGifId).stickerData.gifCycleMs), 1200, 'GIF menu matches another source cycle');
-		assert.equal(await page.evaluate(() => editor.historyManager.history[editor.historyManager.historyIndex].label), 'Match cycle', 'A cycle choice commits its parent action label');
+		assert.equal(await page.evaluate(() => editor.historyManager.history[editor.historyManager.historyIndex].label), 'Paste timing', 'A pasted timing is one named history step');
 		await gifBar.click({ button: 'right' });
 		await page.getByRole('menuitem', { name: 'Reset timing', exact: true }).click(); await ready();
-		assert(await page.evaluate(() => editor.layerManager.getLayerById(window.timelineGifId).stickerData.gifCycleMs == null), 'Reset timing also restores the speed remembered by Match cycle');
+		assert(await page.evaluate(() => editor.layerManager.getLayerById(window.timelineGifId).stickerData.gifCycleMs == null), 'Reset timing also restores the speed remembered by Paste timing');
 		await gifBar.click({ button: 'right' });
 		await page.getByRole('menuitem', { name: 'Reset speed', exact: true }).click();
 		await ready();
@@ -355,7 +357,7 @@ async function verifyTimelineGestures(browser) {
 			assert.deepEqual(result, pageZoom, `Ctrl-wheel consumes browser zoom over ${selector} and leaves canvas zoom unchanged: ${JSON.stringify(result)}`);
 			assert(await page.evaluate(() => editor.timelineDock.scale) !== scale, `Ctrl-wheel zooms over ${selector}`);
 		};
-		for (const selector of ['.timeline-bar', '.timeline-row-label', '.timeline-ruler', '#timelineDock .section-header', '.timeline-body']) {
+		for (const selector of ['#timelineDock .timeline-bar', '.timeline-row-label', '.timeline-ruler', '#timelineDock .section-header', '.timeline-body']) {
 			await page.evaluate(() => { editor.timelineDock.setZoom(300); editor.timelineDock.scrollToTimeX(0); });
 			const empty = selector === '.timeline-body' ? { x: bodyBox.width - 40, y: bodyBox.height - 25 } : null;
 			await ctrlWheel(selector, empty);
@@ -476,7 +478,7 @@ async function verifyTimelineGestures(browser) {
 			const row = dock.model.groups.find(group => group.layerId === layer.id).rows[0];
 			const delay = layer.animations[0].delayMs, history = editor.historyManager.historyIndex;
 			dock.markStale(); dock.nudgeRow(row, { key: 'ArrowRight', shiftKey: false });
-			const held = dock.stale && dock.host.classList.contains('is-stale') && !dock.canEdit(row)
+			const held = dock.stale && !dock.host.classList.contains('is-stale') && !dock.canEdit(row)
 				&& layer.animations[0].delayMs === delay && editor.historyManager.historyIndex === history;
 			dock.resync();
 			return held && !dock.stale;
@@ -496,7 +498,7 @@ async function verifyTimelineGestures(browser) {
 		}); await ready();
 		assert.equal(await page.locator(`[data-layer-id="${fixtureId}"] .timeline-period-notch`).count(), 0, 'Dense cycles leave the bar body available to drag');
 		await page.getByRole('button', { name: 'Timeline options', exact: true }).click();
-		assert(await page.getByRole('menuitem', { name: 'Zoom to fit', exact: true }).isVisible());
+		assert.equal(await page.getByRole('menuitem', { name: 'Zoom to fit', exact: true }).count(), 0, 'Fit moved to the slider double-click and ruler menu');
 		const output = page.getByRole('menuitemcheckbox', { name: 'Output frames', exact: true });
 		const cycles = page.getByRole('menuitemcheckbox', { name: 'Cycle marks', exact: true });
 		await output.click();
@@ -507,9 +509,39 @@ async function verifyTimelineGestures(browser) {
 		await page.keyboard.press('Escape');
 		assert(!(await output.isVisible()), 'Escape still closes the options menu');
 		await page.evaluate(() => editor.timelineDock.setZoom(300));
-		await page.getByRole('button', { name: 'Timeline options', exact: true }).click();
-		await page.getByRole('menuitem', { name: 'Zoom to fit', exact: true }).click();
-		assert(!(await output.isVisible()), 'An ordinary menu action still closes the menu');
+		await page.getByRole('slider', { name: 'Timeline zoom', exact: true }).dblclick();
+		assert.equal(await page.evaluate(() => PREFERENCES.get('timelineZoom')), 'fit', 'Double-clicking the zoom slider fits the loop');
+		await page.evaluate(async () => {
+			const layer = editor.layerManager.getLayerById(window.timelineFixtureId);
+			layer.animations = [GlitterAnimation.normalizeAnimation({ type: 'pulse', periodMs: 1000, phase: 0.2, delayMs: 200, iterations: 2 })];
+			editor.setDocumentLoop({ mode: 'set', durationMs: 4000 }, { commit: false });
+			editor.shapeGlitterManager.renderLayer(layer); editor.saveState('Menu fixture'); await editor.updateExportDuration();
+			editor.animationPanel.setPaused(true); editor.animationTicker.seek(1500);
+		}); await ready();
+		const openMotionMenu = () => page.evaluate(() => {
+			const dock = editor.timelineDock, row = dock.model.groups.find(group => group.layerId === window.timelineFixtureId).rows[0];
+			const node = dock.rowNodesByKey.get(String(row.key)); dock.openBarMenu(row, node, node.querySelector('.timeline-bar'));
+		});
+		for (const [label, field, value] of [['Play once', 'repeats', 1], ['Repeat forever', 'repeats', Infinity], ['Start at playhead', 'delay', 1500], ['End at playhead', 'repeats', 1.5], ['Reverse', 'direction', 'reverse'], ['Ping-pong', 'direction', 'alternate']]) {
+			const before = await state(); await openMotionMenu();
+			await page.getByRole('menuitem', { name: label, exact: true }).click(); await ready();
+			const after = await state();
+			assert.equal(field === 'direction' ? await page.evaluate(() => editor.layerManager.getLayerById(window.timelineFixtureId).animations[0].direction) : after[field], value, label);
+			assert.equal(after.history, before.history + 1, `${label} saves one step`);
+			await page.evaluate(() => editor.historyManager.undo()); await ready(); assert.deepEqual(await state(), before, `${label} undoes in one step`);
+		}
+		assert(await page.evaluate(async () => {
+			const dock = editor.timelineDock, layer = editor.layerManager.getLayerById(window.timelineFixtureId), nodes = [...dock.rowNodesByKey.values()];
+			dock.setZoom(300); const zoomReused = nodes.every(node => node.isConnected && dock.rowNodesByKey.get(node.dataset.sourceKey) === node);
+			getLayerFillSlot(layer).color = '#ff0000'; editor.shapeGlitterManager.renderLayer(layer); editor.saveState('Change static paint'); await editor.updateExportDuration();
+			return zoomReused && nodes.every(node => node.isConnected && dock.rowNodesByKey.get(node.dataset.sourceKey) === node);
+		}), 'Zoom and a static paint commit reuse row nodes');
+		assert(await page.evaluate(() => {
+			const dock = editor.timelineDock, row = dock.model.groups.find(group => group.layerId === window.timelineFixtureId).rows[0], start = row.startMs;
+			for (let i = 0; i < 3; i++) dock.nudgeRow(row, { key: 'ArrowRight', shiftKey: false });
+			return row.startMs > start + 2 * dock.model.frameStarts[1] && dock.canEdit(row);
+		}), 'Held-arrow repeats advance while their estimates are pending');
+		await page.evaluate(() => editor.updateExportDuration()); await ready();
 		await page.getByRole('button', { name: 'Timeline options', exact: true }).click();
 		await page.evaluate(() => editor.timelineDock.close());
 		assert.equal(await page.getByRole('menuitem', { name: 'Zoom to fit', exact: true }).isVisible(), false, 'Closing the dock closes its portaled options menu');

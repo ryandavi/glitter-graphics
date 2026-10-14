@@ -134,12 +134,12 @@ const GlitterAnimation = (() => {
 		originX: 0.5, originY: 0.5, hue: POSE_CHANNELS.hue.rest
 	});
 	const BASE_DEFAULTS = Object.freeze({
-		periodMs: 1000, easing: 'linear', steps: 2, direction: 'normal', iterations: Infinity,
+		enabled: true, periodMs: 1000, easing: 'linear', steps: 2, direction: 'normal', iterations: Infinity,
 		delayMs: 0, phase: 0, fillMode: 'none', amount: 0, angle: 0, distance: 0,
 		radius: 0, turns: 0, duty: 50, opacityFloor: 0, repeat: 'none', gap: 0,
 		orbitCenter: 'center', orbitCenterX: 0.5, orbitCenterY: 0.5, snapMode: 'smooth'
 	});
-	const CONVERT_TIMING_KEYS = Object.freeze(['periodMs', 'easing', 'steps', 'direction', 'iterations', 'delayMs', 'phase', 'fillMode', 'snapMode']);
+	const CONVERT_TIMING_KEYS = Object.freeze(['enabled', 'periodMs', 'steps', 'direction', 'iterations', 'delayMs', 'phase', 'fillMode', 'snapMode']);
 	function mod(value, span) { return ((value % span) + span) % span; }
 
 	function wrap(u0, span, progress) { return span > 0 ? mod(u0 + span * progress, span) - u0 : 0; }
@@ -221,7 +221,11 @@ const GlitterAnimation = (() => {
 		if (requested.iterations == null || requested.iterations === 'Infinity') {
 			normalized.iterations = cfg.presets[type].iterations;
 		}
-		if (MOTION_REGISTRY[type].keyed) normalized.keys = normalizeKeys(normalized.keys);
+		if (MOTION_REGISTRY[type].keyed) {
+			normalized.keys = normalizeKeys(normalized.keys);
+			normalized.easing = 'linear';
+			if (normalized.snapMode === 'step') normalized.snapMode = 'smooth';
+		}
 		return normalized;
 	}
 
@@ -230,7 +234,7 @@ const GlitterAnimation = (() => {
 		if (!Array.isArray(keys)) return [];
 		keys.forEach((key) => {
 			if (!key || !Number.isFinite(key.at) || key.at < 0 || key.at > 1) return;
-			const at = key.at === 1 ? 0 : key.at;
+			const at = key.at;
 			const previous = byPosition.get(at);
 			const values = { ...previous?.values };
 			Object.entries(key.values && typeof key.values === 'object' ? key.values : {}).forEach(([id, value]) => {
@@ -245,7 +249,7 @@ const GlitterAnimation = (() => {
 
 	// The pose a keyed motion has at one of its positions, before timing.
 	function keyRestSample(value, at) {
-		return sampleAt({ ...value, phase: at, easing: 'linear', snapMode: 'smooth', delayMs: 0, direction: 'normal', iterations: Infinity }, 0);
+		return pose(normalizeAnimation({ ...value, easing: 'linear', snapMode: 'smooth' }), at, 0, {}, at);
 	}
 
 	function interpolateChannel(channel, from, to, progress) {
@@ -258,7 +262,7 @@ const GlitterAnimation = (() => {
 	}
 
 	function sampleKeys(out, data, progress) {
-		const p = mod(progress, 1);
+		const p = Math.max(0, Math.min(1, progress));
 		Object.entries(POSE_CHANNELS).forEach(([id, channel]) => {
 			const keys = data.keys.filter((key) => Object.hasOwn(key.values, id));
 			if (!keys.length) return;
@@ -266,8 +270,10 @@ const GlitterAnimation = (() => {
 			const index = keys.findLastIndex((key) => key.at <= p);
 			const from = keys[index < 0 ? keys.length - 1 : index];
 			const to = keys[(index + 1) % keys.length];
-			const length = mod(to.at - from.at, 1);
-			const fraction = mod(p - from.at, 1) / length;
+			if (from.at === p) { out[id] = from.values[id]; return; }
+			const length = to.at > from.at ? to.at - from.at : 1 - from.at + to.at;
+			const distance = p >= from.at ? p - from.at : 1 - from.at + p;
+			const fraction = length > 0 ? distance / length : 0;
 			const eased = GlitterEasing.easingFn(from.easing, { steps: data.steps })(fraction);
 			out[id] = interpolateChannel(channel, from.values[id], to.values[id], eased);
 		});
@@ -282,7 +288,7 @@ const GlitterAnimation = (() => {
 
 	function isActive(value) {
 		if (Array.isArray(value)) return value.some((animation) => isActive(animation));
-		if (!value || !ANIMATION_TYPES.includes(value.type)) return false;
+		if (!value || value.enabled === false || !ANIMATION_TYPES.includes(value.type)) return false;
 		const data = normalizeAnimation(value);
 		return MOTION_REGISTRY[data.type].activeWhen(data);
 	}
@@ -380,6 +386,7 @@ const GlitterAnimation = (() => {
 	}
 
 	function easedProgress(data, progress) {
+		if (MOTION_REGISTRY[data.type].keyed) return progress;
 		let p = GlitterEasing.easingFn(data.easing, { steps: data.steps })(progress);
 		if (data.snapMode === 'step' && data.easing !== 'steps') p = GlitterEasing.stepsEase(p, data.steps);
 		return p;
@@ -440,6 +447,11 @@ const GlitterAnimation = (() => {
 	function timeAtProgress(value, at, timestamp) {
 		const data = normalizeAnimation(value);
 		const current = progressAt(data, timestamp, false);
+		if (MOTION_REGISTRY[data.type].keyed && current && Number.isFinite(at)) {
+			const fraction = directedProgress(Math.max(0, Math.min(1, at)), current.cycle, data.direction);
+			const time = Number(data.delayMs) + (current.cycle + fraction - Number(data.phase)) * data.periodMs;
+			return time >= data.delayMs && time <= runTiming(data).end ? time : null;
+		}
 		if (!current || data.easing === 'steps' || data.snapMode === 'step' || !Number.isFinite(at)) return null;
 		const { samples, iterations, tolerance } = config().keySeek;
 		const keyAt = mod(at, 1);
@@ -478,13 +490,13 @@ const GlitterAnimation = (() => {
 		}
 		const data = normalizeAnimation(value);
 		const position = progressAt(data, tMs, true);
-		return position ? pose(data, position.progress, tMs, options, position.eased)
+		return position && data.enabled !== false ? pose(data, position.progress, tMs, options, position.eased)
 			: { ...IDENTITY, originX: options.origin?.[0] ?? 0.5, originY: options.origin?.[1] ?? 0.5 };
 	}
 
 	// Samples a preset into evenly spaced linear keys: the fewest that reach the
 	// channel tolerances, else the most the ladder allows. The result keeps the
-	// preset's timing, so key positions sit before its easing. Null when the
+	// preset's timing, with easing sampled in time. Null when the
 	// preset has no keyed form or the keyed motion strays past the limit, as a
 	// half-wave does under an easing that overshoots.
 	function convertToKeys(value) {
@@ -498,13 +510,14 @@ const GlitterAnimation = (() => {
 			return channel.interpolation === 'angle' ? Math.min(mod(distance, 360), 360 - mod(distance, 360)) : distance;
 		};
 		const positions = Array.from({ length: cfg.samples }, (_unused, index) => index / cfg.samples);
-		const source = positions.map((p) => pose(smooth, p, 0, {}, p));
+		const source = positions.map((p) => pose(smooth, p, p * data.periodMs, {}));
 		const used = channels.filter((channel) => source.some((sample) => difference(channel, sample[channel.id], channel.rest) > cfg.exactError));
 		const timing = Object.fromEntries(CONVERT_TIMING_KEYS.map((key) => [key, data[key]]));
-		const build = (count) => normalizeAnimation({ ...timing, type: 'custom', keys: Array.from({ length: count }, (_unused, index) => {
-			const sample = pose(smooth, index / count, 0, {}, index / count);
-			return { at: index / count, easing: 'linear', values: Object.fromEntries(used.map((channel) => [channel.id, sample[channel.id]])) };
-		}) });
+		const makeKey = (at, easing = 'linear') => {
+			const sample = pose(smooth, at, at * data.periodMs, {});
+			return { at, easing, values: Object.fromEntries(used.map((channel) => [channel.id, sample[channel.id]])) };
+		};
+		const build = (count) => normalizeAnimation({ ...timing, type: 'custom', keys: Array.from({ length: count }, (_unused, index) => makeKey(index / count)) });
 		// The worst channel, as a multiple of its tolerance.
 		const measure = (pairs) => pairs.reduce((worst, [a, b]) => channels.reduce((current, channel) => {
 			const error = difference(channel, a[channel.id], b[channel.id]);
@@ -515,12 +528,32 @@ const GlitterAnimation = (() => {
 		// A turning channel keeps its winding only while neighbouring keys sit
 		// under a half turn apart, where the shortest path is unambiguous.
 		const winds = (count) => used.some((channel) => channel.interpolation === 'angle' && Array.from({ length: count }, (_unused, index) =>
-			Math.abs(pose(smooth, (index + 1) / count, 0, {}, (index + 1) / count)[channel.id] - pose(smooth, index / count, 0, {}, index / count)[channel.id])).some((turn) => turn >= 180 - cfg.exactError));
+			Math.abs(pose(smooth, (index + 1) / count, (index + 1) * data.periodMs / count, {})[channel.id] - pose(smooth, index / count, index * data.periodMs / count, {})[channel.id])).some((turn) => turn >= 180 - cfg.exactError));
 		for (const count of counts) {
 			if (winds(count) && count !== counts.at(-1)) continue;
 			animation = build(count);
 			fit = measure(positions.map((p, index) => [source[index], pose(animation, p, 0, {}, p)]));
 			if (fit.ratio <= 1) break;
+		}
+		if (data.easing === 'steps' && data.steps + 1 <= config().maxKeys) {
+			animation = normalizeAnimation({ ...timing, type: 'custom', steps: 1, keys: Array.from({ length: data.steps + 1 }, (_, index) => makeKey(index / data.steps, 'steps')) });
+			fit = measure(positions.map((p, index) => [source[index], pose(animation, p, 0, {}, p)]));
+		} else if (fit.ratio > 1) {
+			// Uneven easing can put a sharp turn between uniform keys. Spend the
+			// same key budget where its measured channel error is largest.
+			let adaptive = build(counts.find(count => !winds(count)) || counts.at(-1));
+			for (let attempt = adaptive.keys.length; attempt < config().maxKeys; attempt++) {
+				let worst = { ratio: 0, at: 0 };
+				positions.forEach((p, index) => {
+					const error = measure([[source[index], pose(adaptive, p, 0, {}, p)]]);
+					if (error.ratio > worst.ratio) worst = { ratio: error.ratio, at: p };
+				});
+				if (worst.ratio <= 1) break;
+				if (adaptive.keys.some(key => key.at === worst.at)) break;
+				adaptive.keys = normalizeKeys([...adaptive.keys, makeKey(worst.at)]);
+			}
+			const error = measure(positions.map((p, index) => [source[index], pose(adaptive, p, 0, {}, p)]));
+			if (error.ratio < fit.ratio) { animation = adaptive; fit = error; }
 		}
 		// Two repetitions under the motion's own easing and direction, seam included.
 		const played = (entry) => ({ ...entry, snapMode: smooth.snapMode, delayMs: 0, phase: 0, iterations: Infinity });
@@ -587,10 +620,14 @@ const GlitterAnimation = (() => {
 		const b = sampleAt(data, duration, context);
 		// hue wraps at 360deg (0deg and 360deg render identically), so it needs a
 		// modular comparison instead of the other channels' exact equality.
-		const transformSeamless = Object.keys(IDENTITY).filter((key) => key !== 'hue').every((key) => Math.abs(a[key] - b[key]) <= 1e-3);
-		const hueDifference = ((a.hue - b.hue) % 360 + 360) % 360;
-		const hueSeamless = Math.min(hueDifference, 360 - hueDifference) <= 1e-3;
-		return transformSeamless && hueSeamless;
+		const matches = (left, right) => {
+			const transform = Object.keys(IDENTITY).filter(key => key !== 'hue').every(key => Math.abs(left[key] - right[key]) <= 1e-3);
+			const hue = mod(left.hue - right.hue, 360);
+			return transform && Math.min(hue, 360 - hue) <= 1e-3;
+		};
+		if (MOTION_REGISTRY[data.type].keyed && data.keys.some(key => key.at === 1) && data.iterations === Infinity
+			&& ['normal', 'reverse'].includes(data.direction) && !matches(pose(data, 0, 0, context, 0), pose(data, 1, data.periodMs, context, 1))) return false;
+		return matches(a, b);
 	}
 
 	function domTransformString(sample) {

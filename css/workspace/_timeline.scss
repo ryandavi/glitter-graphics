@@ -15,6 +15,9 @@
 }
 
 .timeline-dock {
+	--timeline-z-guides: 3;
+	--timeline-z-handle: 4;
+	--timeline-z-readout: 5;
 	--timeline-row-height: 28px;
 	--timeline-group-height: 32px;
 	--timeline-group-media: 20px;
@@ -59,6 +62,7 @@
 		> .section-header-title { flex: 0 0 auto; }
 		> .section-header-actions { gap: var(--spacing-2xs); }
 	}
+	.timeline-zoom { width: calc(4 * var(--control-height)); min-width: var(--control-height); }
 	.timeline-window-actions { display: flex; gap: var(--spacing-2xs); margin-left: var(--spacing-base); }
 	.timeline-summary {
 		display: flex;
@@ -121,7 +125,7 @@
 		--timeline-columns: var(--timeline-label-column) var(--timeline-track-width) var(--timeline-info-column);
 		// Row labels start where the group name does: past the row's inset,
 		// the chevron, the eye, the thumbnail and the gap after each.
-		--timeline-label-inset: calc(var(--spacing-sm) + var(--font-size-md) + var(--control-height) + var(--timeline-group-media) + 5 * var(--spacing-xs));
+		--timeline-label-inset: var(--timeline-measured-label-inset, var(--spacing-base));
 		position: relative;
 		flex: 1;
 		min-height: 0;
@@ -156,13 +160,17 @@
 	}
 
 	// One line over the ruler and the rows, moved by a transform.
-	.timeline-playhead, .timeline-snap-guide {
+	.timeline-playhead, .timeline-snap-guide, .timeline-hover-guide {
 		position: absolute;
 		inset: 0 auto 0 var(--timeline-label-column);
-		z-index: 3;
+		z-index: var(--timeline-z-guides);
 		width: 1px;
 		pointer-events: none;
 	}
+	.timeline-hover-guide { background: var(--color-text-secondary); opacity: var(--opacity-muted); }
+	.timeline-playhead-time { position: absolute; top: var(--spacing-base); left: var(--spacing-xs); white-space: nowrap; font-variant-numeric: tabular-nums; }
+	&.shows-rest .timeline-playhead::after { background: var(--color-bg-primary); border: 1px solid var(--color-accent); }
+	.timeline-bar-icon { position: absolute; left: var(--spacing-xs); top: 50%; transform: translateY(-50%); pointer-events: none; opacity: var(--opacity-muted); }
 	// Where a drag snapped.
 	.timeline-snap-guide { background: var(--color-text-primary); opacity: var(--opacity-dragging); }
 	.timeline-playhead {
@@ -196,7 +204,7 @@
 	.timeline-label-handle {
 		position: absolute;
 		inset: 0 auto 0 calc(var(--timeline-label-column) - var(--spacing-xs));
-		z-index: 4;
+		z-index: var(--timeline-z-handle);
 		width: var(--spacing-sm);
 		cursor: col-resize;
 	}
@@ -425,7 +433,7 @@
 	&[data-dragging="move"] {
 		&, .timeline-bar, .timeline-stage { cursor: grabbing; }
 	}
-	.timeline-drag-readout { position: absolute; z-index: 5; pointer-events: none; font-variant-numeric: tabular-nums; }
+	.timeline-drag-readout { position: absolute; z-index: var(--timeline-z-readout); pointer-events: none; font-variant-numeric: tabular-nums; }
 	// Each repeat, as a gap cut into the bar.
 	.timeline-bar-marks {
 		@include cover;
@@ -439,14 +447,20 @@
 		background-image: repeating-linear-gradient(to right, var(--timeline-row-bg) 0 1px, transparent 1px var(--cycle-px));
 		background-position: var(--cycle-offset-px) 0;
 	}
+	&.shows-curves .timeline-bar-marks::before {
+		content: '';
+		@include cover;
+		background-image: var(--motion-curve);
+		background-size: var(--cycle-px) 100%;
+		background-position: var(--cycle-offset-px) 0;
+		background-repeat: repeat-x;
+	}
 	.timeline-cycle-mark { position: absolute; top: 60%; bottom: 0; width: 1px; background: var(--timeline-row-bg); opacity: var(--opacity-soft); }
 	// A keyed motion's keys, repeated in every cycle of its bar.
 	.timeline-key-dot {
 		position: absolute;
 		top: 50%;
-		width: var(--spacing-xs);
-		height: var(--spacing-xs);
-		transform: translate(-50%, -50%) rotate(45deg);
+		@include diamond(var(--spacing-xs));
 		background: var(--color-text-primary);
 		opacity: var(--opacity-muted);
 	}
@@ -483,6 +497,8 @@
 	// Diamonds may hang past the cycle's ends, never past the track's.
 	.timeline-key-cell { touch-action: none; }
 	.timeline-key-track {
+		margin: 0;
+		height: auto;
 		position: absolute;
 		inset-block: 0;
 		&::before {
@@ -491,21 +507,6 @@
 			inset: 50% 0 auto;
 			border-top: 1px solid var(--color-border-hover);
 		}
-	}
-	.timeline-key {
-		position: absolute;
-		top: 50%;
-		width: var(--timeline-key-size);
-		height: var(--timeline-key-size);
-		min-width: 0;
-		padding: 0;
-		transform: translate(-50%, -50%) rotate(45deg);
-		border: 1px solid var(--color-text-secondary);
-		background: var(--color-bg-primary);
-		border-radius: var(--radius-xs);
-		&.active { background: var(--color-accent); border-color: var(--color-accent); }
-		&.is-untimed { opacity: var(--opacity-muted); }
-		&.is-ghost { opacity: var(--opacity-disabled); pointer-events: none; }
 	}
 
 	@container timeline (max-width: #{tokens.$timeline-compact-width}) {
