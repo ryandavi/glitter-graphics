@@ -295,12 +295,12 @@
 }
 
 .animation-stack {
+	position: relative;
 	display: flex;
 	flex-direction: column;
 	gap: var(--spacing-xs);
 	.animation-stack-item {
 		min-width: 0;
-		&.active { background: var(--color-accent-surface); }
 		.list-row-content { display: flex; align-items: center; gap: var(--spacing-xs); flex: 1; min-width: 0; text-align: left; color: var(--color-text-primary); }
 	}
 }
@@ -376,16 +376,6 @@
 		border: 1px solid transparent;
 		cursor: grab;
 
-		&.is-dragging {
-			opacity: .55;
-			transform: scale(.99);
-		}
-
-		&.is-merge-target {
-			border-color: var(--color-accent);
-			box-shadow: 0 0 0 2px var(--color-accent-light);
-		}
-
 		&.is-merged {
 			margin-top: calc(var(--spacing-sm) * -1);
 			margin-left: calc(var(--row-height) + var(--spacing-sm));
@@ -396,15 +386,6 @@
 		&.is-skipped {
 			opacity: var(--opacity-disabled);
 			background: var(--color-bg-secondary);
-		}
-	}
-
-	.auto-glitter-drag-handle {
-		display: none;
-
-		&:disabled {
-			opacity: var(--opacity-disabled);
-			cursor: default;
 		}
 	}
 

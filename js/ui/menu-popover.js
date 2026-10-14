@@ -34,6 +34,34 @@ function buildMenuLabel(text) {
 	return node;
 }
 
+const ACTION_MENUS = new WeakMap();
+
+function openActionMenu({ root, trigger, actions, event, anchor }) {
+	const previous = ACTION_MENUS.get(root);
+	previous?.menu.close(); previous?.panel.remove();
+	const panel = root.querySelector(':scope > .app-menu-panel') || buildMenuPanel();
+	panel.replaceChildren();
+	let group = null;
+	for (const action of actions) {
+		if (action.group !== group) {
+			if (group) panel.appendChild(buildMenuSeparator());
+			if (action.group) panel.appendChild(buildMenuLabel(action.group));
+			group = action.group;
+		}
+		if (action.labelOnly) { panel.appendChild(buildMenuLabel(action.label)); continue; }
+		const item = buildMenuItem({ label: action.label, current: action.checked != null, run: action.run });
+		item.disabled = Boolean(action.disabled);
+		if (action.checked != null) item.setAttribute('aria-current', String(action.checked));
+		panel.appendChild(item);
+	}
+	root.appendChild(panel);
+	const menu = setupMenuPopover({ root, trigger, panel, fixed: true, bindTrigger: false });
+	ACTION_MENUS.set(root, { menu, panel });
+	const pointer = event && { left: event.clientX, right: event.clientX, top: event.clientY, bottom: event.clientY };
+	menu.open({ anchor: anchor || pointer });
+	return menu;
+}
+
 // `liftHost` is a bar that forms its own stacking context: it carries
 // `.has-open-menu` while the panel is open so the menu can rise above its
 // neighbours.

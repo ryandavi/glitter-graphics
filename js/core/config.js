@@ -153,14 +153,7 @@ const CONFIG = deepFreeze({
 			'normal', 'multiply', 'screen', 'overlay', 'darken', 'lighten',
 			'color-dodge', 'color-burn', 'hard-light', 'soft-light', 'difference',
 			'exclusion', 'hue', 'saturation', 'color', 'luminosity'
-		],
-
-		reorder: {
-			autoScroll: {
-				zoneSize: 50,
-				speed: 10
-			}
-		}
+		]
 	},
 
 	tools: {
@@ -811,6 +804,12 @@ const CONFIG = deepFreeze({
 			magneticOffsets: [0, 0.25, 0.5, 0.75, 1],
 			magneticThresholdPx: 5
 		},
+		reorder: {
+			autoScroll: {
+				zoneSize: 50,
+				speed: 10
+			}
+		},
 		gestures: {
 			creationDragThreshold: 6,
 			tapMaxMs: 300,
@@ -1048,7 +1047,7 @@ const CONFIG = deepFreeze({
 			// phone - more GIF-encoding workers than cores adds context-switch
 			// overhead instead of speed.
 			workers: Math.max(1, Math.min(4, navigator.hardwareConcurrency || 4)),
-			workerScript: 'js/workers/gif-encode.worker.js?v=20dea8e0',
+			workerScript: 'js/workers/gif-encode.worker.js?v=827b31c7',
 			quality: 1,
 
 		},

@@ -116,8 +116,8 @@
 		filter: unset;
 	}
 
-	.layer-item {
-		> .layer-drag-handle,
+	.layer-item, .animation-stack-item, .auto-glitter-match {
+		> .list-row-handle,
 		.list-row-action.goto-glitter { display: flex; }
 	}
 

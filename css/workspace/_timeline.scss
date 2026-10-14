@@ -19,8 +19,6 @@
 	--timeline-z-handle: 4;
 	--timeline-z-readout: 5;
 	--timeline-row-height: 28px;
-	--timeline-group-height: 32px;
-	--timeline-group-media: 20px;
 	--timeline-info-width: 120px;
 	--timeline-key-size: 10px;
 	container: timeline / inline-size;
@@ -275,26 +273,8 @@
 		border-right: 1px solid var(--timeline-line);
 	}
 	.timeline-group-label {
-		--list-row-media: var(--timeline-group-media);
+		--list-row-background: var(--color-bg-secondary);
 		min-width: 0;
-		min-height: var(--timeline-group-height);
-		padding-block: var(--spacing-2xs);
-		gap: var(--spacing-xs);
-		// Opaque: it stays put while the tracks scroll under it.
-		background: var(--color-bg-secondary);
-
-		&:hover { background: var(--color-bg-tertiary); }
-		&.active { background: linear-gradient(var(--color-accent-surface-strong), var(--color-accent-surface-strong)) var(--color-bg-secondary); }
-	}
-	.timeline-group-track { height: auto; }
-	// A hidden layer has no bars to draw.
-	.timeline-group-note {
-		position: absolute;
-		inset: 0 auto 0 var(--spacing-base);
-		display: flex;
-		align-items: center;
-		font-size: var(--font-size-xs);
-		color: var(--color-text-tertiary);
 	}
 	.timeline-group-span {
 		position: absolute;
@@ -304,13 +284,6 @@
 		border-radius: var(--radius-xs);
 		background: var(--color-border-hover);
 		pointer-events: none;
-	}
-	.timeline-group-select {
-		flex: 0 0 auto;
-		padding: 0;
-		border: 0;
-		background: none;
-		cursor: pointer;
 	}
 	// Visibility dims the preview, never the row's controls.
 	.timeline-group.is-hidden {
@@ -334,6 +307,9 @@
 		background: var(--timeline-row-bg);
 	}
 	.timeline-row-label {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-xs);
 		@include truncate;
 		text-align: left;
 		padding: 0 var(--spacing-base) 0 var(--timeline-label-inset);
@@ -342,11 +318,17 @@
 		color: var(--color-text-secondary);
 		font-weight: var(--font-weight-normal);
 	}
+	.timeline-group-rows { position: relative; }
+	.timeline-row.is-inactive {
+		.list-row-content, .timeline-row-info { color: var(--color-text-tertiary); }
+	}
+	.timeline-row-label .list-row-content { @include truncate; min-width: 0; flex: 1; text-align: left; }
 	.timeline-row.is-selected .timeline-row-label { color: var(--color-text-primary); }
 	.timeline-track {
 		position: relative;
 		grid-column: 2;
 		height: var(--timeline-row-height);
+		&.timeline-group-track { height: auto; align-self: stretch; }
 		overflow: hidden;
 		// Past the loop's end: the line, and the next pass set back behind it.
 		&::after {

@@ -1,26 +1,11 @@
 'use strict';
 
 const assert = require('assert');
-const { chromium } = require('playwright');
-
-const APP_URL = process.env.GLITTER_URL || 'http://localhost/glitter/';
+const { openApp } = require('../lib/app');
 
 async function main() {
-	const browser = await chromium.launch({ headless: true });
-	const page = await browser.newPage({ viewport: { width: Number(process.env.GLITTER_TEST_WIDTH) || 1280, height: 900 } });
-	const pageErrors = [];
-	page.on('pageerror', (error) => pageErrors.push(error.message || String(error)));
+	const { browser, context, page, errors: pageErrors } = await openApp({ viewport: { width: Number(process.env.GLITTER_TEST_WIDTH) || 1280, height: 900 }, document: { width: 40, height: 20 } });
 	try {
-		await page.addInitScript(() => localStorage.setItem('glitterEditor_welcomeModalSeen', 'true'));
-		await page.goto(APP_URL, { waitUntil: 'domcontentloaded' });
-		await page.waitForFunction(() => window.editor != null);
-		await page.evaluate(async () => {
-			document.querySelectorAll('.modal-overlay.visible').forEach((element) => element.classList.remove('visible'));
-			await window.editor.loadBlankImage(40, 20, '#ffffff');
-		});
-		await page.waitForFunction(() => window.editor.originalImage != null);
-		await page.waitForFunction(() => window.editor.glitterLibrary.getAllContent().length > 0);
-
 		const initial = await page.evaluate(() => {
 			const auto = window.editor.autoGlitterManager;
 			window.editor.baseImageSource = { kind: 'file', hasBaseImage: true };
@@ -45,7 +30,7 @@ async function main() {
 					batchId,
 					createdAt,
 					batchSize: 2,
-					generatedState: JSON.stringify(auto.captureGeneratedState(layer))
+					generatedState: auto.captureGeneratedState(layer)
 				};
 				return layer;
 			});
@@ -77,6 +62,51 @@ async function main() {
 			const view = dispatchKeyboardCommand(editor, new KeyboardEvent('keydown', { key: '0', ctrlKey: true, bubbles: true, cancelable: true }));
 			return !blocked && editor.currentTool === tool && editor.layers.length === count && view;
 		}), 'Auto Glitter did not apply the real View/Tools command policy');
+
+		const matches = page.locator('#autoGlitterResults > .auto-glitter-match');
+		await matches.nth(0).scrollIntoViewIfNeeded();
+		const mergeState = () => page.evaluate(() => {
+			const auto = editor.autoGlitterManager;
+			return { targets: auto.result.palette.map(color => color.manualMergeTarget ?? null), steps: auto.steps.undoStack.length, document: editor.historyManager.historyIndex };
+		});
+		const beforeMerge = await mergeState();
+		const press = async () => {
+			const start = await matches.nth(0).locator('.auto-glitter-color-name').boundingBox(), target = await matches.nth(1).boundingBox();
+			await page.mouse.move(start.x + 5, start.y + start.height / 2); await page.mouse.down();
+			await page.mouse.move(target.x + 60, target.y + target.height / 2, { steps: 5 });
+			assert.equal(await matches.nth(1).evaluate(node => node.classList.contains('is-drop-target')), true, 'Manual merge marks its target with the shared class');
+		};
+		await press();
+		await page.evaluate(() => { const auto = editor.autoGlitterManager; auto.renderReviewResults(); });
+		assert.equal(await page.evaluate(() => editor.autoGlitterManager.pendingReviewRender), true, 'Review rerenders defer while merging');
+		await page.keyboard.press('Escape'); await page.mouse.up();
+		assert.deepStrictEqual(await mergeState(), beforeMerge, 'Escape cancels manual merging without a session or document step');
+		assert.equal(await page.locator('#autoGlitterResults .is-drop-target, #autoGlitterResults .is-dragging').count(), 0, 'Cancellation clears drag states');
+		await press(); await page.mouse.up();
+		const merged = await mergeState();
+		assert.equal(merged.targets[0], 1, 'Pointer drop combines the source color into its target');
+		assert.equal(merged.steps, beforeMerge.steps + 1, 'Manual combine records one session step');
+		assert.equal(merged.document, beforeMerge.document, 'Manual combine does not write document history');
+		assert.equal(await page.evaluate(() => editor.autoGlitterManager.session.layers.length), 1, 'Merged preview has one layer');
+		await page.evaluate(async () => editor.autoGlitterManager.getHistory().undo());
+		assert.equal((await mergeState()).targets[0], null, 'Session undo separates the manually merged color');
+		await page.evaluate(async () => editor.autoGlitterManager.getHistory().redo());
+		assert.equal((await mergeState()).targets[0], 1, 'Session redo restores the manual merge');
+		await page.evaluate(async () => editor.autoGlitterManager.getHistory().undo());
+		// Native touch input exercises the same pointer path from the handle.
+		await matches.nth(0).locator('.auto-glitter-choice').focus();
+		const grip = await matches.nth(0).locator('.list-row-handle').boundingBox(), target = await matches.nth(1).boundingBox();
+		const cdp = await context.newCDPSession(page);
+		await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: grip.x + grip.width / 2, y: grip.y + grip.height / 2 }] });
+		await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: target.x + 60, y: target.y + target.height / 2 }] });
+		assert.equal(await matches.nth(1).evaluate(node => node.classList.contains('is-drop-target')), true, 'Touch handle uses the same onto target');
+		await cdp.send('Input.dispatchTouchEvent', { type: 'touchCancel', touchPoints: [] });
+		assert.equal((await mergeState()).targets[0], null, 'Touch cancellation keeps both colors separate');
+		await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: grip.x + grip.width / 2, y: grip.y + grip.height / 2 }] });
+		await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: target.x + 60, y: target.y + target.height / 2 }] });
+		await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+		assert.equal((await mergeState()).targets[0], 1, 'Touch handle drop combines colors');
+		await page.evaluate(async () => editor.autoGlitterManager.getHistory().undo());
 
 		const coalesced = await page.evaluate(async () => {
 			const auto = window.editor.autoGlitterManager;

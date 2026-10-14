@@ -182,7 +182,7 @@ class SceneCompositor {
 				if (pattern.scroll === 'none') return [];
 				return [{
 					key: `__pattern_${getPaintSlotSourceKey(layer, entry)}`,
-					rowLabel: 'Pattern scroll', label: `${layer.name || 'Layer'} pattern scroll`, ownerLayerId: layer.id, effectSlot: entry.key,
+					rowLabel: 'Pattern scroll', label: `${describeLayer(layer, this.editor).name} pattern scroll`, ownerLayerId: layer.id, effectSlot: entry.key,
 					naturalPeriod: pattern.scrollCycleMs,
 					periodRange: { min: FIELDS.patternScrollCycle.min, max: FIELDS.patternScrollCycle.max },
 					setPeriod: (ms) => { entry.data.pattern.scrollCycleMs = Math.min(FIELDS.patternScrollCycle.max, Math.max(FIELDS.patternScrollCycle.min, ms)); },
@@ -232,7 +232,7 @@ class SceneCompositor {
 				rowLabel: GlitterAnimation.summaryText(animation), direction: animation.direction,
 				cycleMarks: GlitterAnimation.MOTION_REGISTRY[animation.type].keyed ? animation.keys.map((key) => key.at).filter((at) => at > 0) : undefined,
 				keyTrack: GlitterAnimation.MOTION_REGISTRY[animation.type].keyed ? { entry: layer.animations[index], index } : null,
-				label: `${layer.name || 'Layer'} ${GlitterAnimation.summaryText(animation)}`,
+				label: `${describeLayer(layer, this.editor).name} ${GlitterAnimation.summaryText(animation)}`,
 				ownerLayerId: layer.id,
 				effectSlot: `animation-${index}`,
 				naturalPeriod: animation.periodMs,
@@ -266,7 +266,7 @@ class SceneCompositor {
 			const cycle = Math.max(1, Number(entry.data.cycleMs) || FIELDS.sparkleCycle.value);
 			return {
 				key: this._getSparkleTimelineKey(layer, entry),
-				rowLabel: 'Sparkles', label: `${layer.name || 'Layer'} sparkles`,
+				rowLabel: 'Sparkles', label: `${describeLayer(layer, this.editor).name} sparkles`,
 				ownerLayerId: layer.id,
 				effectSlot: entry.key,
 				naturalPeriod: cycle,
@@ -828,6 +828,7 @@ class SceneCompositor {
 				const cycle = clampNumber(roundTo(ms, quantum), timing.range.min, timing.range.max);
 				if (cycle === roundTo(fileCycleDuration, quantum)) delete record.gifCycleMs;
 				else record.gifCycleMs = cycle;
+				return cycle;
 			}
 		};
 	}

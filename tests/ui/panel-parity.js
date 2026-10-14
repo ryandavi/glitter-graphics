@@ -243,7 +243,7 @@ const LAYER_SETUPS = {
 			const filterIndex = editor.layers.findIndex((entry) => entry.id === layer.id);
 			editor.layers.splice(filterIndex, 1);
 			editor.layers.push(layer);
-			editor.layerManager.reorderLayerItems();
+			editor.layerManager.renderLayersList();
 			editor.layerManager.reorderLayers();
 			const filterElement = editor.filterLayerManager.layerElements.get(layer.id);
 			if (filterElement?.style.zIndex) throw new Error('Reordering created a stacking context on the filter wrapper');

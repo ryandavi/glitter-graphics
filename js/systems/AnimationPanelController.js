@@ -273,6 +273,20 @@ class AnimationPanelController {
 		return true;
 	}
 
+	beginKeyRetime(layer, entry, at) {
+		const keys = GlitterAnimation.normalizeKeys(entry.keys);
+		let finished = false;
+		return {
+			move: requested => finished || !this.canEditKeys(layer, entry) ? null : this.retimeKey(layer, entry, this.keyIndex(entry), requested, { commit: false }),
+			finish: cancelled => {
+				if (finished) return;
+				finished = true;
+				if (cancelled) this.setKeys(layer, entry, keys, { commit: false, rollback: true, at });
+				else if (!isSameData(keys, GlitterAnimation.normalizeKeys(entry.keys))) this.editor.saveState('Retime motion key');
+			}
+		};
+	}
+
 	retimeKey(layer, animation, index, requested, options = {}) {
 		const keys = GlitterAnimation.normalizeKeys(animation.keys);
 		if (!keys[index] || !Number.isFinite(requested)) return null;
@@ -537,16 +551,13 @@ class AnimationPanelController {
 			if (!this.canEditKeys(layer, animation)) return;
 			const key = GlitterAnimation.normalizeKeys(animation.keys)[this.keyIndex(animation)];
 			if (!key) return;
-			const trigger = event.currentTarget, root = trigger.closest('.app-menu'), panel = root.querySelector('.app-menu-panel');
-			panel.replaceChildren(...GlitterAnimation.POSE_PROPERTIES.filter((property) => !property.channels.some((id) => Object.hasOwn(key.values, id))).map((property) => {
-				const button = buildMenuItem({ label: property.label, run: () => {
+			const trigger = event.currentTarget;
+			openActionMenu({ root: trigger.closest('.app-menu'), trigger, actions: GlitterAnimation.POSE_PROPERTIES.filter((property) => !property.channels.some((id) => Object.hasOwn(key.values, id))).map((property) => ({
+				label: property.label, run: () => {
 					const current = target();
 					this._editKey(current.layer, current.animation, (entry) => this._holdProperty(current.animation, entry, property));
-				} });
-				return button;
-			}));
-			root._animationMenu ||= setupMenuPopover({ root, trigger, panel, bindTrigger: false });
-			root._animationMenu.open();
+				}
+			})) });
 		});
 		this._id(prefix, 'KeyAdd')?.addEventListener('click', () => { const { layer, animation } = target(); this.addKey(layer, animation); });
 		this._id(prefix, 'KeyDelete')?.addEventListener('click', () => { const { layer, animation } = target(); if (animation) this.deleteKey(layer, animation); });
@@ -585,35 +596,68 @@ class AnimationPanelController {
 		this._render(layer); this.editor.saveState('Delete animation');
 	}
 
+	moveAnimation(layer, from, to) {
+		const animations = this._animations(layer);
+		if (!this.editor.layers.includes(layer) || !this.editor.canEditLayer(layer) || !Number.isInteger(from) || !Number.isInteger(to)
+			|| from === to || from < 0 || to < 0 || from >= animations.length || to >= animations.length) return false;
+		const [entry] = animations.splice(from, 1);
+		animations.splice(to, 0, entry);
+		this.selectMotion(layer, to);
+		this._render(layer);
+		this.editor.saveState('Reorder animations');
+		return true;
+	}
+
+	toggleAnimation(layer, index) {
+		const animation = this._animations(layer)[index];
+		if (!animation || !this.editor.layers.includes(layer) || !this.editor.canEditLayer(layer)) return false;
+		animation.enabled = animation.enabled === false;
+		this._render(layer);
+		this.editor.saveState('Toggle animation');
+		return true;
+	}
+
 	_renderStack(prefix, layer) {
 		const host = this._id(prefix, 'Stack');
 		if (!host) return;
+		if (isReordering(host)) { host._pendingRender = true; return; }
+		host.dataset.layerId = layer.id;
+		const currentLayer = () => this.editor.layerManager.getLayerById(host.dataset.layerId);
+		if (!LIST_REORDERS.has(host)) {
+			bindListReorder(host, {
+				item: '.animation-stack-item', handle: '.list-row-handle',
+				ids: row => [Number(row.dataset.animationIndex)],
+				canDrag: () => this.editor.canEditLayer(currentLayer()),
+				resolve: ({ ids, target, place }) => {
+					const from = ids[0], insertion = Number(target.dataset.animationIndex) + Number(place === 'below');
+					const to = insertion - Number(from < insertion);
+					return from !== to && to >= 0 && to < this._animations(currentLayer()).length ? { from, to } : null;
+				},
+				commit: ({ from, to }) => this.moveAnimation(currentLayer(), from, to)
+			});
+			host.addEventListener('listreorderend', () => {
+				if (host._pendingRender) { host._pendingRender = false; this._renderStack(prefix, currentLayer()); }
+			});
+		}
 		const animations = this._animations(layer);
 		host.hidden = !animations.length;
-		host.replaceChildren();
+		host.replaceChildren(host.querySelector('.list-insertion-line'));
 		animations.forEach((animation, index) => {
 			const row = document.createElement('div'); row.className = 'list-row animation-stack-item';
+			row.dataset.animationIndex = index;
 			row.classList.toggle('active', index === this._selectedIndex(layer));
 			const button = document.createElement('button'); button.type = 'button'; button.className = 'list-row-content btn-text';
-			button.append(createIcon('motion-play'));
-			const text = document.createElement('span'); text.textContent = `${GlitterAnimation.MOTION_REGISTRY[animation.type].label} · ${formatSeconds(animation.periodMs)} · ${TimelineView.repeatsText(animation.iterations)}`; button.append(text);
+			const description = GlitterAnimation.describe(animation), text = buildElement('list-row-text', null, 'span');
+			text.append(buildElement('list-row-name', description.name, 'span'), buildElement('list-row-meta', description.detail, 'span')); button.append(text);
 			button.setAttribute('aria-pressed', String(index === this._selectedIndex(layer)));
 			button.addEventListener('click', () => { this.selectMotion(layer, index); this.editor.timelineDock?.selectMotion(layer.id, index); this.load(layer); });
 			const enabled = buildIconButton({ label: animation.enabled === false ? 'Enable animation' : 'Disable animation', icon: animation.enabled === false ? 'eye-slash' : 'eye' });
 			enabled.setAttribute('aria-pressed', String(animation.enabled !== false));
-			enabled.addEventListener('click', () => { if (!this.editor.canEditLayer(layer)) return; animation.enabled = animation.enabled === false; this._render(layer); this.editor.saveState('Toggle animation'); });
-			const grip = buildIconButton({ icon: 'grip-vertical', label: 'Drag to reorder; arrow keys move this animation' });
-			const reorder = destination => {
-				if (!this.editor.canEditLayer(layer) || destination === index || destination < 0 || destination >= animations.length) return;
-				animations.splice(index, 1); animations.splice(destination, 0, animation); this.selectMotion(layer, destination); this._render(layer); this.editor.saveState('Reorder animations');
-			};
-			grip.draggable = true;
-			grip.addEventListener('dragstart', event => { this.stackDrag = { layer, index }; event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', String(index)); });
-			row.addEventListener('dragover', event => { if (this.stackDrag?.layer === layer) event.preventDefault(); });
-			row.addEventListener('drop', event => { if (this.stackDrag?.layer !== layer) return; event.preventDefault(); const origin = this.stackDrag.index; this.stackDrag = null; if (origin === index || !this.editor.canEditLayer(layer)) return; const [entry] = animations.splice(origin, 1); animations.splice(index, 0, entry); this.selectMotion(layer, index); this._render(layer); this.editor.saveState('Reorder animations'); });
-			grip.addEventListener('dragend', () => { this.stackDrag = null; });
-			grip.addEventListener('keydown', event => { if (!['ArrowUp', 'ArrowDown'].includes(event.key)) return; event.preventDefault(); event.stopPropagation(); reorder(index + (event.key === 'ArrowDown' ? 1 : -1)); });
-			row.append(button, enabled, grip); host.appendChild(row);
+			enabled.addEventListener('click', () => this.toggleAnimation(layer, index));
+			const grip = buildIconButton({ label: 'Drag to reorder; arrow keys move this animation' });
+			const mark = buildElement('drag-handle-mark', undefined, 'span'); mark.setAttribute('aria-hidden', 'true'); grip.append(mark);
+			grip.classList.add('list-row-handle');
+			row.append(grip, enabled, button); host.appendChild(row);
 		});
 		const remove = this._id(prefix, 'Remove');
 		if (remove) remove.disabled = !animations.length;
@@ -677,12 +721,8 @@ class AnimationPanelController {
 			if (!layer || !this.editor.canEditLayer(layer) || this._animations(layer).length >= CONFIG.tools.animation.maxStackSize) return;
 			const append = motionType => this.addAnimation(layer, motionType);
 			if (!isFeatureAvailable('timeline')) { append(CONFIG.tools.animation.defaultType); return; }
-			const trigger = this._id(prefix, 'Add'), root = trigger.closest('.app-menu'), panel = root.querySelector('.app-menu-panel');
-			panel.replaceChildren(...[CONFIG.tools.animation.defaultType, 'custom'].map((motionType) => {
-				return buildMenuItem({ label: GlitterAnimation.MOTION_REGISTRY[motionType].label, run: () => append(motionType) });
-			}));
-			root._animationMenu ||= setupMenuPopover({ root, trigger, panel, bindTrigger: false });
-			root._animationMenu.open();
+			const trigger = this._id(prefix, 'Add');
+			openActionMenu({ root: trigger.closest('.app-menu'), trigger, actions: [CONFIG.tools.animation.defaultType, 'custom'].map(motionType => ({ label: GlitterAnimation.MOTION_REGISTRY[motionType].label, run: () => append(motionType) })) });
 		});
 		this._id(prefix, 'Remove')?.addEventListener('click', () => {
 			const layer = this._active(type); if (layer) this.deleteAnimation(layer);
@@ -860,7 +900,7 @@ class AnimationPanelController {
 
 	loadTimingStrip(prefix, layer) {
 		const host = this._id(prefix, 'TimingStrip'); if (!host) return;
-		const model = TimelineView.buildModel(this.editor.loopEstimate, this.editor.layers);
+		const model = TimelineView.buildModel(this.editor.loopEstimate, this.editor.layers, this.editor);
 		const row = model.groups.find(group => group.layerId === layer.id)?.rows.find(row => TimelineView.motionIndex(row) === this._selectedIndex(layer));
 		host.replaceChildren(); host.hidden = !row || !model.loopMs; if (host.hidden) return;
 		const available = isFeatureAvailable('timeline'), bar = document.createElement(available ? 'button' : 'div');

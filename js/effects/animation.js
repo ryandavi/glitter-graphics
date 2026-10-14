@@ -310,6 +310,11 @@ const GlitterAnimation = (() => {
 		return MOTION_REGISTRY[data.type].label;
 	}
 
+	function describe(value) {
+		const data = normalizeAnimation(value);
+		return { name: MOTION_REGISTRY[data.type].label, detail: `${formatSeconds(data.periodMs)} · ${Number.isFinite(data.iterations) ? formatCount(data.iterations, 'repeat') : 'Repeat forever'}` };
+	}
+
 	function loopDurationMs(value) {
 		const data = normalizeAnimation(value);
 		return Number.isFinite(data.iterations) ? data.periodMs * Math.max(0, data.iterations) : Infinity;
@@ -321,11 +326,15 @@ const GlitterAnimation = (() => {
 		return { start, end: Number.isFinite(data.iterations) ? Math.max(0, start + loopDurationMs(data) - Number(data.phase) * data.periodMs) : Infinity };
 	}
 
+	function repeatsForRun({ cycleMs, phase }, { start, end }) {
+		return Number.isFinite(end) ? (end - start) / cycleMs + Number(phase) : Infinity;
+	}
+
 	function iterationsForRun(animation, { start, end }) {
 		const data = normalizeAnimation(animation);
 		if (end === Infinity) return Infinity;
 		const delayMs = clampNumber(start, 0, FIELDS.animDelay.max * 1000);
-		return Number(clampNumber((end - delayMs) / data.periodMs + Number(data.phase), FIELDS.animIterations.min, FIELDS.animIterations.max).toFixed(2));
+		return Number(clampNumber(repeatsForRun({ cycleMs: data.periodMs, phase: data.phase }, { start: delayMs, end }), FIELDS.animIterations.min, FIELDS.animIterations.max).toFixed(2));
 	}
 
 	// Typical canvas speed of a traveling motion in px/s: the median step over
@@ -378,11 +387,23 @@ const GlitterAnimation = (() => {
 		return [anchor.fx, anchor.fy];
 	}
 
-	function directedProgress(progress, cycle, direction) {
-		const reverse = direction === 'reverse'
-			|| (direction === 'alternate' && cycle % 2 === 1)
+	function isReversedCycle(direction, cycle) {
+		return direction === 'reverse' || (direction === 'alternate' && cycle % 2 !== 0)
 			|| (direction === 'alternate-reverse' && cycle % 2 === 0);
-		return reverse ? 1 - progress : progress;
+	}
+
+	function directedProgress(progress, cycle, direction) {
+		return isReversedCycle(direction, cycle) ? 1 - progress : progress;
+	}
+
+	function cycleAt({ start, cycleMs, phase, direction }, ms) {
+		const position = (ms - start) / cycleMs + Number(phase);
+		const cycle = Math.floor(position);
+		return { cycle, progress: directedProgress(position - cycle, cycle, direction), position };
+	}
+
+	function timeAtCycle({ start, cycleMs, phase, direction }, cycle, progress) {
+		return start + (cycle + directedProgress(progress, cycle, direction) - Number(phase)) * cycleMs;
 	}
 
 	function easedProgress(data, progress) {
@@ -419,11 +440,14 @@ const GlitterAnimation = (() => {
 		const period = Math.max(1, Number(data.periodMs));
 		const localTime = Number(tMs) - Number(data.delayMs);
 		if (!fill && localTime < 0) return null;
-		let u = localTime / period + Number(data.phase || 0);
+		const timing = { start: Number(data.delayMs), cycleMs: period, phase: Number(data.phase || 0), direction: data.direction };
+		let current = cycleAt(timing, Number(tMs));
+		let u = current.position;
 		let held = false;
 		if (u < 0) {
 			if (!fill || !['backwards', 'both'].includes(data.fillMode)) return null;
 			u = 0;
+			current = cycleAt({ ...timing, start: 0, phase: 0 }, 0);
 			held = true;
 		}
 		const iterations = data.iterations === Infinity ? Infinity : Math.max(0, Number(data.iterations));
@@ -433,8 +457,7 @@ const GlitterAnimation = (() => {
 			const finalProgress = directedProgress(iterations - Math.floor(iterations) || 1, finalCycle, data.direction);
 			return { cycle: finalCycle, progress: finalProgress, eased: easedProgress(data, finalProgress), held: true };
 		}
-		const cycle = Math.floor(u);
-		const progress = directedProgress(u - cycle, cycle, data.direction);
+		const { cycle, progress } = current;
 		return { cycle, progress, eased: easedProgress(data, progress), held };
 	}
 
@@ -448,8 +471,7 @@ const GlitterAnimation = (() => {
 		const data = normalizeAnimation(value);
 		const current = progressAt(data, timestamp, false);
 		if (MOTION_REGISTRY[data.type].keyed && current && Number.isFinite(at)) {
-			const fraction = directedProgress(Math.max(0, Math.min(1, at)), current.cycle, data.direction);
-			const time = Number(data.delayMs) + (current.cycle + fraction - Number(data.phase)) * data.periodMs;
+			const time = timeAtCycle({ start: Number(data.delayMs), cycleMs: data.periodMs, phase: data.phase, direction: data.direction }, current.cycle, Math.max(0, Math.min(1, at)));
 			return time >= data.delayMs && time <= runTiming(data).end ? time : null;
 		}
 		if (!current || data.easing === 'steps' || data.snapMode === 'step' || !Number.isFinite(at)) return null;
@@ -656,8 +678,8 @@ const GlitterAnimation = (() => {
 	}
 
 	return {
-		ANIMATION_TYPES, MOTION_REGISTRY, ANIMATION_CONTROLS, POSE_CHANNELS, POSE_PROPERTIES, keyRestSample, normalizeAnimation, normalizeAnimations, normalizeKeys, interpolateChannel, cycleProgress, timeAtProgress, convertToKeys, isActive, includesOffCanvas, summaryText, loopDurationMs,
-		isSeamlessLoop, runTiming, iterationsForRun, travelSpeed, sampleAt, composeSamples, seededRandom01, domTransformString, applyToContext, resolveOrigin,
+		ANIMATION_TYPES, MOTION_REGISTRY, ANIMATION_CONTROLS, POSE_CHANNELS, POSE_PROPERTIES, keyRestSample, normalizeAnimation, normalizeAnimations, normalizeKeys, interpolateChannel, cycleProgress, timeAtProgress, convertToKeys, isActive, includesOffCanvas, summaryText, describe, loopDurationMs,
+		isSeamlessLoop, runTiming, iterationsForRun, repeatsForRun, isReversedCycle, cycleAt, timeAtCycle, travelSpeed, sampleAt, composeSamples, seededRandom01, domTransformString, applyToContext, resolveOrigin,
 		hashString, mulberry32, createSamplingContext, splitSample, sampleMatrix, multiplyMatrices, wrap, reflect
 	};
 })();

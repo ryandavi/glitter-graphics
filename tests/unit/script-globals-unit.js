@@ -40,6 +40,7 @@ assert.strictEqual(math.indexAtOrBefore([10, 20, 30], 20 - 5e-7, 0), 0);
 assert.strictEqual(math.indexAtOrBefore([10, 20, 30], 100), 2);
 assert(math.isSameData({ a: [1, { b: null }], c: false }, { c: false, a: [1, { b: null }] }));
 assert(!math.isSameData([1, 2], [2, 1]));
+assert(!math.isSameData([], new Array(3)));
 assert(!math.isSameData({ a: undefined }, {}));
 assert(!math.isSameData(null, {}));
 const color = require('../../js/core/color.js');

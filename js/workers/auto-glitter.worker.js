@@ -1,4 +1,4 @@
-importScripts('../core/math.js?v=35dff948', '../effects/palette-analysis.js?v=5de64065');
+importScripts('../core/math.js?v=f539913a', '../effects/palette-analysis.js?v=5de64065');
 
 importScripts('../effects/color-adjust.js?v=7bd60e2a');
 

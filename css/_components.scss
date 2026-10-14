@@ -511,6 +511,7 @@ input[type="range"] {
 	overflow: hidden;
 	transition: background-color var(--transition-fast), opacity var(--transition-fast);
 
+	background: var(--list-row-background, transparent);
 	&:hover { background: var(--color-bg-tertiary); }
 
 	&:focus-visible {
@@ -518,8 +519,8 @@ input[type="range"] {
 		box-shadow: inset var(--control-focus-ring);
 	}
 
-	&.selected { background: var(--color-accent-surface); }
-	&.active { background: var(--color-accent-surface-strong); }
+	&.selected { background: linear-gradient(var(--color-accent-surface), var(--color-accent-surface)) var(--list-row-background, transparent); }
+	&.active { background: linear-gradient(var(--color-accent-surface-strong), var(--color-accent-surface-strong)) var(--list-row-background, transparent); }
 }
 
 // Palette entry variant: the shared list surface and text tiers with a native
@@ -551,6 +552,29 @@ input.color-hex-input {
 	min-width: 0;
 	height: var(--control-height);
 	font-variant-numeric: tabular-nums;
+}
+
+.list-insertion-line {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: -10px;
+	z-index: 100;
+	height: 2px;
+	background: var(--color-accent);
+	pointer-events: none;
+	opacity: 0;
+	transition: opacity var(--transition-fast);
+
+	&.visible { opacity: 1; }
+}
+
+.list-row.is-dragging { opacity: var(--opacity-dragging); }
+.list-row.is-drop-target { outline: 2px solid var(--color-accent); }
+
+.layer-item, .animation-stack-item, .auto-glitter-match {
+	> .list-row-handle { display: none; }
+	&:focus-within > .list-row-handle { display: flex; }
 }
 
 .list-row-handle {

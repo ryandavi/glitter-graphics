@@ -17,9 +17,7 @@ const DRAG_KINDS = {
 
 const TimelineView = {
 	SEAM_TEXT: 'Visible seam: the end does not match the start.',
-	// `kept` names the layers already listed: one of them that is now hidden
-	// keeps its group, without rows, so it can be shown again from there.
-	buildModel(estimate, layers, kept = new Set()) {
+	buildModel(estimate, layers, editor) {
 		const loopMs = estimate?.duration || 0;
 		const analyses = new Map((estimate?.sourceAnalysis || []).map(entry => [entry.key, entry]));
 		const owners = new Map(layers.map(layer => [layer.id, layer]));
@@ -40,16 +38,31 @@ const TimelineView = {
 				frameCount: source.frameCount, cycleMarks: source.cycleMarks || [],
 				closes: sourceSeamError(source, loopMs, exportCycleMs) < 1e-8, nonLooping: source.nonLooping,
 				can: { period: typeof source.setPeriod === 'function', run: typeof source.setRun === 'function', phase: typeof source.setPhase === 'function' },
-				curve: this.motionCurve(source, cycleMs), source
+				curveKey: source.key, source
 			});
 			groups.set(source.ownerLayerId, rows);
 		});
 		return {
 			loopMs, loopFit: estimate?.loopFit, exact: estimate?.exact, frameStarts: estimate?.renderClock?.frameStarts || [],
 			frameCount: estimate?.renderClock?.frameCount || 0, outputFormat: estimate?.outputFormat,
-			groups: [...layers].reverse().filter(layer => groups.has(layer.id) || (layer.visible === false && kept.has(layer.id))).map(layer => ({
-				layerId: layer.id, name: layer.name, locked: isLayerFullyLocked(layer), rows: groups.get(layer.id) || []
-			}))
+			groups: [...layers].reverse().filter(layer => !layer.isPreview).map(layer => {
+				const sourceRows = groups.get(layer.id) || [];
+				const motions = (layer.animations || []).map((animation, index) => {
+					const effectSlot = `animation-${index}`, description = GlitterAnimation.describe(animation);
+					const active = animation.enabled !== false && layer.visible !== false && sourceRows.find(row => row.effectSlot === effectSlot);
+					return { ...(active || {
+						key: `__anim_${layer.id}_${index}`, layerId: layer.id, effectSlot, kind: 'procedural',
+						cycleMs: animation.periodMs, exportCycleMs: animation.periodMs, startMs: 0, endMs: 0,
+						phase: animation.phase, direction: animation.direction, cycleMarks: [], closes: true,
+						can: { period: false, run: false, phase: false }, curve: null, source: null
+					}), label: description.name, animation, curveInputs: JSON.stringify({ animation, period: active?.cycleMs, phase: animation.phase }), enabled: animation.enabled !== false };
+				});
+				return {
+					layerId: layer.id, name: describeLayer(layer, editor).name, visible: layer.visible !== false,
+					locked: isLayerFullyLocked(layer), stackLocked: Boolean(layer.locked),
+					rows: [...sourceRows.filter(row => this.motionIndex(row) == null), ...motions]
+				};
+			})
 		};
 	},
 	motionCurve(source, cycleMs) {
@@ -68,7 +81,7 @@ const TimelineView = {
 		return `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points="${points}" fill="none" stroke="white" stroke-opacity=".35" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg>`)}")`;
 	},
 	modelSignature(model) {
-		return JSON.stringify({ ...model, loopFit: undefined, groups: model.groups.map(group => ({ ...group, rows: group.rows.map(row => ({ ...row, source: { run: row.source.run, keys: row.source.keyTrack?.entry?.keys }, curve: row.curve })) })) });
+		return JSON.stringify({ ...model, loopFit: undefined, groups: model.groups.map(group => ({ ...group, rows: group.rows.map(row => ({ ...row, source: row.source && { run: row.source.run, keys: row.source.keyTrack?.entry?.keys }, curve: undefined, curveInputs: undefined })) })) });
 	},
 	wheelZoom(travel, delta, threshold) {
 		const total = travel && Math.sign(travel) !== Math.sign(delta) ? delta : travel + delta;
@@ -110,7 +123,7 @@ const TimelineView = {
 	},
 	// How many times a run plays its cycle; Infinity to the loop's end.
 	repeats(row, run = row.source.run) {
-		return run && Number.isFinite(run.end) ? (run.end - run.start) / row.cycleMs + row.phase : Infinity;
+		return run ? GlitterAnimation.repeatsForRun(row, run) : Infinity;
 	},
 	repeatsText(count) { return Number.isFinite(count) ? String(Number(count.toFixed(2))) : 'forever'; },
 	durationText(row, { period, run }) {
@@ -156,6 +169,7 @@ const TimelineView = {
 		return text;
 	},
 	rowInfo(row) {
+		if (!row.source && row.animation) return GlitterAnimation.describe(row.animation).detail;
 		if (row.kind === 'authored') return `${row.frameCount} frames · ${formatSeconds(row.cycleMs)}`;
 		return Number.isFinite(row.source.run?.end)
 			? this.durationText(row, { period: row.cycleMs, run: row.source.run }) : formatSeconds(row.cycleMs);
@@ -285,7 +299,7 @@ const TimelineView = {
 				{ id: 'start', label: 'Start at playhead', run: () => row.source.setRun({ start: clampNumber(playhead, 0, FIELDS.animDelay.max * 1000), end: row.source.run.end }) },
 				{ id: 'end', label: 'End at playhead', disabled: playhead <= row.startMs, run: () => row.source.setRun({ start: row.startMs, end: playhead }) });
 		}
-		if (row.source.setDirection) for (const [direction, label] of [['normal', 'Normal'], ['reverse', 'Reverse'], ['alternate', 'Ping-pong']]) actions.push({ id: `direction-${direction}`, label, checked: row.direction === direction, run: () => row.source.setDirection(direction) });
+		if (row.source.setDirection) for (const { value: direction, label } of ANIMATION_DIRECTION_OPTIONS) actions.push({ id: `direction-${direction}`, label, checked: row.direction === direction, run: () => row.source.setDirection(direction) });
 		const writePeriod = period => row.source.setPeriod(row.source.resolvePeriod ? row.source.resolvePeriod(period) : period);
 		if (row.can.period) {
 			const fit = model.loopFit?.candidates.find(candidate => candidate.duration === model.loopMs)?.fits.find(entry => entry.source.key === row.key && entry.fitted);
@@ -318,18 +332,15 @@ const TimelineView = {
 		return starts;
 	},
 	isReversed(row, index) {
-		return row.direction === 'reverse' || (row.direction === 'alternate' && index % 2 !== 0)
-			|| (row.direction === 'alternate-reverse' && index % 2 === 0);
+		return GlitterAnimation.isReversedCycle(row.direction, index);
 	},
 	timeToCycle(row, ms) {
 		if (ms < row.startMs || ms >= row.endMs) return null;
-		const u = (ms - row.startMs) / row.cycleMs + row.phase;
-		const index = Math.floor(u);
-		const progress = u - index;
-		return { index, progress: this.isReversed(row, index) ? 1 - progress : progress };
+		const { cycle: index, progress } = GlitterAnimation.cycleAt({ ...row, start: row.startMs }, ms);
+		return { index, progress };
 	},
 	cycleToTime(row, index, progress) {
-		return row.startMs + (index + (this.isReversed(row, index) ? 1 - progress : progress) - row.phase) * row.cycleMs;
+		return GlitterAnimation.timeAtCycle({ ...row, start: row.startMs }, index, progress);
 	},
 	// The start of the output frame nearest a moment: where a playhead snaps.
 	nearestFrameStart(frameStarts, ms) {

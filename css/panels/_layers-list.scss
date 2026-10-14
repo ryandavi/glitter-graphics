@@ -58,8 +58,6 @@
 .layer-item {
 	cursor: pointer;
 
-	&.dragging { opacity: var(--opacity-dragging); }
-
 	// Visibility dims the preview, never the row's controls.
 	&.is-hidden {
 		> .layer-swatch { opacity: 0.35; }
@@ -69,9 +67,6 @@
 	}
 
 	&.is-locked > .layer-drag-handle { cursor: default; }
-
-	// Shown on touch layouts only, where rows reorder by handle.
-	> .layer-drag-handle { display: none; }
 
 	> .layer-visibility {
 		touch-action: none;
@@ -180,20 +175,6 @@
 	}
 }
 
-.layer-insertion-line {
-	position: absolute;
-	left: 0;
-	right: 0;
-	top: -10px;
-	z-index: 100;
-	height: 2px;
-	background: var(--color-accent);
-	pointer-events: none;
-	opacity: 0;
-	transition: opacity var(--transition-fast);
-
-	&.visible { opacity: 1; }
-}
 
 // Add actions on the left, edit actions on the right.
 .layers-section-bottom-bar {

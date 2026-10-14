@@ -13,21 +13,20 @@ class KeyStrip {
 					const button = event.target.closest('[data-key-at]'), { layer, entry } = this.context;
 					if (!button || !this.panel.canEditKeys(layer, entry)) return false;
 					const at = Number(button.dataset.keyAt);
-					this.drag = { layer, entry, at, keys: GlitterAnimation.normalizeKeys(entry.keys), moved: false };
+					this.drag = { layer, entry, retime: this.panel.beginKeyRetime(layer, entry, at), moved: false };
 					this.panel.selectKey(layer, entry, at);
 				},
 				move: event => {
 					const drag = this.drag, box = host.getBoundingClientRect();
 					if (!this.panel.canEditKeys(drag.layer, drag.entry)) { this.pointerDrag.finish(true); return; }
 					drag.moved = true;
-					this.panel.retimeKey(drag.layer, drag.entry, this.panel.keyIndex(drag.entry), clampNumber((event.clientX - box.left) / box.width, 0, 1), { commit: false });
+					drag.retime.move(clampNumber((event.clientX - box.left) / box.width, 0, 1));
 					this.update();
 				},
 				end: cancelled => {
 					const drag = this.drag; this.drag = null;
 					if (!drag?.moved) return;
-					if (cancelled) this.panel.setKeys(drag.layer, drag.entry, drag.keys, { commit: false, rollback: true, at: drag.at });
-					else if (!isSameData(drag.keys, GlitterAnimation.normalizeKeys(drag.entry.keys))) this.panel.editor.saveState('Retime motion key');
+					drag.retime.finish(cancelled);
 					this.update();
 				}
 			});
@@ -85,21 +84,16 @@ class KeyStrip {
 	openMenu(button, event) {
 		const { layer, entry } = this.context;
 		if (!this.panel.canEditKeys(layer, entry)) return;
-		this.menu?.close(); this.menuHost?.remove();
 		this.panel.setKeySelection(entry, Number(button.dataset.keyAt));
 		const key = GlitterAnimation.normalizeKeys(entry.keys)[this.panel.keyIndex(entry)];
-		const menu = buildMenuPanel();
-		menu.append(buildMenuLabel('Outgoing easing'), ...ANIMATION_EASING_OPTIONS.map(option => {
-			const item = buildMenuItem({ label: option.label, current: true, run: () => {
+		this.menu = openActionMenu({ root: this.host, trigger: button, event, actions: [
+			...ANIMATION_EASING_OPTIONS.map(option => ({ group: 'Outgoing easing', label: option.label, checked: key.easing === option.value, run: () => {
 				if (!this.panel.canEditKeys(layer, entry)) return;
 				this.panel.editKeyEasing(layer, entry, key.at, option.value); this.update();
-			} });
-			item.setAttribute('aria-current', String(key.easing === option.value)); return item;
-		}), buildMenuSeparator(), buildMenuItem({ label: 'Duplicate key', run: () => { this.panel.duplicateKey(layer, entry, key.at); this.update(); } }), buildMenuItem({ label: 'Delete key', run: () => { this.panel.deleteKey(layer, entry); this.update(); } }));
-		this.host.appendChild(menu); this.menuHost = menu;
-		this.menu = setupMenuPopover({ root: this.host, trigger: button, panel: menu, fixed: true, bindTrigger: false });
-		const anchor = event && { left: event.clientX, right: event.clientX, top: event.clientY, bottom: event.clientY };
-		this.menu.open({ anchor });
+			} })),
+			{ label: 'Duplicate key', run: () => { this.panel.duplicateKey(layer, entry, key.at); this.update(); } },
+			{ label: 'Delete key', run: () => { this.panel.deleteKey(layer, entry); this.update(); } }
+		] });
 	}
 }
 

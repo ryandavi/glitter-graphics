@@ -119,7 +119,7 @@ class TimelineKeyLane {
 		event.preventDefault(); event.stopPropagation();
 		const keys = GlitterAnimation.normalizeKeys(this.entry.keys);
 		const at = Number(button.dataset.keyAt);
-		this.drag = { pointerId: event.pointerId, x: event.clientX, left: this.cell.getBoundingClientRect().left, scrollLeft: this.dock.body.scrollLeft, keys, at, layer: this.layer, entry: this.entry, button, track: this.track, moved: false };
+		this.drag = { pointerId: event.pointerId, x: event.clientX, left: this.cell.getBoundingClientRect().left, scrollLeft: this.dock.body.scrollLeft, retime: this.panel.beginKeyRetime(this.layer, this.entry, at), at, layer: this.layer, entry: this.entry, button, track: this.track, moved: false };
 		const span = TimelineView.cycleSpan(this.row, this.cycle);
 		this.drag.targets = [
 			{ ms: this.dock.editor.animationTicker.getPlayheadTime(), kind: 'playhead' }, { ms: span.start, kind: 'cycle' }, { ms: span.end, kind: 'cycle' },
@@ -147,7 +147,7 @@ class TimelineKeyLane {
 			({ ms, target } = TimelineView.snapTime(ms, targets, TimelineView.xToTime(CONFIG.ui.timeline.snapPx, scale)));
 		}
 		const wanted = TimelineView.timeToKey(this.row, drag.entry, ms, this.cycle);
-		const next = this.panel.retimeKey(drag.layer, drag.entry, this.panel.keyIndex(drag.entry), wanted, { commit: false });
+		const next = drag.retime.move(wanted);
 		if (next == null) return;
 		// Another key in the way moves this one off the snap.
 		if (Math.abs(next - wanted) > 1e-9) target = null;
@@ -164,8 +164,7 @@ class TimelineKeyLane {
 		this.dock.stopEdgeScroll();
 		this.dock.clearDragFeedback();
 		if (!drag.moved) { if (this.dock.syncPending) this.dock.resync(); return; }
-		if (cancel) this.panel.setKeys(drag.layer, drag.entry, drag.keys, { commit: false, rollback: true, at: drag.at });
-		else if (!isSameData(drag.keys, GlitterAnimation.normalizeKeys(drag.entry.keys))) this.dock.editor.saveState('Retime motion key');
+		drag.retime.finish(cancel);
 		this.refresh();
 		if (this.dock.syncPending) this.dock.resync();
 	}

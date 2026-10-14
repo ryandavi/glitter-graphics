@@ -43,6 +43,22 @@ class AutoGlitterManager {
 			previewModes: [...document.querySelectorAll('#autoGlitterPreviewMode [data-value]')]
 		};
 
+		this.mergeReorder = bindListReorder(this.ui.results, {
+			item: '.auto-glitter-match:not(.is-merged)', handle: '.list-row-handle',
+			scroller: this.ui.results.closest('.section-content') || this.ui.results,
+			drop: 'onto', keyboard: false,
+			ids: row => [Number(row.dataset.paletteIndex)],
+			canDrag: () => this.isSessionActive() && this.getActivePaletteIndices().length > 1,
+			resolve: ({ ids, target }) => {
+				const sourceIndex = ids[0], targetIndex = Number(target.dataset.paletteIndex);
+				return sourceIndex !== targetIndex && this.result.palette[sourceIndex]?.manualMergeTarget == null && this.result.palette[targetIndex]?.manualMergeTarget == null ? { sourceIndex, targetIndex } : null;
+			},
+			commit: ({ sourceIndex, targetIndex }) => this.combineColors(sourceIndex, targetIndex)
+		});
+		this.ui.results.addEventListener('listreorderend', () => {
+			if (this.pendingReviewRender) { this.pendingReviewRender = false; this.renderReviewResults(); }
+		});
+
 		// How far a matched glitter may be moved toward its region, one limit per
 		// axis of its color adjust; the setting and the worker option share a key.
 		this.corrections = Object.fromEntries(Object.entries({
@@ -596,7 +612,7 @@ class AutoGlitterManager {
 
 	ensureWorker() {
 		if (this.worker) return;
-		this.worker = new Worker('js/workers/auto-glitter.worker.js?v=6b98d1ac');
+		this.worker = new Worker('js/workers/auto-glitter.worker.js?v=7a141b07');
 		this.worker.onmessage = ({ data }) => {
 			const pending = this.workerRequests.get(data.requestId);
 			if (!pending) return;
@@ -639,6 +655,7 @@ class AutoGlitterManager {
 	}
 
 	renderReviewResults() {
+		if (isReordering(this.ui.results)) { this.pendingReviewRender = true; return; }
 		const template = document.getElementById('tpl-auto-glitter-match');
 		const glitters = this.editor.glitterLibrary.getAllContent().filter(glitter => glitter.isActive !== false && !glitter.hasTransparency);
 		this.ui.results.replaceChildren();
@@ -679,8 +696,6 @@ class AutoGlitterManager {
 			} else {
 				handle.setAttribute('aria-label', `Drag Color ${index + 1} onto another color to combine them`);
 				handle.disabled = activeIndices.length <= 1;
-				this.bindMergeHandle(handle, row, index);
-				this.bindMergeRow(row, index, activeIndices.length <= 1);
 				choice.setAttribute('aria-label', `Choose glitter for Color ${index + 1}`);
 				choice.addEventListener('click', () => this.openGlitterPicker(index));
 				row.classList.toggle('is-skipped', Boolean(color.skipped));
@@ -792,86 +807,6 @@ class AutoGlitterManager {
 
 	closePickerSession() {
 		pickerCloseSession(this, { refresh: () => this.syncMatchAdjust() });
-	}
-
-	bindMergeHandle(handle, row, index) {
-		handle.addEventListener('pointerdown', (event) => {
-			if (handle.disabled || event.button !== 0) return;
-			this.mergeDrag = { pointerId: event.pointerId, sourceIndex: index, sourceRow: row, targetRow: null, startX: event.clientX, startY: event.clientY };
-			handle.setPointerCapture?.(event.pointerId);
-			event.preventDefault();
-		});
-		handle.addEventListener('pointermove', (event) => this.moveMergeDrag(event));
-		handle.addEventListener('pointerup', (event) => this.endMergeDrag(event));
-		handle.addEventListener('pointercancel', (event) => this.endMergeDrag(event, true));
-	}
-
-	bindMergeRow(row, index, disabled) {
-		row.draggable = !disabled;
-		row.addEventListener('pointerdown', (event) => {
-			row.mergeDragBlocked = Boolean(event.target.closest('button'));
-		});
-		row.addEventListener('pointerup', () => { row.mergeDragBlocked = false; });
-		row.addEventListener('pointercancel', () => { row.mergeDragBlocked = false; });
-		row.addEventListener('dragstart', (event) => {
-			if (disabled || row.mergeDragBlocked) {
-				event.preventDefault();
-				return;
-			}
-			this.nativeMergeSourceIndex = index;
-			event.dataTransfer.effectAllowed = 'move';
-			event.dataTransfer.setData('text/plain', String(index));
-			row.classList.add('is-dragging');
-		});
-		row.addEventListener('dragover', (event) => {
-			if (this.nativeMergeSourceIndex == null || this.nativeMergeSourceIndex === index) return;
-			event.preventDefault();
-			event.dataTransfer.dropEffect = 'move';
-			row.classList.add('is-merge-target');
-		});
-		row.addEventListener('dragleave', (event) => {
-			if (!row.contains(event.relatedTarget)) row.classList.remove('is-merge-target');
-		});
-		row.addEventListener('drop', (event) => {
-			event.preventDefault();
-			const sourceIndex = this.nativeMergeSourceIndex;
-			this.clearNativeMergeDrag();
-			if (sourceIndex != null) this.combineColors(sourceIndex, index);
-		});
-		row.addEventListener('dragend', () => this.clearNativeMergeDrag());
-	}
-
-	clearNativeMergeDrag() {
-		this.nativeMergeSourceIndex = null;
-		this.ui.results.querySelectorAll('.is-dragging, .is-merge-target').forEach((row) => {
-			row.classList.remove('is-dragging', 'is-merge-target');
-		});
-	}
-
-	moveMergeDrag(event) {
-		const drag = this.mergeDrag;
-		if (!drag || event.pointerId !== drag.pointerId) return;
-		if (Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) > 4) drag.sourceRow.classList.add('is-dragging');
-		const target = document.elementsFromPoint(event.clientX, event.clientY).find((element) =>
-			element.classList?.contains('auto-glitter-match')
-			&& !element.classList.contains('is-merged')
-			&& element !== drag.sourceRow
-		);
-		if (drag.targetRow !== target) {
-			drag.targetRow?.classList.remove('is-merge-target');
-			drag.targetRow = target || null;
-			drag.targetRow?.classList.add('is-merge-target');
-		}
-		event.preventDefault();
-	}
-
-	endMergeDrag(event, cancelled = false) {
-		const drag = this.mergeDrag;
-		if (!drag || event.pointerId !== drag.pointerId) return;
-		drag.sourceRow.classList.remove('is-dragging');
-		drag.targetRow?.classList.remove('is-merge-target');
-		if (!cancelled && drag.targetRow) this.combineColors(drag.sourceIndex, Number(drag.targetRow.dataset.paletteIndex));
-		this.mergeDrag = null;
 	}
 
 	getActivePaletteIndices() {

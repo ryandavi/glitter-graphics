@@ -101,7 +101,7 @@ const { openApp } = require('../lib/app');
 		let menuBefore = await state();
 		await page.evaluate(() => {
 			const trigger = document.getElementById('shapeAnimAdd'); trigger.click();
-			[...trigger.closest('.app-menu').querySelectorAll('.app-menu-item')].find(button => button.textContent === 'Custom').click();
+			[...document.querySelectorAll('.app-menu-panel.is-fixed-menu:not([hidden]) .app-menu-item')].find(button => button.textContent === 'Custom').click();
 		});
 		await ready();
 		assert.strictEqual(await page.evaluate(() => editor.layerManager.getActiveLayer().animations.length), 2);
@@ -123,7 +123,7 @@ const { openApp } = require('../lib/app');
 		await page.evaluate(() => editor.historyManager.undo()); await ready();
 		const addValue = name => page.evaluate(name => {
 			const trigger = document.getElementById('shapeAnimKeyAddValue'); trigger.click();
-			const items = [...trigger.closest('.app-menu').querySelectorAll('.app-menu-item')];
+			const items = [...document.querySelectorAll('.app-menu-panel.is-fixed-menu:not([hidden]) .app-menu-item')];
 			const labels = items.map(item => item.textContent);
 			items.find(item => item.textContent === name).click();
 			return labels;

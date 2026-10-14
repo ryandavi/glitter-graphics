@@ -81,6 +81,16 @@ const COMMANDS = {
 		when: editor => editor.canToggleClippingMask(),
 		run: editor => editor.toggleClippingMask()
 	},
+	...Object.fromEntries([
+		['arrangeForward', 'Bring Forward', 'forward', 'mod+BracketRight', 'Ctrl/Cmd + ]'],
+		['arrangeBackward', 'Send Backward', 'backward', 'mod+BracketLeft', 'Ctrl/Cmd + ['],
+		['arrangeFront', 'Bring to Front', 'front', 'mod+shift+BracketRight', 'Ctrl/Cmd + Shift + ]'],
+		['arrangeBack', 'Send to Back', 'back', 'mod+shift+BracketLeft', 'Ctrl/Cmd + Shift + [']
+	].map(([id, label, step, key, displayKey]) => [id, {
+		label, group: 'Transform', keys: [key], displayKey,
+		when: editor => editor.layerManager.getSelectedLayers().some(layer => canEditLayerInStack(layer) && !layer.isPreview),
+		run: editor => editor.layerManager.arrangeLayers([...editor.selectedLayerIds], step)
+	}])),
 	flipHorizontal: {
 		label: 'Flip Horizontal', group: 'Transform', keys: ['shift+h'], displayKey: 'Shift + H',
 		when: (editor) => editor.getSelectedActionableLayers().length === 1 && Boolean(editor.getMovableLayerContext(editor.layerManager.getActiveLayer())),

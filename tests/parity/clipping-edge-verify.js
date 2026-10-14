@@ -49,8 +49,7 @@ async function main() {
 			const duplicate = manager.cloneLayer(content.id, { skipSelection: true, skipHistory: true });
 			const persists = restored.clipped && duplicate.clipped && getClipBase(editor.layers, duplicate)?.id === base.id;
 			manager.deleteLayer(duplicate.id); editor.saveState('Before reorder');
-			manager.draggedLayerId = content.id; manager.dropTargetId = base.id; manager.dropInsertAbove = false;
-			manager.handleLayerDrop({ preventDefault() {} });
+			manager.moveLayers([content.id], { targetId: base.id, place: 'below' });
 			const released = !getClipBase(editor.layers, content);
 			await editor.undo(); const restoredClip = manager.getLayerById(content.id).clipped && getClipBase(editor.layers, manager.getLayerById(content.id))?.id === base.id;
 			await editor.redo(); const redoReorder = !getClipBase(editor.layers, manager.getLayerById(content.id));

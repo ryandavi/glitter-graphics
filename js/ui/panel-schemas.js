@@ -81,12 +81,6 @@ const ANIMATION_PRESET_OPTIONS = Object.values(GlitterAnimation.MOTION_REGISTRY)
 
 const KEY_POSE_ACTION = Object.freeze({ label: 'Pose keys', icon: 'hand-pointer', history: 'Pose motion key' });
 
-const ANIMATION_EASING_OPTIONS = [
-	{ value: 'linear', label: 'Linear', shape: 'diamond' }, { value: 'ease', label: 'Ease', shape: 'rounded' }, { value: 'easeIn', label: 'Ease in', shape: 'rounded' },
-	{ value: 'easeOut', label: 'Ease out', shape: 'rounded' }, { value: 'easeInOut', label: 'Ease in-out', shape: 'rounded' },
-	{ value: 'bounceOut', label: 'Bounce out', shape: 'rounded' }, { value: 'elasticOut', label: 'Elastic out', shape: 'rounded' }, { value: 'steps', label: 'Steps', shape: 'square' }
-];
-
 const ANCHOR_SELECT_OPTIONS = Object.freeze([
 	...ANCHOR_POINTS.map((anchor) => ({ value: `${anchor.fx},${anchor.fy}`, label: anchor.label })),
 	{ value: 'custom', label: 'Custom', disabled: true }
@@ -366,10 +360,7 @@ function createAnimationSectionSpec(prefix) {
 		advanced: [
 			{ label: 'Playback', rows: [
 				...sliders(['phase']),
-				{ kind: 'select', id: id('Direction'), label: 'Direction', options: [
-					{ value: 'normal', label: 'Normal' }, { value: 'reverse', label: 'Reverse' },
-					{ value: 'alternate', label: 'Alternate' }, { value: 'alternate-reverse', label: 'Alternate reverse' }
-				] },
+				{ kind: 'select', id: id('Direction'), label: 'Direction', options: ANIMATION_DIRECTION_OPTIONS },
 				{ kind: 'select', id: id('FillMode'), label: 'Fill', ariaLabel: 'Fill mode',
 					hint: 'What the layer does before the delay and after the last repeat.',
 					options: [

@@ -14,6 +14,17 @@ const ANCHOR_POINTS = Object.freeze([
 
 const OPTION_REGISTRY = Object.create(null);
 
+const ANIMATION_EASING_OPTIONS = [
+	{ value: 'linear', label: 'Linear', shape: 'diamond' }, { value: 'ease', label: 'Ease', shape: 'rounded' }, { value: 'easeIn', label: 'Ease in', shape: 'rounded' },
+	{ value: 'easeOut', label: 'Ease out', shape: 'rounded' }, { value: 'easeInOut', label: 'Ease in-out', shape: 'rounded' },
+	{ value: 'bounceOut', label: 'Bounce out', shape: 'rounded' }, { value: 'elasticOut', label: 'Elastic out', shape: 'rounded' }, { value: 'steps', label: 'Steps', shape: 'square' }
+];
+
+const ANIMATION_DIRECTION_OPTIONS = defineOptions('animationDirection', [
+	{ value: 'normal', label: 'Normal' }, { value: 'reverse', label: 'Reverse' },
+	{ value: 'alternate', label: 'Ping-pong' }, { value: 'alternate-reverse', label: 'Reverse ping-pong' }
+]);
+
 function defineOptions(name, options) {
 	if (OPTION_REGISTRY[name]) throw new Error(`Options already defined: ${name}`);
 	const normalized = options.map((option) => Object.freeze(typeof option === 'string' ? { value: option, label: option } : { ...option }));

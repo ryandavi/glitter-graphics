@@ -144,8 +144,16 @@ togglePreview() {
 		});
 		this.previewContainer.addEventListener('pointerleave', () => this.previewContainer.classList.remove('is-over-picked-layer'));
 
-		// Prevent right-click context menu on preview area
 		this.previewContainer.addEventListener('contextmenu', (e) => {
+			if (this.currentTool === ToolType.SELECT && !e.target.closest('.ui-ignore-gestures') && !this.autoGlitterManager?.isSessionActive()) {
+				const layer = PREFERENCES.get('autoSelect') ? this.getCanvasPickedLayerAt(e, { paintedOnly: false }) : this.layerManager.getActiveLayer();
+				if (layer) {
+					e.preventDefault();
+					this.layerManager.selectLayerFromCanvas(layer.id);
+					openActionMenu({ root: this.previewContainer, trigger: this.previewCanvas, actions: getLayerActions(this, layer), event: e });
+					return;
+				}
+			}
 			// Always prevent on canvas
 			if (e.target === this.previewCanvas || e.target === document.getElementById('maskOverlayCanvas')) {
 				e.preventDefault();
@@ -156,6 +164,13 @@ togglePreview() {
 			if (this.currentTool === ToolType.ZOOM) {
 				e.preventDefault();
 			}
+		});
+		this.previewCanvas.addEventListener('keydown', event => {
+			if (this.currentTool !== ToolType.SELECT || (event.key !== 'ContextMenu' && !(event.shiftKey && event.key === 'F10')) || this.autoGlitterManager?.isSessionActive()) return;
+			const layer = this.layerManager.getActiveLayer();
+			if (!layer) return;
+			event.preventDefault(); event.stopPropagation();
+			openActionMenu({ root: this.previewContainer, trigger: this.previewCanvas, actions: getLayerActions(this, layer) });
 		});
 	},
 
@@ -193,11 +208,11 @@ togglePreview() {
 
 	// The canvas-picked layer a press at this pointer would drag, if any. The
 	// press and the hover cursor share this test.
-	getCanvasPickedLayerAt(e) {
+	getCanvasPickedLayerAt(e, { paintedOnly = true } = {}) {
 		if (e.shiftKey || !PREFERENCES.get('autoSelect') || this.autoGlitterManager?.isSessionActive()) return null;
 		const point = this.viewport.screenToCanvas(e.clientX, e.clientY);
-		const layer = this.layerManager.getTopVisibleLayerAtPoint(point.x, point.y, { includeBase: false, excludeLocked: true });
-		return layer && LAYER_UI_CONFIG[layer.type]?.pickedOnCanvas && isLayerSelectableOnCanvas(layer) ? layer : null;
+		const layer = this.layerManager.getTopVisibleLayerAtPoint(point.x, point.y, { includeBase: !paintedOnly, excludeLocked: true });
+		return layer && (!paintedOnly || (LAYER_UI_CONFIG[layer.type]?.pickedOnCanvas && isLayerSelectableOnCanvas(layer))) ? layer : null;
 	},
 
 	// A layer picked on the canvas (LAYER_UI_CONFIG pickedOnCanvas) has no

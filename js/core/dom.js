@@ -16,6 +16,29 @@ function buildIconButton({ className = 'btn-icon-simple icon-wrapper sm', label 
 	return button;
 }
 
+const KEYED_CHILDREN = new WeakMap();
+
+function reconcileKeyedChildren(container, items, { key, build, reuse }) {
+	const previous = new Map([...(KEYED_CHILDREN.get(container) || [])].filter(([, node]) => node.parentElement === container)), next = new Map();
+	for (const node of container.children) if (node.dataset.id != null) previous.set(String(node.dataset.id), node);
+	for (const item of items) {
+		const id = String(key(item)), current = previous.get(id);
+		const node = current ? (reuse?.(current, item) || current) : build(item);
+		if (current && node !== current) current.remove();
+		next.set(id, node);
+	}
+	for (const [id, node] of previous) if (!next.has(id)) node.remove();
+	const managed = new Set([...previous.values(), ...next.values()]);
+	let cursor = [...container.children].find(node => managed.has(node)) || null;
+	for (const node of next.values()) {
+		if (node !== cursor) container.insertBefore(node, cursor);
+		cursor = node.nextElementSibling;
+		while (cursor && !managed.has(cursor)) cursor = cursor.nextElementSibling;
+	}
+	KEYED_CHILDREN.set(container, next);
+	return [...next.values()];
+}
+
 function isLocalHost() {
 	return document.documentElement.classList.contains('is-localhost');
 }

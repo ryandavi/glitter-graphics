@@ -143,12 +143,16 @@ function assert(condition, message) {
 			&& timing.frameIndexAt(69) === 1 && timing.frameIndexAt(70) === 2,
 			'Authored timing still owns pixels or changed duration normalization');
 
-		const exporter = window.editor.exporter;
-		const compositor = window.editor.sceneCompositor;
-		check(window.editor.authoredFrameResolver === compositor.authoredFrameResolver
-			&& window.editor.gifEncodingPipeline === exporter.gifEncodingPipeline
+		check(window.editor.authoredFrameResolver === window.editor.sceneCompositor.authoredFrameResolver
+			&& window.editor.gifEncodingPipeline === window.editor.exporter.gifEncodingPipeline
 			&& window.editor.gifEncodingPipeline === window.editor.stillImageExporter.gifEncodingPipeline,
 			'Application initialization did not share export services');
+		// Background loop estimates share the application's compositor.
+		// The fixture's plan counter must measure its own export work.
+		const compositor = new SceneCompositor({ editor: window.editor, resolveImageFill: ref => window.editor.imageFills.get(ref) });
+		const exporter = new GifExporter(compositor, {
+			gifEncodingPipeline: window.editor.gifEncodingPipeline, resultPresenter: window.editor.exportResultPresenter
+		});
 		const library = [{ id: 'g1', name: 'One' }, { id: 'g2', name: 'Two' }, { id: 'g3', name: 'Three' }];
 		const keysFor = (layer) => compositor._buildLayerExportPlan(layer).getAuthoredSources(library).map((source) => source.key);
 		const base = { id: 'base', type: LayerType.BASE_IMAGE, background: { mode: 'solid', glitterId: 'g1' } };
@@ -401,6 +405,8 @@ function assert(condition, message) {
 		planBuilds = 0;
 		compositor._buildLayerExportPlan = (...args) => { planBuilds++; return originalBuild(...args); };
 		try {
+			window.editor.scheduleExportDuration();
+			await new Promise(resolve => setTimeout(resolve, CONFIG.export.timeline.estimateDebounceMs + 25));
 			await exporter.process({
 				visibleLayers, glitterGifs: window.editor.glitterLibrary.content, canvasData,
 				exportSettings: structuredClone(window.editor.exportSettings), target: EXPORT_TARGETS['animation:gif'], callbacks,
@@ -443,7 +449,7 @@ function assert(condition, message) {
 		try { resolver.resolveFrame(descriptor('invalid', { width: 1, height: 1, frames: [] }), 0, resolver.createSession()); }
 		catch (error) { resolverErrored = true; }
 		check(resolverErrored, 'Resolver error fixture did not fail');
-		check(Object.keys(compositor.authoredFrameResolver).length === 0
+		check(Object.keys(window.editor.authoredFrameResolver).length === 0 && Object.keys(compositor.authoredFrameResolver).length === 0
 			&& !Object.keys(exporter.gifEncodingPipeline).some((key) => /context|frame|session|source/i.test(key)),
 			'Shared services retained per-export resolution state');
 

@@ -15,19 +15,6 @@ class LayerManager {
 		this.activeLayerId = null;
 		this.selectionCycleState = null;
 
-		// Drag and drop state (desktop)
-		this.draggedLayerId = null;
-		this.dropTargetId = null;
-		this.dropInsertAbove = false;
-		this.dragScrollInterval = null;
-		this.visibilityStroke = null;
-		this.suppressVisibilityClick = false;
-
-		// Touch drag state (mobile)
-		this.touchDragStartY = 0;
-		this.touchDragLastY = 0;
-		this.touchDragPointerId = null;
-		this.touchDragPointerElement = null;
 
 		// DOM references
 		this.layersListContainer = document.getElementById('layersList');
@@ -43,7 +30,7 @@ class LayerManager {
 	// ===== INITIALIZATION =====
 
 	setupContainerEvents() {
-		this.setupVisibilityEvents();
+		bindLayerVisibilityStroke(this.editor, this.layersListContainer);
 		// Layer deselection when clicking empty space
 		this.layersListContainer.addEventListener('click', (e) => {
 			if (e.target === this.layersListContainer) {
@@ -51,24 +38,24 @@ class LayerManager {
 			}
 		});
 
-		// Allow dropping on empty space in the container (drop handler below)
-		this.layersListContainer.addEventListener('dragover', (e) => {
-			if (this.draggedLayerId && e.target === this.layersListContainer) {
-				this.handleLayerDragOver(e, null);
-			}
+		bindListReorder(this.layersListContainer, {
+			item: '.layer-item', handle: '.list-row-handle',
+			ids: row => this.isLayerSelected(row.dataset.layerId) ? [...this.selectedLayerIds] : [row.dataset.layerId],
+			canDrag: row => canEditLayerInStack(this.getLayerById(row.dataset.layerId)),
+			resolve: ({ ids, target, place }) => {
+				const drop = { targetId: target.dataset.layerId, place };
+				return this.canDropLayers(ids, drop) ? { ids, ...drop } : null;
+			},
+			commit: ({ ids, targetId, place }) => this.moveLayers(ids, { targetId, place })
 		});
-
-		// Drop handler for container
-		this.layersListContainer.addEventListener('drop', (e) => {
-			if (e.target === this.layersListContainer) {
-				this.handleLayerDrop(e, null);
-			}
+		this.layersListContainer.addEventListener('listreorderend', () => {
+			if (this.pendingListRender) { this.pendingListRender = false; this.renderLayersList(); }
 		});
 	}
 
 	setupKeyboardNavigation() {
 		this.layersListContainer?.addEventListener('keydown', (event) => {
-			if (!['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
+			if (event.defaultPrevented || event.target.closest('.list-row-handle') || !['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
 			const items = [...this.layersListContainer.querySelectorAll('.layer-item')];
 			if (!items.length) return;
 			const currentIndex = Math.max(0, items.indexOf(document.activeElement));
@@ -288,74 +275,6 @@ class LayerManager {
 		this.deleteLayers([layerId], options);
 	}
 
-	setupVisibilityEvents() {
-		const container = this.layersListContainer;
-		container.addEventListener('pointerdown', (event) => {
-			if (this.visibilityStroke || event.button !== 0 || !event.isPrimary) return;
-			this.suppressVisibilityClick = false;
-			const button = event.target.closest('.layer-visibility');
-			if (!button) return;
-			const layer = this.getLayerById(button.closest('.layer-item').dataset.layerId);
-			if (!layer) return;
-			event.preventDefault();
-			event.stopPropagation();
-			this.suppressVisibilityClick = true;
-			this.visibilityStroke = { pointerId: event.pointerId, visible: !layer.visible, lastY: event.clientY, changed: new Set() };
-			container.setPointerCapture(event.pointerId);
-			this.applyVisibilityStroke(event);
-		}, true);
-		container.addEventListener('pointermove', (event) => {
-			if (event.pointerId !== this.visibilityStroke?.pointerId) return;
-			event.preventDefault();
-			event.stopPropagation();
-			this.applyVisibilityStroke(event);
-		}, true);
-		const finish = (event) => {
-			if (event.pointerId !== this.visibilityStroke?.pointerId) return;
-			event.stopPropagation();
-			if (event.type === 'pointerup') this.applyVisibilityStroke(event);
-			this.finishVisibilityStroke();
-		};
-		container.addEventListener('pointerup', finish, true);
-		container.addEventListener('pointercancel', finish, true);
-		container.addEventListener('lostpointercapture', finish);
-		window.addEventListener('blur', () => this.finishVisibilityStroke());
-		container.addEventListener('click', (event) => {
-			if (!this.suppressVisibilityClick || event.detail === 0) return;
-			this.suppressVisibilityClick = false;
-			event.preventDefault();
-			event.stopPropagation();
-		}, true);
-		container.addEventListener('dragstart', (event) => {
-			if (this.visibilityStroke || event.target.closest('.layer-visibility')) event.preventDefault();
-		}, true);
-	}
-
-	applyVisibilityStroke(event) {
-		const stroke = this.visibilityStroke;
-		const bounds = this.layersListContainer.getBoundingClientRect();
-		const top = Math.max(bounds.top, Math.min(stroke.lastY, event.clientY));
-		const bottom = Math.min(bounds.bottom, Math.max(stroke.lastY, event.clientY));
-		this.layersListContainer.querySelectorAll('.layer-visibility').forEach((button) => {
-			const rect = button.getBoundingClientRect();
-			if (event.clientX < rect.left || event.clientX > rect.right || rect.bottom < top || rect.top > bottom) return;
-			const id = button.closest('.layer-item').dataset.layerId;
-			if (this.setLayerVisibility(id, stroke.visible)) stroke.changed.add(id);
-		});
-		stroke.lastY = event.clientY;
-	}
-
-	finishVisibilityStroke() {
-		const stroke = this.visibilityStroke;
-		if (!stroke) return;
-		this.visibilityStroke = null;
-		if (this.layersListContainer.hasPointerCapture(stroke.pointerId)) this.layersListContainer.releasePointerCapture(stroke.pointerId);
-		if (stroke.changed.size) {
-			this.editor.saveState(stroke.visible ? 'Show layers' : 'Hide layers');
-			this.editor.updateStatus(`${stroke.visible ? 'Shown' : 'Hidden'}: ${formatCount(stroke.changed.size, 'layer')}`);
-		}
-	}
-
 	setLayerVisibility(layerId, visible) {
 		const layer = this.getLayerById(layerId);
 		if (!layer || layer.visible === visible) return false;
@@ -367,15 +286,9 @@ class LayerManager {
 		const element = manager?.layerElements?.get(layerId);
 		if (element) element.style.display = visible ? 'block' : 'none';
 
-		// Preserve the eye controls and pointer capture throughout a visibility stroke.
-		const row = this.layersListContainer.querySelector(`.layer-item[data-layer-id="${layerId}"]`);
-		const button = row?.querySelector('.layer-visibility');
-		row?.classList.toggle('is-hidden', !visible);
-		if (button) {
-			button.classList.toggle('hidden', !visible);
-			button.title = visible ? 'Hide layer' : 'Show layer';
-			button.querySelector('use').setAttribute('href', visible ? '#icon-eye' : '#icon-eye-slash');
-		}
+		document.querySelectorAll('.layer-item[data-layer-id]').forEach(row => {
+			if (row.dataset.layerId === layerId) syncLayerRow(row, layer);
+		});
 		this.editor.requestPreviewUpdate();
 		return true;
 	}
@@ -806,46 +719,21 @@ class LayerManager {
 	// ===== RENDERING =====
 
 	renderLayersList() {
+		if (isReordering(this.layersListContainer)) { this.pendingListRender = true; return; }
 		const container = this.layersListContainer;
 		// The Inspector's bar and the Library's show the same layer name as the list.
 		this.editor.syncInspectorHeader?.();
 		syncLibraryTitle();
 
-		// Add insertion line if it doesn't exist
-		let insertionLine = container.querySelector('.layer-insertion-line');
-		if (!insertionLine) {
-			insertionLine = document.createElement('div');
-			insertionLine.className = 'layer-insertion-line';
-			container.appendChild(insertionLine);
-		}
-
-		if (container.firstChild !== insertionLine) container.prepend(insertionLine);
-
-		// Reconcile rows by layer id instead of rebuilding the list: a row whose
-		// markup is unchanged is kept, so animated swatches keep playing and
-		// keyboard focus stays put. Rows are kept only for the same layer object,
-		// because their handlers close over it (undo and project load replace
-		// layer objects). Layers render in reverse order (visual stacking);
-		// ephemeral Auto Glitter session layers stay out until committed.
-		const rows = new Map();
-		container.querySelectorAll(':scope > .layer-item').forEach((row) => rows.set(row.dataset.layerId, row));
-		let previous = insertionLine;
-		[...this.layers].reverse().forEach((layer) => {
-			if (layer.isPreview) return;
-			const fresh = this.createLayerElement(layer);
-			const current = rows.get(layer.id);
-			rows.delete(layer.id);
-			let row = fresh;
-			if (current?._layer === layer && current.outerHTML === fresh.outerHTML) {
-				row = current;
-			} else {
-				current?.remove();
+		reconcileKeyedChildren(container, [...this.layers].reverse().filter(layer => !layer.isPreview), {
+			key: layer => layer.id,
+			build: layer => { const row = buildLayerRow(this.editor, layer, { variant: 'panel' }); row._layer = layer; return row; },
+			reuse: (current, layer) => {
+				const fresh = buildLayerRow(this.editor, layer, { variant: 'panel' });
+				if (current._layer === layer && current.outerHTML === fresh.outerHTML) return current;
+				fresh._layer = layer; return fresh;
 			}
-			row._layer = layer;
-			if (previous.nextSibling !== row) previous.after(row);
-			previous = row;
 		});
-		rows.forEach((row) => row.remove());
 
 		// Update layer count displays
 		this.updateLayerCount();
@@ -870,27 +758,7 @@ class LayerManager {
 	updateActiveLayerListSelection() {
 		if (!this.layersListContainer) return;
 
-		this.layersListContainer.querySelectorAll('.layer-item').forEach(item => {
-			item.classList.remove('active', 'selected');
-			item.setAttribute('aria-selected', 'false');
-			item.tabIndex = -1;
-		});
-
-		this.selectedLayerIds.forEach((layerId) => {
-			const item = this.layersListContainer.querySelector(`[data-layer-id="${layerId}"]`);
-			if (item) {
-				item.classList.add('selected');
-				item.setAttribute('aria-selected', 'true');
-			}
-		});
-
-		if (this.activeLayerId) {
-			const activeItem = this.layersListContainer.querySelector(`[data-layer-id="${this.activeLayerId}"]`);
-			if (activeItem) {
-				activeItem.classList.add('active');
-				activeItem.tabIndex = 0;
-			}
-		}
+		this.layersListContainer.querySelectorAll('.layer-item').forEach(row => syncLayerRow(row, this.getLayerById(row.dataset.layerId)));
 	}
 
 	updateBottomBarButtons() {
@@ -1075,246 +943,6 @@ class LayerManager {
 		if (!options.silent) this.editor.updateStatus(uniqueIds.length > 1 ? 'Layers deleted' : 'Layer deleted');
 		return true;
 	}
-	createLayerElement(layer) {
-		const layerEl = document.createElement('div');
-		layerEl.className = 'layer-item list-row';
-		layerEl.dataset.layerId = layer.id;
-		const clipBase = getClipBase(this.layers, layer);
-		layerEl.classList.toggle('is-clipped', Boolean(clipBase));
-		const clipButton = clipBase ? buildIconButton({ className: 'btn-icon-simple icon-wrapper sm list-row-action layer-clip', label: `Release clip to ${describeLayer(clipBase, this.editor).name}`, icon: 'clip', onClick: event => {
-				event.stopPropagation();
-				this.editor.toggleClippingMask([layer]);
-			} }) : null;
-		layerEl.setAttribute('role', 'option');
-		layerEl.setAttribute('aria-selected', String(this.isLayerSelected(layer.id)));
-		layerEl.tabIndex = layer.id === this.activeLayerId ? 0 : -1;
-		layerEl.classList.toggle('is-hidden', !layer.visible);
-		layerEl.classList.toggle('is-locked', Boolean(layer.locked));
-
-		// Only allow dragging if not locked
-		if (!isLayerFullyLocked(layer)) {
-			layerEl.draggable = true;
-		}
-
-		if (this.isLayerSelected(layer.id)) {
-			layerEl.classList.add('selected');
-		}
-		if (layer.id === this.activeLayerId) {
-			layerEl.classList.add('active');
-		}
-
-		// 1. Reorder handle. The mark is shared with context bars and Auto Glitter.
-		const dragHandle = document.createElement('button');
-		dragHandle.type = 'button';
-		dragHandle.className = 'layer-drag-handle list-row-handle';
-		dragHandle.disabled = isLayerFullyLocked(layer);
-		dragHandle.setAttribute('aria-label', isLayerFullyLocked(layer) ? 'Layer is locked' : `Reorder ${layer.name || 'layer'}`);
-		const dragMark = document.createElement('span');
-		dragMark.className = 'drag-handle-mark';
-		dragMark.setAttribute('aria-hidden', 'true');
-		dragHandle.appendChild(dragMark);
-
-		// 2. Swatch (Thumbnail)
-		const swatch = document.createElement('div');
-		swatch.className = 'layer-swatch list-row-media';
-		this.renderLayerSwatch(swatch, layer);
-
-		swatch.title = `${swatch.title ? `${swatch.title}\n` : ''}${formatKeyLabel('Ctrl/Cmd')}+click to select its pixels`;
-		// A plain thumbnail click opens its source; modifier clicks read pixels.
-		swatch.addEventListener('click', (e) => {
-			e.stopPropagation();
-			if (e.ctrlKey || e.metaKey) {
-				this.editor.areaSelect.selectLayerPixels([layer], modeFromModifiers(e));
-				return;
-			}
-			this.goToLayerSource(layer.id);
-		});
-
-		// 3. Info (Name & Type)
-		const info = document.createElement('div');
-		info.className = 'list-row-text';
-
-		const nameText = document.createElement('div');
-		nameText.className = 'layer-name list-row-name';
-		nameText.title = 'Double-click to rename';
-		nameText.addEventListener('dblclick', (event) => {
-			event.stopPropagation();
-			if (!canEditLayerInStack(layer)) return;
-			const input = document.createElement('input');
-			input.className = 'layer-name-input';
-			input.type = 'text';
-			input.maxLength = 80;
-			input.value = layer.name || nameText.textContent;
-			nameText.replaceWith(input);
-			input.focus();
-			input.select();
-			let finished = false;
-			const finish = (commit) => {
-				if (finished) return;
-				finished = true;
-				const nextName = input.value.trim();
-				if (commit && nextName && nextName !== layer.name) {
-					layer.name = nextName;
-					this.editor.saveState('Rename layer');
-				}
-				this.renderLayersList();
-			};
-			input.addEventListener('blur', () => finish(true));
-			input.addEventListener('keydown', (keyEvent) => {
-				if (keyEvent.key === 'Enter') { keyEvent.preventDefault(); input.blur(); }
-				if (keyEvent.key === 'Escape') { keyEvent.preventDefault(); finish(false); }
-			});
-		});
-
-		const metaRow = document.createElement('div');
-		metaRow.className = 'list-row-meta';
-
-		const typeText = document.createElement('div');
-		typeText.className = 'layer-type';
-		const description = describeLayer(layer, this.editor);
-		nameText.textContent = description.name;
-		typeText.textContent = description.detail;
-
-		typeText.title = typeText.textContent;
-		metaRow.appendChild(typeText);
-
-		LAYER_BADGES.forEach((badgeConfig) => {
-			const state = badgeConfig.getState?.(layer);
-			if (!state) {
-				return;
-			}
-
-			const badge = document.createElement('span');
-			badge.className = 'layer-badge';
-			badge.title = state.title;
-			badge.setAttribute('aria-label', state.title);
-
-			const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-			svg.classList.add('icon');
-			const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-			use.setAttribute('href', `#icon-${badgeConfig.icon}`);
-			svg.appendChild(use);
-			badge.appendChild(svg);
-			metaRow.appendChild(badge);
-		});
-
-		info.append(nameText, metaRow);
-
-		// 4. Visibility belongs with layer identity, matching modern layer panels.
-		const state = this.getLayerRowState(layer);
-		const visBtn = buildIconButton({
-			className: 'btn-icon-simple icon-wrapper sm list-row-action layer-visibility' + (!layer.visible ? ' hidden' : ''),
-			label: state.visibility.title,
-			icon: state.visibility.icon,
-			onClick: (e) => {
-				e.stopPropagation();
-				this.toggleLayerVisibility(layer.id);
-			}
-		});
-
-		// 5. Right-side actions are reserved for state and secondary actions.
-		const actions = document.createElement('div');
-		actions.className = 'list-row-actions';
-
-		const lockBtn = buildIconButton({
-			className: `btn-icon-simple icon-wrapper sm list-row-action lock${state.lock.active ? ' active' : ''}${state.lock.permanent ? ' permanent' : ''}`,
-			label: state.lock.title,
-			icon: state.lock.icon,
-			onClick: (e) => {
-				e.stopPropagation();
-				this.pressLayerLock(layer);
-			}
-		});
-		actions.appendChild(lockBtn);
-
-		// Source navigation follows state controls and precedes destructive actions.
-		const sourceType = LAYER_UI_CONFIG[layer.type]?.goTo;
-		const arrowBtn = buildIconButton({
-			className: `btn-icon-simple icon-wrapper sm list-row-action goto-glitter${sourceType ? '' : ' unavailable'}`,
-			label: sourceType ? (sourceType === 'asset' ? 'Show sticker in Design' : 'Show glitter in Design') : 'No source asset for this layer',
-			icon: 'locate',
-			disabled: !sourceType,
-			onClick: (e) => {
-				e.stopPropagation();
-				this.goToLayerSource(layer.id);
-			}
-		});
-		actions.appendChild(arrowBtn);
-
-		const delBtn = buildIconButton({
-				className: `btn-icon-simple icon-wrapper sm list-row-action delete${state.delete.disabled ? ' unavailable' : ''}`,
-				label: state.delete.title,
-				icon: 'trash',
-				disabled: state.delete.disabled,
-				onClick: async (e) => {
-					e.stopPropagation();
-					await this.deleteLayerFromRow(layer);
-				}
-			});
-		actions.appendChild(delBtn);
-
-		layerEl.append(dragHandle, visBtn, ...(clipButton ? [clipButton] : []), swatch, info, actions);
-		layerEl.onclick = (event) => {
-			if (event.altKey && event.pointerType !== 'touch' && layerEl.getBoundingClientRect().bottom - event.clientY <= CONFIG.ui.gestures.dragThresholdPx && this.editor.canToggleClippingMask([layer])) {
-				this.editor.toggleClippingMask([layer]);
-				return;
-			}
-			// Dispatch custom event for mobile manager
-			window.dispatchEvent(new CustomEvent('layerItemClick', {
-				detail: { layerId: layer.id }
-			}));
-
-			if (event.shiftKey && this.isLayerMultiSelectable(layer)) {
-				this.selectLayerRange(layer.id, { additive: event.ctrlKey || event.metaKey });
-				return;
-			}
-
-			if ((event.ctrlKey || event.metaKey) && this.isLayerMultiSelectable(layer)) {
-				this.toggleLayerSelection(layer.id);
-				return;
-			}
-
-			this.setActiveLayer(layer.id);
-		};
-
-		// Attach Drag Events only if not locked
-		// Attach Drag Events (even for locked layers, so we can drop AROUND them)
-		layerEl.addEventListener('dragover', (e) => this.handleLayerDragOver(e, layer.id));
-		layerEl.addEventListener('dragleave', (e) => this.handleLayerDragLeave(e));
-		layerEl.addEventListener('drop', (e) => this.handleLayerDrop(e, layer.id));
-		layerEl.addEventListener('dragend', (e) => this.handleLayerDragEnd(e));
-
-		// Only attach drag START and touch/pointer reorder events if not locked
-		if (!isLayerFullyLocked(layer)) {
-			layerEl.addEventListener('dragstart', (e) => this.handleLayerDragStart(e, layer.id));
-
-			layerEl.addEventListener('pointerdown', (e) => this.handleLayerTouchStart(e, layer.id));
-			layerEl.addEventListener('pointermove', (e) => this.handleLayerTouchMove(e));
-			layerEl.addEventListener('pointerup', (e) => this.handleLayerTouchEnd(e));
-			layerEl.addEventListener('pointercancel', (e) => this.handleLayerTouchCancel(e));
-		}
-
-		return layerEl;
-	}
-
-	// What a layer row's state buttons show and do, for the Layers list and
-	// the timeline.
-	getLayerRowState(layer) {
-		const isBaseLayer = layer.type === LayerType.BASE_IMAGE;
-		const cannotDelete = isBaseLayer || isLayerFullyLocked(layer);
-		return {
-			visibility: { icon: layer.visible ? 'eye' : 'eye-slash', title: layer.visible ? 'Hide layer' : 'Show layer' },
-			lock: {
-				icon: layer.locked ? 'lock' : 'unlock', active: Boolean(layer.locked), permanent: isBaseLayer,
-				title: isBaseLayer ? 'Fixed background — editable, but cannot be moved, reordered, or deleted' : (layer.locked ? 'Unlock layer' : 'Lock layer')
-			},
-			delete: {
-				disabled: cannotDelete,
-				title: isBaseLayer ? 'Base layer cannot be deleted' : (cannotDelete ? 'Unlock layer to delete it' : 'Delete layer')
-			}
-		};
-	}
-
 	pressLayerLock(layer) {
 		if (layer.type === LayerType.BASE_IMAGE) this.editor.updateStatus('The fixed background can be edited, but not moved or deleted');
 		else this.toggleLayerLock(layer.id);
@@ -1414,386 +1042,64 @@ class LayerManager {
 		if (!layer) mobileLayersSwatch.classList.remove('empty');
 	}
 
-	// ===== DRAG AND DROP (DESKTOP) =====
+	// ===== LAYER ORDER =====
 
-	handleLayerDragStart(event, layerId) {
-		// Check if layer is locked
-		const layer = this.getLayerById(layerId);
-		if (isLayerFullyLocked(layer)) {
-			event.preventDefault();
-			return;
+	_resolveLayerMove(ids, { targetId, place }) {
+		if (!['above', 'below'].includes(place)) return null;
+		const requested = new Set(ids);
+		const moving = this.layers.filter(layer => requested.has(layer.id) && !layer.isPreview && canEditLayerInStack(layer));
+		if (!moving.length || moving.some(layer => layer.id === targetId)) return null;
+		const movingIds = new Set(moving.map(layer => layer.id));
+		const stack = this.layers.filter(layer => !movingIds.has(layer.id)).map(layer => ({ ...layer }));
+		const targetIndex = stack.findIndex(layer => layer.id === targetId);
+		if (targetIndex < 0 || (targetIndex === 0 && place === 'below' && stack[0].locked)) return null;
+		let index = targetIndex + (place === 'above' ? 1 : 0);
+		for (const layer of moving) {
+			const insertion = getClipInsertion(stack, layer, index);
+			stack.splice(insertion.index, 0, { ...layer, clipped: insertion.clipped });
+			index = insertion.index + 1;
 		}
-
-		this.dropTargetId = null;
-		this.dropInsertAbove = false;
-		this.draggedLayerId = layerId;
-		event.target.classList.add('dragging');
-		event.dataTransfer.effectAllowed = 'move';
-		event.dataTransfer.setData('text/html', event.target.innerHTML);
+		if (stack.every((layer, position) => layer.id === this.layers[position].id && Boolean(layer.clipped) === Boolean(this.layers[position].clipped))) return null;
+		return stack;
 	}
 
-	handleLayerDragOver(event, targetLayerId) {
-		event.preventDefault();
-
-		if (!this.draggedLayerId) return;
-
-		// Call existing scroll handler
-		this.handleLayerDragScroll(event);
-
-		const insertionLine = this.layersListContainer.querySelector('.layer-insertion-line');
-		this.dropTargetId = null;
-		insertionLine.classList.remove('visible');
-
-		let targetElement = event.currentTarget;
-		if (!targetLayerId) {
-			const rows = [...this.layersListContainer.querySelectorAll('.layer-item')];
-			targetElement = rows.find((row) => {
-				const rect = row.getBoundingClientRect();
-				return event.clientY < rect.top + rect.height / 2;
-			}) || rows[rows.length - 1];
-			if (!targetElement) return;
-			targetLayerId = targetElement.dataset.layerId;
-		}
-		const rect = targetElement.getBoundingClientRect();
-
-		// Calculate drop position
-		const midpoint = rect.top + rect.height / 2;
-		const insertAbove = event.clientY < midpoint; // Visually above (higher array index)
-
-		const draggedIndex = this.layers.findIndex(l => l.id === this.draggedLayerId);
-		const targetIndex = this.layers.findIndex(l => l.id === targetLayerId);
-
-		// ============================================================
-		// Lock Constraint Logic
-		// ============================================================
-
-		// 1. Don't allow dropping onto itself
-		if (targetIndex === draggedIndex) {
-			insertionLine.classList.remove('visible');
-			return;
-		}
-
-		// 2. Prevent dropping BELOW the bottom-most layer if it is locked
-		// In the array, index 0 is the bottom. 'insertAbove = false' means visually below.
-		if (targetIndex === 0 && this.layers[0].locked && !insertAbove) {
-			insertionLine.classList.remove('visible');
-			this.dropTargetId = null; // Ensure drop is invalidated
-			return;
-		}
-		// ============================================================
-
-		// Standard adjacency checks (don't show line if dropping exactly where it already is)
-		if (targetIndex === draggedIndex - 1 && insertAbove) {
-			insertionLine.classList.remove('visible');
-			return;
-		}
-		if (targetIndex === draggedIndex + 1 && !insertAbove) {
-			insertionLine.classList.remove('visible');
-			return;
-		}
-
-		// Calculate Line Position
-		event.dataTransfer.dropEffect = 'move';
-
-		this.showLayerInsertionLine(targetElement, insertAbove);
-
-		this.dropInsertAbove = insertAbove;
-		this.dropTargetId = targetLayerId;
+	canDropLayers(ids, drop) {
+		return Boolean(this._resolveLayerMove(ids, drop));
 	}
 
-	showLayerInsertionLine(targetElement, insertAbove) {
-		const container = this.layersListContainer;
-		const insertionLine = container.querySelector('.layer-insertion-line');
-		const rect = targetElement.getBoundingClientRect();
-		const neighbor = insertAbove ? targetElement.previousElementSibling : targetElement.nextElementSibling;
-		let boundary = insertAbove ? rect.top : rect.bottom;
-
-		// Both sides of a gap must resolve to the same insertion boundary.
-		if (neighbor?.classList.contains('layer-item')) {
-			const neighborRect = neighbor.getBoundingClientRect();
-			boundary = (boundary + (insertAbove ? neighborRect.bottom : neighborRect.top)) / 2;
-		}
-		const lineHeight = insertionLine.getBoundingClientRect().height;
-		const contentY = boundary - container.getBoundingClientRect().top - container.clientTop + container.scrollTop;
-		insertionLine.style.top = Math.max(0, Math.min(container.scrollHeight - lineHeight, contentY - lineHeight / 2)) + 'px';
-		insertionLine.classList.add('visible');
-	}
-
-	handleLayerDragLeave(event) {
-		const insertionLine = this.layersListContainer.querySelector('.layer-insertion-line');
-
-		// Only hide the visual line, don't clear the drop target
-		// This allows drops to work even if you drag slightly outside the container
-		if (!this.layersListContainer.contains(event.relatedTarget)) {
-			insertionLine.classList.remove('visible');
-			// DON'T clear this.dropTargetId here - keep the last valid drop position
-		}
-	}
-
-	handleLayerDrop(event, targetLayerId) {
-		event.preventDefault();
-
-		const insertionLine = this.layersListContainer.querySelector('.layer-insertion-line');
-		insertionLine.classList.remove('visible');
-
-		if (!this.draggedLayerId) return;
-
-		// Use stored values from dragover
-		targetLayerId = this.dropTargetId;
-		const insertAbove = this.dropInsertAbove;
-
-		if (!targetLayerId || this.draggedLayerId === targetLayerId) return;
-
-		const draggedIndex = this.layers.findIndex(l => l.id === this.draggedLayerId);
-		const targetIndex = this.layers.findIndex(l => l.id === targetLayerId);
-
-		if (draggedIndex === -1 || targetIndex === -1) return;
-
-		// Remove the dragged layer
-		const [draggedLayer] = this.layers.splice(draggedIndex, 1);
-
-		// Recalculate target index after removal
-		let newTargetIndex = this.layers.findIndex(l => l.id === targetLayerId);
-
-		// Visual order is reversed!
-		// "Above" visually = higher index in array = AFTER target
-		// "Below" visually = lower index in array = AT target
-		let newIndex = insertAbove ? newTargetIndex + 1 : newTargetIndex;
-
-		// Insert at new position
-		const insertion = getClipInsertion(this.layers, draggedLayer, newIndex);
-		draggedLayer.clipped = insertion.clipped;
-		this.layers.splice(insertion.index, 0, draggedLayer);
-
-		// OPTIMIZED: Just reorder DOM instead of recreating
+	moveLayers(ids, drop) {
+		const stack = this._resolveLayerMove(ids, drop);
+		if (!stack) return false;
+		const byId = new Map(this.layers.map(layer => [layer.id, layer]));
+		this.layers = stack.map(item => {
+			const layer = byId.get(item.id);
+			layer.clipped = item.clipped;
+			return layer;
+		});
 		this.renderLayersList();
 		this.reorderLayers();
 		this.editor.saveState('Reorder layers');
+		return true;
 	}
 
-	handleLayerDragEnd(event) {
-		event.target.classList.remove('dragging');
-		const insertionLine = this.layersListContainer.querySelector('.layer-insertion-line');
-		insertionLine.classList.remove('visible');
-
-		if (this.dragScrollInterval) {
-			clearInterval(this.dragScrollInterval);
-			this.dragScrollInterval = null;
-		}
-
-		this.draggedLayerId = null;
-	}
-
-	handleLayerDragScroll(event) {
-		if (!this.draggedLayerId) return;
-
-		const rect = this.layersListContainer.getBoundingClientRect();
-		const scrollZone = CONFIG.layers.reorder.autoScroll.zoneSize;
-		const scrollSpeed = CONFIG.layers.reorder.autoScroll.speed;
-
-		const mouseY = event.clientY - rect.top;
-		const listHeight = rect.height;
-
-		// Clear existing interval
-		if (this.dragScrollInterval) {
-			clearInterval(this.dragScrollInterval);
-			this.dragScrollInterval = null;
-		}
-
-		// Scroll up when near top
-		if (mouseY < scrollZone && mouseY > 0) {
-			this.dragScrollInterval = setInterval(() => {
-				this.layersListContainer.scrollTop = Math.max(0, this.layersListContainer.scrollTop - scrollSpeed);
-			}, 16);
-		}
-		// Scroll down when near bottom
-		else if (mouseY > listHeight - scrollZone && mouseY < listHeight) {
-			this.dragScrollInterval = setInterval(() => {
-				const maxScroll = this.layersListContainer.scrollHeight - this.layersListContainer.clientHeight;
-				this.layersListContainer.scrollTop = Math.min(maxScroll, this.layersListContainer.scrollTop + scrollSpeed);
-			}, 16);
-		}
-	}
-
-	// ===== TOUCH DRAG (MOBILE) =====
-
-	handleLayerTouchStart(event, layerId) {
-		if (event.pointerType !== 'touch') {
-			return;
-		}
-
-		// ONLY start drag if touching the drag handle specifically
-		if (!event.target.closest('.layer-drag-handle')) {
-			return;
-		}
-
-		// Check if layer is locked
-		const layer = this.getLayerById(layerId);
-		if (isLayerFullyLocked(layer)) {
-			return;
-		}
-
-		this.dropTargetId = null;
-		this.dropInsertAbove = false;
-		this.draggedLayerId = layerId;
-		this.touchDragPointerId = event.pointerId;
-		this.touchDragPointerElement = event.currentTarget;
-		event.currentTarget.classList.add('dragging');
-		event.currentTarget.setPointerCapture?.(event.pointerId);
-
-		this.touchDragStartY = event.clientY;
-		this.touchDragLastY = event.clientY;
-
-		event.preventDefault();
-		event.stopPropagation();
-	}
-
-	handleLayerTouchMove(event) {
-		if (event.pointerType !== 'touch' || !this.draggedLayerId || event.pointerId !== this.touchDragPointerId) {
-			return;
-		}
-
-		this.touchDragLastY = event.clientY;
-
-		// Resolve the row even when the finger is over its swatch, text, or actions.
-		const validTargetLayer = document
-			.elementsFromPoint(event.clientX, event.clientY)
-			.map((element) => element.closest('.layer-item'))
-			.find((element) => element?.dataset.layerId && element.dataset.layerId !== this.draggedLayerId);
-
-		const insertionLine = this.layersListContainer.querySelector('.layer-insertion-line');
-
-		if (validTargetLayer?.dataset.layerId) {
-			const targetLayerId = validTargetLayer.dataset.layerId;
-			const targetIndex = this.layers.findIndex(l => l.id === targetLayerId);
-
-			const rect = validTargetLayer.getBoundingClientRect();
-			const midpoint = rect.top + rect.height / 2;
-			const insertAbove = event.clientY < midpoint;
-
-			// ============================================================
-			// Lock Constraint Logic (Mobile)
-			// ============================================================
-			// Prevent dropping BELOW the bottom-most layer if it is locked
-			if (targetIndex === 0 && this.layers[0].locked && !insertAbove) {
-				insertionLine.classList.remove('visible');
-				this.dropTargetId = null;
-				return; // Exit early
-			}
-			// ============================================================
-
-			this.showLayerInsertionLine(validTargetLayer, insertAbove);
-
-			this.dropTargetId = targetLayerId;
-			this.dropInsertAbove = insertAbove;
-		} else {
-			// Hide line if not over a valid target
-			insertionLine.classList.remove('visible');
-			this.dropTargetId = null;
-		}
-
-		event.preventDefault();
-	}
-
-	handleLayerTouchEnd(event) {
-		if (event.pointerType !== 'touch' || event.pointerId !== this.touchDragPointerId) {
-			return;
-		}
-
-		event.preventDefault();
-		this.touchDragPointerElement?.releasePointerCapture?.(event.pointerId);
-
-		// Find the dragged element and remove dragging class
-		const draggedElement = document.querySelector(`[data-layer-id="${this.draggedLayerId}"]`);
-		if (draggedElement) {
-			draggedElement.classList.remove('dragging');
-		}
-
-		const insertionLine = this.layersListContainer.querySelector('.layer-insertion-line');
-		insertionLine.classList.remove('visible');
-
-		// Perform the actual reordering using stored values
-		if (this.dropTargetId && this.draggedLayerId !== this.dropTargetId) {
-			const draggedIndex = this.layers.findIndex(l => l.id === this.draggedLayerId);
-
-			// Remove the dragged layer first
-			if (draggedIndex !== -1) {
-				const [draggedLayer] = this.layers.splice(draggedIndex, 1);
-
-				// Recalculate target index after removal (items might have shifted)
-				let newTargetIndex = this.layers.findIndex(l => l.id === this.dropTargetId);
-
-				// "Insert Above" visually means a higher index in the array (rendered bottom-to-top)
-				let newIndex = this.dropInsertAbove ? newTargetIndex + 1 : newTargetIndex;
-
-				const insertion = getClipInsertion(this.layers, draggedLayer, newIndex);
-				draggedLayer.clipped = insertion.clipped;
-				this.layers.splice(insertion.index, 0, draggedLayer);
-				this.renderLayersList();
-				this.reorderLayers();
-				this.editor.saveState('Reorder layers');
-			}
-		}
-
-		this.draggedLayerId = null;
-		this.dropTargetId = null;
-		this.dropInsertAbove = false;
-		this.touchDragPointerId = null;
-		this.touchDragPointerElement = null;
-	}
-
-	handleLayerTouchCancel(event) {
-		if (event.pointerType !== 'touch' || event.pointerId !== this.touchDragPointerId) {
-			return;
-		}
-
-		event.preventDefault();
-		this.touchDragPointerElement?.releasePointerCapture?.(event.pointerId);
-
-		const draggedElement = document.querySelector(`[data-layer-id="${this.draggedLayerId}"]`);
-		if (draggedElement) {
-			draggedElement.classList.remove('dragging');
-		}
-
-		const insertionLine = this.layersListContainer.querySelector('.layer-insertion-line');
-		insertionLine.classList.remove('visible');
-
-		this.draggedLayerId = null;
-		this.dropTargetId = null;
-		this.dropInsertAbove = false;
-		this.touchDragPointerId = null;
-		this.touchDragPointerElement = null;
-	}
-
-	// ===== OPTIMIZED REORDERING =====
-
-	// In Layer Panel
-	reorderLayerItems() {
-		const container = this.layersListContainer;
-		const insertionLine = container.querySelector('.layer-insertion-line');
-
-		// Get all existing layer elements
-		const existingElements = new Map();
-		container.querySelectorAll('.layer-item').forEach(el => {
-			existingElements.set(el.dataset.layerId, el);
-		});
-
-		// Reorder them to match layers array (reversed for display)
-		const fragment = document.createDocumentFragment();
-
-		[...this.layers].reverse().forEach(layer => {
-			const element = existingElements.get(layer.id);
-			if (element) {
-				element.classList.toggle('selected', this.isLayerSelected(layer.id));
-				element.classList.toggle('active', layer.id === this.activeLayerId);
-				fragment.appendChild(element);
-			}
-		});
-
-		// Clear and re-append in correct order
-		container.innerHTML = '';
-		container.appendChild(insertionLine);
-		container.appendChild(fragment);
+	arrangeLayers(ids, step) {
+		const requested = new Set(ids);
+		const moving = this.layers.filter(layer => requested.has(layer.id) && !layer.isPreview && canEditLayerInStack(layer));
+		if (!moving.length) return false;
+		const movingIds = new Set(moving.map(layer => layer.id));
+		const others = this.layers.filter(layer => !movingIds.has(layer.id));
+		let target, place;
+		if (step === 'front') { target = others.at(-1); place = 'above'; }
+		else if (step === 'back') { target = others[0]; place = target?.locked ? 'above' : 'below'; }
+		else if (step === 'forward') {
+			const top = this.layers.indexOf(moving.at(-1));
+			target = this.layers.slice(top + 1).find(layer => !movingIds.has(layer.id)); place = 'above';
+		} else if (step === 'backward') {
+			const bottom = this.layers.indexOf(moving[0]);
+			target = this.layers.slice(0, bottom).reverse().find(layer => !movingIds.has(layer.id));
+			place = target === this.layers[0] && target?.locked ? 'above' : 'below';
+		} else return false;
+		return target ? this.moveLayers(moving.map(layer => layer.id), { targetId: target.id, place }) : false;
 	}
 
 	// In Preview

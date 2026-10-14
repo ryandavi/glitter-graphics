@@ -58,7 +58,7 @@ Required for an addable type:
 
 Common optional fields:
 
-- `describe(layer, editor)`: returns `{ name, detail }` for the layers list and selection status; omission uses the type display name.
+- `describe(layer, editor)`: returns `{ name, detail }` for shared layer rows, timeline source names and selection status; omission uses the type display name.
 - `defaultCreateOptions(editor)`: supplies per-type defaults before creating a layer.
 - `addedStatusMessage`: status text after creation.
 - `addableViaModal`: `{ label, icon, description }` for the Add Layer modal card. Omit it if users shouldn't add the type there.

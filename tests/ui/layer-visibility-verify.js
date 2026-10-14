@@ -56,8 +56,8 @@ async function verify(touch) {
 				selected: [...editor.selectedLayerIds],
 				history: editor.historyManager.historyIndex,
 				dragStarts: window.visibilityDragStarts,
-				stroke: editor.layerManager.visibilityStroke,
-				dragged: editor.layerManager.draggedLayerId,
+				stroke: isLayerVisibilityStroking(editor.layerManager.layersListContainer),
+				dragged: isReordering(editor.layerManager.layersListContainer),
 				icons: [...document.querySelectorAll('#layersList .layer-visibility use')].map(icon => icon.getAttribute('href'))
 			}));
 			assert.deepStrictEqual(after.visible, before.visible.map(() => show), 'A mixed-state stroke sets every crossed eye to the first eye’s new state');
@@ -65,8 +65,8 @@ async function verify(touch) {
 			assert.deepStrictEqual(after.selected, before.selected, 'Visibility must not change selection');
 			assert.strictEqual(after.history, before.history + 1, 'A complete stroke is one history step');
 			assert.strictEqual(after.dragStarts, 0, 'The eye must not start a native drag');
-			assert.strictEqual(after.stroke, null);
-			assert.strictEqual(after.dragged, null);
+			assert.strictEqual(after.stroke, false);
+			assert.strictEqual(after.dragged, false);
 			assert(after.icons.every(icon => icon === (show ? '#icon-eye' : '#icon-eye-slash')));
 			await page.evaluate(() => editor.historyManager.undo());
 			assert.deepStrictEqual(await page.evaluate(() => editor.layers.map(layer => layer.visible)), before.visible, 'Undo restores mixed visibility');
@@ -85,7 +85,44 @@ async function verify(touch) {
 			const box = await page.locator('#layersList .layer-visibility').first().boundingBox();
 			await move({ x: box.x + box.width / 2, y: box.y + box.height / 2 }, 'touchStart');
 			await move({}, 'touchCancel');
-			assert.strictEqual(await page.evaluate(() => editor.layerManager.visibilityStroke), null, 'Cancellation releases the stroke');
+			assert.strictEqual(await page.evaluate(() => isLayerVisibilityStroking(editor.layerManager.layersListContainer)), false, 'Cancellation releases the stroke');
+		}
+		if (!touch) {
+			await page.evaluate(() => {
+				editor.setTool(ToolType.SELECT);
+				const layer = editor.layers.at(-1); layer.visible = true;
+				getLayerFillSlot(layer).mode = 'solid';
+				editor.shapeGlitterManager.renderLayer(layer);
+				editor.layerManager.setActiveLayer(layer.id);
+				window.menuLayerId = layer.id;
+			});
+			const row = page.locator(`#layersList .layer-item[data-layer-id="${await page.evaluate(() => window.menuLayerId)}"]`);
+			const menu = page.locator('.app-menu-panel.is-fixed-menu:visible');
+			const actions = () => menu.locator('.app-menu-item').evaluateAll(items => items.map(item => ({ label: item.textContent, disabled: item.disabled })));
+			await row.click({ button: 'right' });
+			const rowActions = await actions();
+			assert.deepStrictEqual(rowActions, await page.evaluate(() => getLayerActions(editor, editor.layerManager.getLayerById(window.menuLayerId)).map(action => ({ label: action.label, disabled: Boolean(action.disabled) }))), 'Row menu reflects its shared actions');
+			await page.keyboard.press('Escape');
+			const point = await page.evaluate(() => {
+				editor.layerManager.clearSelection();
+				const rect = editor.previewWrapper.getBoundingClientRect();
+				return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+			});
+			await page.mouse.click(point.x, point.y, { button: 'right' });
+			assert.strictEqual(await page.evaluate(() => editor.activeLayerId), await page.evaluate(() => window.menuLayerId), 'Canvas right-click first selects the picked layer');
+			assert.deepStrictEqual(await actions(), rowActions, 'Canvas and Layers menus list the same enabled actions');
+			const box = await menu.boundingBox();
+			assert(box.x >= 0 && box.y >= 0 && box.x + box.width <= 1280 && box.y + box.height <= 900, 'Layer action menu fits the viewport');
+			await page.keyboard.press('Escape');
+			await row.focus(); await page.keyboard.press('Shift+F10');
+			assert.deepStrictEqual(await actions(), rowActions, 'Shift+F10 opens the same row menu');
+			await page.keyboard.press('Escape');
+			await row.focus(); await page.keyboard.press('ContextMenu');
+			assert.deepStrictEqual(await actions(), rowActions, 'ContextMenu opens the same row menu');
+			await page.keyboard.press('Escape');
+			await page.evaluate(() => editor.setTool(ToolType.ZOOM));
+			await page.mouse.click(point.x, point.y, { button: 'right' });
+			assert.strictEqual(await menu.count(), 0, 'Zoom right-click retains its tool behavior');
 		}
 		assert.deepStrictEqual(errors, []);
 	} finally {

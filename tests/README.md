@@ -32,6 +32,7 @@ Paths below are relative to `tests/`. Related pure-logic contracts live in `unit
 | Suite | Covers | Run after changing |
 |---|---|---|
 | `ui/document-start-verify.js`, `unit/recents-unit.js` | Start card, New Canvas split scrolling, template mode, recents, coarse-pointer focus and short viewport fallback | Document-start UI, blank creation or recency helpers |
+| `ui/auto-glitter-reopen-verify.js`, `unit/auto-glitter-analysis.js` | Manual color merge pointer/touch gestures, cancellation, deferred rendering and session undo/redo; reopened batches, automatic analysis and palette reduction | Auto Glitter matching, merge gestures or session lifecycle |
 | `ui/history-contract-verify.js` | Action step counts, canonical undo/redo, native typing, pending commits, sessions, document replacement, failed decoding, queued restore and animated exports | History, selection, tools, sessions or document loading |
 | `ui/canvas-qol-verify.js` | Source double-click/double-tap, creation badges at three zooms, Shift, click threshold and second-finger cancellation | Source dispatch and canvas creation |
 | `parity/clipping-region-verify.js`, `parity/clipping-edge-verify.js`, `parity/regional-look-verify.js`, `ui/clipping-preview-verify.js` | Clipping pixel parity, inherited motion, undo, empty/soft bodies, filter regions, animated GIF/MP4 and Chrome/WebKit mask continuity | Clipping, filter geometry or their shared compositor paths |

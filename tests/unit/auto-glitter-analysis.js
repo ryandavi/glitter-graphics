@@ -4,7 +4,6 @@ const path = require('path');
 const vm = require('vm');
 
 const workerSource = fs.readFileSync(path.join(__dirname, '..', '..', 'js', 'workers', 'auto-glitter.worker.js'), 'utf8');
-const sharedAnalysisSource = fs.readFileSync(path.join(__dirname, '..', '..', 'js', 'effects', 'palette-analysis.js'), 'utf8');
 let response;
 let segmentResponses = 0;
 const context = {
@@ -22,9 +21,11 @@ const context = {
 		}
 	}
 };
-context.importScripts = (url) => {
-	if (url.includes('color-adjust')) { vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../../js/effects/color-adjust.js'), 'utf8'), context); return; }
-	vm.runInNewContext(sharedAnalysisSource, context, { filename: 'palette-analysis.js' });
+context.importScripts = (...urls) => {
+	for (const url of urls) {
+		const filename = path.resolve(__dirname, '../../js/workers', url.split('?')[0]);
+		vm.runInNewContext(fs.readFileSync(filename, 'utf8'), context, { filename });
+	}
 	context.GlitterPaletteAnalysis = context.self.GlitterPaletteAnalysis;
 };
 vm.runInNewContext(workerSource, context, { filename: 'auto-glitter.worker.js' });

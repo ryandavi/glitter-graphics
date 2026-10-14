@@ -6,8 +6,8 @@ const path = require('path');
 const vm = require('vm');
 const root = path.resolve(__dirname, '../..');
 const motion = { periodMs: 1000, easing: 'linear', amount: 10, direction: 'normal', iterations: Infinity };
-const context = vm.createContext({ isLayerFullyLocked: layer => layer.locked, CONFIG: { tools: { animation: { defaultType: 'pulse', presets: { pulse: motion, custom: motion }, jitterQuantMs: 60, keySeek: { samples: 128, iterations: 24, tolerance: 1e-7 } } } } });
-for (const file of ['js/core/fields.js', 'js/core/format.js', 'js/core/gif-decode.js', 'js/export/ExportTimeline.js', 'js/core/math.js', 'js/effects/easing.js', 'js/effects/animation.js', 'js/ui/timeline-view.js']) vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), context);
+const context = vm.createContext({ CONFIG: { tools: { animation: { defaultType: 'pulse', presets: { pulse: motion, custom: motion }, jitterQuantMs: 60, keySeek: { samples: 128, iterations: 24, tolerance: 1e-7 } } } } });
+for (const file of ['js/core/fields.js', 'js/core/format.js', 'js/core/options.js', 'js/core/gif-decode.js', 'js/export/ExportTimeline.js', 'js/core/math.js', 'js/core/layer-types.js', 'js/effects/easing.js', 'js/effects/animation.js', 'js/ui/timeline-view.js']) vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), context);
 const { view, Authored, Procedural } = vm.runInContext('({ view: TimelineView, Authored: AuthoredAnimationSource, Procedural: ProceduralAnimationSource })', context);
 const json = value => JSON.parse(JSON.stringify(value));
 assert.equal(vm.runInContext('formatSeconds(1230)', context), '1.23 s');
@@ -17,6 +17,13 @@ assert.equal(view.motionIndex({ effectSlot: 'animation-12' }), 12);
 assert.equal(view.motionIndex({ effectSlot: 'fill' }), null);
 assert.equal(view.motionIndex({ effectSlot: 'animation-nope' }), null);
 assert.equal(view.motionIndex(null), null);
+const inactive = { id: 'inactive', animations: [{ type: 'pulse', enabled: false, periodMs: 1000 }] };
+const inactiveModel = view.buildModel(null, [{ id: 'base' }, inactive, { id: 'preview', isPreview: true }]);
+assert.deepStrictEqual(json(inactiveModel.groups.map(group => group.layerId)), ['inactive', 'base']);
+assert.strictEqual(inactiveModel.groups[0].rows[0].source, null);
+assert.strictEqual(inactiveModel.groups[0].rows[0].label, 'Pulse');
+assert.strictEqual(inactiveModel.groups[0].rows[0].enabled, false);
+assert.notStrictEqual(view.modelSignature(inactiveModel), view.modelSignature(view.buildModel(null, [{ id: 'base' }, { ...inactive, animations: [{ ...inactive.animations[0], enabled: true }] }])));
 // A key is drawn at the time its motion reaches it, in one cycle of the bar.
 const keyRow = (entry, run = { start: entry.delayMs || 0, end: Infinity }) => ({
 	startMs: run.start, endMs: Math.min(run.end, 4800), cycleMs: entry.periodMs, exportCycleMs: entry.periodMs,
@@ -77,7 +84,8 @@ const estimate = { duration: 4800, exact: false, outputFormat: 'gif', renderCloc
 const model = view.buildModel(estimate, [{ id: 'bottom', name: 'Bottom', locked: true }, { id: 'top', name: 'Top' }]);
 assert.strictEqual(model.groups.length, 2);
 const hidden = [{ id: 'gone', name: 'Gone', visible: false }, { id: 'other', name: 'Other', visible: false }];
-assert.deepStrictEqual(json(view.buildModel(estimate, hidden, new Set(['gone'])).groups), [{ layerId: 'gone', name: 'Gone', rows: [] }], 'A listed layer that is hidden keeps an empty group');
+assert.deepStrictEqual(json(view.buildModel(estimate, hidden).groups.map(group => group.layerId)), ['other', 'gone'], 'Every hidden layer stays in stack order');
+assert(view.buildModel(estimate, hidden).groups.every(group => group.rows.length === 0 && group.visible === false));
 assert.strictEqual(model.groups[0].layerId, 'top');
 assert.strictEqual(model.groups[0].rows.length, 2);
 assert.strictEqual(model.groups[0].rows[0].closes, false);
@@ -170,7 +178,7 @@ assert.equal(view.hasGripRoom(23.99, config), false, 'A cycle needs room for two
 assert.equal(view.hasGripRoom(24, config), true);
 for (const cycleMs of [0, -1, Infinity, NaN]) {
 	const badSource = { key: 'invalid', ownerLayerId: 'top', kind: 'procedural', naturalPeriod: cycleMs };
-	assert.deepEqual(json(view.buildModel({ duration: 1000, loopFit: { sources: [badSource] } }, [{ id: 'top' }]).groups), []);
+	assert.deepEqual(json(view.buildModel({ duration: 1000, loopFit: { sources: [badSource] } }, [{ id: 'top' }]).groups[0].rows), []);
 	assert.deepEqual(json(view.buildModel({ ...estimate, sourceAnalysis: [{ key: 'a', resolvedPeriod: cycleMs }] }, [{ id: 'top' }]).groups[0].rows.map(entry => entry.key)), ['b']);
 }
 assert.deepStrictEqual(json(view.barBox({ startMs: 0, endMs: 4800 }, 100, config)), { left: 0, width: 480, gripsOutside: false, leftGripInside: false });

@@ -536,6 +536,22 @@ async function verifyTimelineGestures(browser) {
 			getLayerFillSlot(layer).color = '#ff0000'; editor.shapeGlitterManager.renderLayer(layer); editor.saveState('Change static paint'); await editor.updateExportDuration();
 			return zoomReused && nodes.every(node => node.isConnected && dock.rowNodesByKey.get(node.dataset.sourceKey) === node);
 		}), 'Zoom and a static paint commit reuse row nodes');
+		assert(await page.evaluate(async () => {
+			const dock = editor.timelineDock, layer = editor.layerManager.getLayerById(window.timelineFixtureId);
+			const groups = [...dock.body.querySelectorAll('.timeline-group')], nodes = [...dock.rowNodesByKey.values()];
+			let sampled = 0; const curve = TimelineView.motionCurve;
+			TimelineView.motionCurve = (...args) => { sampled++; return curve.apply(TimelineView, args); };
+			try {
+				layer.name = 'Renamed motion'; editor.saveState('Rename fixture'); await editor.updateExportDuration();
+				const chevron = dock.body.querySelector(`[data-layer-id="${layer.id}"] .timeline-group-chevron`);
+				chevron.click(); chevron.click();
+				const renameKept = groups.every(node => node.isConnected) && nodes.every(node => node.isConnected) && sampled === 0
+					&& chevron.getAttribute('aria-label') === 'Toggle Renamed motion timeline rows';
+				layer.animations[0].periodMs += 100; editor.saveState('Retime fixture'); await editor.updateExportDuration();
+				return renameKept && groups.every(node => node.isConnected) && sampled === 1;
+			} finally { TimelineView.motionCurve = curve; }
+		}), 'Rename retains groups and rows without curve sampling; retime samples only its changed curve');
+
 		assert(await page.evaluate(() => {
 			const dock = editor.timelineDock, row = dock.model.groups.find(group => group.layerId === window.timelineFixtureId).rows[0], start = row.startMs;
 			for (let i = 0; i < 3; i++) dock.nudgeRow(row, { key: 'ArrowRight', shiftKey: false });
@@ -545,6 +561,73 @@ async function verifyTimelineGestures(browser) {
 		await page.getByRole('button', { name: 'Timeline options', exact: true }).click();
 		await page.evaluate(() => editor.timelineDock.close());
 		assert.equal(await page.getByRole('menuitem', { name: 'Zoom to fit', exact: true }).isVisible(), false, 'Closing the dock closes its portaled options menu');
+		await page.evaluate(async () => {
+			await editor.loadBlankImage(200, 160, '#ffffff');
+			const fill = editor.layerManager.addLayer(LayerType.GLITTER_FILL);
+			getLayerFillSlot(fill).mode = 'solid'; getLayerFillSlot(fill).color = '#12ab34';
+			editor.setTool(ToolType.BRUSH);
+			const rect = editor.previewWrapper.getBoundingClientRect();
+			if (!editor.maskEditor._startStrokeFromScreenPoint(rect.left + rect.width / 2, rect.top + rect.height / 2)) throw new Error('Fill fixture stroke failed');
+			editor.maskEditor._finishStroke(); editor.setTool(ToolType.SELECT);
+			const still = editor.layerManager.addLayer(LayerType.SHAPE); still.name = 'Static layer'; still.animations = [];
+			window.stackFixture = { fillId: fill.id, staticId: still.id };
+			editor.setDocumentLoop(CONFIG.project.loop);
+			PREFERENCES.set('timelineOpen', true); PREFERENCES.set('timelineLabelWidth', CONFIG.ui.timeline.labelWidth);
+			await editor.updateExportDuration();
+		});
+		const stackReady = () => page.waitForFunction(() => !editor.timelineDock.stale && editor.timelineDock.model.groups.length === editor.layers.filter(layer => !layer.isPreview).length);
+		await stackReady();
+		const fillId = await page.evaluate(() => stackFixture.fillId), staticId = await page.evaluate(() => stackFixture.staticId);
+		const group = id => page.locator(`.timeline-group[data-layer-id="${id}"]`);
+		assert.equal(await group(fillId).locator('.layer-name').textContent(), await page.evaluate(() => describeLayer(editor.layerManager.getLayerById(stackFixture.fillId), editor).name), 'A Fill header uses its described name');
+		assert.equal(await group(staticId).locator('.layer-name').textContent(), 'Static layer', 'A static layer is listed');
+		assert.equal(await page.locator('#timelineDock .property-empty').count(), 0, 'Existing static layers suppress the empty state');
+		assert(await page.evaluate(() => {
+			const dock = editor.timelineDock; dock.sync({ ...editor.loopEstimate, duration: 0 });
+			return dock.model.groups.length === 3 && dock.ruler.hidden && !dock.labelHandle.hidden
+				&& dock.body.querySelector('.timeline-group-label').getBoundingClientRect().width === CONFIG.ui.timeline.labelWidth;
+		}), 'A zero-length loop builds every group with the ruler hidden and the default label width');
+		const startGroup = await group(fillId).locator('.list-row-text').boundingBox(), targetGroup = await group(staticId).boundingBox();
+		const orderHistory = await page.evaluate(() => editor.historyManager.historyIndex);
+		await page.mouse.move(startGroup.x + 1, startGroup.y + startGroup.height / 2); await page.mouse.down();
+		await page.mouse.move(targetGroup.x + 80, targetGroup.y + 1); await page.mouse.up();
+		await stackReady();
+		assert(await page.evaluate(index => editor.layers.at(-1).id === stackFixture.fillId && editor.layerManager.layersListContainer.querySelector('.layer-item').dataset.layerId === stackFixture.fillId && editor.historyManager.historyIndex === index + 1, orderHistory), 'Group dragging reorders layers and the Layers panel in one step');
+		await page.evaluate(async () => {
+			const layer = editor.layerManager.getLayerById(stackFixture.fillId);
+			editor.layerManager.setActiveLayer(layer.id);
+			editor.animationPanel.addAnimation(layer, 'pulse'); editor.animationPanel.addAnimation(layer, 'rotate');
+			editor.animationPanel.toggleAnimation(layer, 1);
+			await editor.updateExportDuration();
+		});
+		await stackReady();
+		const motions = group(fillId).locator('.timeline-row[data-motion-index]');
+		assert.equal(await motions.count(), 2, 'Every stack entry is listed');
+		assert.equal(await motions.nth(1).locator('.timeline-bar').count(), 0, 'Disabled motion has no bar');
+		assert.equal(await motions.nth(1).locator('.list-row-content').textContent(), 'Rotate', 'Disabled motion retains its registry name');
+		const motionStart = await motions.nth(0).locator('.list-row-content').boundingBox(), motionTarget = await motions.nth(1).boundingBox();
+		const motionHistory = await page.evaluate(() => editor.historyManager.historyIndex);
+		await page.mouse.move(motionStart.x + 1, motionStart.y + motionStart.height / 2); await page.mouse.down();
+		await page.mouse.move(motionTarget.x + 80, motionTarget.y + motionTarget.height - 1); await page.mouse.up();
+		await page.waitForFunction(() => !editor.timelineDock.stale && editor.timelineDock.model.groups.find(group => group.layerId === stackFixture.fillId).rows[0].label === 'Rotate');
+		assert(await page.evaluate(index => {
+			const layer = editor.layerManager.getLayerById(stackFixture.fillId), prefix = editor.animationPanel.prefixByType.get(layer.type);
+			return layer.animations[0].type === 'rotate' && editor.animationPanel.selectedMotionIndex(layer) === 1
+				&& document.getElementById(`${prefix}AnimStack`).querySelector('.list-row-name').textContent === 'Rotate' && editor.historyManager.historyIndex === index + 1;
+		}, motionHistory), 'Motion row dragging reorders both timeline and inspector in one step');
+		await motions.nth(0).locator('.timeline-motion-enabled').click();
+		await page.waitForFunction(() => !editor.timelineDock.stale && editor.timelineDock.model.groups.find(group => group.layerId === stackFixture.fillId).rows[0].source);
+		assert.equal(await motions.nth(0).locator('.timeline-bar').count(), 1, 'Timeline eye enables a disabled motion');
+		await group(fillId).locator('.timeline-group-label').focus();
+		await group(fillId).locator('.timeline-group-header .list-row-handle').focus(); await page.keyboard.press('ArrowDown');
+		await page.waitForFunction(() => !editor.timelineDock.stale && editor.timelineDock.model.groups[0].layerId === stackFixture.staticId);
+		assert.equal(await page.evaluate(() => editor.layers[1].id), fillId, 'Header handle ArrowDown reorders the layer');
+		await motions.nth(0).locator('.list-row-handle').focus(); await page.keyboard.press('ArrowDown');
+		await page.waitForFunction(() => !editor.timelineDock.stale && editor.timelineDock.model.groups.find(group => group.layerId === stackFixture.fillId).rows[0].label === 'Pulse');
+		assert.equal(await page.evaluate(() => editor.layerManager.getLayerById(stackFixture.fillId).animations[0].type), 'pulse', 'Motion handle ArrowDown reorders its stack');
+		await page.evaluate(async () => { editor.layerManager.toggleLayerVisibility(stackFixture.fillId); await editor.updateExportDuration(); });
+		assert.equal(await motions.count(), 2, 'A hidden layer retains all stack entries');
+		assert.equal(await motions.locator('.timeline-bar').count(), 0, 'A hidden layer has no motion bars');
 		assert.deepEqual(errors, []);
 		console.log('PASS timeline gestures: body move and slip, snap guide and readout, Alt, live trim, Undo, Escape, locked bars, nudge burst, arrow focus, menu, short bars, cycle and loop length');
 	} finally { await context.close(); }

@@ -19,9 +19,27 @@ const source = fs.readFileSync(path.join(__dirname, '..', '..', 'js', 'export', 
 vm.runInContext(`${source}\nglobalThis.timelineExports = { AuthoredAnimationSource, ProceduralAnimationSource, CompositeFrameReducer, CompositeTimelinePlanner, planLoopFit, planFrameOptions };`, context);
 const { AuthoredAnimationSource, ProceduralAnimationSource, CompositeFrameReducer, CompositeTimelinePlanner, planLoopFit, planFrameOptions } = context.timelineExports;
 
-for (const file of ['core/releases.js', 'core/fields.js', 'core/math.js', 'core/format.js', 'core/area.js', 'core/config.js', 'effects/easing.js', 'effects/animation.js', 'export/SceneCompositor.js']) {
+for (const file of ['core/releases.js', 'core/fields.js', 'core/math.js', 'core/format.js', 'core/options.js', 'core/area.js', 'core/config.js', 'core/layer-types.js', 'effects/easing.js', 'effects/animation.js', 'ui/timeline-view.js', 'export/SceneCompositor.js']) {
 	vm.runInContext(fs.readFileSync(path.join(__dirname, '..', '..', 'js', file), 'utf8'), context);
 }
+vm.runInContext('globalThis.directionMath = { view: TimelineView, animation: GlitterAnimation };', context);
+for (const direction of ['normal', 'reverse', 'alternate', 'alternate-reverse']) {
+	const animation = context.directionMath.animation.normalizeAnimation({ type: 'pulse', periodMs: 800, delayMs: 230, phase: 0.35, direction, iterations: 3.5 });
+	const run = context.directionMath.animation.runTiming(animation);
+	const row = { startMs: run.start, endMs: run.end, cycleMs: 800, phase: animation.phase, direction, source: { run } };
+	for (const ms of [0, 229, 230, 450, 750, 1100, 1650, run.end - 1, run.end]) {
+		const view = context.directionMath.view.timeToCycle(row, ms);
+		const motion = context.directionMath.animation.cycleProgress(animation, ms, { fill: false });
+		assert(Boolean(view) === Boolean(motion), `${direction} run at ${ms}`);
+		if (!view) continue;
+		assert(view.index === motion.cycle, `${direction} cycle at ${ms}`);
+		assert(view.progress === motion.progress, `${direction} progress at ${ms}`);
+		assert(context.directionMath.view.isReversed(row, view.index) === context.directionMath.animation.isReversedCycle(direction, motion.cycle), `${direction} reversal at ${ms}`);
+		assert(Math.abs(context.directionMath.view.cycleToTime(row, view.index, view.progress) - ms) < 1e-8, `${direction} inverse time at ${ms}`);
+	}
+	assert(context.directionMath.view.repeats(row) === context.directionMath.animation.iterationsForRun(animation, run), `${direction} finite repeats`);
+}
+console.log('PASS shared cycle index, progress, reversal, phase, finite run and inverse timing for all four directions');
 const motionSources = vm.runInContext(`(animation) => {
 	const compositor = Object.create(SceneCompositor.prototype);
 	compositor._buildAnimationSamplingContext = () => ({ id: 'motion' });

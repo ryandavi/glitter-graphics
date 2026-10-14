@@ -512,13 +512,8 @@ class AssetBrowser {
 		if (this.browseView !== 'favorites') return;
 		this.preserveScrollPosition(() => {
 			this.wallItems = this.sortItems(this.contentManager.getFavoriteItems(this.getFilteredItems()));
-			const existing = new Map([...this.elements.itemGrid.children].map(tile => [String(tile.dataset.id), tile]));
 			const shown = this.wallItems.slice(0, Math.max(this.currentOffset, this.getPageRows(this.elements.itemGrid).columns * this.getPageRows(this.elements.itemGrid).rows));
-			const tiles = shown.map(item => existing.get(String(item.id)) || this.createItemElement(item));
-			for (const child of [...this.elements.itemGrid.children]) if (!tiles.includes(child)) child.remove();
-			tiles.forEach((tile, index) => {
-				if (this.elements.itemGrid.children[index] !== tile) this.elements.itemGrid.insertBefore(tile, this.elements.itemGrid.children[index] || null);
-			});
+			const tiles = reconcileKeyedChildren(this.elements.itemGrid, shown, { key: item => item.id, build: item => this.createItemElement(item) });
 			this.currentOffset = tiles.length;
 			this.elements.emptyState.classList.remove('visible');
 			if (!this.wallItems.length) this.showEmptyState('No favorites yet');
@@ -622,12 +617,7 @@ class AssetBrowser {
 			const retainedIds = new Set(retained.map(item => String(item.id)));
 			items = [...retained, ...items.filter(item => !retainedIds.has(String(item.id)))];
 		}
-		const existing = new Map([...grid.children].map(tile => [String(tile.dataset.id), tile]));
-		const tiles = items.map(item => existing.get(String(item.id)) || this.createItemElement(item));
-		for (const child of [...grid.children]) if (!tiles.includes(child)) child.remove();
-		tiles.forEach((tile, index) => {
-			if (grid.children[index] !== tile) grid.insertBefore(tile, grid.children[index] || null);
-		});
+		reconcileKeyedChildren(grid, items, { key: item => item.id, build: item => this.createItemElement(item) });
 		this.shortcuts.hidden = !items.length;
 		this._fitShortcutRow();
 	}

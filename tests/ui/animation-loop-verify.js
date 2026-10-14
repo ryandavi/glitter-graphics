@@ -52,7 +52,7 @@ async function verifyTimelineDock() {
 			await e.updateExportDuration();
 			return { stickerId: sticker.id, textId: text.id, count: e.loopEstimate.loopFit.sources.filter(source => source.kind === 'procedural' || Number.isFinite(source.cycleDuration)).length };
 		});
-		assert.strictEqual(await page.locator('.timeline-group').count(), 2);
+		assert.strictEqual(await page.locator('.timeline-group').count(), 3);
 		assert.strictEqual(await page.locator('.timeline-row').count(), sources.count);
 		assert((await page.locator('.timeline-bar-seam').count()) > 0, 'A held non-rest pose must mark its seam');
 		assert((await page.locator('.timeline-bar-marks').count()) >= sources.count);
@@ -73,11 +73,11 @@ async function verifyTimelineDock() {
 		assert.notStrictEqual(await page.locator('.timeline-readout').textContent(), gif);
 		await page.evaluate(async () => { editor.exportSettings.animationFormat = 'gif'; await editor.updateExportDuration(); });
 		await page.evaluate(async () => { editor.layerManager.deleteLayer(editor.layers.find(layer => layer.type === LayerType.STICKER).id); await editor.updateExportDuration(); });
-		assert.strictEqual(await page.locator('.timeline-group').count(), 1);
-		await page.evaluate(async () => { await editor.historyManager.undo(); await editor.updateExportDuration(); });
 		assert.strictEqual(await page.locator('.timeline-group').count(), 2);
+		await page.evaluate(async () => { await editor.historyManager.undo(); await editor.updateExportDuration(); });
+		assert.strictEqual(await page.locator('.timeline-group').count(), 3);
 		await page.evaluate(async () => { await editor.historyManager.redo(); await editor.updateExportDuration(); });
-		assert.strictEqual(await page.locator('.timeline-group').count(), 1);
+		assert.strictEqual(await page.locator('.timeline-group').count(), 2);
 		await page.evaluate(async () => { await editor.historyManager.undo(); await editor.updateExportDuration(); });
 		const handle = page.locator('.timeline-resize-handle');
 		await handle.focus();
@@ -162,7 +162,7 @@ async function verifyTimelineDock() {
 			const result = { same: row === dock.body.querySelector('.timeline-row'), pending: dock.rowsPending,
 				readout: dock.readout.textContent, ticks: editor.animationTicker.tickListeners.size };
 			dock.minimize.click();
-			result.expanded = !dock.rowsPending && row !== dock.body.querySelector('.timeline-row');
+			result.expanded = !dock.rowsPending && row === dock.body.querySelector('.timeline-row');
 			dock.close(); result.closedTicks = editor.animationTicker.tickListeners.size;
 			dock.open();
 			return result;
