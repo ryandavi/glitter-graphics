@@ -1537,6 +1537,8 @@ class SceneCompositor {
 		plan.width = output.width;
 		plan.height = output.height;
 		dbg('[SceneCompositor] Render clock:', {
+			// TEMPORARY with CONFIG.export.timeline.renderClock.glitterLocked: which clock this was.
+			glitterLocked: timelineConfig.renderClock.glitterLocked,
 			mode: plan.renderClock.mode,
 			targetDuration: plan.renderClock.targetDuration,
 			actualDuration: plan.renderClock.duration,

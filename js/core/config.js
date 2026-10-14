@@ -1084,7 +1084,17 @@ const CONFIG = deepFreeze({
 				// delay regularity — not a hair's difference in average rate —
 				// decides between otherwise comparable clocks.
 				cadenceShortfallTolerance: 0.05,
-				loopCandidateShortlist: 4
+				loopCandidateShortlist: 4,
+				// TEMPORARY A/B switch (docs/plans/TIMELINE-AUDIT-2026-10-14.md, section 10).
+				// On: every glitter or GIF frame change starts an output frame, so
+				// each frame plays for its own time; motion is fitted around it.
+				// Off: the older free grid, where a frame change can show up to one
+				// frame late. Delete this switch and the losing path after the test.
+				glitterLocked: true,
+				// A locked clock runs no faster than the preferred rate times this,
+				// unless a frame change needs it: 30 ms GIF frames (33 fps) pass,
+				// 20 ms (50 fps) does not, so exact glitter does not grow the file.
+				lockedRateAllowance: 1.25
 			},
 			// Timings offered for a smaller export (planFrameOptions). An option
 			// must save `minimumSaving` of the frames, and never moves a speed

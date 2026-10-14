@@ -76,7 +76,7 @@ function procedural(key, period, preferredSamplingRate = 12) {
 	});
 }
 
-function createPlanner() {
+function createPlanner(renderClockOverrides = {}) {
 	return new CompositeTimelinePlanner({
 		proceduralPeriodTolerance: 0.10,
 		preRenderBudgetMultiplier: 1.5,
@@ -86,14 +86,15 @@ function createPlanner() {
 			gifMaximumDelayMs: 200,
 			mp4OutputFpsStops: [12, 15, 20, 24, 25, 30, 50, 60],
 			cadenceShortfallTolerance: 0.05,
-			loopCandidateShortlist: 4
+			loopCandidateShortlist: 4,
+			...renderClockOverrides
 		}
 	});
 
 }
 
-async function buildPlan(timelines, overrides = {}) {
-	const planner = createPlanner();
+async function buildPlan(timelines, overrides = {}, renderClockOverrides = {}) {
+	const planner = createPlanner(renderClockOverrides);
 	return planner.plan({
 		timelines,
 		fallbackDuration: 100,
@@ -145,7 +146,8 @@ async function main() {
 		mutation.source().setRun({ start: 600, end });
 		const run = mutation.run();
 		assert(run.start === 600 && run.end === end, 'Run setter must invert runTiming including phase and Infinity');
-		assert((typeof mutation.source().setPeriod === 'function') === (end === Infinity), 'Finite runs must not gain period setters');
+		// A finite run keeps a speed setter: a bar's right edge sets its length at the same repeat count.
+		assert(typeof mutation.source().setPeriod === 'function', 'Runs must keep their period setters');
 	}
 	mutation.source().setPhase(-0.25);
 	assert(mutation.layer.animations[0].phase === 0.75, 'Phase setter must wrap negative values');
@@ -500,6 +502,50 @@ async function main() {
 	const deterministicB = await buildPlan([timeline('authored', 3, [110, 110, 110]), procedural('rotate', 3000, 30)]);
 	assert(deterministicA.renderClock.delays.join(',') === deterministicB.renderClock.delays.join(','),
 		'Identical input did not produce an identical timing plan.');
+
+	// --- Glitter-locked clock (TEMPORARY switch renderClock.glitterLocked) ---
+	// Every frame change of a frame animation starts an output frame, so each
+	// glitter frame plays for its own time; motion is sampled between them.
+	const locked = { glitterLocked: true };
+	for (const frameMs of [100, 110, 120, 170]) {
+		const glitter = () => timeline(`glitter-${frameMs}`, 4, Array(4).fill(frameMs));
+		const lockedPlan = await buildPlan([glitter(), procedural('rotate', 3000, 30)], {}, locked);
+		const lockedClock = lockedPlan.renderClock;
+		assert(lockedClock.maximumAuthoredBoundaryLateness < 0.5
+			&& glitter().boundariesUntil(lockedClock.duration).every((boundary) => lockedClock.timestamps.includes(boundary)),
+			`A ${frameMs} ms glitter frame change did not start an output frame on the locked clock.`);
+		assert(lockedClock.delays.every((delay) => delay >= 20 && delay % 10 === 0) && lockedClock.maximumDelay <= 40,
+			`The locked clock for ${frameMs} ms glitter left the GIF grid or slowed motion past 25 fps.`);
+		const lockedVideo = (await buildPlan([glitter(), procedural('rotate', 3000, 30)], { outputFormat: 'mp4' }, locked)).renderClock;
+		const freeVideo = (await buildPlan([glitter(), procedural('rotate', 3000, 30)], { outputFormat: 'mp4' })).renderClock;
+		assert(lockedVideo.maximumAuthoredBoundaryLateness <= freeVideo.maximumAuthoredBoundaryLateness,
+			`The locked MP4 clock showed ${frameMs} ms glitter later than the free clock.`);
+	}
+	const evenGlitter = (await buildPlan([timeline('glitter-120', 4, Array(4).fill(120)), procedural('rotate', 3000, 30)], {}, locked)).renderClock;
+	assert(evenGlitter.delaySpread === 0, 'A glitter frame the grid divides evenly must give even motion steps.');
+	const glitter120Video = (await buildPlan([timeline('glitter-120', 4, Array(4).fill(120)), procedural('rotate', 3000, 30)], { outputFormat: 'mp4' }, locked)).renderClock;
+	assert(glitter120Video.maximumAuthoredBoundaryLateness < 0.5, 'The locked MP4 clock must pick a rate that divides the glitter frame (25 fps for 120 ms).');
+	const unrelated = () => [timeline('fast', 2, [30, 30]), timeline('slow', 2, [50, 50]), procedural('rotate', 3000, 30)];
+	const unrelatedLocked = (await buildPlan(unrelated(), {}, locked)).renderClock;
+	const unrelatedFree = (await buildPlan(unrelated())).renderClock;
+	assert(unrelatedLocked.maximumAuthoredBoundaryLateness <= unrelatedFree.maximumAuthoredBoundaryLateness
+		&& unrelatedLocked.delays.every((delay) => delay >= 20),
+		'Two frame animations at unrelated rates must not be shown later than the free clock, or below the delay floor.');
+	// Reduction never merges across a glitter frame change while locked.
+	const lockedFrames = Array.from({ length: 4 }, (_, index) => frame(100 + (index % 2), 255, 4));
+	const lockedInput = () => ({
+		frames: [...lockedFrames],
+		frameDurations: Array(4).fill(50),
+		selections: lockedFrames.map((_, index) => new Map([['glitter', { frameIndex: index }]]))
+	});
+	const lockedReduction = reducer.reduce(lockedInput(), {
+		enabled: true, visualErrorThreshold: 0.05, preferredFrameBudget: 1, hardFrameLimit: 1000, lockAuthoredFrames: true
+	});
+	const freeReduction = reducer.reduce(lockedInput(), {
+		enabled: true, visualErrorThreshold: 0.05, preferredFrameBudget: 1, hardFrameLimit: 1000
+	});
+	assert(lockedReduction.nearDuplicatesMerged === 0 && freeReduction.nearDuplicatesMerged > 0,
+		'Locked reduction merged two frames that show different glitter frames.');
 
 	assert(CompositeFrameReducer.hash(frame(12)) === '2x2:615909253',
 		'Golden no-reduction composed-frame hash changed.');

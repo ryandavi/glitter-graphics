@@ -330,6 +330,8 @@ class RenderClock {
 			delays,
 			outputFps,
 			candidateRank: context.candidateRank,
+			lockAuthored: Boolean(context.lockAuthored),
+			lockedRateAllowance: context.lockedRateAllowance || 1,
 			procedural: fitProceduralPeriods(context.procedural, realizedDuration, context.tolerance),
 			diagnostics: {
 				...RenderClock.authoredCoverage(context.authored, starts, realizedDuration),
@@ -358,6 +360,12 @@ class RenderClock {
 		const diagnostics = clock.diagnostics;
 		return [
 			diagnostics.authoredOccurrencesMissed,
+			// Glitter-locked: a frame animation's frames play for their own time
+			// before motion fit or smoothness is considered.
+			clock.lockAuthored ? Math.round(diagnostics.maximumAuthoredBoundaryLateness) : 0,
+			// ...and no faster than the preferred rate unless the frames need it,
+			// so exact glitter does not cost a bigger file on its own.
+			clock.lockAuthored && diagnostics.averageFps > (1000 / diagnostics.preferredInterval) * clock.lockedRateAllowance ? 1 : 0,
 			clock.procedural.toleranceMisses,
 			// Loop candidates arrive already ordered by the source-level rule
 			// (lowest maximum period drift, then total drift, then shortest loop);
@@ -417,7 +425,55 @@ class GifRenderClockPlanner {
 			const candidate = RenderClock.build('gif', targetDuration, delays, context);
 			if (RenderClock.isBetter(candidate, best)) best = candidate;
 		});
+		if (context.lockAuthored) {
+			this.lockedDelaySets(totalUnits, duration, preferredInterval, minimumUnits, context).forEach((delays) => {
+				const candidate = RenderClock.build('gif', targetDuration, delays, context);
+				if (RenderClock.isBetter(candidate, best)) best = candidate;
+			});
+		}
 		return best;
+	}
+
+	// Glitter-locked clocks: every frame animation's frame change starts an
+	// output frame, and the stretch between two changes is split as evenly as
+	// the centisecond grid allows. The variants differ only in how finely each
+	// stretch is split; ranking picks between them on cadence and cost.
+	lockedDelaySets(totalUnits, duration, preferredInterval, minimumUnits, context) {
+		const quantum = this.config.gifDelayQuantumMs;
+		const points = new Set([0, totalUnits]);
+		for (const source of context.authored) {
+			for (const boundary of source.boundariesUntil(duration)) {
+				const units = Math.round(boundary / quantum);
+				// A change off the grid cannot start a GIF frame exactly.
+				if (Math.abs(boundary / quantum - units) > 1e-6) return [];
+				points.add(units);
+			}
+		}
+		if (points.size <= 2) return [];
+		// Changes closer than the shortest delay a viewer honours share a frame.
+		const kept = [0];
+		[...points].sort((left, right) => left - right).slice(1).forEach((point) => {
+			if (point - kept.at(-1) >= minimumUnits) kept.push(point);
+			else if (point === totalUnits && kept.length > 1) kept[kept.length - 1] = point;
+		});
+		const gaps = kept.slice(1).map((point, index) => point - kept[index]);
+		const preferredUnits = preferredInterval / quantum;
+		const rules = [
+			() => 1,
+			(gap) => Math.floor(gap / preferredUnits),
+			(gap) => Math.round(gap / preferredUnits),
+			(gap) => Math.ceil(gap / preferredUnits)
+		];
+		const seen = new Set();
+		return rules.map((rule) => gaps.flatMap((gap) => {
+			const parts = Math.max(1, Math.min(Math.floor(gap / minimumUnits), rule(gap)));
+			return Array.from({ length: parts }, (_, index) => (Math.floor((index + 1) * gap / parts) - Math.floor(index * gap / parts)) * quantum);
+		})).filter((delays) => {
+			const signature = delays.join(',');
+			if (delays.length > context.frameLimit || seen.has(signature)) return false;
+			seen.add(signature);
+			return true;
+		});
 	}
 }
 
@@ -502,7 +558,7 @@ class CompositeFrameReducer {
 		return samples ? Math.max(error / samples, peakError * 0.09) : 0;
 	}
 
-	reduce(input, { enabled, visualErrorThreshold, preferredFrameBudget, hardFrameLimit, maximumCadenceGap = Infinity }) {
+	reduce(input, { enabled, visualErrorThreshold, preferredFrameBudget, hardFrameLimit, maximumCadenceGap = Infinity, lockAuthoredFrames = false }) {
 		const frames = [...input.frames];
 		const frameDurations = [...input.frameDurations];
 		const selections = input.selections.map((selection) => new Map(selection));
@@ -526,7 +582,10 @@ class CompositeFrameReducer {
 				}
 			}
 
-			const mergeWithinThreshold = (threshold, cadenceGap) => {
+			// Two frames showing the same frame of every frame animation; merging
+			// any others would move a glitter frame change off its own time.
+			const sameAuthoredFrames = (left, right) => [...selections[left]].every(([key, selected]) => selections[right].get(key)?.frameIndex === selected?.frameIndex);
+			const mergeWithinThreshold = (threshold, cadenceGap, locked = false) => {
 				let best = null;
 				for (let index = 1; index < frames.length; index++) {
 					const sampledPrev = CompositeFrameReducer.difference(frames[index], frames[index - 1], true);
@@ -548,6 +607,7 @@ class CompositeFrameReducer {
 						const neighbour = mergePrevious ? index - 1 : index + 1;
 						if (neighbour >= frames.length || frameDurations[index] + frameDurations[neighbour] > cadenceGap) continue;
 					}
+					if (locked && !sameAuthoredFrames(index, mergePrevious ? index - 1 : index + 1)) continue;
 					if (!materialChange && score < threshold && (!best || score < best.score)) {
 						best = { index, score, mergePrevious };
 					}
@@ -564,7 +624,7 @@ class CompositeFrameReducer {
 			};
 
 			if (effectiveVisualErrorThreshold > 0) {
-				while (frames.length > preferredFrameBudget && mergeWithinThreshold(effectiveVisualErrorThreshold, maximumCadenceGap)) {}
+				while (frames.length > preferredFrameBudget && mergeWithinThreshold(effectiveVisualErrorThreshold, maximumCadenceGap, lockAuthoredFrames)) {}
 			}
 
 			// The hard limit is a resource ceiling, not a quality preference, so it
@@ -726,7 +786,9 @@ class CompositeTimelinePlanner {
 			resolveFrameLimit: options.resolveFrameLimit,
 			tolerance: this.config.proceduralPeriodTolerance,
 			cadenceShortfallTolerance: this.config.renderClock.cadenceShortfallTolerance,
-			candidateRank: 0
+			candidateRank: 0,
+			lockAuthored: Boolean(this.config.renderClock.glitterLocked) && authored.some((source) => !source.isStatic),
+			lockedRateAllowance: this.config.renderClock.lockedRateAllowance || 1.25
 		};
 		if (!procedural.length) {
 			const clock = this._authoredClock(timelines, authoredDuration, options.maxSamplingFps, context);
@@ -1043,7 +1105,8 @@ class CompositeTimelinePlanner {
 			visualErrorThreshold: options.visualErrorThreshold,
 			preferredFrameBudget: this._frameBudgets(schedulePlan.loopSeam.duration, options).preferredFrameBudget,
 			hardFrameLimit: options.hardFrameLimit,
-			maximumCadenceGap
+			maximumCadenceGap,
+			lockAuthoredFrames: Boolean(this.config.renderClock.glitterLocked)
 		});
 		const totalDuration = reduced.frameDurations.reduce((sum, duration) => sum + duration, 0);
 		const authoredKeys = schedulePlan.sourceAnalysis
