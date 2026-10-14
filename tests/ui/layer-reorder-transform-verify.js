@@ -89,8 +89,8 @@ async function verifyReorderControls(page) {
 	await page.waitForFunction(() => editor.timelineDock?.model?.groups.length === 7 && !editor.timelineDock.stale);
 	const selection = () => page.evaluate(() => [...editor.layerManager.selectedLayerIds]);
 	const drag = async (container, rows, from, target, place, during) => {
-		const start = await rows.nth(from).locator('.list-row-handle').first().boundingBox(), end = await rows.nth(target).boundingBox();
-		assert(start && end, 'Drag handles and targets must reserve space');
+		const start = await rows.nth(from).locator('.list-row-text, .list-row-content').first().boundingBox(), end = await rows.nth(target).boundingBox();
+		assert(start && end, 'Row bodies and targets must have layout boxes');
 		await page.mouse.move(start.x + start.width / 2, start.y + start.height / 2); await page.mouse.down();
 		await page.mouse.move(end.x + 70, place === 'above' ? end.y + 1 : end.y + end.height - 1);
 		await page.waitForTimeout(250);
@@ -121,7 +121,18 @@ async function verifyReorderControls(page) {
 			return { width: row.scrollWidth, left: row.querySelector('.layer-name').getBoundingClientRect().left, gutter: row.querySelector('.list-row-handle').getBoundingClientRect().width };
 		});
 		const before = await measure(); await name(1).hover(); const after = await measure();
-		assert(JSON.stringify(before) === JSON.stringify(after) && before.gutter === 16, `${selector}: hovering must preserve the gutter and name position`);
+		assert(JSON.stringify(before) === JSON.stringify(after) && before.gutter === 0, `${selector}: desktop handles have no gutter, even on hover`);
+		const control = await rows.nth(1).locator('.lock').boundingBox(), controlTarget = await rows.nth(0).boundingBox();
+		await page.mouse.move(control.x + control.width / 2, control.y + control.height / 2); await page.mouse.down();
+		await page.mouse.move(controlTarget.x + 80, controlTarget.y + 1);
+		assert(!await container.evaluate(node => isReordering(node)), `${selector}: buttons cannot start row dragging`);
+		await page.mouse.up();
+		await name(1).dblclick();
+		const input = rows.nth(1).locator('.layer-name-input'), inputBox = await input.boundingBox();
+		await page.mouse.move(inputBox.x + 8, inputBox.y + inputBox.height / 2); await page.mouse.down();
+		await page.mouse.move(controlTarget.x + 80, controlTarget.y + 1);
+		assert(!await container.evaluate(node => isReordering(node)), `${selector}: inputs cannot start row dragging`);
+		await page.mouse.up(); await page.keyboard.press('Escape');
 		await name(1).click(); await name(2).click({ modifiers: ['Control'] }); await name(3).click({ modifiers: ['Control'] });
 		const selected = await selection(), original = await page.evaluate(() => editor.layers.map(layer => layer.id));
 		await name(2).evaluate(node => { const range = document.createRange(); range.selectNodeContents(node); window.getSelection().addRange(range); });
@@ -142,6 +153,15 @@ async function verifyReorderControls(page) {
 		// The protected base is the last row; the last movable slot is above it.
 		await page.evaluate(() => editor.layerManager.setSelection([editor.layers.at(-1).id]));
 		await drag(container, rows, 0, 5, 'below');
+		const keyboardId = await id(1);
+		await page.evaluate(id => editor.layerManager.setSelection([id]), keyboardId);
+		await (timeline ? rows.nth(1).locator('.timeline-group-label') : rows.nth(1)).focus();
+		await page.keyboard.press('Alt+ArrowUp');
+		await page.evaluate(async () => { await editor.updateExportDuration(); });
+		assert(await id(0) === keyboardId, `${selector}: focused row Alt+ArrowUp reorders`);
+		await page.keyboard.press('Alt+ArrowDown');
+		await page.evaluate(async () => { await editor.updateExportDuration(); });
+		assert(await id(1) === keyboardId, `${selector}: focused row Alt+ArrowDown reorders`);
 		if (timeline) {
 			assert(await rows.nth(0).locator('.timeline-group-chevron').evaluate(node => node.disabled && node.getAttribute('aria-disabled') === 'true' && !node.hasAttribute('aria-expanded') && !node.closest('.timeline-group').classList.contains('is-collapsed')), 'Empty groups must have disabled chevrons and no collapsed state');
 			await rows.nth(0).evaluate(node => { window.reusedGroup = node; });
@@ -152,9 +172,9 @@ async function verifyReorderControls(page) {
 	await page.evaluate(() => {
 		const layer = editor.layers[1]; editor.layerManager.setActiveLayer(layer.id);
 		layer.animations = []; editor.animationPanel.load(layer);
-		const card = document.getElementById('stickerAnimSelectedCard');
-		if (!card.hidden || document.getElementById('stickerAnimStackEmpty').hidden) throw new Error('Empty stack must show its empty state');
 		const section = document.getElementById('stickerAnimEnabled').closest('.animation-module');
+		if (!section.querySelector('.animation-stack-card') || section.querySelectorAll('.property-object-card').length !== 1) throw new Error('Only the Animations object has a card');
+		if (!section.classList.contains('is-empty') || document.getElementById('stickerAnimStackEmpty').hidden) throw new Error('Empty stack must show its empty state');
 		const controls = [...section.querySelectorAll('[id]')];
 		const movement = () => ['Amount', 'Angle', 'Distance', 'Radius', 'Turns', 'Duty', 'OpacityFloor'].map(suffix => document.getElementById(`stickerAnim${suffix}Row`).hidden).join();
 		const emptyRows = movement(), toggle = document.getElementById('stickerAnimEnabled');
@@ -167,11 +187,16 @@ async function verifyReorderControls(page) {
 		// Four rows exercise all insertion slots independently of the Add limit.
 		layer.animations = ['pulse', 'rotate', 'bounce', 'shake'].map(type => GlitterAnimation.normalizeAnimation({ type }));
 		editor.animationPanel.load(layer);
-		if (card.hidden || !document.getElementById('stickerAnimStackEmpty').hidden) throw new Error('Populated stack must show its selected card');
+		if (section.classList.contains('is-empty') || !document.getElementById('stickerAnimStackEmpty').hidden) throw new Error('Populated stack must show its settings');
 		if (editor.pickers.flyout !== section.dataset.flyoutKey) editor.pickers.toggleFlyout(section.dataset.flyoutKey);
 		setPanelCardCollapsed(section, false);
 	});
 	const stack = page.locator('#stickerAnimStack'), motions = stack.locator(':scope > .animation-stack-item');
+	await motions.nth(2).locator('.list-row-content').click();
+	assert(await page.evaluate(() => editor.animationPanel.selectedMotionIndex(editor.layerManager.getActiveLayer()) === 2), 'Plain motion click selects');
+	await motions.nth(2).focus(); await page.keyboard.press('Alt+ArrowUp');
+	assert(await page.evaluate(() => editor.layerManager.getActiveLayer().animations[1].type === 'bounce'), 'Focused motion row Alt+ArrowUp reorders');
+	await page.keyboard.press('Alt+ArrowDown');
 	await drag(stack, motions, 2, 0, 'above');
 	await drag(stack, motions, 0, 3, 'below');
 	await page.evaluate(async () => { editor.pickers.closeActive(); await editor.updateExportDuration(); editor.timelineDock.resync(); const group = editor.timelineDock.body.querySelector(`[data-layer-id="${editor.layerManager.activeLayerId}"]`); editor.timelineDock.body.scrollTop = group.offsetTop; });
@@ -179,19 +204,32 @@ async function verifyReorderControls(page) {
 	const motionLayerId = await page.evaluate(() => editor.layerManager.activeLayerId);
 	const timelineStack = page.locator(`.timeline-group[data-layer-id="${motionLayerId}"] > .timeline-group-rows`);
 	const timelineMotions = timelineStack.locator(':scope > .timeline-row[data-motion-index]');
-	const alignedHandles = () => timelineStack.evaluate(node => Math.abs(node.parentElement.querySelector('.timeline-group-header .list-row-handle').getBoundingClientRect().left - node.querySelector('.timeline-row .list-row-handle').getBoundingClientRect().left) < 0.1);
-	assert(await alignedHandles(), 'Narrow timeline motion grips must align with the group handle');
+	const alignedEyes = () => timelineStack.evaluate(node => Math.abs(node.parentElement.querySelector('.timeline-group-header .layer-visibility').getBoundingClientRect().left - node.querySelector('.timeline-motion-enabled').getBoundingClientRect().left) < 0.1);
+	assert(await alignedEyes(), 'Narrow timeline motion eyes must align with the group eye');
+	await timelineMotions.nth(2).focus(); await page.keyboard.press('Alt+ArrowUp');
+	assert(await page.evaluate(() => editor.layerManager.getActiveLayer().animations[1].type === 'shake'), 'Timeline motion row Alt+ArrowUp reorders');
+	await page.evaluate(async () => { await editor.updateExportDuration(); });
+	await page.keyboard.press('Alt+ArrowDown');
 	await drag(timelineStack, timelineMotions, 2, 0, 'above');
 	await drag(timelineStack, timelineMotions, 0, 3, 'below');
 	await page.setViewportSize({ width: 1600, height: 1100 }); await page.waitForTimeout(250);
-	assert(await alignedHandles(), 'Wide timeline motion grips must align with the group handle');
+	assert(await alignedEyes(), 'Wide timeline motion eyes must align with the group eye');
 	await page.evaluate(() => { PREFERENCES.set('timelineOpen', false); editor.pickers.closeActive(); });
+	assert(await page.evaluate(() => {
+		const base = editor.layerManager.getBaseLayer(); editor.layerManager.setActiveLayer(base.id);
+		base.background.mode = 'gradient'; editor.baseBackgroundManager.loadLayerSettings(base);
+		const card = document.getElementById('baseBackgroundGradientCard');
+		return card?.matches('.inset-surface.property-object-card') && card.querySelector('.property-object-title').textContent === 'Gradient'
+			&& !card.parentElement.hidden && card.querySelector('.gradient-preview') && card.querySelector('.effect-gradient-editor')
+			&& getComputedStyle(card.querySelector('.property-object-title')).fontSize === getComputedStyle(card.closest('.property-card').querySelector('.property-card-title')).fontSize;
+	}), 'Gradient uses the shared object card with preview, stops, controls and section-title typography');
 	await page.setViewportSize(VIEWPORT); await page.waitForTimeout(250);
 }
 
 (async () => {
-	const { browser, context, page } = await openApp({ viewport: VIEWPORT, document: { width: 320, height: 240 } });
-	await verifyReorderControls(page);
+	const fine = await openApp({ viewport: VIEWPORT, document: { width: 320, height: 240 } });
+	await verifyReorderControls(fine.page); await fine.browser.close();
+	const { browser, context, page } = await openApp({ viewport: VIEWPORT, touch: true, document: { width: 320, height: 240 } });
 	await loadBlankCanvas(page);
 	await createStickerLayer(page, 'Reorder Target Sticker');
 	await createStickerLayer(page, 'Reorder Test Sticker');
@@ -294,6 +332,8 @@ async function verifyReorderControls(page) {
 	const touchId = await row(3).getAttribute('data-layer-id');
 	await row(3).focus();
 	const grip = await row(3).locator('.list-row-handle').boundingBox();
+	assert(grip && grip.width > 0 && await row(3).locator('.list-row-handle').isVisible(), 'Coarse-pointer handles are visible');
+	assert(await row(4).locator('.list-row-handle').evaluate(node => node.disabled && getComputedStyle(node).visibility === 'hidden' && node.getBoundingClientRect().width === 16), 'Locked touch handle hides while retaining its slot');
 	const touchTarget = await row(0).boundingBox();
 	const cdp = await context.newCDPSession(page);
 	await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: grip.x + grip.width / 2, y: grip.y + grip.height / 2 }] });
@@ -324,7 +364,6 @@ async function verifyReorderControls(page) {
 	await page.mouse.move(motionStart.x + 15, motionStart.y + motionStart.height / 2); await page.mouse.down();
 	await page.mouse.move(motionTarget.x + 30, motionTarget.y + motionTarget.height - 1); await page.mouse.up();
 	assert(await page.evaluate(index => { const layer = editor.layerManager.getActiveLayer(); return layer.animations[0].type === 'rotate' && layer.animations[1].type === 'pulse' && editor.animationPanel.selectedMotionIndex(layer) === 1 && editor.historyManager.historyIndex === index + 1; }, motionHistory), 'Motion stack pointer drag must reorder, retain the moved selection and save once');
-	await motion.nth(1).locator('.list-row-content').focus();
 	await motion.nth(1).locator('.list-row-handle').focus(); await page.keyboard.press('ArrowUp');
 	assert(await page.evaluate(() => editor.layerManager.getActiveLayer().animations[0].type === 'pulse'), 'Motion handle ArrowUp must use the shared reorder');
 	await browser.close();

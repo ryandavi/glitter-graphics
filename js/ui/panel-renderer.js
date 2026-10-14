@@ -932,13 +932,6 @@ function buildPaintOpacityRow(slot) {
 	});
 }
 
-// The Gradient source's sets, laid out as the glitter source's are, with no
-// set inside a set: Presets (closed until asked for, one remembered state for
-// every editor), the stops (the preview bar over its stop table) and the
-// Type/Blend/Angle options are sets of the section body; the Smooth blend's
-// set joins the section's one Advanced. installEffectGradientEditor binds
-// them by `data-gradient-editor`. `owner` names a second paint source, as in
-// buildGlitterAdvancedSets.
 function buildPatternSourceSets(slot, options = {}) {
 	const prefix = slot.idPrefix;
 	const defaults = normalizeEffectPattern(null);
@@ -988,6 +981,8 @@ function buildPatternSourceSets(slot, options = {}) {
 	return { body: [presets, colors, types], advanced: scroll };
 }
 
+// Presets precede the shared Gradient card; smoothing joins the section's
+// Advanced. The binder finds the built sets through data-gradient-editor.
 function buildGradientSourceSets(slot, options = {}) {
 	const fragment = document.getElementById('tpl-gradient-editor').content.cloneNode(true);
 	const presets = buildPanelSet({ label: 'Presets', collapse: 'closed', rows: [
@@ -1008,7 +1003,10 @@ function buildGradientSourceSets(slot, options = {}) {
 		set.dataset.gradientPart = part;
 		if (options.owner) set.dataset.paintSlotOwner = options.owner;
 	});
-	return { body: [parts.presets, parts.stops, parts.options], advanced: parts.smoothing };
+	const editor = buildPanelObjectCard({ id: `${slot.idPrefix}GradientCard`, title: 'Gradient' }, null, [parts.stops, parts.options]);
+	editor.dataset.paintSourceMode = 'gradient'; editor.hidden = true;
+	if (options.owner) editor.dataset.paintSlotOwner = options.owner;
+	return { body: [parts.presets, editor], advanced: parts.smoothing };
 }
 
 // A run of built nodes in a `.property-set`. For the renderer's own sets;
@@ -1152,21 +1150,23 @@ function buildSectionShell(spec, schema) {
 	return card;
 }
 
-// `{ kind: 'section' }`: a title row, then its sets, then at most one
-// Advanced. The body holds exactly what the schema lists, in that order.
+// Object cards share one shell for schema sets and code-built editor content.
+function buildPanelObjectCard(specCard, schema, content = []) {
+	const surface = addPanelClasses(buildElement('inset-surface property-object-card'), specCard.classes);
+	surface.id = specCard.id; surface.setAttribute('role', 'group');
+	const title = buildElement('property-object-title', specCard.title);
+	title.id = specCard.titleId || `${specCard.id}Title`; surface.setAttribute('aria-labelledby', title.id);
+	surface.appendChild(title);
+	for (const set of specCard.sets || []) surface.appendChild(buildPanelSet(set, schema));
+	surface.append(...content);
+	const row = buildElement('property-row is-control'); row.appendChild(surface); return row;
+}
+
 function buildPanelSection(spec, schema) {
 	const card = buildSectionShell(spec, schema);
 	const body = card.querySelector(':scope > .property-card-body');
+	for (const specCard of spec.cards || []) body.appendChild(buildPanelObjectCard(specCard, schema));
 	(spec.sets || []).forEach((set) => body.appendChild(buildPanelSet(set, schema)));
-	for (const specCard of spec.cards || []) {
-		const surface = addPanelClasses(buildElement('inset-surface property-object-card'), specCard.classes);
-		surface.id = specCard.id; surface.setAttribute('role', 'group');
-		const title = buildElement('property-object-title', specCard.title);
-		title.id = specCard.titleId || `${specCard.id}Title`; surface.setAttribute('aria-labelledby', title.id);
-		surface.appendChild(title);
-		for (const set of specCard.sets) surface.appendChild(buildPanelSet(set, schema));
-		const row = buildElement('property-row is-control'); row.appendChild(surface); body.appendChild(row);
-	}
 	if (spec.advanced?.length) body.appendChild(buildAdvancedDisclosure({ id: spec.advancedId, sets: spec.advanced }, schema));
 	return card;
 }

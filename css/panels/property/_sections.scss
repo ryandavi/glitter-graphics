@@ -334,5 +334,5 @@
 	flex-direction: column;
 	gap: var(--property-set-gap);
 	--property-gutter: var(--spacing-base);
-	> .property-object-title { padding-inline: var(--property-gutter); font-weight: var(--font-weight-semibold); }
+	> .property-object-title { padding-inline: var(--property-gutter); }
 }

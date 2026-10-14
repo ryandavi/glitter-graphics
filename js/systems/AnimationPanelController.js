@@ -580,6 +580,7 @@ class AnimationPanelController {
 		if (feature && !isFeatureAvailable(feature)) return;
 		layer.animations ||= []; layer.animations.push(this._createDefault(layer, type));
 		this.selectedByLayer.set(layer.id, layer.animations.length - 1); this._render(layer);
+		this.editor.timelineDock?.expandLayer(layer.id);
 		this.editor.saveState('Add animation');
 	}
 
@@ -626,6 +627,7 @@ class AnimationPanelController {
 		if (!LIST_REORDERS.has(host)) {
 			bindListReorder(host, {
 				item: '.animation-stack-item', handle: '.list-row-handle',
+				keyboardFocus: next => next.to,
 				ids: row => [Number(row.dataset.animationIndex)],
 				canDrag: () => this.editor.canEditLayer(currentLayer()),
 				resolve: ({ ids, target, place }) => {
@@ -644,13 +646,15 @@ class AnimationPanelController {
 		host.replaceChildren(host.querySelector('.list-insertion-line'));
 		animations.forEach((animation, index) => {
 			const row = document.createElement('div'); row.className = 'list-row animation-stack-item';
-			row.dataset.animationIndex = index;
+			row.dataset.animationIndex = index; row.tabIndex = 0;
 			row.classList.toggle('active', index === this._selectedIndex(layer));
-			const button = document.createElement('button'); button.type = 'button'; button.className = 'list-row-content btn-text';
+			const button = buildElement('list-row-content btn-text', undefined, 'span');
 			const description = GlitterAnimation.describe(animation), text = buildElement('list-row-text', null, 'span');
 			text.append(buildElement('list-row-name', description.name, 'span'), buildElement('list-row-meta', description.detail, 'span')); button.append(text);
-			button.setAttribute('aria-pressed', String(index === this._selectedIndex(layer)));
-			button.addEventListener('click', () => { this.selectMotion(layer, index); this.editor.timelineDock?.selectMotion(layer.id, index); this.load(layer); });
+			row.setAttribute('aria-selected', String(index === this._selectedIndex(layer))); row.setAttribute('role', 'option');
+			const select = () => { this.selectMotion(layer, index); this.editor.timelineDock?.selectMotion(layer.id, index); this.load(layer); };
+			row.addEventListener('click', event => { if (!event.target.closest('button')) select(); });
+			row.addEventListener('keydown', event => { if (event.target === row && ['Enter', ' '].includes(event.key)) { event.preventDefault(); event.stopPropagation(); select(); } });
 			const enabled = buildIconButton({ label: animation.enabled === false ? 'Enable animation' : 'Disable animation', icon: animation.enabled === false ? 'eye-slash' : 'eye' });
 			enabled.setAttribute('aria-pressed', String(animation.enabled !== false));
 			enabled.addEventListener('click', () => this.toggleAnimation(layer, index));
@@ -832,9 +836,6 @@ class AnimationPanelController {
 		const data = GlitterAnimation.normalizeAnimation(this._selected(layer) || { type: CONFIG.tools.animation.defaultType });
 		this._id(prefix, 'Enabled').closest('.animation-module').classList.toggle('is-empty', !layer.animations?.length);
 		this._id(prefix, 'StackEmpty').hidden = Boolean(layer.animations?.length);
-		this._id(prefix, 'SelectedCard').hidden = !layer.animations?.length;
-		this._id(prefix, 'SelectedCard').parentElement.hidden = !layer.animations?.length;
-		this._id(prefix, 'SelectedTitle').textContent = GlitterAnimation.describe(data).name;
 		this._loadKeyControls(prefix, layer, data);
 		this._renderStack(prefix, layer);
 		const anchorControl = this._id(prefix, 'Anchor');

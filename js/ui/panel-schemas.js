@@ -386,10 +386,9 @@ function createAnimationSectionSpec(prefix) {
 	spec.cards = [
 		{ id: id('AnimationsCard'), title: 'Animations', classes: 'animation-stack-card', sets: [
 			{ rows: [stack, { kind: 'note', id: id('StackEmpty'), text: 'No animations yet', classes: 'property-empty' }] }, actions
-		] },
-		{ id: id('SelectedCard'), title: 'Selected animation', titleId: id('SelectedTitle'), classes: 'animation-selected-card', sets: [preset, ...spec.sets] }
+		] }
 	];
-	spec.sets = [];
+	spec.sets = [preset, ...spec.sets];
 	return spec;
 }
 

@@ -30,9 +30,9 @@ async function verifyTimelineDock() {
 		await page.waitForFunction(() => editor.timelineDock?.isOpen);
 		await page.waitForTimeout(200);
 		await page.evaluate(() => editor.updateExportDuration());
-		assert(await page.locator('#timelineDock .property-empty').isVisible(), 'A document with nothing animated must say so');
+		assert(await page.locator('#timelineDock .timeline-ruler .property-note').isVisible(), 'A document with nothing animated must say so in the ruler band');
 		assert(await page.evaluate(() => editor.animationTicker.tickListeners.size === 0 && editor.animationTicker.frameRequest == null), 'An empty dock does not keep the ticker running');
-		assert(await page.locator('#timelineDock .property-empty').evaluate(node => !node.dispatchEvent(new WheelEvent('wheel', { bubbles: true, cancelable: true, ctrlKey: true, deltaY: -100 }))), 'An empty timeline also consumes Ctrl-wheel to prevent page zoom');
+		assert(await page.locator('#timelineDock .timeline-ruler').evaluate(node => !node.dispatchEvent(new WheelEvent('wheel', { bubbles: true, cancelable: true, ctrlKey: true, deltaY: -100 }))), 'An empty timeline also consumes Ctrl-wheel to prevent page zoom');
 		assert((await page.locator('#previewContainer').evaluate(node => node.clientHeight)) < fullHeight);
 		assert.strictEqual(await page.evaluate(() => editor.viewport.lastViewportHeight), await page.locator('#previewContainer').evaluate(node => node.clientHeight), 'Opening must use the viewport resize path');
 		const sources = await page.evaluate(async () => {

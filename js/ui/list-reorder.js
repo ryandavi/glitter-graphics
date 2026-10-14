@@ -6,7 +6,7 @@ function isReordering(container) {
 	return Boolean(LIST_REORDERS.get(container)?.dragging);
 }
 
-function bindListReorder(container, { item, handle, scroller = container, ids, canDrag, drop = 'between', resolve, commit, keyboard = true, rowIds = ids }) {
+function bindListReorder(container, { item, handle, scroller = container, ids, canDrag, drop = 'between', resolve, commit, keyboard = true, rowIds = ids, keyboardFocus = (next, selected) => selected[0] }) {
 	const existing = LIST_REORDERS.get(container);
 	if (existing) return existing;
 	const state = { dragging: false };
@@ -69,7 +69,7 @@ function bindListReorder(container, { item, handle, scroller = container, ids, c
 			if (!row || !canDrag(row, event)) return false;
 			const grip = event.target.closest(handle);
 			if (event.pointerType === 'touch' && !grip) return false;
-			return Boolean(grip || !event.target.closest('button, input, select, textarea, a, [contenteditable]') || event.target.closest('.list-row-content'));
+			return Boolean(grip || !event.target.closest('button, input, select, textarea, a, [contenteditable]'));
 		},
 		start: event => { dragged = ownRow(event.target); draggedIds = ids(dragged); window.getSelection()?.removeAllRanges(); },
 		activate: event => {
@@ -95,7 +95,9 @@ function bindListReorder(container, { item, handle, scroller = container, ids, c
 		}
 	});
 	if (keyboard) container.addEventListener('keydown', event => {
-		if (!['ArrowUp', 'ArrowDown'].includes(event.key) || !event.target.closest(handle)) return;
+		const grip = event.target.closest(handle);
+		const rowChord = event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey && event.target.matches(`${item}, .timeline-group-label`);
+		if (!['ArrowUp', 'ArrowDown'].includes(event.key) || (!grip && !rowChord)) return;
 		const row = ownRow(event.target);
 		if (!row) return;
 		event.preventDefault(); event.stopImmediatePropagation();
@@ -107,7 +109,11 @@ function bindListReorder(container, { item, handle, scroller = container, ids, c
 		const neighbor = target.find(candidate => !ids(candidate).some(id => selected.includes(id)));
 		if (!neighbor) return;
 		const next = resolve({ ids: selected, target: neighbor, place: direction < 0 ? 'above' : 'below' });
-		if (next) { commit(next); rows().find(candidate => ids(candidate).includes(selected[0]))?.querySelector(handle)?.focus(); }
+		if (next) {
+			commit(next);
+			const moved = rows().find(candidate => rowIds(candidate).includes(keyboardFocus(next, selected)));
+			(grip ? moved?.querySelector(handle) : moved?.querySelector('.timeline-group-label') || moved)?.focus();
+		}
 	});
 	return state;
 }

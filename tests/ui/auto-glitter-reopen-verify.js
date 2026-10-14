@@ -4,7 +4,7 @@ const assert = require('assert');
 const { openApp } = require('../lib/app');
 
 async function main() {
-	const { browser, context, page, errors: pageErrors } = await openApp({ viewport: { width: Number(process.env.GLITTER_TEST_WIDTH) || 1280, height: 900 }, document: { width: 40, height: 20 } });
+	const { browser, context, page, errors: pageErrors } = await openApp({ viewport: { width: Number(process.env.GLITTER_TEST_WIDTH) || 1280, height: 900 }, touch: true, document: { width: 40, height: 20 } });
 	try {
 		const initial = await page.evaluate(() => {
 			const auto = window.editor.autoGlitterManager;

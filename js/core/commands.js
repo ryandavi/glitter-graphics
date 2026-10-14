@@ -176,6 +176,7 @@ const COMMANDS = {
 	temporaryHand: { label: 'Temporarily Use Hand Tool', group: 'View', displayKey: 'Space', instruction: 'Hold' },
 	nudge: { label: 'Nudge Selected Layer', group: 'Transform', displayKey: 'Arrow Keys', keys: ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'shift+ArrowLeft', 'shift+ArrowRight', 'shift+ArrowUp', 'shift+ArrowDown'], when: (editor, event) => (!focusClaimsArrowKey(event.key) || (editor.currentTool === ToolType.SELECT && document.activeElement === editor.textGlitterManager?.ui?.textInput)) && Boolean(editor.originalImage), run: (editor, event) => getSessionDefinition(editor)?.nudge ? dispatchSessionKey(editor, 'nudge', event) : editor.tryArrowNudge(event) },
 	nudgeFast: { label: 'Nudge Selected Layer 10px', group: 'Transform', displayKey: 'Shift + Arrow Keys' },
+	listReorder: { label: 'Reorder Focused Layer or Animation Row', group: 'Transform', displayKey: 'Alt + Up / Down' },
 	gradientStopNudge: { label: 'Move Focused Gradient Stop 1%', group: 'Gradient', displayKey: 'Arrow Keys' },
 	gradientStopNudgeSnap: { label: 'Move Focused Gradient Stop 5%', group: 'Gradient', displayKey: 'Shift + Arrow Keys' },
 	gradientStopDelete: { label: 'Delete Focused Gradient Stop', group: 'Gradient', displayKey: 'Delete / Backspace' },

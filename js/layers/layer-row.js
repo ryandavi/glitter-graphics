@@ -2,8 +2,8 @@
 
 const LAYER_ROW_PARTS = [
 	{ id: 'handle', variants: ['panel', 'timeline'] },
-	{ id: 'chevron', variants: ['timeline'] },
 	{ id: 'visibility', variants: ['panel', 'timeline'] },
+	{ id: 'chevron', variants: ['timeline'] },
 	{ id: 'clip', variants: ['panel', 'timeline'] },
 	{ id: 'swatch', variants: ['panel', 'timeline'] },
 	{ id: 'text', variants: ['panel', 'timeline'] },
@@ -85,7 +85,7 @@ function buildLayerRow(editor, layer, { variant = 'panel' } = {}) {
 	};
 	for (const part of LAYER_ROW_PARTS) {
 		if (!show(part.id) || !parts[part.id]) continue;
-		if (['lock', 'locate', 'delete'].includes(part.id)) actions.append(parts[part.id]);
+		if (['lock', 'locate', 'delete'].includes(part.id) || (part.id === 'clip' && variant === 'timeline')) actions.append(parts[part.id]);
 		else row.append(parts[part.id]);
 	}
 	row.append(actions);

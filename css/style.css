@@ -1510,8 +1510,7 @@ textarea {
   background: var(--color-bg-card);
 }
 
-.asset-info,
-.gradient-stops-box {
+.asset-info {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
@@ -1963,20 +1962,8 @@ input.color-hex-input {
   -webkit-touch-callout: none;
 }
 
-.list-row, .timeline-row {
-  --list-handle-opacity: 0;
-  --list-handle-disabled-opacity: 0;
-}
-.list-row:is(:hover, :focus-within, .selected, .active, .is-dragging), .timeline-row:is(:hover, :focus-within, .selected, .active, .is-dragging) {
-  --list-handle-opacity: 1;
-}
-.list-row:hover, .timeline-row:hover {
-  --list-handle-disabled-opacity: var(--opacity-disabled);
-}
-
 .list-row-handle {
-  display: flex;
-  opacity: var(--list-handle-opacity, 0);
+  display: none;
   width: 16px;
   height: var(--list-row-media);
   align-items: center;
@@ -2001,15 +1988,12 @@ input.color-hex-input {
   outline-offset: 1px;
 }
 .list-row-handle:disabled {
-  opacity: var(--list-handle-disabled-opacity, 0);
+  visibility: hidden;
   cursor: default;
 }
 @media (hover: none), (pointer: coarse) {
   .list-row-handle {
-    opacity: 1;
-  }
-  .list-row-handle:disabled {
-    opacity: var(--opacity-disabled);
+    display: flex;
   }
 }
 
@@ -5188,7 +5172,6 @@ body.tool-select .preview-container.is-over-picked-layer {
   --timeline-label-column: var(--timeline-label-width);
   --timeline-info-column: 0px;
   --timeline-columns: var(--timeline-label-column) var(--timeline-track-width) var(--timeline-info-column);
-  --timeline-label-inset: var(--timeline-measured-label-inset, var(--spacing-base));
   position: relative;
   flex: 1;
   min-height: 0;
@@ -5207,6 +5190,10 @@ body.tool-select .preview-container.is-over-picked-layer {
 }
 .timeline-dock .timeline-stage.is-empty::before {
   content: none;
+}
+.timeline-dock .timeline-stage.is-empty .timeline-group-header {
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
 }
 .timeline-dock.shows-details .timeline-stage {
   --timeline-info-column: var(--timeline-info-width);
@@ -5294,7 +5281,14 @@ body.tool-select .preview-container.is-over-picked-layer {
 }
 .timeline-dock .timeline-ruler {
   flex: 0 0 auto;
+  height: var(--timeline-ruler-height);
   border-bottom: 1px solid var(--timeline-line);
+}
+.timeline-dock .timeline-ruler > .property-note {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  white-space: nowrap;
 }
 .timeline-dock .timeline-ruler-view {
   margin-left: var(--timeline-label-column);
@@ -5352,6 +5346,13 @@ body.tool-select .preview-container.is-over-picked-layer {
   --list-row-background: var(--color-bg-secondary);
   min-width: 0;
 }
+.timeline-dock .timeline-group-label .list-row-action {
+  background: color-mix(in srgb, var(--color-text-primary) 8%, transparent);
+  border-radius: var(--radius-control);
+}
+.timeline-dock .timeline-group-label .list-row-action:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-text-primary) 14%, transparent);
+}
 .timeline-dock .timeline-group-span {
   position: absolute;
   top: 50%;
@@ -5380,12 +5381,11 @@ body.tool-select .preview-container.is-over-picked-layer {
   display: none;
 }
 .timeline-dock .timeline-group-chevron.is-empty {
-  opacity: var(--opacity-disabled);
   pointer-events: none;
   cursor: default;
 }
-.timeline-dock .timeline-row.has-motion .timeline-row-label {
-  padding-left: var(--spacing-sm);
+.timeline-dock .timeline-group-chevron.is-empty .icon {
+  visibility: hidden;
 }
 .timeline-dock .timeline-row {
   position: relative;
@@ -5397,16 +5397,23 @@ body.tool-select .preview-container.is-over-picked-layer {
 .timeline-dock .timeline-row-label {
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs);
+  gap: var(--spacing-sm);
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   text-align: left;
-  padding: 0 var(--spacing-base) 0 var(--timeline-label-inset);
+  padding: 0 var(--spacing-sm);
   height: var(--timeline-row-height);
   background: var(--timeline-row-bg);
   color: var(--color-text-secondary);
   font-weight: var(--font-weight-normal);
+}
+.timeline-dock .timeline-row-label > .timeline-motion-enabled, .timeline-dock .timeline-row-label > .timeline-motion-placeholder {
+  flex: 0 0 var(--control-height);
+  width: var(--control-height);
+}
+.timeline-dock .timeline-row-label > .list-row-handle[aria-hidden] {
+  visibility: hidden;
 }
 .timeline-dock .timeline-group-rows {
   position: relative;
@@ -5451,10 +5458,19 @@ body.tool-select .preview-container.is-over-picked-layer {
   position: absolute;
   top: var(--timeline-bar-inset);
   height: calc(var(--timeline-row-height) - 2 * var(--timeline-bar-inset));
-  background: color-mix(in srgb, var(--timeline-bar-hue) var(--timeline-bar-strength), var(--color-bg-tertiary));
+  background: none;
   border: 0;
   border-radius: var(--radius-sm);
   padding: 0;
+}
+.timeline-dock .timeline-bar::before, .timeline-dock .timeline-bar-ghost::before {
+  content: "";
+  position: absolute;
+  inset: 0 var(--timeline-bar-inset);
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--timeline-bar-hue) var(--timeline-bar-strength), var(--color-bg-tertiary));
+  box-shadow: var(--timeline-bar-ring, none);
+  pointer-events: none;
   transition: background-color var(--transition-fast);
 }
 .timeline-dock .timeline-bar-ghost {
@@ -5477,7 +5493,7 @@ body.tool-select .preview-container.is-over-picked-layer {
 }
 .timeline-dock .timeline-bar:focus-visible {
   outline: none;
-  box-shadow: inset var(--control-focus-ring);
+  --timeline-bar-ring: inset var(--control-focus-ring);
 }
 .timeline-dock .timeline-group.is-locked .timeline-bar {
   cursor: not-allowed;
@@ -5490,7 +5506,7 @@ body.tool-select .preview-container.is-over-picked-layer {
 }
 .timeline-dock .timeline-row:is(.is-selected, .is-dragging) .timeline-bar {
   --timeline-bar-strength: 78%;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-text-primary) 70%, transparent);
+  --timeline-bar-ring: inset 0 0 0 1px color-mix(in srgb, var(--color-text-primary) 70%, transparent);
 }
 .timeline-dock .timeline-bar-handle, .timeline-dock .timeline-period-notch {
   position: absolute;
@@ -5619,7 +5635,7 @@ body.tool-select .preview-container.is-over-picked-layer {
   align-items: center;
   gap: var(--spacing-2xs);
   height: var(--timeline-row-height);
-  padding: 0 var(--spacing-xs) 0 var(--timeline-label-inset);
+  padding: 0 var(--spacing-xs) 0 var(--spacing-base);
   background: var(--timeline-row-bg);
   color: var(--color-text-secondary);
 }
@@ -5666,7 +5682,6 @@ body.tool-select .preview-container.is-over-picked-layer {
   }
   .timeline-dock .timeline-stage {
     --timeline-label-column: 0px;
-    --timeline-label-inset: var(--spacing-base);
   }
   .timeline-dock .timeline-group-header {
     display: block;
@@ -5685,7 +5700,7 @@ body.tool-select .preview-container.is-over-picked-layer {
   }
   .timeline-dock .timeline-key-label {
     width: max-content;
-    padding-left: var(--timeline-label-inset);
+    padding-left: var(--spacing-base);
     border-right: 0;
     background: none;
   }
@@ -8563,6 +8578,10 @@ body.tool-text .text-hover-baselines {
   display: none;
 }
 
+.animation-module.is-empty > .property-card-body > .property-set, .animation-module.is-empty > .property-card-body > .advanced-disclosure {
+  display: none;
+}
+
 .animation-timing-strip {
   padding: var(--spacing-xs);
 }
@@ -8836,7 +8855,8 @@ body.tool-text .text-hover-baselines {
 }
 
 .property-block-title,
-.property-card > .property-card-title {
+.property-card > .property-card-title,
+.property-object-title {
   font-size: var(--font-size-title);
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0;
@@ -9705,7 +9725,6 @@ body.tool-text .text-hover-baselines {
 }
 .property-object-card > .property-object-title {
   padding-inline: var(--property-gutter);
-  font-weight: var(--font-weight-semibold);
 }
 
 .property-panel .asset-info {
@@ -12942,10 +12961,10 @@ body.modal-open {
     filter: unset;
   }
   .layer-item > .list-row-handle, .animation-stack-item > .list-row-handle, .auto-glitter-match > .list-row-handle {
-    opacity: 1;
+    display: flex;
   }
   .layer-item > .list-row-handle:disabled, .animation-stack-item > .list-row-handle:disabled, .auto-glitter-match > .list-row-handle:disabled {
-    opacity: var(--opacity-disabled);
+    visibility: hidden;
   }
   .layer-item .list-row-action.goto-glitter, .animation-stack-item .list-row-action.goto-glitter, .auto-glitter-match .list-row-action.goto-glitter {
     display: flex;

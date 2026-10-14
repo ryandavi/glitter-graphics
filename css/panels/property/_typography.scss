@@ -16,7 +16,8 @@
 }
 
 .property-block-title,
-.property-card > .property-card-title {
+.property-card > .property-card-title,
+.property-object-title {
 	font-size: var(--font-size-title);
 	font-weight: var(--font-weight-semibold);
 	letter-spacing: 0;

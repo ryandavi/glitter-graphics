@@ -23,12 +23,12 @@
 	display: none;
 }
 
-// The gradient editor is laid out exactly like the glitter source: the section
-// body holds a flat run of `.property-set`s (never a set inside a set). effect-source.js splits the template into:
+// The source presets precede the Gradient object card. The renderer splits
+// the template into:
 //   - a collapsible Presets `.property-set`, directly under Source;
-//   - `.gradient-stop-set` → a `.property-set` chunk: the `.gradient-preview`
+//   - `.gradient-stop-set` → a set in the object card: the `.gradient-preview`
 //     bar, the stop table, actions and hint;
-//   - `.effect-gradient-editor` → a `.property-set` chunk: Type / Blend / Angle
+//   - `.effect-gradient-editor` → a set in the object card: Type / Blend / Angle
 //     `.property-row`s, plus the fill's Opacity row for the Gradient source;
 //   - the Smoothing `.advanced-disclosure` → module level, beside the glitter Advanced.
 
@@ -40,8 +40,7 @@
 
 // Stop-table chunk.
 .gradient-stop-set {
-	// The stop table sits in the `.asset-info` surface (`.gradient-stops-box`,
-	// _components.scss); it and the actions take the gutter as that does.
+	// The table and actions share the object's inner gutter.
 	.gradient-stops-box,
 	.gradient-actions {
 		margin-inline: var(--property-gutter);
@@ -301,6 +300,9 @@
 	&[data-shape="square"] { transform: translate(-50%, -50%); }
 }
 .animation-module select[id$="AnimKeySelect"] { display: none; }
+.animation-module.is-empty > .property-card-body {
+	> .property-set, > .advanced-disclosure { display: none; }
+}
 .animation-timing-strip {
 	padding: var(--spacing-xs);
 	.animation-timing-track { position: relative; height: 100%; }
