@@ -298,23 +298,22 @@
 		cursor: not-allowed;
 	}
 
-	&:not(:disabled):hover {
-		&:not(.lock.active) { background: var(--color-bg-tertiary); }
-		border-color: var(--color-border-hover);
+	&:not(:disabled, .active):is(:hover, :active) {
+		background: var(--color-bg-tertiary);
 		color: var(--color-text-primary);
 	}
 
-	&:active {
-		&:not(.lock.active) { background: var(--color-bg-tertiary); }
-		border-color: var(--color-border-hover);
-		color: var(--color-text-primary);
+	// A toggle that is on sits on the accent; its glyph takes the accent's
+	// own contrast color, which each theme sets for its accent's lightness.
+	&.active:not(.lock) {
+		background: var(--color-accent);
+		color: var(--color-text-on-accent);
+
+		&:not(:disabled):hover { background: var(--color-accent-hover); }
 	}
 
-	&.active {
-		color: var(--color-text-primary);
-		&:not(.lock) { background: var(--color-accent); }
-		border-color: var(--color-accent-hover);
-	}
+	// A lock shows its state by its glyph, not a fill.
+	&.lock.active { color: var(--color-text-primary); }
 
 	// On bar chrome (app header, section headers) the panel-surface colors
 	// disappear against a painted bar — follow the --bar-btn-* tokens instead.
@@ -322,11 +321,12 @@
 	.section-header & {
 		color: var(--bar-btn-color);
 
-		&:not(:disabled):hover,
-		&:not(:disabled):active {
+		&:not(:disabled, .active):is(:hover, :active) {
 			background: var(--bar-btn-hover-bg);
 			color: var(--bar-btn-hover-color);
 		}
+
+		&.active:not(.lock) { color: var(--color-text-on-accent); }
 	}
 }
 

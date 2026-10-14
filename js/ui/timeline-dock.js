@@ -749,7 +749,8 @@ class TimelineDock {
 			const collapsed = node.classList.contains('is-collapsed');
 			chevron.setAttribute('aria-expanded', String(!collapsed));
 			chevron.setAttribute('aria-label', `Toggle ${describeLayer(this.editor.layerManager.getLayerById(group.layerId), this.editor).name} timeline rows`);
-			chevron.querySelector('use').setAttribute('href', collapsed ? '#icon-chevron-right' : '#icon-chevron-down');
+			// An empty group has nothing to open: a disabled closed chevron.
+			chevron.querySelector('use').setAttribute('href', collapsed || chevron.disabled ? '#icon-chevron-right' : '#icon-chevron-down');
 		};
 		chevron.addEventListener('click', () => {
 			if (!this.available || chevron.disabled) return;

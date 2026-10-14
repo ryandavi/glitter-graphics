@@ -71,12 +71,18 @@ function bindListReorder(container, { item, handle, scroller = container, ids, c
 			if (event.pointerType === 'touch' && !grip) return false;
 			return Boolean(grip || !event.target.closest('button, input, select, textarea, a, [contenteditable]'));
 		},
-		start: event => { dragged = ownRow(event.target); draggedIds = ids(dragged); window.getSelection()?.removeAllRanges(); },
+		// Selection is blocked from the press, not the drag: a selection begun
+		// inside the threshold becomes a native text drag that cancels this one.
+		start: event => {
+			dragged = ownRow(event.target); draggedIds = ids(dragged);
+			window.getSelection()?.removeAllRanges();
+			document.addEventListener('selectstart', preventSelection, true);
+			document.addEventListener('dragstart', preventSelection, true);
+		},
 		activate: event => {
 			state.dragging = true;
 			container.classList.add('is-reordering'); document.documentElement.classList.add('is-reordering');
 			window.getSelection()?.removeAllRanges();
-			document.addEventListener('selectstart', preventSelection, true);
 			rows().forEach(row => row.classList.toggle('is-dragging', rowIds(row).some(id => draggedIds.includes(id))));
 			pointer = event; scrollFrame = requestAnimationFrame(autoScroll);
 		},
@@ -86,6 +92,7 @@ function bindListReorder(container, { item, handle, scroller = container, ids, c
 			state.dragging = false;
 			container.classList.remove('is-reordering'); document.documentElement.classList.remove('is-reordering');
 			document.removeEventListener('selectstart', preventSelection, true);
+			document.removeEventListener('dragstart', preventSelection, true);
 			cancelAnimationFrame(scrollFrame);
 			rows().forEach(row => row.classList.remove('is-dragging'));
 			clearTarget();

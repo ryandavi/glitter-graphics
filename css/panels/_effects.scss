@@ -23,12 +23,12 @@
 	display: none;
 }
 
-// The source presets precede the Gradient object card. The renderer splits
+// The source presets precede the Colors object card. The renderer splits
 // the template into:
 //   - a collapsible Presets `.property-set`, directly under Source;
-//   - `.gradient-stop-set` → a set in the object card: the `.gradient-preview`
+//   - `.gradient-stop-set` → the object card's one set: the `.gradient-preview`
 //     bar, the stop table, actions and hint;
-//   - `.effect-gradient-editor` → a set in the object card: Type / Blend / Angle
+//   - `.effect-gradient-editor` → a set after the card: Type / Blend / Angle
 //     `.property-row`s, plus the fill's Opacity row for the Gradient source;
 //   - the Smoothing `.advanced-disclosure` → module level, beside the glitter Advanced.
 
@@ -94,7 +94,8 @@
 	.effect-gradient-stop {
 		min-height: 28px;
 		padding: var(--spacing-sm);
-		// border-radius: var(--radius-control);
+		// A tile in the card, like a `.list-row` there.
+		border-radius: var(--radius-control);
 
 		&.is-selected {
 			background: var(--color-accent-surface);
@@ -271,14 +272,15 @@
 	}
 }
 
+// The same rows as the Layers list: its row gap, its action chips.
 .animation-stack {
 	position: relative;
 	display: flex;
 	flex-direction: column;
-	gap: var(--spacing-xs);
 	.animation-stack-item {
 		min-width: 0;
-		.list-row-content { display: flex; align-items: center; gap: var(--spacing-xs); flex: 1; min-width: 0; text-align: left; color: var(--color-text-primary); }
+		cursor: pointer;
+		.list-row-content { display: flex; flex: 1; min-width: 0; }
 	}
 }
 

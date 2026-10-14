@@ -648,14 +648,14 @@ class AnimationPanelController {
 			const row = document.createElement('div'); row.className = 'list-row animation-stack-item';
 			row.dataset.animationIndex = index; row.tabIndex = 0;
 			row.classList.toggle('active', index === this._selectedIndex(layer));
-			const button = buildElement('list-row-content btn-text', undefined, 'span');
+			const button = buildElement('list-row-content', undefined, 'span');
 			const description = GlitterAnimation.describe(animation), text = buildElement('list-row-text', null, 'span');
 			text.append(buildElement('list-row-name', description.name, 'span'), buildElement('list-row-meta', description.detail, 'span')); button.append(text);
 			row.setAttribute('aria-selected', String(index === this._selectedIndex(layer))); row.setAttribute('role', 'option');
 			const select = () => { this.selectMotion(layer, index); this.editor.timelineDock?.selectMotion(layer.id, index); this.load(layer); };
 			row.addEventListener('click', event => { if (!event.target.closest('button')) select(); });
 			row.addEventListener('keydown', event => { if (event.target === row && ['Enter', ' '].includes(event.key)) { event.preventDefault(); event.stopPropagation(); select(); } });
-			const enabled = buildIconButton({ label: animation.enabled === false ? 'Enable animation' : 'Disable animation', icon: animation.enabled === false ? 'eye-slash' : 'eye' });
+			const enabled = buildIconButton({ className: 'btn-icon-simple icon-wrapper sm list-row-action', label: animation.enabled === false ? 'Enable animation' : 'Disable animation', icon: animation.enabled === false ? 'eye-slash' : 'eye' });
 			enabled.setAttribute('aria-pressed', String(animation.enabled !== false));
 			enabled.addEventListener('click', () => this.toggleAnimation(layer, index));
 			const grip = buildIconButton({ label: 'Drag to reorder; arrow keys move this animation' });

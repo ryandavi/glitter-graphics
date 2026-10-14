@@ -219,10 +219,11 @@ async function verifyReorderControls(page) {
 		const base = editor.layerManager.getBaseLayer(); editor.layerManager.setActiveLayer(base.id);
 		base.background.mode = 'gradient'; editor.baseBackgroundManager.loadLayerSettings(base);
 		const card = document.getElementById('baseBackgroundGradientCard');
-		return card?.matches('.inset-surface.property-object-card') && card.querySelector('.property-object-title').textContent === 'Gradient'
-			&& !card.parentElement.hidden && card.querySelector('.gradient-preview') && card.querySelector('.effect-gradient-editor')
+		return card?.matches('.inset-surface.property-object-card') && card.querySelector('.property-object-title').textContent === 'Colors'
+			&& !card.parentElement.hidden && card.querySelector('.gradient-preview') && card.querySelector('.gradient-actions')
+			&& !card.querySelector('.effect-gradient-editor') && card.parentElement.nextElementSibling?.matches('.effect-gradient-editor')
 			&& getComputedStyle(card.querySelector('.property-object-title')).fontSize === getComputedStyle(card.closest('.property-card').querySelector('.property-card-title')).fontSize;
-	}), 'Gradient uses the shared object card with preview, stops, controls and section-title typography');
+	}), 'Gradient stops use the shared object card (preview, stops, actions, section-title typography), with Type/Blend/Angle after it');
 	await page.setViewportSize(VIEWPORT); await page.waitForTimeout(250);
 }
 

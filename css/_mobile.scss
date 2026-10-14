@@ -118,7 +118,6 @@
 
 	.layer-item, .animation-stack-item, .auto-glitter-match {
 		> .list-row-handle { display: flex; }
-		> .list-row-handle:disabled { visibility: hidden; }
 		.list-row-action.goto-glitter { display: flex; }
 	}
 

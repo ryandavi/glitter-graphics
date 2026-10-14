@@ -276,11 +276,6 @@
 	.timeline-group-label {
 		--list-row-background: var(--color-bg-secondary);
 		min-width: 0;
-		.list-row-action {
-			background: color-mix(in srgb, var(--color-text-primary) 8%, transparent);
-			border-radius: var(--radius-control);
-			&:hover:not(:disabled) { background: color-mix(in srgb, var(--color-text-primary) 14%, transparent); }
-		}
 	}
 	.timeline-group-span {
 		position: absolute;
@@ -304,7 +299,6 @@
 		font-weight: var(--font-weight-semibold);
 	}
 	.timeline-group.is-collapsed .timeline-row { display: none; }
-	.timeline-group-chevron.is-empty { pointer-events: none; cursor: default; .icon { visibility: hidden; } }
 
 	.timeline-row {
 		position: relative;

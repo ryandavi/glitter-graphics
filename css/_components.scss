@@ -499,9 +499,11 @@ input[type="range"] {
 // ===========================================================================
 .list-row {
 	--list-row-media: 28px;
+	// One gap between every part of the row, the trailing actions included.
+	--list-row-gap: var(--spacing-sm);
 	display: flex;
 	align-items: center;
-	gap: var(--spacing-sm);
+	gap: var(--list-row-gap);
 	flex: 0 0 auto;
 	min-height: var(--list-row-height);
 	padding: var(--spacing-sm);
@@ -509,8 +511,14 @@ input[type="range"] {
 	// border-radius: var(--radius-control);
 	overflow: hidden;
 	transition: background-color var(--transition-fast), opacity var(--transition-fast);
-
+	// A row is pressed to select and dragged to reorder; its name is not text
+	// to select. The rename field opts back in.
+	-webkit-user-select: none;
+	user-select: none;
 	background: var(--list-row-background, transparent);
+
+	input { -webkit-user-select: text; user-select: text; }
+
 	&:hover { background: var(--color-bg-tertiary); }
 
 	&:focus-visible {
@@ -595,7 +603,7 @@ input.color-hex-input {
 	&:active { cursor: grabbing; }
 	&:hover:not(:disabled) { color: var(--color-text-primary); }
 	&:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 1px; }
-	&:disabled { visibility: hidden; cursor: default; }
+	&:disabled { opacity: var(--opacity-disabled); cursor: default; }
 	@media (hover: none), (pointer: coarse) {
 		display: flex;
 	}
@@ -658,6 +666,10 @@ input.color-hex-input {
 	}
 }
 
+// A row's icon buttons sit on a faint chip of the row's own text color, so
+// they read as controls on any row surface (plain, hovered, selected). An
+// action that does not apply is disabled, never removed, so the actions keep
+// their places from row to row.
 .list-row-action {
 	display: flex;
 	width: var(--control-height);
@@ -668,10 +680,19 @@ input.color-hex-input {
 	color: var(--color-icon-strong);
 }
 
+// Scoped to the row to out-rank `.btn-icon-simple`'s transparent fill and its
+// hover, whose tertiary fill is the hovered row's own color.
+.list-row .list-row-action {
+	border-radius: var(--radius-control);
+	background: color-mix(in srgb, var(--color-text-primary) 8%, transparent);
+
+	&:not(:disabled, .active):hover { background: color-mix(in srgb, var(--color-text-primary) 14%, transparent); }
+}
+
 .list-row-actions {
 	display: flex;
 	align-items: center;
-	gap: var(--spacing-2xs);
+	gap: var(--list-row-gap);
 	flex-shrink: 0;
 
 	// A state that is on (a locked lock) stays in view; the rest wait for the
@@ -680,8 +701,6 @@ input.color-hex-input {
 		opacity: 0;
 		transition: opacity var(--transition-fast);
 	}
-
-	> .list-row-action:disabled:not(.active) { opacity: 0; }
 }
 
 .list-row:is(:hover, :focus-within, .selected, .active) > .list-row-actions > .list-row-action {

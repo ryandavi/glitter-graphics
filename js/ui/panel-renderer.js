@@ -1003,10 +1003,12 @@ function buildGradientSourceSets(slot, options = {}) {
 		set.dataset.gradientPart = part;
 		if (options.owner) set.dataset.paintSlotOwner = options.owner;
 	});
-	const editor = buildPanelObjectCard({ id: `${slot.idPrefix}GradientCard`, title: 'Gradient' }, null, [parts.stops, parts.options]);
+	// The card holds the stops and their actions, like the Animations card
+	// holds its list; Type / Blend / Angle follow it as ordinary rows.
+	const editor = buildPanelObjectCard({ id: `${slot.idPrefix}GradientCard`, title: 'Colors' }, null, [parts.stops]);
 	editor.dataset.paintSourceMode = 'gradient'; editor.hidden = true;
 	if (options.owner) editor.dataset.paintSlotOwner = options.owner;
-	return { body: [parts.presets, editor], advanced: parts.smoothing };
+	return { body: [parts.presets, editor, parts.options], advanced: parts.smoothing };
 }
 
 // A run of built nodes in a `.property-set`. For the renderer's own sets;

@@ -335,4 +335,12 @@
 	gap: var(--property-set-gap);
 	--property-gutter: var(--spacing-base);
 	> .property-object-title { padding-inline: var(--property-gutter); }
+
+	// A list inside a card takes the card's gutter, so its rows line up with
+	// the title and actions and sit in the card as tiles. A list that is the
+	// whole surface (the Layers panel) runs edge to edge.
+	.list-row {
+		margin-inline: var(--property-gutter);
+		border-radius: var(--radius-control);
+	}
 }
