@@ -224,8 +224,8 @@ function initializeScrollRegions() {
 				}
 				return;
 			}
-			const unit = event.deltaMode === 1 ? parseFloat(getComputedStyle(region).lineHeight) || minThumb : event.deltaMode === 2 ? region[client] : 1;
-			scrollTo(region[position] + (horizontal ? event.deltaX || event.deltaY : event.deltaY) * unit);
+			const pixels = VIEWPORT_INPUT.wheelPixels(event, { lineSize: parseFloat(getComputedStyle(region).lineHeight) || minThumb, pageSize: region[client] });
+			scrollTo(region[position] + (horizontal ? pixels.x || pixels.y : pixels.y));
 			event.preventDefault();
 		}, { passive: false });
 		// A press on the bare track pages toward the pointer, repeating while held.

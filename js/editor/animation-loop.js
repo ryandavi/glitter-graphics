@@ -66,7 +66,7 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 			resetButton: document.getElementById(`reset${id.charAt(0).toUpperCase()}${id.slice(1)}`),
 			apply: async (seconds) => {
 				const source = control.source;
-				const layer = source && this.layers.find((entry) => entry.id === source.ownerLayerId);
+				const layer = source && this.layerManager.getLayerById(source.ownerLayerId);
 				if (!layer) return;
 				source.setPeriod(seconds * 1000);
 				getLayerManagerForType(this, layer.type)?.renderLayer?.(layer);
@@ -129,7 +129,7 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 			status.append(value, badge);
 		} else status.textContent = message;
 		const analyses = new Map((estimate?.sourceAnalysis || []).map((entry) => [entry.key, entry]));
-		const showBefore = (fit?.sources || []).some((source) => this.layers.find((layer) => layer.id === source.ownerLayerId)?.loopOriginalPeriods?.[source.key] != null);
+		const showBefore = (fit?.sources || []).some((source) => this.layerManager.getLayerById(source.ownerLayerId)?.loopOriginalPeriods?.[source.key] != null);
 		sources.replaceChildren();
 		const head = sources.createTHead().insertRow();
 		['Source', 'Current', ...(showBefore ? ['Before'] : [])].forEach((label, index) => {
@@ -143,8 +143,8 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 			const analysis = analyses.get(source.key);
 			const period = source.kind === 'authored' ? source.cycleDuration : source.naturalPeriod;
 			const resolved = analysis?.resolvedPeriod || period;
-			const label = source.label || source.key;
-			const title = `Edit ${label}${source.nonLooping ? ' (plays once)' : typeof source.setPeriod !== 'function' ? ' (fixed timing)' : ''}${Math.abs(resolved - period) > 0.01 ? `. Export uses ${formatSeconds(resolved)}.` : ''}`;
+			const label = source.displayLabel;
+			const title = `Edit ${label}${source.nonLooping ? ' (plays once)' : typeof source.setPeriod !== 'function' ? ' (fixed timing)' : ''}${TimelineView.exportNote({ cycleMs: period, exportCycleMs: resolved })}`;
 			const row = body.insertRow();
 			const name = document.createElement('th'); name.scope = 'row';
 			const button = document.createElement('button'); button.type = 'button'; button.className = 'btn-text';
@@ -152,7 +152,7 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 			button.disabled = !source.ownerLayerId;
 			button.addEventListener('click', () => this.layerManager.setActiveLayer(source.ownerLayerId));
 			name.append(button); row.append(name);
-			const previousPeriod = this.layers.find((layer) => layer.id === source.ownerLayerId)?.loopOriginalPeriods?.[source.key];
+			const previousPeriod = this.layerManager.getLayerById(source.ownerLayerId)?.loopOriginalPeriods?.[source.key];
 			[period, ...(showBefore ? [previousPeriod] : [])].forEach((value) => {
 				const cell = row.insertCell(); cell.className = 'is-numeric';
 				cell.textContent = value == null ? '-' : `${formatSeconds(value)}`;
@@ -195,13 +195,13 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		const notes = [];
 		if (candidate) {
 			candidate.fits.forEach((entry) => {
-				const label = entry.source.label || entry.source.key;
+				const label = entry.source.displayLabel;
 				if (!entry.fitted) notes.push(`Cannot fit ${label} within its available speeds.`);
 				else if (Math.abs(entry.fittedPeriod - entry.source.naturalPeriod) > 0.01) notes.push(`${label}: ${formatSeconds(entry.source.naturalPeriod)} to ${formatSeconds(entry.fittedPeriod)}.`);
 			});
-			if (candidate.fixedSeamError >= 1e-8) notes.push(`Fixed sources (${fit.fixed.map((source) => source.label || source.key).join(', ')}) do not close at this length; editable speeds cannot close their seam.`);
+			if (candidate.fixedSeamError >= 1e-8) notes.push(`Fixed sources (${fit.fixed.map((source) => source.displayLabel).join(', ')}) do not close at this length; editable speeds cannot close their seam.`);
 		}
-		if (fit?.oneShots.length) notes.push(`Finite animations (${fit.oneShots.map((source) => source.label || source.key).join(', ')}) keep their repeat counts; their speeds are left unchanged.`);
+		if (fit?.oneShots.length) notes.push(`Finite animations (${fit.oneShots.map((source) => source.displayLabel).join(', ')}) keep their repeat counts; their speeds are left unchanged.`);
 		note.textContent = notes.join('\n') || (candidate ? 'Timing already fits.' : '');
 		note.hidden = !fit?.sources.length || !note.textContent;
 		document.getElementById('animationLoopChangeSet').hidden = note.hidden;
@@ -224,7 +224,7 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 	},
 	hasLoopTimingToRestore() {
 		return (this.loopEstimate?.loopFit.sources || []).some((source) => {
-			const before = this.layers.find((layer) => layer.id === source.ownerLayerId)?.loopOriginalPeriods?.[source.key];
+			const before = this.layerManager.getLayerById(source.ownerLayerId)?.loopOriginalPeriods?.[source.key];
 			return typeof source.setPeriod === 'function' && before != null && Math.abs(before - source.naturalPeriod) > 0.01;
 		});
 	},
@@ -233,11 +233,11 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 	fillFrameOptionsMenu(panel) {
 		const options = this.loopEstimate?.frameOptions;
 		const labels = CONFIG.export.timeline.frameOptions.labels;
-		const heading = buildMenuLabel(options ? `About ${options.frameCount} ${options.frameCount === 1 ? 'frame' : 'frames'} now` : 'Measuring the animation');
+		const heading = buildMenuLabel(options ? `About ${formatCount(options.frameCount, 'frame')} now` : 'Measuring the animation');
 		const entries = (options?.options || []).map(option => buildMenuItem({
-			label: `${labels[option.kind]}: about ${option.frameCount} ${option.frameCount === 1 ? 'frame' : 'frames'}, ${formatSeconds(option.duration)} loop`,
+			label: `${labels[option.kind]}: about ${formatCount(option.frameCount, 'frame')}, ${formatSeconds(option.duration)} loop`,
 			run: () => this.applyFrameOption(option),
-			title: option.fits.map(fit => `${fit.source.label || fit.source.key}: ${formatSeconds(fit.source.naturalPeriod)} to ${formatSeconds(fit.fittedPeriod)}`).join('\n')
+			title: option.fits.map(fit => `${fit.source.displayLabel}: ${formatSeconds(fit.source.naturalPeriod)} to ${formatSeconds(fit.fittedPeriod)}`).join('\n')
 		}));
 		if (options && !options.optimizable) entries.push(buildMenuItem({ label: 'No timing found with fewer frames' }));
 		if (this.hasLoopTimingToRestore()) entries.push(buildMenuItem({
@@ -246,7 +246,7 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		panel.replaceChildren(heading, ...entries);
 	},
 	applyFrameOption(option) {
-		if (this.loopEstimate?.frameOptions.options.includes(option)) this.applyLoopFits(option.fits, 'Change animation timing', `Animation timing changed: about ${option.frameCount} ${option.frameCount === 1 ? 'frame' : 'frames'}`);
+		if (this.loopEstimate?.frameOptions.options.includes(option)) this.applyLoopFits(option.fits, 'Change animation timing', `Animation timing changed: about ${formatCount(option.frameCount, 'frame')}`);
 	},
 	fitAnimationsToLoop() {
 		const candidate = this.getLoopCandidate();

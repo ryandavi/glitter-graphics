@@ -28,16 +28,16 @@ class TimelineKeyLane {
 			this.buttons = [];
 			this.ghost = null;
 			const action = 'btn-icon-simple icon-wrapper sm';
-			const label = this.dock.element('timeline-key-label');
+			const label = buildElement('timeline-key-label');
 			this.record = this.dock.button(action, '', KEY_POSE_ACTION.icon, () => {
 				const recording = this.dock.keyRecording;
 				if (recording.active) recording.end(); else recording.begin(this.layer, this.entry);
 			});
 			this.add = this.dock.button(action, 'Add a key at the playhead', 'plus', () => this.panel.addKey(this.layer, this.entry));
-			label.append(this.dock.element('timeline-key-name', 'Keys', 'span'), this.record, this.add);
-			const cell = this.dock.element('timeline-track timeline-key-cell');
+			label.append(buildElement('timeline-key-name', 'Keys', 'span'), this.record, this.add);
+			const cell = buildElement('timeline-track timeline-key-cell');
 			// The cycle the keys are drawn in.
-			this.track = this.dock.element('timeline-key-track');
+			this.track = buildElement('timeline-key-track');
 			this.track.setAttribute('role', 'group'); this.track.setAttribute('aria-label', 'Motion keys inside one cycle');
 			const rowLayer = () => this.layer, rowEntry = () => this.entry;
 			this.strip = new KeyStrip(this.track, this.panel, {
@@ -58,7 +58,7 @@ class TimelineKeyLane {
 		this.cycle = TimelineView.keyCycle(this.row, this.dock.editor.animationTicker.getPlayheadTime());
 		this.strip.update(); this.buttons = this.strip.buttons;
 		if (!this.ghost) {
-			this.ghost = this.dock.element('timeline-key is-ghost', undefined, 'span');
+			this.ghost = buildElement('timeline-key is-ghost', undefined, 'span');
 			this.ghost.title = '100% repeats the key at 0%'; this.track.appendChild(this.ghost);
 		}
 		this.ghost.hidden = !keys.some(key => key.at === 0) || keys.some(key => key.at === 1);
@@ -165,7 +165,7 @@ class TimelineKeyLane {
 		this.dock.clearDragFeedback();
 		if (!drag.moved) { if (this.dock.syncPending) this.dock.resync(); return; }
 		if (cancel) this.panel.setKeys(drag.layer, drag.entry, drag.keys, { commit: false, rollback: true, at: drag.at });
-		else if (JSON.stringify(drag.keys) !== JSON.stringify(GlitterAnimation.normalizeKeys(drag.entry.keys))) this.dock.editor.saveState('Retime motion key');
+		else if (!isSameData(drag.keys, GlitterAnimation.normalizeKeys(drag.entry.keys))) this.dock.editor.saveState('Retime motion key');
 		this.refresh();
 		if (this.dock.syncPending) this.dock.resync();
 	}

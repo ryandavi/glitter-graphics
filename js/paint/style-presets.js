@@ -298,7 +298,7 @@ function createStylePresetEntryFromLayer(layer, getSlotDefaults) {
 		if (!data || (definition.enabledKeys && !readFieldPath(layer, definition.enabledKeys))) return;
 		const defaults = getSlotDefaults(definition.key);
 		slots[definition.key] = Object.fromEntries(Object.entries(data).filter(([key, value]) =>
-			key === 'mode' || (data.mode === 'glitter' && ['color', 'glitterId'].includes(key)) || (!key.startsWith('_') && JSON.stringify(value) !== JSON.stringify(defaults[key]))));
+			key === 'mode' || (data.mode === 'glitter' && ['color', 'glitterId'].includes(key)) || (!key.startsWith('_') && !isSameData(value, defaults[key]))));
 	});
 	const paths = layer.textData?.orientation == null ? STYLE_PRESET_TEXT_PATHS : [...STYLE_PRESET_TEXT_PATHS, 'textData.orientation'];
 	const data = Object.fromEntries(paths.map(path => [path, readFieldPath(layer, splitFieldPath(path))]).filter(([, value]) => value !== undefined));
@@ -362,7 +362,6 @@ function findStylePresetId(layer) {
 	if (!library) return null;
 	if (layer.type === LayerType.TEXT_GLITTER && (layer.textData.textBackground?.enabled || layer.textData.sparkles || layer.animations?.length || layer.animation || layer.opacity !== FIELDS.layerOpacity.value || layer.blendMode !== CONFIG.layers.defaultBlendMode)) return null;
 	const definitions = getStylePresetSlotDefinitions(layer.type);
-	const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 	return library.entries.find((entry) => {
 		const slots = entry.value.slots || {};
 		const enabledPaths = getStylePresetEnabledPaths(definitions, slots);
@@ -374,10 +373,10 @@ function findStylePresetId(layer) {
 			return present && Object.entries(partial).every(([key, value]) => {
 				// A glitter repaired to the slot default still counts as the preset.
 				if (key === 'glitterId') return true;
-				return same(data[key], value);
+				return isSameData(data[key], value);
 			});
 		});
-		return slotsMatch && Object.entries(entry.value.data || {}).every(([path, value]) => same(readFieldPath(layer, splitFieldPath(path)), value));
+		return slotsMatch && Object.entries(entry.value.data || {}).every(([path, value]) => isSameData(readFieldPath(layer, splitFieldPath(path)), value));
 	})?.id || null;
 }
 

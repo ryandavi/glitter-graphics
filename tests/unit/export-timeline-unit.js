@@ -19,7 +19,7 @@ const source = fs.readFileSync(path.join(__dirname, '..', '..', 'js', 'export', 
 vm.runInContext(`${source}\nglobalThis.timelineExports = { AuthoredAnimationSource, ProceduralAnimationSource, CompositeFrameReducer, CompositeTimelinePlanner, planLoopFit, planFrameOptions };`, context);
 const { AuthoredAnimationSource, ProceduralAnimationSource, CompositeFrameReducer, CompositeTimelinePlanner, planLoopFit, planFrameOptions } = context.timelineExports;
 
-for (const file of ['core/releases.js', 'core/fields.js', 'core/math.js', 'core/area.js', 'core/config.js', 'effects/easing.js', 'effects/animation.js', 'export/SceneCompositor.js']) {
+for (const file of ['core/releases.js', 'core/fields.js', 'core/math.js', 'core/format.js', 'core/area.js', 'core/config.js', 'effects/easing.js', 'effects/animation.js', 'export/SceneCompositor.js']) {
 	vm.runInContext(fs.readFileSync(path.join(__dirname, '..', '..', 'js', file), 'utf8'), context);
 }
 const motionSources = vm.runInContext(`(animation) => {

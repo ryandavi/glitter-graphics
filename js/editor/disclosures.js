@@ -199,10 +199,10 @@ initializeCollapsibleSections() {
 		const section = document.getElementById('shortcutSection');
 		if (!section) return;
 		section.classList.add('property-section');
-		const content = panelDiv('section-content');
-		const description = panelDiv('property-note');
+		const content = buildElement('section-content');
+		const description = buildElement('property-note');
 		description.id = 'shortcutViewDescription';
-		const list = panelDiv('settings-subsection');
+		const list = buildElement('settings-subsection');
 		list.id = 'shortcutList';
 		content.append(description, list);
 		section.replaceChildren(content);

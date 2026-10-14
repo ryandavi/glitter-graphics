@@ -52,8 +52,8 @@ class TimelineKeyRecording {
 	validate() {
 		if (!this.active) return false;
 		if (!this.canBegin(this.layer, this.entry) || this.editor.layerManager.getActiveLayer() !== this.layer
-			|| this.panel.selectedMotion(this.layer) !== this.entry || JSON.stringify(this.layer.transform) !== this.restToken
-			|| JSON.stringify(this.transform.getFrame()) !== this.frameToken
+			|| this.panel.selectedMotion(this.layer) !== this.entry || !isSameData(this.layer.transform, this.restToken)
+			|| !isSameData(this.transform.getFrame(), this.frameToken)
 			|| (this.editor.currentTool !== ToolType.SELECT && !this.editor.temporaryHandToolActive)) { this.end(); return false; }
 		return true;
 	}
@@ -67,7 +67,7 @@ class TimelineKeyRecording {
 		this.dock.syncClock();
 		for (const { target, type, listener, capture } of this.sessionEvents) target.addEventListener(type, listener, capture);
 		this.periodMs = this.panel.keyPeriod(layer, entry);
-		this.restToken = JSON.stringify(layer.transform); this.frameToken = JSON.stringify(this.transform.getFrame());
+		this.restToken = structuredClone(layer.transform); this.frameToken = structuredClone(this.transform.getFrame());
 		this.disabledControls = new Map();
 		this.dock.frameView.invalidate({ keepFrame: true }); this.dock.frameView.seek();
 		this.editor.animationPanel.setPaused(true);
@@ -281,7 +281,7 @@ class TimelineKeyRecording {
 		drag.transform.isDraggingHandle = false; drag.transform.dragStartState = null;
 		if (drag.moved) {
 			if (cancel) this.panel.setKeys(this.layer, this.entry, drag.keys, { commit: false, rollback: true, at: drag.at });
-			else if (JSON.stringify(drag.keys) !== JSON.stringify(GlitterAnimation.normalizeKeys(this.entry.keys))) this.editor.saveState(KEY_POSE_ACTION.history);
+			else if (!isSameData(drag.keys, GlitterAnimation.normalizeKeys(this.entry.keys))) this.editor.saveState(KEY_POSE_ACTION.history);
 		}
 		this.editor.clearSmartGuides();
 		this.refresh();

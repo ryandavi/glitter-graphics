@@ -333,7 +333,7 @@ class AutoGlitterManager {
 	getEditedLayerCount(batch) {
 		if (!batch?.layers.length) return 0;
 		const expectedSize = batch.layers[0].autoGlitter?.batchSize || batch.layers.length;
-		let edited = batch.layers.filter((layer) => JSON.stringify(this.captureGeneratedState(layer)) !== layer.autoGlitter?.generatedState).length;
+		let edited = batch.layers.filter((layer) => !isSameData(this.captureGeneratedState(layer), layer.autoGlitter?.generatedState)).length;
 		if (batch.layers.length !== expectedSize) edited += Math.abs(expectedSize - batch.layers.length);
 		return edited;
 	}
@@ -596,7 +596,7 @@ class AutoGlitterManager {
 
 	ensureWorker() {
 		if (this.worker) return;
-		this.worker = new Worker('js/workers/auto-glitter.worker.js?v=5d4b516f');
+		this.worker = new Worker('js/workers/auto-glitter.worker.js?v=6b98d1ac');
 		this.worker.onmessage = ({ data }) => {
 			const pending = this.workerRequests.get(data.requestId);
 			if (!pending) return;
@@ -701,16 +701,16 @@ class AutoGlitterManager {
 		this.ui.create.disabled = !actual;
 		this.ui.create.textContent = this.isEditingPrevious()
 			? 'Apply changes'
-			: `Create ${actual} ${actual === 1 ? 'layer' : 'layers'}`;
+			: `Create ${formatCount(actual, 'layer')}`;
 		const hasManualMerges = this.result.palette.some((color) => color.manualMergeTarget != null);
 		if (this.isEditingPrevious()) {
-			this.ui.status.textContent = `${actual} ${actual === 1 ? 'layer remains' : 'layers remain'} in the current set. Review the matches, then apply your changes.`;
+			this.ui.status.textContent = `${formatCount(actual, 'layer remains', 'layers remain')} in the current set. Review the matches, then apply your changes.`;
 		} else {
 			this.ui.status.textContent = hasManualMerges
-				? `${actual} ${actual === 1 ? 'layer' : 'layers'} will be created. Combined regions remain fully covered.`
+				? `${formatCount(actual, 'layer')} will be created. Combined regions remain fully covered.`
 				: (activeIndices.length === Number(this.ui.count.value)
 					? 'Review the glitter matches, then create the layers.'
-					: `Close shades were combined. ${actual} ${actual === 1 ? 'layer' : 'layers'} will be created.`);
+					: `Close shades were combined. ${formatCount(actual, 'layer')} will be created.`);
 		}
 	}
 
@@ -979,7 +979,7 @@ class AutoGlitterManager {
 	restoreStep(state) {
 		this.cancelAnalysis();
 		this.closePickerSession(false);
-		if (JSON.stringify(state.settings.sourceAdjust) !== JSON.stringify(this.sourceAdjust)) {
+		if (!isSameData(state.settings.sourceAdjust, this.sourceAdjust)) {
 			this.sourceRevision = (this.sourceRevision || 0) + 1;
 			this.segmentDirty = true;
 		}
@@ -1278,7 +1278,7 @@ class AutoGlitterManager {
 				createdAt,
 				batchSize: kept.length,
 				sessionState,
-				generatedState: JSON.stringify(this.captureGeneratedState(layer))
+				generatedState: this.captureGeneratedState(layer)
 			};
 		});
 		this.session = null;
@@ -1291,7 +1291,7 @@ class AutoGlitterManager {
 		this.editor.saveState('Apply Auto Glitter');
 		this.endSessionUI({ cancel: false, previousShowAllLayers, previousTool });
 		const action = wasEditingPrevious ? 'Updated' : 'Created';
-		this.editor.updateStatus(`${action} ${kept.length} editable glitter ${kept.length === 1 ? 'layer' : 'layers'}`);
+		this.editor.updateStatus(`${action} ${formatCount(kept.length, 'editable glitter layer')}`);
 	}
 
 	removePreviousBatch() {

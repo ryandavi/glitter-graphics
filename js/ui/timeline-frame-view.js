@@ -55,7 +55,7 @@ class TimelineFrameView {
 		if (!this.dock.available || this.editor.exportInProgress || this.blocked) { this.hide(); return; }
 		if (this.exact) {
 			const elapsed = ms % this.exact.totalDuration;
-			const index = Math.max(0, this.exact.entries.findLastIndex(entry => entry.start <= elapsed));
+			const index = Math.max(0, indexAtOrBefore(this.exact.starts, elapsed, 0));
 			if (index !== this.drawnIndex || this.canvas.hidden) { this.draw(this.frames[index]); this.drawnIndex = index; }
 			return;
 		}
@@ -170,6 +170,7 @@ class TimelineFrameView {
 				this.frames = frames.splice(0);
 				let start = 0;
 				this.exact = { totalDuration: plan.totalDuration, entries: plan.entries.map(entry => { const item = { start, timestamp: entry.timestamp }; start += entry.duration; return item; }) };
+				this.exact.starts = this.exact.entries.map(entry => entry.start);
 				this.dock.syncClock();
 				this.drawnIndex = null;
 				this.dock.exact.classList.add('active');

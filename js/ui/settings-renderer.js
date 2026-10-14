@@ -151,7 +151,7 @@ function buildSettingsBlock(control) {
 }
 
 function buildSettingsNote(text, id) {
-	const note = panelDiv('property-note');
+	const note = buildElement('property-note');
 	if (id) note.id = id;
 	note.textContent = text || '';
 	return note;
@@ -159,7 +159,7 @@ function buildSettingsNote(text, id) {
 
 function buildSettingsFieldRow(row, rowReverts = true) {
 	const field = row.field;
-	const set = panelDiv('property-set settings-row');
+	const set = buildElement('property-set settings-row');
 	if (row.rowId) set.id = row.rowId;
 	if (row.hidden || row.revealedBy) set.hidden = true;
 	if (row.revealedBy) set.dataset.revealedBy = row.revealedBy;
@@ -246,8 +246,8 @@ function buildSettingsGroup(group) {
 function renderSettingsGroups(container, groups) {
 	if (!container) return;
 	container.classList.add('property-section');
-	const content = panelDiv('section-content');
-	const subsection = panelDiv('settings-subsection');
+	const content = buildElement('section-content');
+	const subsection = buildElement('settings-subsection');
 	groups.forEach((group) => subsection.appendChild(buildSettingsGroup(group)));
 	content.appendChild(subsection);
 	container.replaceChildren(content);

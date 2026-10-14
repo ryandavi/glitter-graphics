@@ -314,7 +314,7 @@ isLayerContentLocked(layer) {
 			const name = event.target.closest('[data-value]')?.dataset.value;
 			if (names.includes(name)) this.setCollapsibleSectionOpen(name, true);
 		});
-		const header = panelDiv('panel-sticky-header');
+		const header = buildElement('panel-sticky-header');
 		header.appendChild(group);
 		host.appendChild(header);
 	},

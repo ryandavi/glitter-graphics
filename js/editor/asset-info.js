@@ -57,7 +57,7 @@ const EDITOR_ASSET_INFO_METHODS = {
 		if (asset.frameCount <= 1 && !asset.isAnimated) {
 			return 'Static';
 		}
-		const frames = `${asset.frameCount} ${asset.frameCount === 1 ? 'frame' : 'frames'}`;
+		const frames = `${formatCount(asset.frameCount, 'frame')}`;
 		const rate = asset.isVariableFramerate
 			? 'variable'
 			: asset.frameRate ? `${asset.frameRate} fps` : '';

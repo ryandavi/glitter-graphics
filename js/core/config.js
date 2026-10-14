@@ -1048,7 +1048,7 @@ const CONFIG = deepFreeze({
 			// phone - more GIF-encoding workers than cores adds context-switch
 			// overhead instead of speed.
 			workers: Math.max(1, Math.min(4, navigator.hardwareConcurrency || 4)),
-			workerScript: 'js/workers/gif-encode.worker.js?v=f5317dc6',
+			workerScript: 'js/workers/gif-encode.worker.js?v=20dea8e0',
 			quality: 1,
 
 		},

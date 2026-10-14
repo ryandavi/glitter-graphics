@@ -821,7 +821,6 @@ function getSparklePresetThumbnail(entry) {
 // referenced, so this compares values).
 function findSparklePresetId(data) {
 	if (!data) return null;
-	const same = (a, b) => (a && typeof a === 'object' ? JSON.stringify(a) === JSON.stringify(b) : a === b);
 	return SPARKLE_PRESETS.entries.find((entry) => Object.entries(entry.value)
-		.every(([key, value]) => same(value, data[key])))?.id || null;
+		.every(([key, value]) => isSameData(value, data[key])))?.id || null;
 }

@@ -1,5 +1,11 @@
 'use strict';
 
+function buildMenuPanel() {
+	const panel = buildElement('app-menu-panel');
+	panel.hidden = true; panel.setAttribute('role', 'menu');
+	return panel;
+}
+
 function buildMenuItem({ label, run = null, title = '', role = 'menuitem', current = false }) {
 	const button = document.createElement('button');
 	button.type = 'button'; button.className = 'app-menu-item';

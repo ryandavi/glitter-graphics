@@ -1,3 +1,7 @@
+function formatCount(count, singular, plural = singular + 's') {
+	return `${count} ${count === 1 ? singular : plural}`;
+}
+
 function formatUnit(value, unit) {
 	if (!unit) return String(value);
 	return `${value}<span class="setting-unit">${unit}</span>`;

@@ -99,7 +99,7 @@
 			const preset = normalizeEffectGradient({ ...current, type: CONFIG.rendering.gradient.type, ...entry.value });
 			return current.interpolation === preset.interpolation
 				&& current.type === preset.type
-				&& JSON.stringify(current.stops) === JSON.stringify(preset.stops);
+				&& isSameData(current.stops, preset.stops);
 		})?.id;
 		return id || null;
 	}

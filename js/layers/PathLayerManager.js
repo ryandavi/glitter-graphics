@@ -842,7 +842,7 @@ class PathLayerManager {
 
 		if (this.ui.summary) {
 			const points = PathGeometry.countPoints(d.subpaths);
-			this.ui.summary.textContent = `${allClosed ? 'Closed' : 'Open'}, ${points} ${points === 1 ? 'point' : 'points'}`;
+			this.ui.summary.textContent = `${allClosed ? 'Closed' : 'Open'}, ${formatCount(points, 'point')}`;
 		}
 		if (this.ui.toggleClosed) {
 			this.ui.toggleClosed.querySelector('.name').textContent = allClosed ? 'Open path' : 'Close path';

@@ -90,7 +90,7 @@ function createModalFilter(options) {
 		if (emptyState) emptyState.hidden = !terms.length || matchCount > 0;
 		if (status) {
 			status.textContent = terms.length
-				? `${matchCount} ${matchCount === 1 ? options.singularLabel : options.pluralLabel}`
+				? formatCount(matchCount, options.singularLabel, options.pluralLabel)
 				: '';
 		}
 	};

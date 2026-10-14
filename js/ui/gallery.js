@@ -99,8 +99,7 @@ function syncLibrarySearchState() {
 function createShapeCard(shapeId, label, { className = 'brush-shape-option', title = label, tag = 'button' } = {}) {
 	let card = tplClone('tpl-shape-card');
 	if (tag !== 'button') {
-		const box = document.createElement(tag);
-		box.className = card.className;
+		const box = buildElement(card.className, undefined, tag);
 		box.append(...card.childNodes);
 		card = box;
 	}

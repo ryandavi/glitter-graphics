@@ -13,6 +13,7 @@ const root = path.join(__dirname, '..', '..');
 const context = vm.createContext({ console, structuredClone, Math, navigator: { hardwareConcurrency: 4, userAgent: 'node' } });
 for (const file of [
 	'js/core/releases.js',
+	'js/core/math.js',
 	'js/core/fields.js',
 	'js/core/area.js', 'js/core/config.js',
 	'js/core/tools.js', 'js/core/sessions.js',

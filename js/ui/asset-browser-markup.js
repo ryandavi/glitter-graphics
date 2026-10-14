@@ -167,9 +167,9 @@ function buildAssetBrowserFilterSection(section, ids) {
 	const node = tplClone('tpl-group');
 	const label = node.querySelector('.property-group-label');
 	label.textContent = section.kind === 'nameOnly' ? 'Filter' : section.label;
-	const card = panelDiv('property-card');
-	const body = panelDiv('property-card-body');
-	const set = panelDiv('property-set');
+	const card = buildElement('property-card');
+	const body = buildElement('property-card-body');
+	const set = buildElement('property-set');
 	node.appendChild(card);
 	card.appendChild(body);
 	body.appendChild(set);
@@ -191,12 +191,12 @@ function buildAssetBrowserFilterSection(section, ids) {
 		return node;
 	}
 
-	const chips = panelDiv(section.swatch ? 'color-filter-chips' : 'filter-chips');
+	const chips = buildElement(section.swatch ? 'color-filter-chips' : 'filter-chips');
 	if (section.kind === 'categories') {
 		chips.id = ids.categoryChips;
 	} else {
 		section.options.forEach((option) => {
-			const chip = panelDiv(`filter-chip ${section.swatch ? 'color-filter-chip' : 'text-filter-chip'}`);
+			const chip = buildElement(`filter-chip ${section.swatch ? 'color-filter-chip' : 'text-filter-chip'}`);
 			chip.dataset[section.attribute || 'color'] = option.value;
 			chip.dataset.filter = section.filter;
 			chip.title = option.label;
@@ -204,7 +204,7 @@ function buildAssetBrowserFilterSection(section, ids) {
 			chips.appendChild(chip);
 		});
 	}
-	const row = panelDiv('property-row is-stacked');
+	const row = buildElement('property-row is-stacked');
 	row.appendChild(chips);
 	set.appendChild(row);
 	return node;

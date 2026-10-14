@@ -12,7 +12,7 @@ const context = vm.createContext({
 	FIELDS: { gradientSmoothing: { min: 2, max: 32 } }
 });
 
-for (const file of ['js/paint/effect-source.js', 'js/ui/preset-library.js', 'js/paint/gradient-presets.js']) {
+for (const file of ['js/core/math.js', 'js/paint/effect-source.js', 'js/ui/preset-library.js', 'js/paint/gradient-presets.js']) {
 	vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), context, { filename: file });
 }
 

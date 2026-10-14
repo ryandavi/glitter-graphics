@@ -215,7 +215,7 @@ setupImageListeners() {
 		host.querySelector('[data-recent-group]')?.remove();
 		const sizes = PREFERENCES.get('recentCanvasSizes').filter(size => validateCanvasSize(size.width, size.height).ok);
 		if (!sizes.length) return;
-		const grid = panelDiv('blank-image-grid');
+		const grid = buildElement('blank-image-grid');
 		sizes.forEach(size => {
 			const preset = CONFIG.canvas.presets.find(preset => preset.width === size.width && preset.height === size.height);
 			grid.appendChild(buildCanvasSizeCard({ ...size, label: preset?.label || 'Custom' }, { recent: true }));

@@ -143,7 +143,7 @@ class HtmlSceneExporter {
 			const html = await this.createDocument(stickers, this.getOptions());
 			const fileName = this.editor.getProjectFileName('html');
 			downloadBlob(new Blob([html], { type: 'text/html;charset=utf-8' }), fileName);
-			this.setStatus(`Exported ${stickers.length} sticker${stickers.length === 1 ? '' : 's'} as ${fileName}`);
+			this.setStatus(`Exported ${formatCount(stickers.length, 'sticker')} as ${fileName}`);
 		} catch (error) {
 			dbg('[HtmlSceneExporter] Export failed:', error);
 			this.editor.showError('Could not embed every sticker in the HTML scene');
@@ -163,7 +163,7 @@ class HtmlSceneExporter {
 		try {
 			const scene = await this.createScene(stickers, this.getOptions());
 			await this.copyText(this.renderSnippet(scene));
-			this.setStatus(`Copied a snippet with ${stickers.length} sticker${stickers.length === 1 ? '' : 's'}`);
+			this.setStatus(`Copied a snippet with ${formatCount(stickers.length, 'sticker')}`);
 		} catch (error) {
 			dbg('[HtmlSceneExporter] Snippet copy failed:', error);
 			this.editor.showError('Could not copy the HTML scene snippet');

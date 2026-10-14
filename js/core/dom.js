@@ -1,5 +1,21 @@
 'use strict';
 
+function buildElement(className, text, tag = 'div') {
+	const node = document.createElement(tag);
+	node.className = className;
+	if (text !== undefined) node.textContent = text;
+	return node;
+}
+
+function buildIconButton({ className = 'btn-icon-simple icon-wrapper sm', label = '', icon, onClick, disabled = false }) {
+	const button = buildElement(className, undefined, 'button');
+	button.type = 'button'; button.disabled = disabled;
+	button.title = label; button.setAttribute('aria-label', label);
+	if (icon) button.appendChild(createIcon(icon));
+	if (onClick) button.addEventListener('click', onClick);
+	return button;
+}
+
 function isLocalHost() {
 	return document.documentElement.classList.contains('is-localhost');
 }

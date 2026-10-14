@@ -1022,8 +1022,8 @@ class ContentManager {
 	updateFilterResultsCount() {
 		if (!this.ui.closeFiltersBtn) return;
 		const count = this.applyFilters().length;
-		this.ui.closeFiltersBtn.textContent = `Show ${count} result${count === 1 ? '' : 's'}`;
-		this.ui.closeFiltersBtn.setAttribute('aria-label', `Close filters and show ${count} result${count === 1 ? '' : 's'}`);
+		this.ui.closeFiltersBtn.textContent = `Show ${formatCount(count, 'result')}`;
+		this.ui.closeFiltersBtn.setAttribute('aria-label', `Close filters and show ${formatCount(count, 'result')}`);
 	}
 
 	getFilterKey(filterType) {
@@ -1073,7 +1073,7 @@ class ContentManager {
 			if (baseLabel) {
 				chip.dataset.filterLabel = baseLabel;
 				chip.title = `${baseLabel} (${count})`;
-				chip.setAttribute('aria-label', `${baseLabel}, ${count} item${count === 1 ? '' : 's'}`);
+				chip.setAttribute('aria-label', `${baseLabel}, ${formatCount(count, 'item')}`);
 			}
 			chip.querySelector('.filter-chip-count')?.remove();
 		});

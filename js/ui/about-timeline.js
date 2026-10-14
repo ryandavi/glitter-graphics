@@ -195,7 +195,7 @@ function initPreservationTimeline(modalBody) {
 			return;
 		}
 
-		const count = `${matches.length} ${matches.length === 1 ? 'event' : 'events'}`;
+		const count = `${formatCount(matches.length, 'event')}`;
 		const range = matches.length > 1 ? `${matches[0].date} → ${matches[matches.length - 1].date}` : matches[0].date;
 		summaryEl.textContent = filtersActive
 			? `${count} match these filters · ${range}`

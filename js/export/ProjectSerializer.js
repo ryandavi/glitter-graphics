@@ -260,7 +260,7 @@ class ProjectSerializer {
 		const sourceHeight = source?.renderedHeight ?? source?.preset?.height ?? this.editor.originalCanvas.height;
 		const { width, height } = this.editor.originalCanvas;
 		const placement = source?.animation ? source.placement : null;
-		const animationMoved = Boolean(placement) && JSON.stringify(placement) !== JSON.stringify(this.editor.createBaseAnimationPlacement(width, height));
+		const animationMoved = Boolean(placement) && !isSameData(placement, this.editor.createBaseAnimationPlacement(width, height));
 		if (sourceWidth !== width || sourceHeight !== height || animationMoved) {
 			baseImage.canvasData = this.editor.originalCanvas.toDataURL('image/png');
 		}

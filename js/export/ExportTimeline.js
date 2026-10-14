@@ -27,6 +27,8 @@ class AuthoredAnimationSource {
 	}
 
 	// A copy playing one pass in `period`, as its setter would leave it.
+	get displayLabel() { return this.label || String(this.key); }
+
 	atPeriod(period) {
 		return new AuthoredAnimationSource({ ...this, frameDurations: this.retimeDelays?.(period) || this.frameDurations });
 	}
@@ -120,6 +122,8 @@ class ProceduralAnimationSource {
 	}
 
 	// A copy with `period` as its own, as its setter would leave it.
+	get displayLabel() { return this.label || String(this.key); }
+
 	atPeriod(period) {
 		return new ProceduralAnimationSource({ ...this, naturalPeriod: period, resolvedPeriod: period });
 	}
@@ -834,7 +838,7 @@ class CompositeTimelinePlanner {
 			replacements.set(fit.source, fit.source.withPeriod(resolvedPeriod));
 			return {
 				key: fit.source.key,
-				label: fit.source.label || String(fit.source.key),
+				label: fit.source.displayLabel,
 				requestedPeriod: fit.source.naturalPeriod,
 				resolvedPeriod,
 				cycles: clock.duration / resolvedPeriod,
@@ -974,7 +978,7 @@ class CompositeTimelinePlanner {
 		const clock = timingResolution.clock;
 		const fittedChanges = timingResolution.fits.filter((fit) => fit.fitted && Math.abs(fit.requestedPeriod - fit.resolvedPeriod) >= 0.01);
 		if (fittedChanges.length) {
-			options.onStatus?.(`Fit ${fittedChanges.length} procedural ${fittedChanges.length === 1 ? 'period' : 'periods'} to the composite loop.`);
+			options.onStatus?.(`Fit ${formatCount(fittedChanges.length, 'procedural period')} to the composite loop.`);
 		}
 		if (!loop.exact) options.onStatus?.('Loop optimized with a best-fit seam; the exact common loop was too long.');
 		// Every source is sampled at the committed clock's own frame-start

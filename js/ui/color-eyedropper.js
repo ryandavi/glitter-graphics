@@ -36,12 +36,7 @@ function initializeColorEyedroppers(editor) {
 		input.before(wrapper);
 		wrapper.appendChild(input);
 		if (hex) { wrapper.classList.add('has-hex'); wrapper.appendChild(hex); }
-		const button = document.createElement('button');
-		button.type = 'button';
-		button.className = 'btn-icon-simple icon-wrapper sm color-eyedropper-button';
-		button.title = 'Sample color';
-		button.setAttribute('aria-label', 'Sample color');
-		button.appendChild(createIcon('eyedropper'));
+		const button = buildIconButton({ className: 'btn-icon-simple icon-wrapper sm color-eyedropper-button', label: 'Sample color', icon: 'eyedropper' });
 		button._colorInput = input;
 		button.addEventListener('click', async () => {
 			if (input.disabled) return;

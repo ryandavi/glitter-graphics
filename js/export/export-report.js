@@ -100,7 +100,7 @@ function buildExportDetails({ target, timelinePlan, colorAnalysis, fit = null })
 			const kind = reduction.nearDuplicatesMerged > 0
 				? (reduction.exactDuplicatesMerged > 0 ? 'repeated or nearly identical' : 'nearly identical')
 				: 'repeated';
-			optimization.lines.push(`Removed ${pixelRemoved} ${kind} ${pixelRemoved === 1 ? 'frame' : 'frames'} without changing the speed.`);
+			optimization.lines.push(`Removed ${formatCount(pixelRemoved, `${kind} frame`)} without changing the speed.`);
 		}
 		optimization.rows.push({ cells: ['Frames', measure(reduction.outputFrameCount, '', reduction.originalFrameCount)] });
 		if (reduction.exactDuplicatesMerged > 0) optimization.rows.push({ cells: ['Repeated frames removed', String(reduction.exactDuplicatesMerged)] });
@@ -165,7 +165,7 @@ function buildExportReport({ blob, fileName, target, width, height, frameCount =
 		sizeWarning: uploadLimits.length > 0,
 		format: target.label,
 		dimensions: `${width} × ${height} px`,
-		frames: target.isStill ? '' : `${frameCount ?? 0} ${frameCount === 1 ? 'frame' : 'frames'}`,
+		frames: target.isStill ? '' : formatCount(frameCount ?? 0, 'frame'),
 		duration: target.isStill || !Number.isFinite(duration) ? '' : `${duration.toFixed(2)} s`,
 		fileName
 	};
@@ -192,7 +192,7 @@ function buildExportReport({ blob, fileName, target, width, height, frameCount =
 		if (!plan.loopSeam.exact) notices.push({ id: 'seam', level: 'info', action: { id: 'fix-loop', label: 'Fix loop' }, text: 'The animations repeat at different times, so the beginning and ending may not match perfectly.' });
 		// The same place as Fix loop: the Animation loop section lists the timings.
 		const fewest = frameOptions?.optimizable ? Math.min(...frameOptions.options.map((option) => option.frameCount)) : Infinity;
-		if (fewest < frameCount) notices.push({ id: 'frames', level: 'info', action: { id: 'fix-loop', label: 'Frame options' }, text: `A change of animation timing would export about ${fewest} ${fewest === 1 ? 'frame' : 'frames'} instead of ${frameCount}.` });
+		if (fewest < frameCount) notices.push({ id: 'frames', level: 'info', action: { id: 'fix-loop', label: 'Frame options' }, text: `A change of animation timing would export about ${formatCount(fewest, 'frame')} instead of ${frameCount}.` });
 	}
 	// The observed count is a sampled lower bound, so this never fires on an
 	// image the palette could hold.

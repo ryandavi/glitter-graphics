@@ -77,7 +77,7 @@ class TemplateManager {
 			this.editor.updateStatus(`Previewing ${entry.label}`);
 			const confirmed = await this.editor.confirmAction({
 				title: 'Add Template',
-				message: `${entry.label} is previewed on the canvas. Add these ${layers.length} editable layer${layers.length === 1 ? '' : 's'}?`,
+				message: `${entry.label} is previewed on the canvas. Add these ${formatCount(layers.length, 'editable layer')}?`,
 				confirmLabel: 'Add Template'
 			});
 			if (confirmed) this.commitPreview();

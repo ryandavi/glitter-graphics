@@ -254,6 +254,45 @@ function bindSeparator(handle, {
 	};
 }
 
+function bindSizeHandle(handle, {
+	orientation, label, direction = 1, read, apply, persist, reset,
+	canUse = () => true, bodyClass, onChange = () => {},
+	keyStep = CONFIG.ui.panelResize.keyStep, fastKeyStep = CONFIG.ui.panelResize.fastKeyStep
+}) {
+	const coordinate = orientation === 'horizontal' ? 'clientY' : 'clientX';
+	const sign = () => typeof direction === 'function' ? direction() : direction;
+	let startSize, startPosition;
+	bindResizeHandleDrag(handle, {
+		canStart: canUse, bodyClass,
+		start: event => {
+			startSize = read(); startPosition = event[coordinate];
+			onChange('start');
+		},
+		move: event => {
+			if (!canUse()) return;
+			apply(startSize + (event[coordinate] - startPosition) * sign(), event);
+			onChange('move');
+		},
+		end: cancelled => {
+			if (cancelled) apply(startSize);
+			else persist(read());
+			onChange(cancelled ? 'cancel' : 'end');
+		}
+	});
+	return bindSeparator(handle, {
+		orientation, label, canUse, keyStep, fastKeyStep,
+		change: delta => {
+			onChange('start'); apply(read() + delta * Math.sign(sign())); persist(read()); onChange('end');
+		},
+		reset: () => {
+			onChange('start');
+			const value = reset();
+			if (value !== undefined) apply(value);
+			onChange('end');
+		}
+	});
+}
+
 function buildPanelResizeHandle(key) {
 	const config = PANEL_RESIZE_TARGETS[key];
 	const handle = document.createElement('div');
@@ -305,43 +344,17 @@ function initializePanelResize(editor) {
 		const handle = buildPanelResizeHandle(key);
 		(config.handleHost ? document.querySelector(config.handleHost) : panel).appendChild(handle);
 
-		let startX = 0;
-		let startWidth = 0;
-
-		bindResizeHandleDrag(handle, {
-			canStart: () => !editor?.mobileManager?.isMobile,
-			bodyClass: 'is-resizing-panel',
-			start: (event) => {
-				startX = event.clientX;
-				startWidth = getPanelWidth(key);
-				editor.viewport.beginPanelResize();
-			},
-			move: (event) => {
-				// Dragging the Inspector's handle rightwards makes it narrower; the
-				// layers handle works the other way round.
-				const delta = config.edge === 'start' ? startX - event.clientX : event.clientX - startX;
-				const raw = startWidth + delta;
-				applyPanelWidth(key, clampPanelWidth(key, snapPanelWidth(key, raw, event.altKey)));
-			},
-			end: (cancelled) => {
-				if (cancelled) applyPanelWidth(key, startWidth);
-				if (key !== 'inspector' || getPanelWidth(key) !== startWidth) setPanelWidth(key, getPanelWidth(key));
-				editor.viewport.endPanelResize();
-			}
-		});
-
-		bindSeparator(handle, {
-			orientation: 'vertical', label: config.label,
-			canUse: () => !editor?.mobileManager?.isMobile,
-			change: delta => {
-				editor.viewport.beginPanelResize();
-				setPanelWidth(key, getPanelWidth(key) + (config.edge === 'start' ? -delta : delta));
-				editor.viewport.endPanelResize();
-			},
-			reset: () => {
-				editor.viewport.beginPanelResize();
-				resetPanelWidth(key);
-				editor.viewport.endPanelResize();
+		let startWidth;
+		bindSizeHandle(handle, {
+			orientation: 'vertical', label: config.label, direction: config.edge === 'start' ? -1 : 1,
+			canUse: () => !editor?.mobileManager?.isMobile, bodyClass: 'is-resizing-panel',
+			read: () => getPanelWidth(key),
+			apply: (value, event) => applyPanelWidth(key, clampPanelWidth(key, event ? snapPanelWidth(key, value, event.altKey) : value)),
+			persist: value => { if (key !== 'inspector' || value !== startWidth) setPanelWidth(key, value); },
+			reset: () => resetPanelWidth(key),
+			onChange: phase => {
+				if (phase === 'start') { startWidth = getPanelWidth(key); editor.viewport.beginPanelResize(); }
+				else if (phase === 'cancel' || phase === 'end') editor.viewport.endPanelResize();
 			}
 		});
 	});

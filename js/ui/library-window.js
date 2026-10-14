@@ -55,44 +55,23 @@ class LibraryWindow {
 			this.element.classList.toggle('has-chosen-split', chosen);
 			handle.setAttribute('aria-valuenow', String(Math.round(share)));
 		};
-		const setShare = (value) => {
-			applyShare(value, true);
-			writeLibrarySplit(share);
-		};
 		const resetShare = () => {
-			applyShare(limits.defaultShare, false);
-			writeLibrarySplit(null);
+			applyShare(limits.defaultShare, false); writeLibrarySplit(null);
 		};
 		this.resetSplit = resetShare;
 		const stored = readLibrarySplit();
 		applyShare(stored ?? limits.defaultShare, stored !== null);
 		document.getElementById('flyoutSection').after(handle);
-		let startShare = share;
-		let startChosen = false;
-		bindResizeHandleDrag(handle, {
-			canStart: () => !this.editor.mobileManager?.isMobile,
-			start: () => {
-				startShare = share;
-				startChosen = this.element.classList.contains('has-chosen-split');
-			},
-			move: (event) => {
-				const bounds = this.element.getBoundingClientRect();
-				setShare((event.clientY - bounds.top) / bounds.height * 100);
-			},
-			end: (cancelled) => {
-				if (!cancelled) return;
-				if (startChosen) setShare(startShare);
-				else resetShare();
-			}
-		});
-		handle.addEventListener('dblclick', resetShare);
-		handle.addEventListener('keydown', (event) => {
-			if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
-				event.preventDefault();
-				setShare(share + (event.key === 'ArrowUp' ? -1 : 1) * (event.shiftKey ? limits.fastKeyStep : limits.keyStep));
-			} else if (event.key === 'Home' || event.key === 'Escape') {
-				event.preventDefault();
-				resetShare();
+		let startChosen;
+		bindSizeHandle(handle, {
+			orientation: 'horizontal', label: 'Resize properties and library',
+			canUse: () => !this.editor.mobileManager?.isMobile,
+			direction: () => 100 / this.element.getBoundingClientRect().height,
+			read: () => share, apply: value => applyShare(value, true), persist: value => writeLibrarySplit(value),
+			reset: resetShare, keyStep: limits.keyStep, fastKeyStep: limits.fastKeyStep,
+			onChange: phase => {
+				if (phase === 'start') startChosen = this.element.classList.contains('has-chosen-split');
+				else if (phase === 'cancel') applyShare(share, startChosen);
 			}
 		});
 	}

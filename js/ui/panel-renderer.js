@@ -30,8 +30,8 @@ function buildActionCard({ className, dataset, ariaLabel, pressed, media, title,
 }
 
 function buildCanvasPresetGroup(label, grid) {
-	const group = panelDiv('new-canvas-preset-group');
-	const heading = panelDiv('property-group-label');
+	const group = buildElement('new-canvas-preset-group');
+	const heading = buildElement('property-group-label');
 	heading.textContent = label;
 	group.append(heading, grid);
 	return group;
@@ -55,11 +55,6 @@ function buildCanvasSizeCard(preset, { quickStart = false, recent = false } = {}
 	});
 }
 
-function panelDiv(className) {
-	const node = document.createElement('div');
-	node.className = className;
-	return node;
-}
 
 function addPanelClasses(node, classes) {
 	if (!classes) return node;
@@ -69,22 +64,22 @@ function addPanelClasses(node, classes) {
 }
 
 function buildPropertyEmpty(options = {}) {
-	const empty = panelDiv('property-empty');
+	const empty = buildElement('property-empty');
 	if (options.id) empty.id = options.id;
 	if (options.visible) empty.classList.add('visible');
 	if (options.icon) {
-		const icon = panelDiv('property-empty-icon icon-wrapper xl');
+		const icon = buildElement('property-empty-icon icon-wrapper xl');
 		icon.appendChild(createIcon(options.icon));
 		empty.appendChild(icon);
 	}
 	if (options.title !== undefined) {
-		const title = panelDiv('property-empty-title');
+		const title = buildElement('property-empty-title');
 		if (options.titleId) title.id = options.titleId;
 		title.textContent = options.title;
 		empty.appendChild(title);
 	}
 	if (options.text !== undefined) {
-		const text = panelDiv('property-empty-text');
+		const text = buildElement('property-empty-text');
 		if (options.textId) text.id = options.textId;
 		text.textContent = options.text;
 		empty.appendChild(text);
@@ -430,21 +425,21 @@ function initializeEditablePropertyValues(root = document) {
 function buildSteppedSliderRow(item) {
 	const stops = typeof item.stops === 'function' ? item.stops() : item.stops;
 	if (!Array.isArray(stops) || stops.length < 2) throw new Error('A stepped slider needs at least two stops');
-	const row = panelDiv('property-row is-stacked');
+	const row = buildElement('property-row is-stacked');
 	const label = document.createElement('label');
 	label.className = 'property-label';
 	label.htmlFor = item.id;
 	label.textContent = item.label;
-	const slider = panelDiv('stepped-slider');
-	const captions = panelDiv('stepped-slider-captions');
+	const slider = buildElement('stepped-slider');
+	const captions = buildElement('stepped-slider-captions');
 	captions.setAttribute('aria-hidden', 'true');
 	(item.endLabels || [stops[0].label, stops[stops.length - 1].label]).forEach((text) => {
 		const caption = document.createElement('span');
 		caption.textContent = text;
 		captions.appendChild(caption);
 	});
-	const track = panelDiv('stepped-slider-track');
-	const ticks = panelDiv('stepped-slider-ticks');
+	const track = buildElement('stepped-slider-track');
+	const ticks = buildElement('stepped-slider-ticks');
 	ticks.setAttribute('aria-hidden', 'true');
 	stops.forEach(() => ticks.appendChild(document.createElement('span')));
 	const input = document.createElement('input');
@@ -520,10 +515,10 @@ function buildPairRow(item) {
 	if (item.title) label.title = item.title;
 	row.appendChild(label);
 
-	const pair = panelDiv('property-pair');
+	const pair = buildElement('property-pair');
 	item.items.forEach((entry) => {
 		const spec = FIELDS[entry.slider];
-		const cell = panelDiv('property-pair-cell');
+		const cell = buildElement('property-pair-cell');
 		const mark = document.createElement('span');
 		mark.className = 'property-pair-mark';
 		mark.textContent = entry.mark;
@@ -591,7 +586,7 @@ function buildFieldRevert(target, defaultValue) {
 // Selection is separate from the native picker so a second row click can clear
 // selection without opening or dismissing a color editor.
 function buildColorListRow({ id, label, coverage, value }) {
-	const row = panelDiv('color-list-row list-row');
+	const row = buildElement('color-list-row list-row');
 	const select = document.createElement('button');
 	select.type = 'button'; select.className = 'color-list-select list-row-text';
 	select.setAttribute('aria-pressed', 'false');
@@ -611,7 +606,7 @@ function buildColorListRow({ id, label, coverage, value }) {
 }
 
 function buildNumberFieldPair(options) {
-	const row = panelDiv('property-row is-pair transform-pair-row');
+	const row = buildElement('property-row is-pair transform-pair-row');
 	if (options.rowId) row.id = options.rowId;
 	if (options.hidden) row.hidden = true;
 	const label = document.createElement('span');
@@ -755,7 +750,7 @@ function buildSelectProxy(entries, options = {}) {
 	hooks.addEventListener('click', () => requestAnimationFrame(syncOptions));
 	new MutationObserver(syncOptions).observe(hooks, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
 	syncOptions();
-	const control = panelDiv('property-select-control');
+	const control = buildElement('property-select-control');
 	control.append(select, hooks);
 	return control;
 }
@@ -956,7 +951,7 @@ function buildPatternSourceSets(slot, options = {}) {
 	] }, { prefix });
 	presets.querySelector('.preset-grid').dataset.patternPresets = '';
 	const colors = buildPanelSet({ label: 'Colors', rows: [field('color', 'Color'), field('backgroundColor', 'Background'), toggle('transparentBackground', 'Transparent background')] });
-	const preview = panelDiv('pattern-preview property-inset');
+	const preview = buildElement('pattern-preview property-inset');
 	preview.setAttribute('aria-hidden', 'true');
 	colors.appendChild(preview);
 	const types = buildPanelSet({ label: 'Type', rows: [select('type', 'Type', 'patternType')] });
@@ -1019,7 +1014,7 @@ function buildGradientSourceSets(slot, options = {}) {
 // A run of built nodes in a `.property-set`. For the renderer's own sets;
 // schema sets go through buildPanelSet.
 function wrapPropertySet(nodes, classes = '') {
-	const set = addPanelClasses(panelDiv('property-set'), classes);
+	const set = addPanelClasses(buildElement('property-set'), classes);
 	nodes.forEach((node) => set.appendChild(node));
 	return set;
 }
@@ -1033,7 +1028,7 @@ function buildGlitterAdvancedSets(slot, options = {}) {
 	const ids = slot.ids || {};
 	const named = (label) => (options.owner ? `${slot.sourceLabel} ${label.toLowerCase()}` : label);
 	const buildSet = (label, className) => {
-		const set = panelDiv(`property-set glitter-source-glitter ${className}`);
+		const set = buildElement(`property-set glitter-source-glitter ${className}`);
 		set.setAttribute('role', 'group');
 		set.setAttribute('aria-label', named(label));
 		set.hidden = slot.activeMode !== 'glitter';
@@ -1144,7 +1139,7 @@ function buildSectionShell(spec, schema) {
 		if (spec.reset) title.appendChild(buildPanelCardReset(card, spec.title, spec.reset));
 	}
 	else title.remove();
-	if (spec.swatch) title.appendChild(panelDiv('property-card-swatch'));
+	if (spec.swatch) title.appendChild(buildElement('property-card-swatch'));
 	if (spec.toggle) {
 		card.dataset.effectCard = '';
 		card.classList.add('is-off');
@@ -1153,7 +1148,7 @@ function buildSectionShell(spec, schema) {
 		input.dataset.effectToggle = '';
 		title.appendChild(toggle);
 	}
-	card.appendChild(panelDiv('property-card-body'));
+	card.appendChild(buildElement('property-card-body'));
 	return card;
 }
 
@@ -1304,7 +1299,7 @@ function mountFlyoutSection(card, spec, schema) {
 	const prefix = schema.sectionPrefix;
 	let host = document.getElementById(`${prefix}Flyouts`);
 	if (!host) {
-		host = panelDiv('settings-subsection flyout-host');
+		host = buildElement('settings-subsection flyout-host');
 		host.id = `${prefix}Flyouts`;
 		// The window's bar wears the icon of the panel whose section it shows.
 		host.dataset.flyoutIcon = schema.section.icon;
@@ -1332,7 +1327,7 @@ function mountFlyoutSection(card, spec, schema) {
 	const summary = document.createElement('span');
 	summary.className = 'property-card-summary';
 	title.appendChild(summary);
-	if (card.querySelector(':scope > .property-card-title > .property-card-swatch')) title.appendChild(panelDiv('property-card-swatch'));
+	if (card.querySelector(':scope > .property-card-title > .property-card-swatch')) title.appendChild(buildElement('property-card-swatch'));
 	const toggle = buildFlyoutSwitch(card);
 	if (toggle) title.appendChild(toggle);
 	const chevron = document.createElement('span');
@@ -1362,7 +1357,7 @@ function syncFlyoutLine(card, state) {
 // A set of buttons: `{ actions: [...] }` in a section's `sets` or a group's
 // `actions`.
 function buildActionSet(set) {
-	const row = addPanelClasses(panelDiv('property-set property-actions'), set.classes);
+	const row = addPanelClasses(buildElement('property-set property-actions'), set.classes);
 	if (set.id) row.id = set.id;
 	if (set.hidden) row.hidden = true;
 	Object.entries(set.attrs || {}).forEach(([name, value]) => row.setAttribute(name, value));
@@ -1391,9 +1386,8 @@ function buildActionSet(set) {
 		// (setupMenuPopover). It is built inside its popover root, so
 		// opening the menu never re-parents the button.
 		if (action.menu) {
-			const menu = panelDiv('app-menu app-menu-popover');
-			const panel = panelDiv('app-menu-panel');
-			panel.hidden = true;
+			const menu = buildElement('app-menu app-menu-popover');
+			const panel = buildMenuPanel();
 			button.setAttribute('aria-haspopup', 'menu');
 			button.setAttribute('aria-expanded', 'false');
 			menu.append(button, panel);
@@ -1444,7 +1438,7 @@ function buildPanelSet(set, schema) {
 
 function buildPanelSetContent(set, schema) {
 	if (set.actions) return buildActionSet(set);
-	const node = addPanelClasses(panelDiv('property-set'), set.classes);
+	const node = addPanelClasses(buildElement('property-set'), set.classes);
 	if (set.id) node.id = set.id;
 	if (set.hidden) node.hidden = true;
 	Object.entries(set.attrs || {}).forEach(([name, value]) => node.setAttribute(name, value));
@@ -1488,7 +1482,7 @@ function buildPanelItemContent(item, schema) {
 			return buildPaintSlotSection(item, schema);
 		// The shared transform panel (renderTransformPanels fills it).
 		case 'transform': {
-			const host = panelDiv('transform-panel-host');
+			const host = buildElement('transform-panel-host');
 			host.id = `${schema.prefix}TransformPanelHost`;
 			return host;
 		}
@@ -1519,7 +1513,7 @@ function buildPanelItemContent(item, schema) {
 		// R7. Helper text, a status line or an empty state. It sits in the set
 		// of the row it explains.
 		case 'note': {
-			const note = addPanelClasses(panelDiv('property-note'), item.classes);
+			const note = addPanelClasses(buildElement('property-note'), item.classes);
 			if (item.id) note.id = item.id;
 			if (item.hidden) note.hidden = true;
 			if (item.text) note.textContent = item.text;
@@ -1558,7 +1552,7 @@ function buildPanelItemContent(item, schema) {
 			// `.property-row.property-color-row` markup, same `attachOptionRevert`
 			// wiring — one component, not a second color control.
 			if (item.type === 'color') {
-				const row = addPanelClasses(panelDiv('property-row property-color-row'), item.rowClasses);
+				const row = addPanelClasses(buildElement('property-row property-color-row'), item.rowClasses);
 				if (item.rowId) row.id = item.rowId;
 				if (item.hidden) row.hidden = true;
 				if (item.role) row.dataset.role = item.role;
@@ -1570,7 +1564,7 @@ function buildPanelItemContent(item, schema) {
 				return row;
 			}
 
-			const row = addPanelClasses(panelDiv('property-row'), item.rowClasses);
+			const row = addPanelClasses(buildElement('property-row'), item.rowClasses);
 			if (item.rowId) row.id = item.rowId;
 			if (item.hidden) row.hidden = true;
 			if (item.role) row.dataset.role = item.role;
@@ -1581,7 +1575,7 @@ function buildPanelItemContent(item, schema) {
 			row.appendChild(label);
 			if (item.toggle) {
 				row.classList.add('is-pair');
-				const pair = panelDiv('property-pair');
+				const pair = buildElement('property-pair');
 				pair.append(input, buildPropertyCardToggle(item.toggle, item.toggle.label));
 				row.appendChild(pair);
 				return row;
@@ -1670,7 +1664,7 @@ function buildPanelItemContent(item, schema) {
 					button.appendChild(createIcon(action.icon));
 					return button;
 				};
-				control = panelDiv('animation-select-stepper');
+				control = buildElement('animation-select-stepper');
 				if (item.stepper.prev) control.appendChild(buildStepButton(item.stepper.prev));
 				control.appendChild(select);
 				if (item.stepper.next) control.appendChild(buildStepButton(item.stepper.next));
@@ -1689,7 +1683,7 @@ function buildPanelItemContent(item, schema) {
 			if (item.placeholder) textarea.placeholder = item.placeholder;
 			addPanelClasses(textarea, item.controlClasses);
 			if (!item.classes) return textarea;
-			const wrapper = addPanelClasses(panelDiv('property-inset'), item.classes);
+			const wrapper = addPanelClasses(buildElement('property-inset'), item.classes);
 			wrapper.appendChild(textarea);
 			return wrapper;
 		}
@@ -1723,7 +1717,7 @@ function buildPanelItemContent(item, schema) {
 			if (item.text) node.textContent = item.text;
 			Object.entries(item.attrs || {}).forEach(([name, value]) => node.setAttribute(name, value));
 			if (item.rowClasses) {
-				const row = addPanelClasses(panelDiv('property-row'), item.rowClasses);
+				const row = addPanelClasses(buildElement('property-row'), item.rowClasses);
 				if (item.hidden) row.hidden = true;
 				row.appendChild(node);
 				return row;
@@ -1750,7 +1744,7 @@ function buildPanelItemContent(item, schema) {
 // Chip ids are the slot's panelPrefix + the suffix the binder reads
 // (ui/paint-slot-controls.js).
 function buildSparkleGlyphChips(item) {
-	const chips = panelDiv('sparkle-glyph-chips');
+	const chips = buildElement('sparkle-glyph-chips');
 	chips.setAttribute('role', 'group');
 	chips.setAttribute('aria-label', 'Sparkle shapes');
 	Object.values(SPARKLE_GLYPHS).filter((glyph) => glyph.pickable).forEach((glyph) => {
@@ -2119,7 +2113,7 @@ function finishPanelMarkup(root) {
 			// A lone static name repeats its section's title; a name its manager
 			// writes (the chosen look's settings) is always drawn.
 			if (sets.length < 2 && !set.dataset.setLabelId) return;
-			const label = panelDiv('property-set-label');
+			const label = buildElement('property-set-label');
 			label.textContent = set.getAttribute('aria-label') || '';
 			if (set.dataset.setLabelId) label.id = set.dataset.setLabelId;
 			label.setAttribute('aria-hidden', 'true');
@@ -2204,7 +2198,7 @@ function initializePanelVacancy() {
 function renderPanelSubsections(schema, parent) {
 	const defs = schema.subsections || [{ groups: schema.groups, sections: schema.sections }];
 	defs.forEach((def) => {
-		const block = panelDiv('settings-subsection');
+		const block = buildElement('settings-subsection');
 		if (def.id) block.id = def.id;
 		addPanelClasses(block, def.classes);
 		if (def.hidden) block.hidden = true;
@@ -2226,7 +2220,7 @@ function renderBarePanelSection(schema) {
 	addPanelClasses(host, schema.section.classes);
 	let content = host.querySelector(':scope > .section-content');
 	if (!content) {
-		content = panelDiv('section-content');
+		content = buildElement('section-content');
 		host.appendChild(content);
 	}
 	if (content.querySelector(':scope > .settings-subsection')) return;
@@ -2277,7 +2271,7 @@ function renderPanelSection(schema) {
 	const placeGroup = (group, node) => {
 		if (group.region === 'scroll' || group.region === 'header') {
 			if (!wrappers[group.region]) {
-				wrappers[group.region] = panelDiv(group.region === 'scroll' ? 'panel-scroll-region' : 'panel-sticky-header');
+				wrappers[group.region] = buildElement(group.region === 'scroll' ? 'panel-scroll-region' : 'panel-sticky-header');
 				subsection.appendChild(wrappers[group.region]);
 			}
 			wrappers[group.region].appendChild(node);
@@ -2317,7 +2311,7 @@ function renderPanelSection(schema) {
 	if (schema.controls) {
 		const content = fragment.querySelector('.section-content');
 		const empty = buildPropertyEmpty({ id: schema.controls.emptyId, visible: true, ...schema.controls.empty });
-		const controls = panelDiv('panel-controls');
+		const controls = buildElement('panel-controls');
 		controls.id = schema.controls.id;
 		controls.appendChild(subsection);
 		content.replaceChildren(empty, controls);

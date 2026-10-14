@@ -247,7 +247,7 @@ class LayerManager {
 			remaining,
 			reason: remaining <= 0
 				? `You've reached the ${CONFIG.app.limits.maxLayers}-layer limit. Delete or merge a layer to add another.`
-				: `Only ${remaining} more layer${remaining === 1 ? '' : 's'} can be added (limit is ${CONFIG.app.limits.maxLayers}).`
+				: `Only ${formatCount(remaining, 'more layer')} can be added (limit is ${CONFIG.app.limits.maxLayers}).`
 		};
 	}
 
@@ -352,7 +352,7 @@ class LayerManager {
 		if (this.layersListContainer.hasPointerCapture(stroke.pointerId)) this.layersListContainer.releasePointerCapture(stroke.pointerId);
 		if (stroke.changed.size) {
 			this.editor.saveState(stroke.visible ? 'Show layers' : 'Hide layers');
-			this.editor.updateStatus(`${stroke.visible ? 'Shown' : 'Hidden'}: ${stroke.changed.size} layer${stroke.changed.size === 1 ? '' : 's'}`);
+			this.editor.updateStatus(`${stroke.visible ? 'Shown' : 'Hidden'}: ${formatCount(stroke.changed.size, 'layer')}`);
 		}
 	}
 
@@ -1081,7 +1081,7 @@ class LayerManager {
 		layerEl.dataset.layerId = layer.id;
 		const clipBase = getClipBase(this.layers, layer);
 		layerEl.classList.toggle('is-clipped', Boolean(clipBase));
-		const clipButton = clipBase ? this.createIconButton({ className: 'list-row-action layer-clip', title: `Release clip to ${describeLayer(clipBase, this.editor).name}`, iconType: 'clip', onClick: event => {
+		const clipButton = clipBase ? buildIconButton({ className: 'btn-icon-simple icon-wrapper sm list-row-action layer-clip', label: `Release clip to ${describeLayer(clipBase, this.editor).name}`, icon: 'clip', onClick: event => {
 				event.stopPropagation();
 				this.editor.toggleClippingMask([layer]);
 			} }) : null;
@@ -1202,10 +1202,10 @@ class LayerManager {
 
 		// 4. Visibility belongs with layer identity, matching modern layer panels.
 		const state = this.getLayerRowState(layer);
-		const visBtn = this.createIconButton({
-			className: 'list-row-action layer-visibility' + (!layer.visible ? ' hidden' : ''),
-			title: state.visibility.title,
-			iconType: state.visibility.icon,
+		const visBtn = buildIconButton({
+			className: 'btn-icon-simple icon-wrapper sm list-row-action layer-visibility' + (!layer.visible ? ' hidden' : ''),
+			label: state.visibility.title,
+			icon: state.visibility.icon,
 			onClick: (e) => {
 				e.stopPropagation();
 				this.toggleLayerVisibility(layer.id);
@@ -1216,10 +1216,10 @@ class LayerManager {
 		const actions = document.createElement('div');
 		actions.className = 'list-row-actions';
 
-		const lockBtn = this.createIconButton({
-			className: `list-row-action lock${state.lock.active ? ' active' : ''}${state.lock.permanent ? ' permanent' : ''}`,
-			title: state.lock.title,
-			iconType: state.lock.icon,
+		const lockBtn = buildIconButton({
+			className: `btn-icon-simple icon-wrapper sm list-row-action lock${state.lock.active ? ' active' : ''}${state.lock.permanent ? ' permanent' : ''}`,
+			label: state.lock.title,
+			icon: state.lock.icon,
 			onClick: (e) => {
 				e.stopPropagation();
 				this.pressLayerLock(layer);
@@ -1229,10 +1229,10 @@ class LayerManager {
 
 		// Source navigation follows state controls and precedes destructive actions.
 		const sourceType = LAYER_UI_CONFIG[layer.type]?.goTo;
-		const arrowBtn = this.createIconButton({
-			className: `list-row-action goto-glitter${sourceType ? '' : ' unavailable'}`,
-			title: sourceType ? (sourceType === 'asset' ? 'Show sticker in Design' : 'Show glitter in Design') : 'No source asset for this layer',
-			iconType: 'locate',
+		const arrowBtn = buildIconButton({
+			className: `btn-icon-simple icon-wrapper sm list-row-action goto-glitter${sourceType ? '' : ' unavailable'}`,
+			label: sourceType ? (sourceType === 'asset' ? 'Show sticker in Design' : 'Show glitter in Design') : 'No source asset for this layer',
+			icon: 'locate',
 			disabled: !sourceType,
 			onClick: (e) => {
 				e.stopPropagation();
@@ -1241,10 +1241,10 @@ class LayerManager {
 		});
 		actions.appendChild(arrowBtn);
 
-		const delBtn = this.createIconButton({
-				className: `list-row-action delete${state.delete.disabled ? ' unavailable' : ''}`,
-				title: state.delete.title,
-				iconType: 'trash',
+		const delBtn = buildIconButton({
+				className: `btn-icon-simple icon-wrapper sm list-row-action delete${state.delete.disabled ? ' unavailable' : ''}`,
+				label: state.delete.title,
+				icon: 'trash',
 				disabled: state.delete.disabled,
 				onClick: async (e) => {
 					e.stopPropagation();
@@ -1325,33 +1325,6 @@ class LayerManager {
 		await this.editor.deleteSelectedLayers();
 	}
 
-	createIconButton({ className = '', id = '', disabled = false, title = '', iconType = '', label = '', onClick }) {
-		const btn = document.createElement('button');
-		btn.className = "btn-icon-simple icon-wrapper sm " + className;
-		if (id) btn.id = id;
-		if (disabled) btn.disabled = true;
-		if (title) btn.title = title;
-
-		if (iconType) {
-			const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-			svg.classList.add('icon');
-			const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
-			use.setAttribute('href', `#icon-${iconType}`);
-			svg.appendChild(use);
-			btn.appendChild(svg);
-		}
-
-		if (label) {
-			const span = document.createElement('span');
-			span.className = 'name';
-			span.textContent = label;
-			btn.appendChild(span);
-		}
-
-		if (onClick) btn.onclick = onClick;
-
-		return btn;
-	}
 
 	updateLayerCount() {
 		const count = this.layers.filter((layer) => !layer.isPreview).length;

@@ -48,7 +48,7 @@ class CanvasBounds {
 	}
 
 	record(before) {
-		if (JSON.stringify(before) === JSON.stringify(this.snapshot())) return false;
+		if (isSameData(before, this.snapshot())) return false;
 		this.undoStack.push(before);
 		this.redoStack.length = 0;
 		return true;

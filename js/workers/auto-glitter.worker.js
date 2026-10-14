@@ -1,4 +1,4 @@
-importScripts('../effects/palette-analysis.js?v=5de64065');
+importScripts('../core/math.js?v=35dff948', '../effects/palette-analysis.js?v=5de64065');
 
 importScripts('../effects/color-adjust.js?v=7bd60e2a');
 
@@ -109,7 +109,7 @@ function foldSharedMatches(result) {
 		if (entry.suggestedGlitterId == null) continue;
 		const match = palette.findIndex((other, otherIndex) => otherIndex < index && target[otherIndex] === otherIndex
 			&& other.suggestedGlitterId === entry.suggestedGlitterId
-			&& JSON.stringify(other.suggestedColorAdjust) === JSON.stringify(entry.suggestedColorAdjust));
+			&& isSameData(other.suggestedColorAdjust, entry.suggestedColorAdjust));
 		if (match < 0) continue;
 		const kept = palette[match];
 		const combinedCount = kept.count + entry.count;

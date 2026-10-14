@@ -1,7 +1,7 @@
 const LAYER_CLIPBOARD_KIND = 'glitter-layers';
 const CLIPBOARD_COPY = Object.freeze({
-	copied: (count) => `${count} layer${count === 1 ? '' : 's'} copied`,
-	pasted: (count) => `${count} layer${count === 1 ? '' : 's'} pasted`,
+	copied: (count) => `${formatCount(count, 'layer')} copied`,
+	pasted: (count) => `${formatCount(count, 'layer')} pasted`,
 	missingBase: 'Add or paste a base image before pasting layers',
 	imageName: 'clipboard-image.png'
 });

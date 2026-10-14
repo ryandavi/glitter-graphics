@@ -6,12 +6,15 @@
  * continuous zoom factor and never need platform-specific branches.
  */
 const VIEWPORT_INPUT = Object.freeze({
-	normalizeWheel(event, options = {}) {
+	wheelPixels(event, options = {}) {
 		const pageSize = Math.max(1, options.pageSize || 1);
 		const lineSize = Math.max(1, options.lineSize || 16);
 		const unit = event.deltaMode === 1 ? lineSize : event.deltaMode === 2 ? pageSize : 1;
-		const rawX = Number.isFinite(event.deltaX) ? event.deltaX * unit : 0;
-		const rawY = Number.isFinite(event.deltaY) ? event.deltaY * unit : 0;
+		return { x: Number.isFinite(event.deltaX) ? event.deltaX * unit : 0, y: Number.isFinite(event.deltaY) ? event.deltaY * unit : 0 };
+	},
+
+	normalizeWheel(event, options = {}) {
+		const { x: rawX, y: rawY } = this.wheelPixels(event, options);
 
 		if (event.ctrlKey || event.metaKey) {
 			const limitedDelta = Math.max(-100, Math.min(100, rawY));

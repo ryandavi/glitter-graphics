@@ -249,7 +249,7 @@ class AnimationPanelController {
 	setKeys(layer, animation, keys, { commit = true, rollback = false, label = 'Edit motion key', at, coalesceKey } = {}) {
 		if (!this.canEditKeys(layer, animation) && !(rollback && this.editor.layers.includes(layer) && layer.animations?.includes(animation))) return false;
 		const next = GlitterAnimation.normalizeKeys(keys);
-		if (JSON.stringify(next) === JSON.stringify(GlitterAnimation.normalizeKeys(animation.keys))) return false;
+		if (isSameData(next, GlitterAnimation.normalizeKeys(animation.keys))) return false;
 		if (!rollback) {
 			const before = GlitterAnimation.normalizeKeys(animation.keys);
 			for (const id of Object.keys(GlitterAnimation.POSE_CHANNELS)) {
@@ -479,11 +479,11 @@ class AnimationPanelController {
 				apply: (value) => {
 					const { layer, animation } = target();
 					if (!this.canEditKeys(layer, animation)) return;
-					before ??= JSON.stringify(GlitterAnimation.normalizeKeys(animation.keys));
+					before ??= GlitterAnimation.normalizeKeys(animation.keys);
 					write(layer, animation, value);
 				},
 				onCommit: () => {
-					const { layer, animation } = target(), changed = before != null && animation && before !== JSON.stringify(GlitterAnimation.normalizeKeys(animation.keys));
+					const { layer, animation } = target(), changed = before != null && animation && !isSameData(before, GlitterAnimation.normalizeKeys(animation.keys));
 					before = null;
 					if (changed) this.editor.saveState(label);
 					else if (layer) this.load(layer);
@@ -599,11 +599,10 @@ class AnimationPanelController {
 			const text = document.createElement('span'); text.textContent = `${GlitterAnimation.MOTION_REGISTRY[animation.type].label} · ${formatSeconds(animation.periodMs)} · ${TimelineView.repeatsText(animation.iterations)}`; button.append(text);
 			button.setAttribute('aria-pressed', String(index === this._selectedIndex(layer)));
 			button.addEventListener('click', () => { this.selectMotion(layer, index); this.editor.timelineDock?.selectMotion(layer.id, index); this.load(layer); });
-			const enabled = document.createElement('button'); enabled.type = 'button'; enabled.className = 'btn-icon-simple icon-wrapper sm';
-			enabled.append(createIcon(animation.enabled === false ? 'eye-slash' : 'eye')); enabled.title = animation.enabled === false ? 'Enable animation' : 'Disable animation';
+			const enabled = buildIconButton({ label: animation.enabled === false ? 'Enable animation' : 'Disable animation', icon: animation.enabled === false ? 'eye-slash' : 'eye' });
 			enabled.setAttribute('aria-pressed', String(animation.enabled !== false));
 			enabled.addEventListener('click', () => { if (!this.editor.canEditLayer(layer)) return; animation.enabled = animation.enabled === false; this._render(layer); this.editor.saveState('Toggle animation'); });
-			const grip = document.createElement('button'); grip.type = 'button'; grip.className = 'btn-icon-simple icon-wrapper sm'; grip.append(createIcon('grip-vertical')); grip.title = 'Drag to reorder; arrow keys move this animation';
+			const grip = buildIconButton({ icon: 'grip-vertical', label: 'Drag to reorder; arrow keys move this animation' });
 			const reorder = destination => {
 				if (!this.editor.canEditLayer(layer) || destination === index || destination < 0 || destination >= animations.length) return;
 				animations.splice(index, 1); animations.splice(destination, 0, animation); this.selectMotion(layer, destination); this._render(layer); this.editor.saveState('Reorder animations');

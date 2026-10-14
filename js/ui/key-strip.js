@@ -27,7 +27,7 @@ class KeyStrip {
 					const drag = this.drag; this.drag = null;
 					if (!drag?.moved) return;
 					if (cancelled) this.panel.setKeys(drag.layer, drag.entry, drag.keys, { commit: false, rollback: true, at: drag.at });
-					else if (JSON.stringify(drag.keys) !== JSON.stringify(GlitterAnimation.normalizeKeys(drag.entry.keys))) this.panel.editor.saveState('Retime motion key');
+					else if (!isSameData(drag.keys, GlitterAnimation.normalizeKeys(drag.entry.keys))) this.panel.editor.saveState('Retime motion key');
 					this.update();
 				}
 			});
@@ -88,7 +88,7 @@ class KeyStrip {
 		this.menu?.close(); this.menuHost?.remove();
 		this.panel.setKeySelection(entry, Number(button.dataset.keyAt));
 		const key = GlitterAnimation.normalizeKeys(entry.keys)[this.panel.keyIndex(entry)];
-		const menu = document.createElement('div'); menu.className = 'app-menu-panel'; menu.hidden = true; menu.setAttribute('role', 'menu');
+		const menu = buildMenuPanel();
 		menu.append(buildMenuLabel('Outgoing easing'), ...ANIMATION_EASING_OPTIONS.map(option => {
 			const item = buildMenuItem({ label: option.label, current: true, run: () => {
 				if (!this.panel.canEditKeys(layer, entry)) return;

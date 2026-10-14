@@ -187,7 +187,7 @@ const initDocumentModalNavigation = (modal) => {
 		}
 
 		const matches = searchable.filter(record => record.normalized.includes(query));
-		searchStatus.textContent = `${matches.length} ${matches.length === 1 ? 'match' : 'matches'}`;
+		searchStatus.textContent = `${formatCount(matches.length, 'match', 'matches')}`;
 
 		if (matches.length === 0) {
 			const empty = document.createElement('div');

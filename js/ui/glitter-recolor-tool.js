@@ -269,7 +269,7 @@ class GlitterRecolorController {
 			this.buildFrames();
 			this.history = [this.snapshot()];
 			this.historyIndex = 0;
-			this.initial = JSON.stringify(this.snapshot());
+			this.initial = this.snapshot();
 			this.playing = !PREFERENCES.get('reduceMotion');
 			await this.editor.modalManager.open('glitterRecolorModal');
 			this.sync();
@@ -470,7 +470,7 @@ class GlitterRecolorController {
 		return { colors: { ...this.session.colors }, name: this.byId('recolorName').value };
 	}
 	commit() {
-		if (!this.session || JSON.stringify(this.snapshot()) === JSON.stringify(this.history[this.historyIndex])) return;
+		if (!this.session || isSameData(this.snapshot(), this.history[this.historyIndex])) return;
 		this.history.splice(this.historyIndex + 1);
 		this.history.push(this.snapshot());
 		this.historyIndex++;
@@ -588,7 +588,7 @@ class GlitterRecolorController {
 	}
 	async confirmDiscard() {
 		if (this.saving || this.confirming) return false;
-		if (!this.session || (!this.pending() && JSON.stringify(this.snapshot()) === this.initial)) return true;
+		if (!this.session || (!this.pending() && isSameData(this.snapshot(), this.initial))) return true;
 		return this.confirm({
 			title: 'Discard recolor?',
 			message: 'Your unsaved color changes will be lost.',

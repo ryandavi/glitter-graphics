@@ -51,7 +51,7 @@ async function importSvgFile(editor, file, options = {}) {
 		editor.requestPreviewUpdate();
 		editor.saveState('Import SVG');
 		editor.updateExportActionUI();
-		editor.updateStatus(merged ? 'SVG imported as one compound path to fit the layer limit; the first paint is used.' : `SVG imported as ${items.length} path ${items.length === 1 ? 'layer' : 'layers'}.`);
+		editor.updateStatus(merged ? 'SVG imported as one compound path to fit the layer limit; the first paint is used.' : `SVG imported as ${formatCount(items.length, 'path layer')}.`);
 		return true;
 	} finally { done(); }
 }

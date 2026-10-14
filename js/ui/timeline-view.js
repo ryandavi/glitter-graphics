@@ -126,10 +126,16 @@ const TimelineView = {
 		return `Ends ${formatSeconds(time.progress * row.exportCycleMs)} into a ${formatSeconds(row.exportCycleMs)} cycle, so it jumps when the loop restarts.`;
 	},
 
+	exportNote(rowOrSource, analysis) {
+		const period = rowOrSource.cycleMs ?? rowOrSource.naturalPeriod;
+		const resolved = rowOrSource.exportCycleMs ?? analysis?.resolvedPeriod ?? period;
+		return Math.abs(resolved - period) > 0.01 ? `. Export uses ${formatSeconds(resolved)}.` : '';
+	},
+
 	barTitle(row, loopMs) {
 		let text = `${row.label}: ${this.rowInfo(row)}`;
 		const body = this.bodyDrag(row, false);
-		if (row.exportCycleMs !== row.cycleMs) text += `. Export uses ${formatSeconds(row.exportCycleMs)}.`;
+		text += this.exportNote(row);
 		if (!row.closes) text += ` ${TimelineView.seamTitle(row, loopMs)}`;
 		if (body === 'move') text += row.can.phase ? ' Drag to move it. Alt-drag to slip the motion inside it.' : ' Drag to move it.';
 		else if (body === 'slip') text += ' Drag to slip the motion inside it.';
@@ -327,13 +333,16 @@ const TimelineView = {
 	},
 	// The start of the output frame nearest a moment: where a playhead snaps.
 	nearestFrameStart(frameStarts, ms) {
-		return frameStarts.reduce((best, start) => (Math.abs(start - ms) < Math.abs(best - ms) ? start : best), frameStarts.length ? frameStarts[0] : ms);
+		if (!frameStarts.length) return ms;
+		const index = Math.max(0, indexAtOrBefore(frameStarts, ms, 0));
+		const next = frameStarts[index + 1];
+		return next !== undefined && Math.abs(next - ms) < Math.abs(frameStarts[index] - ms) ? next : frameStarts[index];
 	},
 	// One output frame on from a moment, or back. Stepping back from inside a
 	// frame lands on that frame's own start first. Both directions wrap.
 	stepFrame(frameStarts, ms, direction) {
 		if (!frameStarts.length) return ms;
-		const index = Math.max(0, frameStarts.findLastIndex(start => start <= ms + 1e-6));
+		const index = Math.max(0, indexAtOrBefore(frameStarts, ms));
 		if (direction < 0 && ms - frameStarts[index] > 1e-6) return frameStarts[index];
 		return frameStarts[(index + direction + frameStarts.length) % frameStarts.length];
 	},

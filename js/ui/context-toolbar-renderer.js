@@ -358,7 +358,7 @@ class ContextToolbarRenderer {
 	buildMenu(trigger, items, bindTrigger = true) {
 		const root = document.createElement('div'); root.className = 'app-menu app-menu-popover';
 		trigger.before(root); root.appendChild(trigger);
-		const panel = document.createElement('div'); panel.className = 'app-menu-panel'; panel.hidden = true;
+		const panel = buildMenuPanel();
 		root.appendChild(panel);
 		trigger.setAttribute('aria-haspopup', 'menu');
 		trigger.setAttribute('aria-expanded', 'false');

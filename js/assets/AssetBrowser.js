@@ -701,7 +701,7 @@ class AssetBrowser {
 		}
 
 		card.querySelector('.category-card-name').textContent = category.name;
-		card.querySelector('.category-card-count').textContent = `${count} ${count === 1 ? 'item' : 'items'}`;
+		card.querySelector('.category-card-count').textContent = `${formatCount(count, 'item')}`;
 		card.title = `${category.name} (${count})`;
 		this.contentManager.customizeCollectionCard?.(card, category);
 
@@ -739,7 +739,7 @@ class AssetBrowser {
 		// Update header
 		const query = this.contentManager.activeFilters.search;
 		const resultCount = this.getFilteredItems().length;
-		const line = AssetSetHeader.createTitleLine(`${resultCount} result${resultCount === 1 ? '' : 's'}${query ? ` for “${query}”` : ''}`);
+		const line = AssetSetHeader.createTitleLine(`${formatCount(resultCount, 'result')}${query ? ` for “${query}”` : ''}`);
 		this.setHeader.element.replaceChildren(line);
 		this.setHeader.element.setAttribute('aria-live', 'polite');
 		this.setHeader.element.hidden = false;
