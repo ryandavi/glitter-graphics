@@ -712,6 +712,7 @@ class TimelineDock {
 		const manager = this.editor.layerManager;
 		bindListReorder(this.body, {
 			item: '.timeline-group', handle: '.timeline-group-header .list-row-handle',
+			rowIds: row => [row.dataset.layerId],
 			ids: row => manager.isLayerSelected(row.dataset.layerId) ? [...manager.selectedLayerIds] : [row.dataset.layerId],
 			canDrag: (row, event) => this.available && event.target.closest('.timeline-group-header')?.parentElement === row && canEditLayerInStack(manager.getLayerById(row.dataset.layerId)),
 			resolve: ({ ids, target, place }) => {
@@ -725,7 +726,7 @@ class TimelineDock {
 
 	buildGroup(group) {
 		const node = buildElement('timeline-group'); node.dataset.layerId = group.layerId;
-		node.classList.toggle('is-collapsed', Boolean(this.collapsed.get(group.layerId)));
+		node.classList.toggle('is-collapsed', Boolean(group.rows.length && this.collapsed.get(group.layerId)));
 		node.classList.toggle('is-hidden', !group.visible); node.classList.toggle('is-locked', group.locked);
 		const layer = this.editor.layerManager.getLayerById(group.layerId);
 		const header = buildElement('timeline-group-header');
@@ -738,7 +739,7 @@ class TimelineDock {
 			chevron.querySelector('use').setAttribute('href', collapsed ? '#icon-chevron-right' : '#icon-chevron-down');
 		};
 		chevron.addEventListener('click', () => {
-			if (!this.available) return;
+			if (!this.available || chevron.disabled) return;
 			const collapsed = !node.classList.contains('is-collapsed');
 			this.collapsed.set(group.layerId, collapsed); node.classList.toggle('is-collapsed', collapsed); syncChevron();
 			if (this.keyLane.host?.closest('.timeline-group') === node) {
@@ -746,9 +747,10 @@ class TimelineDock {
 				else { this.keyLane.syncState(); this.keyLane.paint(this.editor.animationTicker.getPlayheadTime()); }
 			}
 		});
-		syncChevron();
+		node._syncChevron = syncChevron;
 		const track = buildElement('timeline-track timeline-group-track');
 		header.append(label, track); node.appendChild(header);
+		this.syncGroupChevron(node, group);
 		const rows = buildElement('timeline-group-rows');
 		this.reconcileRows(rows, group);
 		node.appendChild(rows);
@@ -768,10 +770,19 @@ class TimelineDock {
 	}
 
 
+	syncGroupChevron(node, group) {
+		const empty = !group.rows.length, chevron = node.querySelector('.timeline-group-chevron');
+		chevron.disabled = empty; chevron.setAttribute('aria-disabled', String(empty)); chevron.classList.toggle('is-empty', empty);
+		if (empty) { this.collapsed.delete(group.layerId); node.classList.remove('is-collapsed'); }
+		node._syncChevron();
+		if (empty) chevron.removeAttribute('aria-expanded');
+	}
+
 	reuseGroup(node, group) {
 		node.classList.toggle('is-hidden', !group.visible); node.classList.toggle('is-locked', group.locked);
 		syncLayerRow(node.querySelector('.timeline-group-label'), this.editor.layerManager.getLayerById(group.layerId));
 		node.querySelector('.timeline-group-chevron').setAttribute('aria-label', `Toggle ${group.name} timeline rows`);
+		this.syncGroupChevron(node, group);
 		this.reconcileRows(node.querySelector('.timeline-group-rows'), group);
 		this.layoutGroup(node, group);
 		return node;
@@ -805,6 +816,7 @@ class TimelineDock {
 		row.curve = this.resolveCurve(row);
 		const node = buildElement('timeline-row'); node.dataset.sourceKey = row.key;
 		node.classList.toggle('is-inactive', !row.source);
+		node.classList.toggle('has-motion', Boolean(row.animation));
 		if (row.animation) node.dataset.motionIndex = TimelineView.motionIndex(row);
 		this.rowNodesByKey.set(String(row.key), node);
 		const select = () => {

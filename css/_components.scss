@@ -569,16 +569,25 @@ input.color-hex-input {
 	&.visible { opacity: 1; }
 }
 
-.list-row.is-dragging { opacity: var(--opacity-dragging); }
+.list-row.is-dragging, .timeline-group.is-dragging > .timeline-group-header { opacity: var(--opacity-dragging); }
 .list-row.is-drop-target { outline: 2px solid var(--color-accent); }
 
-.layer-item, .animation-stack-item, .auto-glitter-match {
-	> .list-row-handle { display: none; }
-	&:focus-within > .list-row-handle { display: flex; }
+.is-reordering, .is-reordering * {
+	-webkit-user-select: none;
+	user-select: none;
+	-webkit-touch-callout: none;
+}
+
+.list-row, .timeline-row {
+	--list-handle-opacity: 0;
+	--list-handle-disabled-opacity: 0;
+	&:is(:hover, :focus-within, .selected, .active, .is-dragging) { --list-handle-opacity: 1; }
+	&:hover { --list-handle-disabled-opacity: var(--opacity-disabled); }
 }
 
 .list-row-handle {
 	display: flex;
+	opacity: var(--list-handle-opacity, 0);
 	width: 16px;
 	height: var(--list-row-media);
 	align-items: center;
@@ -595,7 +604,11 @@ input.color-hex-input {
 	&:active { cursor: grabbing; }
 	&:hover:not(:disabled) { color: var(--color-text-primary); }
 	&:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 1px; }
-	&:disabled { opacity: var(--opacity-disabled); cursor: default; }
+	&:disabled { opacity: var(--list-handle-disabled-opacity, 0); cursor: default; }
+	@media (hover: none), (pointer: coarse) {
+		opacity: 1;
+		&:disabled { opacity: var(--opacity-disabled); }
+	}
 }
 
 // One reorder language across floating context bars and sortable rows.

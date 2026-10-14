@@ -117,7 +117,8 @@
 	}
 
 	.layer-item, .animation-stack-item, .auto-glitter-match {
-		> .list-row-handle,
+		> .list-row-handle { opacity: 1; }
+		> .list-row-handle:disabled { opacity: var(--opacity-disabled); }
 		.list-row-action.goto-glitter { display: flex; }
 	}
 

@@ -106,6 +106,7 @@ class AssetBrowserRail {
 			group.appendChild(option);
 		});
 		this.field.replaceChildren(...nodes);
+		enableSelectPreviews(this.field);
 		this.field.disabled = !entries.length;
 
 		// A set's parent is its style or creator; theirs is home, where there is one.

@@ -284,8 +284,8 @@ async function verifyTimingModel() {
 			getLayerFillSlot(layer).mode = 'solid';
 			layer.animations = [GlitterAnimation.normalizeAnimation({ type: 'rotate', periodMs: 1000, turns: 1, fillMode: 'none' })];
 			e.animationPanel.load(layer);
-			const forever = document.getElementById('shapeAnimIterationsForever');
-			forever.checked = false; forever.dispatchEvent(new Event('change', { bubbles: true }));
+			const forever = document.getElementById('shapeAnimPlaysTimes');
+			forever.checked = true; forever.dispatchEvent(new Event('change', { bubbles: true }));
 			const input = document.getElementById('shapeAnimIterations');
 			input.value = '2.5'; input.dispatchEvent(new Event('change', { bubbles: true }));
 			const count = layer.animations[0].iterations;

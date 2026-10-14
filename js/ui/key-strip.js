@@ -100,10 +100,14 @@ class KeyStrip {
 function buildEasingCurve(easing, steps) {
 	const fn = GlitterEasing.easingFn(easing, { steps });
 	const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-	svg.classList.add('easing-curve'); svg.setAttribute('viewBox', '0 -10 100 120'); svg.setAttribute('aria-hidden', 'true');
+	svg.classList.add('icon'); svg.setAttribute('viewBox', '0 -10 100 120'); svg.setAttribute('aria-hidden', 'true');
 	const line = document.createElementNS(svg.namespaceURI, 'polyline');
 	line.setAttribute('points', Array.from({ length: CONFIG.ui.timeline.curveSamples + 1 }, (_, i) => {
 		const p = i / CONFIG.ui.timeline.curveSamples; return `${p * 100},${100 - fn(p) * 100}`;
 	}).join(' '));
+	line.setAttribute('fill', 'none'); line.setAttribute('stroke', 'currentColor');
+	line.setAttribute('stroke-width', document.getElementById('icon-crop').getAttribute('stroke-width'));
+	line.setAttribute('vector-effect', 'non-scaling-stroke');
+	line.setAttribute('stroke-linecap', 'round'); line.setAttribute('stroke-linejoin', 'round');
 	svg.appendChild(line); return svg;
 }

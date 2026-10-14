@@ -27,7 +27,7 @@
 	> input[type="text"],
 	> .input-unit,
 	> textarea,
-	> .animation-select-stepper { grid-column: 2 / -1; }
+	> .select-stepper { grid-column: 2 / -1; }
 
 	> input[type="color"] { justify-self: end; }
 }
@@ -78,7 +78,7 @@
 	> select,
 	> .glitter-source,
 	> textarea,
-	> .animation-select-stepper {
+	> .select-stepper {
 		grid-area: 2 / 1 / 3 / 4;
 		margin-inline: 0;
 	}
@@ -260,4 +260,22 @@
 	width: auto;
 	max-width: calc(100% - var(--property-gutter) * 2);
 	margin-inline: var(--property-gutter);
+}
+
+.select-stepper {
+	display: flex;
+	align-items: center;
+	flex-wrap: nowrap;
+	gap: var(--spacing-xs);
+
+	> select { flex: 1 1 auto; min-width: 0; }
+
+	// Match the select's own box so prev/next read as part of the same
+	// control instead of a taller/shorter pair riding beside it.
+	> button {
+		flex: 0 0 auto;
+		width: var(--control-height);
+		height: var(--control-height);
+		padding: 0;
+	}
 }

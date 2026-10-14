@@ -327,3 +327,12 @@
 	@include swatch-unset-fill($important: true);
 	opacity: 0.55;
 }
+
+.property-object-card {
+	padding-block: var(--spacing-base);
+	display: flex;
+	flex-direction: column;
+	gap: var(--property-set-gap);
+	--property-gutter: var(--spacing-base);
+	> .property-object-title { padding-inline: var(--property-gutter); font-weight: var(--font-weight-semibold); }
+}

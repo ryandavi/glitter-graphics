@@ -40,7 +40,13 @@ async function verifyTimelineGestures(browser) {
 				const node = dock.body.querySelector(`[data-layer-id="${window.timelineFixtureId}"] .timeline-row`);
 				const track = (kind === 'loop' ? dock.rulerTrack : node.querySelector('.timeline-track')).getBoundingClientRect();
 				const target = (kind === 'loop' ? dock.rulerTrack.querySelector('.timeline-loop-end') : node.querySelector(kind === 'body' ? '.timeline-bar' : kind === 'period' ? '.timeline-period-notch' : `.timeline-bar-handle.is-${kind}`)).getBoundingClientRect();
-				const x = kind === 'body' && !grab ? target.left + Math.min(30, target.width / 2) : target.left + target.width / 2;
+				let x = target.left + target.width / 2;
+				if (kind === 'body' && !grab) {
+					const view = dock.body.getBoundingClientRect(), left = Math.max(target.left, view.left), right = Math.min(target.right, view.right);
+					const bar = node.querySelector('.timeline-bar'), y = target.top + target.height / 2;
+					x = [0.5, 0.75, 0.25].map(share => left + (right - left) * share).find(candidate => document.elementFromPoint(candidate, y)?.closest('[data-drag]') === bar);
+					if (x == null) throw new Error('No unobstructed timing-bar body for dragging');
+				}
 				return { x, y: target.top + target.height / 2, to: (delta ? x : track.left) + TimelineView.timeToX(time, dock.scale) };
 			}, { kind, time, delta, grab });
 			if (alt) await page.keyboard.down('Alt');

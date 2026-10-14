@@ -298,6 +298,8 @@
 		font-weight: var(--font-weight-semibold);
 	}
 	.timeline-group.is-collapsed .timeline-row { display: none; }
+	.timeline-group-chevron.is-empty { opacity: var(--opacity-disabled); pointer-events: none; cursor: default; }
+	.timeline-row.has-motion .timeline-row-label { padding-left: var(--spacing-sm); }
 
 	.timeline-row {
 		position: relative;
@@ -514,7 +516,20 @@
 			border-right: 0;
 			background: none;
 		}
-		// The label sits inside its bar, on the bar's own fill.
+		// Motion controls sit above the bar so even a short bar keeps its drag body.
+		.timeline-row.has-motion {
+			min-height: calc(2 * var(--timeline-row-height));
+			> .timeline-track { align-self: end; height: var(--timeline-row-height); }
+			> .timeline-row-label {
+				left: 0;
+				top: 0;
+				width: 100%;
+				max-width: 100%;
+				height: var(--timeline-row-height);
+				> .list-row-content { pointer-events: auto; }
+			}
+		}
+		// Authored source names sit inside their bar, on its own fill.
 		.timeline-row-label {
 			position: absolute;
 			left: var(--timeline-bar-left);
@@ -526,6 +541,7 @@
 			background: none;
 			color: var(--color-text-primary);
 			pointer-events: none;
+			> .list-row-handle, > .timeline-motion-enabled { pointer-events: auto; }
 		}
 	}
 }

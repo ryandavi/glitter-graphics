@@ -39,7 +39,7 @@ const { openApp } = require('../lib/app');
 			}, { x: box.x + box.width / 2, y: box.y + box.height / 2 }))}`);
 			await page.mouse.move(box.x + box.width / 2 + dx, box.y + box.height / 2 + dy, { steps: 6 });
 			assert(await page.evaluate(() => Boolean(editor.timelineKeyRecording.drag?.moved && editor.timelineKeyRecording.active)), 'The recording transaction stays active during movement');
-			assert(await page.evaluate(() => JSON.stringify(editor.layerManager.getActiveLayer().transform) === editor.timelineKeyRecording.restToken), 'A live gesture never writes the rest transform');
+			assert(await page.evaluate(() => JSON.stringify(editor.layerManager.getActiveLayer().transform) === JSON.stringify(editor.timelineKeyRecording.restToken)), 'A live gesture never writes the rest transform');
 			if (escape) await page.keyboard.press('Escape');
 			if (blur) await page.evaluate(() => window.dispatchEvent(new Event('blur')));
 			if (cancel) await page.evaluate(() => {

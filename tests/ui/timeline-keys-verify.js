@@ -101,7 +101,7 @@ const { openApp } = require('../lib/app');
 		let menuBefore = await state();
 		await page.evaluate(() => {
 			const trigger = document.getElementById('shapeAnimAdd'); trigger.click();
-			[...document.querySelectorAll('.app-menu-panel.is-fixed-menu:not([hidden]) .app-menu-item')].find(button => button.textContent === 'Custom').click();
+			[...document.querySelectorAll('.app-menu-panel.is-fixed-menu:not([hidden]) .app-menu-item')].find(button => button.textContent === 'Custom keys').click();
 		});
 		await ready();
 		assert.strictEqual(await page.evaluate(() => editor.layerManager.getActiveLayer().animations.length), 2);

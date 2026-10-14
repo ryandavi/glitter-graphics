@@ -128,6 +128,10 @@ function checkSection(section, where, layerType = null, keys = null) {
 	['before', 'sets', 'advanced'].forEach((key) => {
 		(section[key] || []).forEach((set, index) => checkSet(set, `${name} ${key}[${index}]`));
 	});
+	(section.cards || []).forEach((card, index) => {
+		assert(card.id && card.title && Array.isArray(card.sets), `${name} card ${index}: needs id, title and sets`);
+		card.sets.forEach((set, setIndex) => checkSet(set, `${name} card ${index} set ${setIndex}`));
+	});
 	if (section.before) assert.strictEqual(section.kind, 'paintSlot', `${name}: only a paintSlot has "before" sets`);
 	// One disclosure per section: `advanced` is the only way to write one, and
 	// a set of buttons or a second paint cannot hide another inside it.

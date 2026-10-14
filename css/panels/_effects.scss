@@ -272,28 +272,6 @@
 	}
 }
 
-// The animation preset picker: prev/next flank the select in one grid cell
-// as a non-wrapping flex row (the select fills whatever space the two fixed
-// arrow buttons leave, same as every other select in the panel), instead of
-// the stepper living below as a separate action row.
-.animation-select-stepper {
-	display: flex;
-	align-items: center;
-	flex-wrap: nowrap;
-	gap: var(--spacing-xs);
-
-	> select { flex: 1 1 auto; min-width: 0; }
-
-	// Match the select's own box so prev/next read as part of the same
-	// control instead of a taller/shorter pair riding beside it.
-	> button {
-		flex: 0 0 auto;
-		width: var(--control-height);
-		height: var(--control-height);
-		padding: 0;
-	}
-}
-
 .animation-stack {
 	position: relative;
 	display: flex;
@@ -323,10 +301,9 @@
 	&[data-shape="square"] { transform: translate(-50%, -50%); }
 }
 .animation-module select[id$="AnimKeySelect"] { display: none; }
-.easing-curve { width: var(--control-height); height: var(--control-height); flex: 0 0 auto; }
-.easing-curve polyline { fill: none; stroke: var(--color-accent); stroke-width: 2; }
 .animation-timing-strip {
-	position: relative;
+	padding: var(--spacing-xs);
+	.animation-timing-track { position: relative; height: 100%; }
 	height: var(--control-height);
 	background: var(--color-bg-tertiary);
 	border: 1px solid var(--color-border);

@@ -16,6 +16,13 @@ function buildIconButton({ className = 'btn-icon-simple icon-wrapper sm', label 
 	return button;
 }
 
+function enableSelectPreviews(select) {
+	select.classList.add('preview-select');
+	const button = document.createElement('button'); button.type = 'button';
+	button.appendChild(document.createElement('selectedcontent'));
+	select.prepend(button);
+}
+
 const KEYED_CHILDREN = new WeakMap();
 
 function reconcileKeyedChildren(container, items, { key, build, reuse }) {

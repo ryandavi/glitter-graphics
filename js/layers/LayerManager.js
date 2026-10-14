@@ -40,6 +40,7 @@ class LayerManager {
 
 		bindListReorder(this.layersListContainer, {
 			item: '.layer-item', handle: '.list-row-handle',
+			rowIds: row => [row.dataset.layerId],
 			ids: row => this.isLayerSelected(row.dataset.layerId) ? [...this.selectedLayerIds] : [row.dataset.layerId],
 			canDrag: row => canEditLayerInStack(this.getLayerById(row.dataset.layerId)),
 			resolve: ({ ids, target, place }) => {

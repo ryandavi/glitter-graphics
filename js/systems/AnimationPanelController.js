@@ -722,7 +722,7 @@ class AnimationPanelController {
 			const append = motionType => this.addAnimation(layer, motionType);
 			if (!isFeatureAvailable('timeline')) { append(CONFIG.tools.animation.defaultType); return; }
 			const trigger = this._id(prefix, 'Add');
-			openActionMenu({ root: trigger.closest('.app-menu'), trigger, actions: [CONFIG.tools.animation.defaultType, 'custom'].map(motionType => ({ label: GlitterAnimation.MOTION_REGISTRY[motionType].label, run: () => append(motionType) })) });
+			openActionMenu({ root: trigger.closest('.app-menu'), trigger, actions: [CONFIG.tools.animation.defaultType, 'custom'].map(motionType => ({ label: motionType === 'custom' ? 'Custom keys' : 'Preset motion', run: () => append(motionType) })) });
 		});
 		this._id(prefix, 'Remove')?.addEventListener('click', () => {
 			const layer = this._active(type); if (layer) this.deleteAnimation(layer);
@@ -789,13 +789,13 @@ class AnimationPanelController {
 			const animation = this._selected(layer);
 			if (!animation) return;
 			const spec = FIELDS.animIterations;
-			animation.iterations = this._id(prefix, 'IterationsForever').checked
+			animation.iterations = this._id(prefix, 'PlaysForever').checked
 				? Infinity
 				: Number(clampNumber(this._id(prefix, 'Iterations').valueAsNumber, spec.min, spec.max, spec.value).toFixed(2));
 			this._render(layer, true);
 		};
 		this._id(prefix, 'Iterations')?.addEventListener('change', applyRepeats);
-		this._id(prefix, 'IterationsForever')?.addEventListener('change', applyRepeats);
+		this._id(prefix, 'Plays')?.addEventListener('change', applyRepeats);
 		for (const suffix of ['Steps', 'KeySteps']) this._id(prefix, suffix)?.addEventListener('change', (event) => {
 			const layer = this._active(type);
 			const animation = this._selected(layer);
@@ -829,9 +829,13 @@ class AnimationPanelController {
 		// so there's no separate content wrapper to toggle by hand here.
 		syncPanelEffectToggle(this._id(prefix, 'Enabled'), enabled);
 		this._syncSummary(prefix, layer.animations, this._selected(layer));
-		this._loadKeyControls(prefix, layer, this._selected(layer));
-		if (!layer.animations?.length) return;
-		const data = GlitterAnimation.normalizeAnimation(this._selected(layer));
+		const data = GlitterAnimation.normalizeAnimation(this._selected(layer) || { type: CONFIG.tools.animation.defaultType });
+		this._id(prefix, 'Enabled').closest('.animation-module').classList.toggle('is-empty', !layer.animations?.length);
+		this._id(prefix, 'StackEmpty').hidden = Boolean(layer.animations?.length);
+		this._id(prefix, 'SelectedCard').hidden = !layer.animations?.length;
+		this._id(prefix, 'SelectedCard').parentElement.hidden = !layer.animations?.length;
+		this._id(prefix, 'SelectedTitle').textContent = GlitterAnimation.describe(data).name;
+		this._loadKeyControls(prefix, layer, data);
 		this._renderStack(prefix, layer);
 		const anchorControl = this._id(prefix, 'Anchor');
 		const anchorRow = anchorControl?.closest('.property-row');
@@ -856,8 +860,9 @@ class AnimationPanelController {
 		const iterations = this._id(prefix, 'Iterations');
 		const forever = !Number.isFinite(data.iterations);
 		if (iterations) { iterations.value = forever ? FIELDS.animIterations.value : data.iterations; iterations.disabled = forever; }
-		const repeatForever = this._id(prefix, 'IterationsForever');
-		if (repeatForever) repeatForever.checked = forever;
+		this._id(prefix, 'PlaysForever').checked = forever;
+		this._id(prefix, 'PlaysTimes').checked = !forever;
+		this._id(prefix, 'IterationsRow').hidden = forever;
 		const steps = this._id(prefix, 'Steps');
 		if (steps) steps.value = data.steps;
 		GlitterAnimation.ANIMATION_CONTROLS.filter((control) => control.field).forEach(({ suffix, key: field, field: spec, scale }) => {
@@ -894,7 +899,8 @@ class AnimationPanelController {
 		this.loadTimingStrip(prefix, layer);
 		for (const [suffix, easing] of [['Easing', data.easing], ['KeyEasing', GlitterAnimation.normalizeKeys(data.keys)[this.keyIndex(this._selected(layer))]?.easing || 'linear']]) {
 			const control = this._id(prefix, suffix); if (!control) continue;
-			control.parentElement.querySelector('.easing-curve')?.remove(); control.after(buildEasingCurve(easing, data.steps));
+			for (const option of control.options) option.querySelector('svg')?.replaceWith(buildEasingCurve(option.value, data.steps));
+			control.value = easing;
 		}
 	}
 
@@ -902,7 +908,8 @@ class AnimationPanelController {
 		const host = this._id(prefix, 'TimingStrip'); if (!host) return;
 		const model = TimelineView.buildModel(this.editor.loopEstimate, this.editor.layers, this.editor);
 		const row = model.groups.find(group => group.layerId === layer.id)?.rows.find(row => TimelineView.motionIndex(row) === this._selectedIndex(layer));
-		host.replaceChildren(); host.hidden = !row || !model.loopMs; if (host.hidden) return;
+		host.replaceChildren(); host.parentElement.hidden = !row || !model.loopMs; if (host.parentElement.hidden) return;
+		const track = buildElement('animation-timing-track'); host.appendChild(track);
 		const available = isFeatureAvailable('timeline'), bar = document.createElement(available ? 'button' : 'div');
 		if (available) { bar.type = 'button'; bar.addEventListener('click', async () => { PREFERENCES.set('timelineOpen', true); const dock = await this.editor.ensureTimelineDock(); dock.open(); dock.selectMotion(layer.id, this._selectedIndex(layer)); }); }
 		bar.className = 'timeline-bar animation-timing-bar'; bar.title = TimelineView.barTitle(row, model.loopMs);
@@ -910,7 +917,7 @@ class AnimationPanelController {
 		bar.style.left = `${box.left}%`; bar.style.width = `${Math.min(100 - box.left, box.width)}%`;
 		bar.style.setProperty('--cycle-share', `${row.exportCycleMs / Math.max(1, row.endMs - row.startMs) * 100}%`);
 		bar.classList.toggle('is-seam', !row.closes); if (!row.closes) bar.append(createIcon('triangle-exclamation'));
-		host.title = `Loop ${formatSeconds(model.loopMs)}`; host.append(bar);
+		host.title = `Loop ${formatSeconds(model.loopMs)}`; track.append(bar);
 	}
 
 	_anchorDefinition(animation) {

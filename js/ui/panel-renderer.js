@@ -1158,6 +1158,15 @@ function buildPanelSection(spec, schema) {
 	const card = buildSectionShell(spec, schema);
 	const body = card.querySelector(':scope > .property-card-body');
 	(spec.sets || []).forEach((set) => body.appendChild(buildPanelSet(set, schema)));
+	for (const specCard of spec.cards || []) {
+		const surface = addPanelClasses(buildElement('inset-surface property-object-card'), specCard.classes);
+		surface.id = specCard.id; surface.setAttribute('role', 'group');
+		const title = buildElement('property-object-title', specCard.title);
+		title.id = specCard.titleId || `${specCard.id}Title`; surface.setAttribute('aria-labelledby', title.id);
+		surface.appendChild(title);
+		for (const set of specCard.sets) surface.appendChild(buildPanelSet(set, schema));
+		const row = buildElement('property-row is-control'); row.appendChild(surface); body.appendChild(row);
+	}
 	if (spec.advanced?.length) body.appendChild(buildAdvancedDisclosure({ id: spec.advancedId, sets: spec.advanced }, schema));
 	return card;
 }
@@ -1647,6 +1656,14 @@ function buildPanelItemContent(item, schema) {
 				}
 				parent.appendChild(option);
 			});
+			if (item.optionPreview) {
+				enableSelectPreviews(select);
+				for (const option of select.options) {
+					const name = buildElement('asset-browser-rail-name', option.textContent, 'span');
+					const preview = item.optionPreview(option.value); preview.classList.add('asset-browser-rail-preview');
+					option.replaceChildren(preview, name);
+				}
+			}
 			if (!item.label) return select;
 			// `stepper`: compact icon-only prev/next buttons flanking the select
 			// (prev on the left, next on the right) so cycling this field's options
@@ -1656,7 +1673,7 @@ function buildPanelItemContent(item, schema) {
 				const buildStepButton = (action) => {
 					const button = document.createElement('button');
 					button.type = 'button';
-					button.className = 'btn-icon-simple icon-wrapper';
+					button.className = 'btn-icon-simple icon-wrapper sm';
 					button.id = action.id;
 		if (action.command) button.addEventListener('click', () => COMMANDS[action.command]?.run(window.editor));
 					if (action.title) button.title = action.title;
@@ -1664,7 +1681,7 @@ function buildPanelItemContent(item, schema) {
 					button.appendChild(createIcon(action.icon));
 					return button;
 				};
-				control = buildElement('animation-select-stepper');
+				control = buildElement('select-stepper');
 				if (item.stepper.prev) control.appendChild(buildStepButton(item.stepper.prev));
 				control.appendChild(select);
 				if (item.stepper.next) control.appendChild(buildStepButton(item.stepper.next));

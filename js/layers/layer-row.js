@@ -1,8 +1,8 @@
 'use strict';
 
 const LAYER_ROW_PARTS = [
-	{ id: 'chevron', variants: ['timeline'] },
 	{ id: 'handle', variants: ['panel', 'timeline'] },
+	{ id: 'chevron', variants: ['timeline'] },
 	{ id: 'visibility', variants: ['panel', 'timeline'] },
 	{ id: 'clip', variants: ['panel', 'timeline'] },
 	{ id: 'swatch', variants: ['panel', 'timeline'] },

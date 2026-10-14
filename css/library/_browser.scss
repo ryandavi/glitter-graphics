@@ -209,10 +209,11 @@ body:not(.boot-library) #designGalleryContent > :not(.boot-library-loading) { di
 // the same rows as text.
 @supports (appearance: base-select) {
 	@media (min-width: ($mobile-breakpoint + 1px)) {
-		.asset-browser-rail > select {
-			--asset-rail-icon-size: 20px;
+		.asset-browser-rail > select, .preview-select {
+			--asset-rail-icon-size: var(--icon-size-xs);
 			// The customizable select is a flex row; its label sits mid-bar.
 			align-items: center;
+			selectedcontent { display: flex; align-items: center; gap: var(--spacing-sm); }
 
 			&,
 			&::picker(select) { appearance: base-select; }
@@ -289,7 +290,7 @@ body:not(.boot-library) #designGalleryContent > :not(.boot-library-loading) { di
 			image-rendering: pixelated;
 		}
 
-		.asset-browser-rail > select .asset-browser-rail-preview {
+		:is(.asset-browser-rail > select, .preview-select) .asset-browser-rail-preview {
 			flex: 0 0 auto;
 			width: var(--asset-rail-icon-size);
 			height: var(--asset-rail-icon-size);

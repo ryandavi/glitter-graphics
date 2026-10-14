@@ -1,10 +1,10 @@
 'use strict';
 
-const { chromium } = require('playwright');
+const { openApp } = require('../lib/app');
+const path = require('path');
 
 const fs = require('fs');
 
-const APP_URL = process.env.GLITTER_URL || 'http://localhost/glitter/';
 const VIEWPORT = { width: 1280, height: 900 };
 
 function assert(condition, message) {
@@ -65,20 +65,133 @@ async function createStickerLayer(page, label) {
 	}, { layerLabel: label });
 }
 
-(async () => {
-	const browser = await chromium.launch({ headless: true });
-	const context = await browser.newContext({ viewport: VIEWPORT, hasTouch: true });
-	const page = await context.newPage();
-
-	if (process.env.GLITTER_TEST_CSS) await page.route('**/css/style.css*', route => route.fulfill({ body: fs.readFileSync(process.env.GLITTER_TEST_CSS), contentType: 'text/css' }));
-	page.on('console', (message) => {
-		if (message.type() === 'error') {
-			console.error(message.text());
-		}
+async function verifyReorderControls(page) {
+	const sourceRoot = path.join(__dirname, '..', '..', 'js');
+	const sources = fs.readdirSync(sourceRoot, { recursive: true }).filter(file => file.endsWith('.js') && !file.startsWith('dist') && !file.startsWith('vendor'));
+	const references = new Set();
+	for (const file of sources) {
+		const source = fs.readFileSync(path.join(sourceRoot, file), 'utf8');
+		if (!['list-reorder.js', 'layer-row.js'].includes(path.basename(file)) && !source.includes('bindPointerDrag(')) continue;
+		for (const match of source.matchAll(/CONFIG(?:\.[A-Za-z_$][\w$]*)+/g)) references.add(match[0]);
+	}
+	const missing = await page.evaluate(references => references.filter(reference => {
+		let value = CONFIG;
+		for (const key of reference.split('.').slice(1)) value = value?.[key];
+		return value === undefined;
+	}), [...references]);
+	assert(!missing.length, `Undefined drag CONFIG keys: ${missing.join(', ')}`);
+	assert(await page.evaluate(() => CONFIG.ui.gestures.dragThresholdPx > 0), 'Drag threshold must allow clicks');
+	for (const label of ['One', 'Two', 'Three', 'Four', 'Five', 'Six']) await createStickerLayer(page, label);
+	await page.evaluate(async () => {
+		await editor.ensureTimelineDock(); PREFERENCES.set('timelineOpen', true); PREFERENCES.set('timelineHeight', 450);
+		await editor.updateExportDuration();
 	});
+	await page.waitForFunction(() => editor.timelineDock?.model?.groups.length === 7 && !editor.timelineDock.stale);
+	const selection = () => page.evaluate(() => [...editor.layerManager.selectedLayerIds]);
+	const drag = async (container, rows, from, target, place, during) => {
+		const start = await rows.nth(from).locator('.list-row-handle').first().boundingBox(), end = await rows.nth(target).boundingBox();
+		assert(start && end, 'Drag handles and targets must reserve space');
+		await page.mouse.move(start.x + start.width / 2, start.y + start.height / 2); await page.mouse.down();
+		await page.mouse.move(end.x + 70, place === 'above' ? end.y + 1 : end.y + end.height - 1);
+		await page.waitForTimeout(250);
+		const geometry = await container.locator(':scope > .list-insertion-line').evaluate(node => ({ opacity: getComputedStyle(node).opacity, line: node.getBoundingClientRect().toJSON(), list: node.parentElement.getBoundingClientRect().toJSON(), classes: node.className }));
+		assert(await container.locator(':scope > .list-insertion-line').evaluate(node => {
+			const rect = node.getBoundingClientRect(), parent = node.parentElement.getBoundingClientRect();
+			return getComputedStyle(node).opacity === '1' && rect.width > 0 && rect.height > 0 && rect.top >= parent.top && rect.bottom <= parent.bottom;
+		}), `Insertion line must have opacity 1 and a non-zero rectangle inside its list: ${JSON.stringify(geometry)}`);
+		if (during) await during();
+		await page.mouse.up();
+		assert(await page.evaluate(() => window.getSelection().toString() === '' && !document.documentElement.classList.contains('is-reordering')), 'Text selection and reorder state must clear after dragging');
+		await page.evaluate(async () => { await editor.updateExportDuration(); editor.timelineDock.resync(); });
+		await page.waitForTimeout(200);
+	};
+	for (const selector of ['#layersList', '.timeline-body']) {
+		const timeline = selector !== '#layersList', container = page.locator(selector);
+		const rows = container.locator(timeline ? ':scope > .timeline-group' : ':scope > .layer-item');
+		const name = index => rows.nth(index).locator('.layer-name').first();
+		const id = index => rows.nth(index).getAttribute('data-layer-id');
+		await page.evaluate(() => { editor.timelineDock.body.scrollTop = 0; });
+		await page.waitForTimeout(200);
+		await name(0).click(); assert((await selection()).join() === await id(0), `${selector}: plain click selects (${(await selection()).join()}; target ${await id(0)})`);
+		await name(1).click({ modifiers: ['Control'] }); assert((await selection()).length === 2, `${selector}: Ctrl+click adds selection`);
+		await name(3).click({ modifiers: ['Shift'] }); assert((await selection()).length >= 3 && (await selection()).includes(await id(3)), `${selector}: Shift+click selects a range (${(await selection()).join()}; target ${await id(3)})`);
+		await name(4).click(); await page.mouse.move(5, 5); await page.evaluate(() => document.activeElement?.blur());
+		const measure = () => rows.nth(1).evaluate(node => {
+			const row = node.matches('.timeline-group') ? node.querySelector('.layer-item') : node;
+			return { width: row.scrollWidth, left: row.querySelector('.layer-name').getBoundingClientRect().left, gutter: row.querySelector('.list-row-handle').getBoundingClientRect().width };
+		});
+		const before = await measure(); await name(1).hover(); const after = await measure();
+		assert(JSON.stringify(before) === JSON.stringify(after) && before.gutter === 16, `${selector}: hovering must preserve the gutter and name position`);
+		await name(1).click(); await name(2).click({ modifiers: ['Control'] }); await name(3).click({ modifiers: ['Control'] });
+		const selected = await selection(), original = await page.evaluate(() => editor.layers.map(layer => layer.id));
+		await name(2).evaluate(node => { const range = document.createRange(); range.selectNodeContents(node); window.getSelection().addRange(range); });
+		await drag(container, rows, 2, 0, 'above', async () => {
+			const marked = await rows.evaluateAll(nodes => nodes.filter(node => node.classList.contains('is-dragging')).map(node => node.dataset.layerId));
+			assert(marked.length === 3 && selected.every(id => marked.includes(id)), `${selector}: exactly the selected rows must dim`);
+			assert(await name(2).evaluate(node => getComputedStyle(node).userSelect === 'none'), 'Layer names must block text selection during dragging');
+			assert(await page.evaluate(() => window.getSelection().toString() === ''), 'Drag start must clear text selection');
+		});
+		const order = await page.evaluate(() => editor.layers.map(layer => layer.id));
+		assert(order.slice(-3).join() === original.filter(id => selected.includes(id)).join(), `${selector}: selected handle must move all three in order`);
+		const unselected = await id(3), singleBefore = await page.evaluate(() => editor.layers.map(layer => layer.id));
+		await drag(container, rows, 3, 0, 'above', async () => {
+			assert(await rows.evaluateAll(nodes => nodes.filter(node => node.classList.contains('is-dragging')).length) === 1, 'An unselected row must drag alone');
+		});
+		const singleAfter = await page.evaluate(() => editor.layers.map(layer => layer.id));
+		assert(singleAfter.at(-1) === unselected && singleBefore.filter(id => id !== unselected).join() === singleAfter.filter(id => id !== unselected).join(), 'Unselected drag must move only its own layer');
+		// The protected base is the last row; the last movable slot is above it.
+		await page.evaluate(() => editor.layerManager.setSelection([editor.layers.at(-1).id]));
+		await drag(container, rows, 0, 5, 'below');
+		if (timeline) {
+			assert(await rows.nth(0).locator('.timeline-group-chevron').evaluate(node => node.disabled && node.getAttribute('aria-disabled') === 'true' && !node.hasAttribute('aria-expanded') && !node.closest('.timeline-group').classList.contains('is-collapsed')), 'Empty groups must have disabled chevrons and no collapsed state');
+			await rows.nth(0).evaluate(node => { window.reusedGroup = node; });
+			await page.evaluate(async () => { const layer = editor.layerManager.getLayerById(reusedGroup.dataset.layerId); editor.animationPanel.addAnimation(layer); await editor.updateExportDuration(); });
+			assert(await page.evaluate(() => reusedGroup.isConnected && !reusedGroup.querySelector('.timeline-group-chevron').disabled), 'Adding a motion must re-enable the existing group chevron');
+		}
+	}
+	await page.evaluate(() => {
+		const layer = editor.layers[1]; editor.layerManager.setActiveLayer(layer.id);
+		layer.animations = []; editor.animationPanel.load(layer);
+		const card = document.getElementById('stickerAnimSelectedCard');
+		if (!card.hidden || document.getElementById('stickerAnimStackEmpty').hidden) throw new Error('Empty stack must show its empty state');
+		const section = document.getElementById('stickerAnimEnabled').closest('.animation-module');
+		const controls = [...section.querySelectorAll('[id]')];
+		const movement = () => ['Amount', 'Angle', 'Distance', 'Radius', 'Turns', 'Duty', 'OpacityFloor'].map(suffix => document.getElementById(`stickerAnim${suffix}Row`).hidden).join();
+		const emptyRows = movement(), toggle = document.getElementById('stickerAnimEnabled');
+		for (const checked of [true, false, true]) { toggle.checked = checked; toggle.dispatchEvent(new Event('change', { bubbles: true })); }
+		if (emptyRows !== movement() || !controls.every(node => node.isConnected)) throw new Error('Empty and enabled panels must keep the same controls and default row filtering');
+		const times = document.getElementById('stickerAnimPlaysTimes'); times.checked = true; times.dispatchEvent(new Event('change', { bubbles: true }));
+		if (document.getElementById('stickerAnimIterationsRow').hidden || !Number.isFinite(layer.animations[0].iterations)) throw new Error('Times must expose the finite play count');
+		const forever = document.getElementById('stickerAnimPlaysForever'); forever.checked = true; forever.dispatchEvent(new Event('change', { bubbles: true }));
+		if (!document.getElementById('stickerAnimIterationsRow').hidden || layer.animations[0].iterations !== Infinity) throw new Error('Forever must hide the count and store Infinity');
+		// Four rows exercise all insertion slots independently of the Add limit.
+		layer.animations = ['pulse', 'rotate', 'bounce', 'shake'].map(type => GlitterAnimation.normalizeAnimation({ type }));
+		editor.animationPanel.load(layer);
+		if (card.hidden || !document.getElementById('stickerAnimStackEmpty').hidden) throw new Error('Populated stack must show its selected card');
+		if (editor.pickers.flyout !== section.dataset.flyoutKey) editor.pickers.toggleFlyout(section.dataset.flyoutKey);
+		setPanelCardCollapsed(section, false);
+	});
+	const stack = page.locator('#stickerAnimStack'), motions = stack.locator(':scope > .animation-stack-item');
+	await drag(stack, motions, 2, 0, 'above');
+	await drag(stack, motions, 0, 3, 'below');
+	await page.evaluate(async () => { editor.pickers.closeActive(); await editor.updateExportDuration(); editor.timelineDock.resync(); const group = editor.timelineDock.body.querySelector(`[data-layer-id="${editor.layerManager.activeLayerId}"]`); editor.timelineDock.body.scrollTop = group.offsetTop; });
+	await page.waitForTimeout(250);
+	const motionLayerId = await page.evaluate(() => editor.layerManager.activeLayerId);
+	const timelineStack = page.locator(`.timeline-group[data-layer-id="${motionLayerId}"] > .timeline-group-rows`);
+	const timelineMotions = timelineStack.locator(':scope > .timeline-row[data-motion-index]');
+	const alignedHandles = () => timelineStack.evaluate(node => Math.abs(node.parentElement.querySelector('.timeline-group-header .list-row-handle').getBoundingClientRect().left - node.querySelector('.timeline-row .list-row-handle').getBoundingClientRect().left) < 0.1);
+	assert(await alignedHandles(), 'Narrow timeline motion grips must align with the group handle');
+	await drag(timelineStack, timelineMotions, 2, 0, 'above');
+	await drag(timelineStack, timelineMotions, 0, 3, 'below');
+	await page.setViewportSize({ width: 1600, height: 1100 }); await page.waitForTimeout(250);
+	assert(await alignedHandles(), 'Wide timeline motion grips must align with the group handle');
+	await page.evaluate(() => { PREFERENCES.set('timelineOpen', false); editor.pickers.closeActive(); });
+	await page.setViewportSize(VIEWPORT); await page.waitForTimeout(250);
+}
 
-	await page.goto(APP_URL, { waitUntil: 'domcontentloaded' });
-	await page.waitForFunction(() => window.editor != null, null, { timeout: 15000 });
+(async () => {
+	const { browser, context, page } = await openApp({ viewport: VIEWPORT, document: { width: 320, height: 240 } });
+	await verifyReorderControls(page);
 	await loadBlankCanvas(page);
 	await createStickerLayer(page, 'Reorder Target Sticker');
 	await createStickerLayer(page, 'Reorder Test Sticker');
@@ -140,10 +253,11 @@ async function createStickerLayer(page, label) {
 	assert(await page.evaluate(() => editor.layers[0].locked), 'Expected the bottom layer to be locked');
 	await over(base.y + base.height - 1);
 	assert(!await visible(), 'Dropping below a locked bottom layer must be invalid');
-	await page.evaluate(() => { const container = editor.layerManager.layersListContainer; container.style.flex = 'none'; container.style.height = '100px'; container.scrollTop = 25; });
-	const scrolledUpper = await row(0).boundingBox(), scrolledLower = await row(1).boundingBox();
+	const beforeScroll = await over(lowerRect.y + lowerRect.height - 1);
+	await page.evaluate(() => { const container = editor.layerManager.layersListContainer; container.style.flex = 'none'; container.style.height = '180px'; container.scrollTop = 25; });
+	const scrolledUpper = await row(1).boundingBox(), scrolledLower = await row(2).boundingBox();
 	const scrolledPosition = await over(scrolledUpper.y + scrolledUpper.height - 1);
-	assert(Math.abs(scrolledPosition - belowUpper) < 0.01, 'Scrolling must preserve the insertion position in list coordinates');
+	assert(Math.abs(scrolledPosition - beforeScroll) < 0.01, 'Scrolling must preserve the insertion position in list coordinates');
 	assert(Math.abs(await over(scrolledLower.y + 1) - scrolledPosition) < 0.01, 'Scrolled gap has two insertion line positions');
 	await page.evaluate(() => { editor.layerManager.layersListContainer.scrollTop = 0; });
 	const top = await row(0).boundingBox();

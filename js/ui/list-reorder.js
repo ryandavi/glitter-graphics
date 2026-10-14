@@ -6,7 +6,7 @@ function isReordering(container) {
 	return Boolean(LIST_REORDERS.get(container)?.dragging);
 }
 
-function bindListReorder(container, { item, handle, scroller = container, ids, canDrag, drop = 'between', resolve, commit, keyboard = true }) {
+function bindListReorder(container, { item, handle, scroller = container, ids, canDrag, drop = 'between', resolve, commit, keyboard = true, rowIds = ids }) {
 	const existing = LIST_REORDERS.get(container);
 	if (existing) return existing;
 	const state = { dragging: false };
@@ -24,21 +24,23 @@ function bindListReorder(container, { item, handle, scroller = container, ids, c
 		marked?.classList.remove('is-drop-target');
 		marked = null; destination = null;
 	};
+	const preventSelection = event => event.preventDefault();
 	const locate = event => {
-		clearTarget();
+		marked?.classList.remove('is-drop-target');
+		marked = null; destination = null;
 		const bounds = scroller.getBoundingClientRect();
-		if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) return;
+		if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) { clearTarget(); return; }
 		const list = rows();
 		const target = list.find(row => {
 			const rect = row.getBoundingClientRect();
 			return event.clientY < (drop === 'onto' ? rect.bottom : rect.top + rect.height / 2);
 		}) || list.at(-1);
-		if (!target) return;
+		if (!target) { clearTarget(); return; }
 		const rect = target.getBoundingClientRect();
-		if (drop === 'onto' && event.clientY < rect.top) return;
+		if (drop === 'onto' && event.clientY < rect.top) { clearTarget(); return; }
 		const place = drop === 'onto' ? 'onto' : event.clientY < rect.top + rect.height / 2 ? 'above' : 'below';
 		destination = resolve({ ids: draggedIds, target, place });
-		if (!destination) return;
+		if (!destination) { clearTarget(); return; }
 		if (drop === 'onto') { marked = target; target.classList.add('is-drop-target'); return; }
 		const index = list.indexOf(target), adjacent = list[index + (place === 'above' ? -1 : 1)];
 		let y = place === 'above' ? rect.top : rect.bottom;
@@ -46,6 +48,7 @@ function bindListReorder(container, { item, handle, scroller = container, ids, c
 			const neighbor = adjacent.getBoundingClientRect();
 			y = (y + (place === 'above' ? neighbor.bottom : neighbor.top)) / 2;
 		}
+		if (line.parentElement !== container) container.prepend(line);
 		const height = line.getBoundingClientRect().height;
 		const contentY = y - container.getBoundingClientRect().top - container.clientTop + container.scrollTop;
 		line.style.top = `${clampNumber(contentY - height / 2, 0, container.scrollHeight - height)}px`;
@@ -68,16 +71,21 @@ function bindListReorder(container, { item, handle, scroller = container, ids, c
 			if (event.pointerType === 'touch' && !grip) return false;
 			return Boolean(grip || !event.target.closest('button, input, select, textarea, a, [contenteditable]') || event.target.closest('.list-row-content'));
 		},
-		start: event => { dragged = ownRow(event.target); draggedIds = ids(dragged); },
+		start: event => { dragged = ownRow(event.target); draggedIds = ids(dragged); window.getSelection()?.removeAllRanges(); },
 		activate: event => {
 			state.dragging = true;
-			rows().forEach(row => row.classList.toggle('is-dragging', ids(row).some(id => draggedIds.includes(id))));
+			container.classList.add('is-reordering'); document.documentElement.classList.add('is-reordering');
+			window.getSelection()?.removeAllRanges();
+			document.addEventListener('selectstart', preventSelection, true);
+			rows().forEach(row => row.classList.toggle('is-dragging', rowIds(row).some(id => draggedIds.includes(id))));
 			pointer = event; scrollFrame = requestAnimationFrame(autoScroll);
 		},
 		move: event => { pointer = event; locate(event); },
 		end: (cancelled, press) => {
 			const next = destination;
 			state.dragging = false;
+			container.classList.remove('is-reordering'); document.documentElement.classList.remove('is-reordering');
+			document.removeEventListener('selectstart', preventSelection, true);
 			cancelAnimationFrame(scrollFrame);
 			rows().forEach(row => row.classList.remove('is-dragging'));
 			clearTarget();

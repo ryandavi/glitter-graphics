@@ -812,6 +812,9 @@ const CONFIG = deepFreeze({
 		},
 		gestures: {
 			creationDragThreshold: 6,
+			// Screen pixels a press must travel before a list row starts a drag, so
+			// a click still selects (list-reorder.js, layer-row.js alt-click zone).
+			dragThresholdPx: 3,
 			tapMaxMs: 300,
 			tapSlopPx: 10,
 			wheelZoomSensitivity: 0.002,
