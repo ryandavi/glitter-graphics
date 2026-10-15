@@ -4,6 +4,8 @@ const { spawnSync } = require('child_process');
 const path = require('path');
 
 const SUITES = [
+	{ file: 'unit/animation-timing-unit.js', tags: ['unit', 'quick'] },
+	{ file: 'ui/animation-without-timeline-verify.js', tags: ['layers', 'quick'] },
 	{ file: 'unit/timeline-view-unit.js', tags: ['unit', 'quick'] },
 	{ file: 'unit/features-unit.js', tags: ['unit', 'quick'] },
 	{ file: 'unit/gif-retime-unit.js', tags: ['unit', 'quick', 'export'] },

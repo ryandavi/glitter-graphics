@@ -168,7 +168,8 @@ class SceneCompositor {
 				...(LAYER_UI_CONFIG[layer.type]?.timelineSources?.(layer, { compositor: this, includeBaseImage, canvasData }) || []),
 				...this._createPatternTimelineSources(layer, includeBaseImage)
 			];
-			return isLayerFullyLocked(layer) ? sources.map((source) => ({ ...source, setPeriod: null, setRun: null, setPhase: null, setDirection: null })) : sources;
+			const targets = new Map(listTimingTargets(this.editor, [layer]).map(target => [target.key, target]));
+			return sources.map(source => ({ ...source, adjustable: targets.get(source.key)?.can.period === true }));
 		});
 	}
 
@@ -185,7 +186,6 @@ class SceneCompositor {
 					rowLabel: 'Pattern scroll', label: `${describeLayer(layer, this.editor).name} pattern scroll`, ownerLayerId: layer.id, effectSlot: entry.key,
 					naturalPeriod: pattern.scrollCycleMs,
 					periodRange: { min: FIELDS.patternScrollCycle.min, max: FIELDS.patternScrollCycle.max },
-					setPeriod: (ms) => { entry.data.pattern.scrollCycleMs = Math.min(FIELDS.patternScrollCycle.max, Math.max(FIELDS.patternScrollCycle.min, ms)); },
 					preferredSamplingRate: CONFIG.rendering.pattern.exportFps,
 					sampleAt: (time, period = pattern.scrollCycleMs) => ({ time: time * pattern.scrollCycleMs / period })
 				}];
@@ -207,11 +207,7 @@ class SceneCompositor {
 			naturalPeriod: animation.frames * frameDuration,
 			...(control ? {
 				periodRange: control.range(data),
-				resolvePeriod: (ms) => control.resolve(ms, data),
-				setPeriod: (ms) => {
-					const range = control.range(data);
-					control.set(data, control.resolve(Math.min(range.max, Math.max(range.min, ms)), data));
-				}
+				resolvePeriod: (ms) => control.resolve(ms, data)
 			} : {}),
 			preferredSamplingRate: 1000 / frameDuration,
 			sampleAt: (timestamp, period = animation.frames * frameDuration) => {
@@ -222,33 +218,22 @@ class SceneCompositor {
 	}
 
 	_createLayerAnimationTimelineSources(layer) {
-		const animations = GlitterAnimation.normalizeAnimations(layer.animations);
+		const animations = GlitterAnimation.normalizeAnimations(GlitterAnimation.getLayerAnimations(layer));
 		if (!animations.some((animation) => GlitterAnimation.isActive(animation))) return [];
 		const samplingContext = this._buildAnimationSamplingContext(layer);
-		return animations.map((animation, index) => ({ animation, index }))
-			.filter(({ animation }) => GlitterAnimation.isActive(animation))
-			.map(({ animation, index }) => ({
-				key: `__anim_${layer.id}_${index}`,
+		return animations.filter(animation => GlitterAnimation.isActive(animation)).map(animation => ({
+				key: GlitterAnimation.sourceKey(layer.id, animation),
 				rowLabel: GlitterAnimation.summaryText(animation), direction: animation.direction,
 				cycleMarks: GlitterAnimation.MOTION_REGISTRY[animation.type].keyed ? animation.keys.map((key) => key.at).filter((at) => at > 0) : undefined,
-				keyTrack: GlitterAnimation.MOTION_REGISTRY[animation.type].keyed ? { entry: layer.animations[index], index } : null,
+				keyTrack: GlitterAnimation.MOTION_REGISTRY[animation.type].keyed ? { entry: layer.animations.find(entry => entry.id === animation.id), motionId: animation.id } : null,
 				label: `${describeLayer(layer, this.editor).name} ${GlitterAnimation.summaryText(animation)}`,
 				ownerLayerId: layer.id,
-				effectSlot: `animation-${index}`,
+				effectSlot: GlitterAnimation.slotKey(animation),
 				naturalPeriod: animation.periodMs,
 				run: GlitterAnimation.runTiming(animation),
-				setRun: (run) => {
-					const current = layer.animations[index];
-					current.delayMs = clampNumber(run.start, 0, FIELDS.animDelay.max * 1000);
-					current.iterations = GlitterAnimation.iterationsForRun(current, run);
-					return GlitterAnimation.runTiming(current);
-				},
-				setDirection: (direction) => { layer.animations[index].direction = direction; },
-				setPhase: (phase) => { layer.animations[index].phase = ((Number(phase) % 1) + 1) % 1; },
 				closesAt: (duration, period) => GlitterAnimation.isSeamlessLoop({ ...animation, periodMs: period }, samplingContext, duration),
 				nonLooping: Number.isFinite(animation.iterations),
 				periodRange: { min: FIELDS.animDuration.min * 1000, max: FIELDS.animDuration.max * 1000 },
-				setPeriod: (ms) => { layer.animations[index].periodMs = Math.min(FIELDS.animDuration.max * 1000, Math.max(FIELDS.animDuration.min * 1000, ms)); },
 				phase: animation.phase,
 				preferredSamplingRate: CONFIG.tools.animation.exportFps,
 				sampleAt: (timestamp, period = animation.periodMs) => ({
@@ -271,7 +256,6 @@ class SceneCompositor {
 				effectSlot: entry.key,
 				naturalPeriod: cycle,
 				periodRange: { min: FIELDS.sparkleCycle.min, max: FIELDS.sparkleCycle.max },
-				setPeriod: (ms) => { entry.data.cycleMs = Math.min(FIELDS.sparkleCycle.max, Math.max(FIELDS.sparkleCycle.min, ms)); },
 				preferredSamplingRate: CONFIG.tools.sparkles.exportFps,
 				sampleAt: (timestamp, period = cycle) => ({ time: timestamp * cycle / period })
 			};
@@ -435,9 +419,9 @@ class SceneCompositor {
 
 	_sampleLayerAnimation(layer, timestamp, sourceSelectionMap) {
 		const context = this._buildAnimationSamplingContext(layer);
-		const samples = layer.animations.map((animation, index) => ({ animation, index }))
+		const samples = GlitterAnimation.getLayerAnimations(layer).map((animation, index) => ({ animation, index }))
 			.filter(({ animation }) => GlitterAnimation.isActive(animation))
-			.map(({ animation, index }) => sourceSelectionMap?.get(`__anim_${layer.id}_${index}`)?.sample || GlitterAnimation.sampleAt(animation, timestamp, context));
+			.map(({ animation, index }) => sourceSelectionMap?.get(GlitterAnimation.sourceKey(layer.id, animation))?.sample || GlitterAnimation.sampleAt(animation, timestamp, context));
 		return GlitterAnimation.composeSamples(samples, { origin: context.origin });
 	}
 
@@ -813,10 +797,19 @@ class SceneCompositor {
 
 	// What makes a GIF's speed editable. Only the controls are gated: a stored
 	// cycle is honored above whether or not anything here is offered.
+	describeAuthoredTiming(layer) {
+		const plans = [{ layer, plan: this._buildLayerExportPlan(layer) }];
+		const descriptors = this._collectAuthoredSources(plans, this.editor.glitterLibrary.getRenderContent(), { baseAnimation: this.editor.baseBackgroundManager.getAnimation() });
+		return descriptors.map(descriptor => {
+			const animation = descriptor.getAnimation();
+			return { descriptor, timing: animation ? this.getAuthoredPassTiming(descriptor, animation, CONFIG.export.defaults.frameDelay) : null };
+		});
+	}
+
 	_createGifCycleControls(descriptor, timing) {
 		const record = descriptor.timingRecord;
 		const layer = this.editor?.layers.find((entry) => entry.id === descriptor.ownerLayerId);
-		if (!timing.range || !record || !layer || isLayerFullyLocked(layer) || !isFeatureEnabled('gifCycle')) return {};
+		if (!timing.range || !record || !layer) return {};
 		const quantum = CONFIG.export.timeline.renderClock.gifDelayQuantumMs;
 		const fileCycleDuration = timing.file.reduce((sum, duration) => sum + duration, 0);
 		return {
@@ -824,12 +817,7 @@ class SceneCompositor {
 			periodRange: timing.range,
 			resolvePeriod: (ms) => roundTo(ms, quantum),
 			retimeDelays: (cycle) => retimeGifDelays(timing.file, cycle),
-			setPeriod: (ms) => {
-				const cycle = clampNumber(roundTo(ms, quantum), timing.range.min, timing.range.max);
-				if (cycle === roundTo(fileCycleDuration, quantum)) delete record.gifCycleMs;
-				else record.gifCycleMs = cycle;
-				return cycle;
-			}
+			adjustable: listTimingTargets(this.editor, [layer]).find(target => target.key === descriptor.key)?.can.period === true
 		};
 	}
 
@@ -1678,8 +1666,8 @@ class SceneCompositor {
 				renderCtx.globalCompositeOperation = 'source-over';
 				renderCtx.clearRect(0, 0, width, height);
 			}
-			const animationUnits = GlitterAnimation.isActive(layer.animations)
-				? [{ animData: layer.animations, anchorBox: this._getAnimationBox(layer, width, height) }]
+			const animationUnits = GlitterAnimation.isActive(GlitterAnimation.getLayerAnimations(layer))
+				? [{ animData: GlitterAnimation.getLayerAnimations(layer), anchorBox: this._getAnimationBox(layer, width, height) }]
 				: [{ animData: null, anchorBox: null }];
 			for (const unit of animationUnits) {
 				renderCtx.save();
@@ -1716,7 +1704,7 @@ class SceneCompositor {
 						clipCtx.globalCompositeOperation = 'destination-in';
 						clipCtx.drawImage(body, 0, 0);
 						clipCtx.globalCompositeOperation = 'source-over';
-						const sample = GlitterAnimation.isActive(clipBase.animations) ? this._sampleLayerAnimation(clipBase, timestamp, sourceSelectionMap) : null;
+						const sample = GlitterAnimation.isActive(GlitterAnimation.getLayerAnimations(clipBase)) ? this._sampleLayerAnimation(clipBase, timestamp, sourceSelectionMap) : null;
 						this._drawCanvasSpaceSample(renderCtx, this.clipGroupCanvas, clipBase, sample);
 					}
 				} finally {
@@ -1789,7 +1777,8 @@ class SceneCompositor {
 		baseImage = true,
 		baseAnimation = null,
 		visualErrorThreshold = CONFIG.export.defaults.visualErrorThreshold,
-		outputFormat = 'gif'
+		outputFormat = 'gif',
+		includeFrameOptions = false
 	}) {
 		const callbacks = {
 			onStatus: () => {},
@@ -1852,14 +1841,15 @@ class SceneCompositor {
 		});
 		const plan = await planFrames(timelines);
 		const loopFit = planLoopFit(timelines, { config: timelineConfig, fallbackDuration, loopDurationMs: this._loopDurationMs() });
+		const computeFrameOptions = () => planFrameOptions(timelines, loopFit, plan.frameCount, {
+			config: timelineConfig.frameOptions, plan: planFrames,
+			originalPeriod: source => this.editor.layers.find(layer => layer.id === source.ownerLayerId)?.loopOriginalPeriods?.[source.key] ?? source.naturalPeriod
+		});
 		return {
 			...plan.loopSeam,
 			sourceAnalysis: plan.sourceAnalysis,
 			loopFit,
-			frameOptions: await planFrameOptions(timelines, loopFit, plan.frameCount, {
-				config: timelineConfig.frameOptions, plan: planFrames,
-				originalPeriod: (source) => this.editor.layers.find((layer) => layer.id === source.ownerLayerId)?.loopOriginalPeriods?.[source.key] ?? source.naturalPeriod
-			}),
+			computeFrameOptions, frameOptions: includeFrameOptions ? await computeFrameOptions() : null,
 			duration: plan.totalDuration,
 			estimatedFrameCount: plan.frameCount,
 			maximumVisualError: plan.reduction.maximumVisualError,

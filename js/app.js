@@ -121,6 +121,8 @@ class GlitterEditor {
 		this.cropEdit = new CropEditSession(this);
 		this.areaSelection = new AreaSelection(this);
 		this.areaSelect = new AreaSelectSession(this);
+		this.motionSelection = new MotionSelection(this);
+		this.previewImages = new PreviewImageResolver(this);
 		this.animationPanel = new AnimationPanelController(this);
 		this.pickers = new PickerRegistry(this);
 		this.libraryWindow = new LibraryWindow(this);
@@ -257,7 +259,7 @@ class GlitterEditor {
 		initPixelScaler();
 		initTooltips();
 		installClipboardHandlers(this);
-		this.exportResultPresenter = new ExportResultPresenter({ onFixLoop: () => this.openAnimationLoop(), getFrameOptions: () => this.loopEstimate?.frameOptions, onStatus: (message) => this.updateStatus(message), onShow: () => this.modalManager.open('exportPreviewModal'), onFit: (goal) => { this.modalManager.close('exportPreviewModal'); this.exportCurrentTarget({ fit: goal }); } });
+		this.exportResultPresenter = new ExportResultPresenter({ onFixLoop: () => this.openAnimationLoop(), getFrameOptions: () => this.ensureFrameOptions(), onStatus: (message) => this.updateStatus(message), onShow: () => this.modalManager.open('exportPreviewModal'), onFit: (goal) => { this.modalManager.close('exportPreviewModal'); this.exportCurrentTarget({ fit: goal }); } });
 		this.exportProgressPresenter = new ExportProgressPresenter(this);
 		this.gifEncodingPipeline = new GifEncodingPipeline();
 		this.authoredFrameResolver = new AuthoredFrameResolver();
@@ -605,6 +607,7 @@ class GlitterEditor {
 	// A save made while a numeric key step runs shares that step's key, so a
 	// held arrow is one undo.
 	saveState(label = null, options = {}) {
+		this.documentRevision = (this.documentRevision || 0) + 1;
 		this.historyManager.saveState(label, { coalesceKey: currentStepCoalesceKey(), ...options });
 		this.clipPreview?.refresh();
 		this.filterLayerManager?.noteSceneEdited();
@@ -1073,6 +1076,7 @@ Object.assign(
 	GlitterEditor.prototype,
 	EDITOR_SETTINGS_METHODS,
 	EDITOR_ANIMATION_LOOP_METHODS,
+	EDITOR_ANIMATION_EDIT_METHODS,
 	EDITOR_TIMELINE_METHODS,
 	EDITOR_DOCUMENT_IO_METHODS,
 	EDITOR_EXPORT_FLOW_METHODS,

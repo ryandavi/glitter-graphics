@@ -79,8 +79,8 @@ async function buildComposition(page) {
 		stickerLayer.stickerData.shadow.mode = 'glitter';
 		stickerLayer.stickerData.shadow.glitterId = glitterB;
 		stickerLayer.animations = [
-			GlitterAnimation.normalizeAnimation({ type: 'heartbeat', periodMs: 400 }),
-			GlitterAnimation.normalizeAnimation({ type: 'rainbow', periodMs: 900 })
+			GlitterAnimation.normalizeAnimation({ id: editor.layerManager.generateLayerId(), type: 'heartbeat', periodMs: 400 }),
+			GlitterAnimation.normalizeAnimation({ id: editor.layerManager.generateLayerId(), type: 'rainbow', periodMs: 900 })
 		];
 
 		const staticStickerLayer = editor.stickerManager.createLayer(staticSticker.id);

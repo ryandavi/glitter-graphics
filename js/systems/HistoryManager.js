@@ -115,6 +115,8 @@ class HistoryManager {
 	}
 
 	async restoreState(state, touchedState = null) {
+		this.editor.animationRevisionEpoch = (this.editor.animationRevisionEpoch || 0) + 1;
+		this.editor.documentRevision = (this.editor.documentRevision || 0) + 1;
 		this.coalescingOpen = false;
 		this.activeBurst = null;
 		this.editor.maskEditor?.handleStateRestore();
@@ -189,9 +191,9 @@ class HistoryManager {
 
 	enqueueRestore(direction) {
 		if (this.editor.modalManager?.isAnyOpen()) return Promise.resolve();
-		if (this.editor.timelineKeyRecording?.active) {
-			const dragging = Boolean(this.editor.timelineKeyRecording.drag);
-			this.editor.timelineKeyRecording.end();
+		if (this.editor.keyRecording?.active) {
+			const dragging = Boolean(this.editor.keyRecording.drag);
+			this.editor.keyRecording.end();
 			if (dragging) return Promise.resolve();
 		}
 		if (ESCAPE_HANDLERS.find(entry => entry.id === 'drag').handle(this.editor)) return Promise.resolve();

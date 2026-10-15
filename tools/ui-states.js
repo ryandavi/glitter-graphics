@@ -424,7 +424,7 @@ async function animatedFilterStates(page, visit, viewport) {
 		fixed.filterData = GlitterFilter.normalizeFilterData({ type: 'dither', shimmer: true, palette: 'bw' });
 		const shape = e.layerManager.addLayer(LayerType.SHAPE);
 		getLayerFillSlot(shape).mode = 'solid';
-		shape.animations = [GlitterAnimation.normalizeAnimation({ type: 'wobble', periodMs: 1400 })];
+		shape.animations = [GlitterAnimation.normalizeAnimation({ id: editor.layerManager.generateLayerId(), type: 'wobble', periodMs: 1400 })];
 		e.openAnimationLoop(); await e.updateExportDuration();
 		document.getElementById('animationLoopCandidate').value = '800'; e.syncLoopCandidate();
 	});
@@ -495,12 +495,12 @@ async function timelineStates(page, visit, viewport) {
 	await page.evaluate(async () => {
 		const circle = editor.shapeGlitterManager.createLayer({ shapeId: 'circle', width: 40, height: 40, position: { x: 40, y: 40 } });
 		getLayerFillSlot(circle).mode = 'solid';
-		circle.animations = [GlitterAnimation.normalizeAnimation({ type: 'rotate', periodMs: 1600 })];
+		circle.animations = [GlitterAnimation.normalizeAnimation({ id: editor.layerManager.generateLayerId(), type: 'rotate', periodMs: 1600 })];
 		editor.layerManager.insertLayer(circle);
 		editor.shapeGlitterManager.renderLayer(circle);
 		const shape = editor.shapeGlitterManager.createLayer({ shapeId: 'square', width: 60, height: 60, position: { x: 100, y: 80 } });
 		getLayerFillSlot(shape).mode = 'solid';
-		shape.animations = [GlitterAnimation.normalizeAnimation({ type: 'pulse', periodMs: 1000, iterations: 2, delayMs: 600 }), GlitterAnimation.normalizeAnimation({ type: 'rotate', periodMs: 1200 })];
+		shape.animations = [GlitterAnimation.normalizeAnimation({ id: editor.layerManager.generateLayerId(), type: 'pulse', periodMs: 1000, iterations: 2, delayMs: 600 }), GlitterAnimation.normalizeAnimation({ id: editor.layerManager.generateLayerId(), type: 'rotate', periodMs: 1200 })];
 		editor.layerManager.insertLayer(shape);
 		editor.shapeGlitterManager.renderLayer(shape);
 		editor.setDocumentLoop({ mode: 'set', durationMs: 4800 });
@@ -550,11 +550,11 @@ async function timelineStates(page, visit, viewport) {
 		editor.timelineDock.host.style.removeProperty('width');
 		editor.setDocumentLoop({ mode: 'set', durationMs: 4800 });
 		const layer = editor.layers.find(entry => entry.animations?.length > 1);
-		layer.animations[0] = GlitterAnimation.normalizeAnimation({ type: 'custom', periodMs: 1600, keys: [
+		layer.animations[0] = GlitterAnimation.normalizeAnimation({ id: editor.layerManager.generateLayerId(), type: 'custom', periodMs: 1600, keys: [
 			{ at: 0, values: { tx: 0, rotate: 0 } }, { at: 0.35, values: { tx: 40, rotate: 20 } }, { at: 0.7, values: { tx: -30, rotate: -10 } }
 		] });
 		editor.layerManager.setActiveLayer(layer.id);
-		editor.animationPanel.selectedByLayer.set(layer.id, 0);
+		editor.animationPanel.selectMotion(layer, 0);
 		editor.saveState('Custom motion');
 		await editor.updateExportDuration();
 		editor.animationPanel.load(layer);
@@ -572,6 +572,9 @@ async function timelineStates(page, visit, viewport) {
 	});
 	await wait(page);
 	await visit(`${viewport} timeline key fields`, { shot: '#flyoutSection', tall: true });
+	await page.evaluate(() => editor.timelineDock.openRowSection(editor.timelineDock.keyLane.row)); await wait(page);
+	const motionMenu = page.getByRole('button', { name: 'Animation actions', exact: true }).first();
+	if (await motionMenu.isVisible()) { await motionMenu.click(); await wait(page); await visit(`${viewport} animation row menu`); await page.keyboard.press('Escape'); }
 	await page.evaluate(async () => {
 		const layer = editor.layerManager.getActiveLayer();
 		editor.layerManager.pressLayerLock(layer);

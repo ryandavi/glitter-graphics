@@ -18,6 +18,7 @@ class AnimationTicker {
 		this.holding = false;
 		this.reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)') || null;
 		this.reducedMotion?.addEventListener?.('change', () => this.refresh());
+		editor.previewWrapper.addEventListener('pointerdown', () => { if (this.paused && !editor.keyRecording?.active) this.setRestPreview(true); }, true);
 	}
 
 	// Every layer render calls this. Painting only the registered layer keeps
@@ -36,6 +37,8 @@ class AnimationTicker {
 			&& current.target.getWrapper() === target.getWrapper()
 			&& current.target.getLayer() === target.getLayer();
 		if (!unchanged) this.targets.set(layerId, { target });
+		const entry = this.targets.get(layerId);
+		if (target.getData) entry.prepared = GlitterAnimation.prepare(target.getData());
 		this._paintEntry(layerId, this.targets.get(layerId), this._timeAt(now));
 		if (!this._isPreviewPaused()) this.start();
 	}
@@ -48,29 +51,56 @@ class AnimationTicker {
 		}
 	}
 
-	// `hold` keeps the playhead where it is and resumes from it. Without it
-	// a pause shows time 0 and leaves the clock running underneath.
-	setPaused(paused, { hold = false } = {}) {
+	setPaused(paused) {
 		const playhead = this.getPlayheadTime();
-		if (!paused && this.holding && this.timelineStartedAt != null) this.timelineStartedAt = performance.now() - this.heldMs;
+		if (!paused && this.holding) this.timelineStartedAt = performance.now() - this.heldMs;
 		this.paused = Boolean(paused);
-		this.holding = this.paused && hold;
-		this.heldMs = this.holding ? playhead : 0;
+		this.holding = this.paused;
+		this.restPreview = false;
+		this.heldMs = this.paused ? playhead : 0;
 		this.refresh();
 	}
+
+	resetDocument() {
+		this.heldMs = 0; this.holding = false; this.restPreview = false;
+		this.loopMs = null; this.timelineStartedAt = null;
+		this.refresh();
+	}
+
+	setRestPreview(on) {
+		this.restPreview = Boolean(on);
+		this.refresh();
+	}
+
+	step(direction, frameStarts = this.editor.loopEstimate?.renderClock?.frameStarts) {
+		this.editor.setPlayback(false);
+		const time = this.getPlayheadTime();
+		let next;
+		if (frameStarts?.length) {
+			const index = indexAtOrBefore(frameStarts, time, 0.01);
+			next = direction < 0 && index >= 0 && Math.abs(frameStarts[index] - time) > 0.01
+				? frameStarts[index] : frameStarts[(index + direction + frameStarts.length) % frameStarts.length];
+		} else next = time + direction * 1000 / CONFIG.tools.animation.exportFps;
+		this.seek(next);
+	}
+
+	goToStart() { this.editor.setPlayback(false); this.seek(0); }
 
 	setLoop(ms) {
 		if (!(ms > 0)) return;
 		this.loopMs = ms;
+		if (this.timelineStartedAt == null) this.timelineStartedAt = performance.now();
 		this.heldMs = this._wrap(this.heldMs);
 	}
 
 	// Moves the playhead. Frozen, every target is repainted there; playing,
 	// the clock carries on from there.
 	seek(ms) {
+		this.restPreview = false;
 		for (const listener of this.seekListeners) listener();
 		if (this.paused) this.holding = true;
 		this.heldMs = this._wrap(Number(ms) || 0);
+		this.editor.syncPlaybackControls?.();
 		if (!this._isPreviewPaused() && this.timelineStartedAt != null) this.timelineStartedAt = performance.now() - this.heldMs;
 		this.refresh();
 	}
@@ -92,7 +122,7 @@ class AnimationTicker {
 	}
 
 	_timeAt(now) {
-		return this._isPreviewPaused() ? (this.holding ? this.heldMs : 0) : this._elapsedAt(now);
+		return this._isPreviewPaused() ? (this.holding && !this.restPreview && !this.reducedMotion?.matches && !PREFERENCES.get('reduceMotion') ? this.heldMs : 0) : this._elapsedAt(now);
 	}
 
 	subscribeTick(listener) {
@@ -112,14 +142,7 @@ class AnimationTicker {
 	}
 
 	_elapsedAt(now) {
-		const elapsed = this.timelineStartedAt == null ? 0 : Math.max(0, now - this.timelineStartedAt);
-		const duration = this.loopMs;
-		const hasRun = this.editor.layers.some((layer) => layer.visible !== false
-			&& GlitterAnimation.normalizeAnimations(layer.animations).some((animation) => {
-				const run = GlitterAnimation.runTiming(animation);
-				return GlitterAnimation.isActive(animation) && (run.start > 0 || Number.isFinite(run.end));
-			}));
-		return hasRun && duration > 0 ? elapsed % duration : elapsed;
+		return this._wrap(this.timelineStartedAt == null ? 0 : Math.max(0, now - this.timelineStartedAt));
 	}
 
 	refresh() {
@@ -136,10 +159,11 @@ class AnimationTicker {
 	syncFrozenState() {
 		const container = this.editor.canvasElementsContainer;
 		const frozen = Boolean(this._isPreviewPaused());
-		if (!container || (this.frozenState?.container === container && this.frozenState.frozen === frozen && this.frozenState.heldMs === this.heldMs && this.frozenState.holding === this.holding)) return;
-		this.frozenState = { container, frozen, heldMs: this.heldMs, holding: this.holding };
-		container.classList.toggle('preview-motion-paused', frozen && !this.holding);
-		container.classList.toggle('preview-motion-held', frozen && this.holding);
+		const reduced = Boolean(this.reducedMotion?.matches || PREFERENCES.get('reduceMotion'));
+		if (!container || (this.frozenState?.container === container && this.frozenState.frozen === frozen && this.frozenState.heldMs === this.heldMs && this.frozenState.holding === this.holding && this.frozenState.restPreview === this.restPreview && this.frozenState.reduced === reduced)) return;
+		this.frozenState = { container, frozen, heldMs: this.heldMs, holding: this.holding, restPreview: this.restPreview, reduced };
+		container.classList.toggle('preview-motion-paused', frozen && (!this.holding || this.restPreview || reduced));
+		container.classList.toggle('preview-motion-held', frozen && this.holding && !this.restPreview && !reduced);
 		container.style.setProperty('--preview-held-ms', String(this.heldMs));
 	}
 
@@ -167,6 +191,7 @@ class AnimationTicker {
 		const time = this._timeAt(now);
 		this.targets.forEach((entry, layerId) => this._paintEntry(layerId, entry, time));
 		const playhead = this.getPlayheadTime(now);
+		this.editor.previewFrameView?.paint(playhead);
 		for (const listener of this.tickListeners) listener(playhead);
 	}
 
@@ -185,7 +210,8 @@ class AnimationTicker {
 		LAYER_UI_CONFIG[layer.type]?.animate?.(layer, time, wrapper, {
 			editor: this.editor,
 			layerId,
-			data: target.getData()
+			data: target.getData(),
+			prepared: entry.prepared
 		});
 	}
 }
@@ -193,7 +219,7 @@ class AnimationTicker {
 function paintLayerAnimationPreview(layer, elapsed, wrapper, context) {
 	const transform = getLayerTransform(layer);
 	const samplingContext = getLayerAnimationSamplingContext(context.editor, layer);
-	const sample = GlitterAnimation.sampleAt(context.data, elapsed, samplingContext);
+	const sample = context.prepared ? GlitterAnimation.samplePrepared(context.prepared, elapsed, samplingContext) : GlitterAnimation.sampleAt(context.data, elapsed, samplingContext);
 	const { move, local } = GlitterAnimation.splitSample(sample);
 	// The sample moves the layer in document px. The wrapper sits inside the
 	// element's rotation and flip but outside its scale (the element is sized,
@@ -269,14 +295,10 @@ function syncMotionCopyChildren(source, target) {
 	while (target.childNodes.length > source.childNodes.length) target.lastChild.remove();
 }
 
-function animateTransformableLayerPreview(layer, elapsed, wrapper, context) {
-	paintLayerAnimationPreview(layer, elapsed, wrapper, context);
-}
-
 function syncLayerAnimationPreview(element, layer, ticker) {
 	if (!element || !ticker) return null;
 	let wrapper = Array.from(element.children).find((child) => child.classList.contains('layer-anim-wrapper'));
-	const active = GlitterAnimation.isActive(layer.animations);
+	const active = GlitterAnimation.isActive(GlitterAnimation.getLayerAnimations(layer));
 	if (!active) {
 		if (wrapper) {
 			wrapper._motionCopyObserver?.disconnect();
@@ -297,7 +319,7 @@ function syncLayerAnimationPreview(element, layer, ticker) {
 	});
 	ticker.register(layer.id, {
 		targetId: layer.id,
-		getData: () => editor.timelineKeyRecording?.previewAnimations(layer) || layer.animations,
+		getData: () => ticker.editor.keyRecording?.previewAnimations(layer) || GlitterAnimation.getLayerAnimations(layer),
 		getLayer: () => layer,
 		getWrapper: () => wrapper
 	});

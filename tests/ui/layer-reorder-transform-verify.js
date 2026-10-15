@@ -185,7 +185,7 @@ async function verifyReorderControls(page) {
 		const forever = document.getElementById('stickerAnimPlaysForever'); forever.checked = true; forever.dispatchEvent(new Event('change', { bubbles: true }));
 		if (!document.getElementById('stickerAnimIterationsRow').hidden || layer.animations[0].iterations !== Infinity) throw new Error('Forever must hide the count and store Infinity');
 		// Four rows exercise all insertion slots independently of the Add limit.
-		layer.animations = ['pulse', 'rotate', 'bounce', 'shake'].map(type => GlitterAnimation.normalizeAnimation({ type }));
+		layer.animations = ['pulse', 'rotate', 'bounce', 'shake'].map(type => GlitterAnimation.normalizeAnimation({ id: editor.layerManager.generateLayerId(), type }));
 		editor.animationPanel.load(layer);
 		if (section.classList.contains('is-empty') || !document.getElementById('stickerAnimStackEmpty').hidden) throw new Error('Populated stack must show its settings');
 		if (editor.pickers.flyout !== section.dataset.flyoutKey) editor.pickers.toggleFlyout(section.dataset.flyoutKey);

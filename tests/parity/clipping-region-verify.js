@@ -85,9 +85,9 @@ async function main() {
 			const base = editor.shapeGlitterManager.createLayer({ shapeId: 'square', width: 100, height: 80 });
 			base.transform.rotation = 20; base.transform.scale = { x: 90, y: 120 }; base.transform.flipX = true; base.opacity = 70;
 			base.shapeData.fill.mode = 'solid'; base.shapeData.fill.color = '#3366ff';
-			base.animations = [GlitterAnimation.normalizeAnimation({ type: 'bounce', periodMs: 400, amount: 10 }), GlitterAnimation.normalizeAnimation({ type: 'rainbow', periodMs: 400 })]; editor.layerManager.insertLayer(base);
+			base.animations = [GlitterAnimation.normalizeAnimation({ id: editor.layerManager.generateLayerId(), type: 'bounce', periodMs: 400, amount: 10 }), GlitterAnimation.normalizeAnimation({ id: editor.layerManager.generateLayerId(), type: 'rainbow', periodMs: 400 })]; editor.layerManager.insertLayer(base);
 			const content = editor.shapeGlitterManager.createLayer({ shapeId: 'square', width: 120, height: 110 }); content.shapeData.fill.mode = 'solid'; content.shapeData.fill.color = '#ff3366'; content.opacity = 80; content.clipped = true;
-			content.animations = [GlitterAnimation.normalizeAnimation({ type: 'pulse', periodMs: 400, amount: 10 })]; editor.layerManager.insertLayer(content);
+			content.animations = [GlitterAnimation.normalizeAnimation({ id: editor.layerManager.generateLayerId(), type: 'pulse', periodMs: 400, amount: 10 })]; editor.layerManager.insertLayer(content);
 			editor.setTool(ToolType.HAND); editor.requestPreviewUpdate();
 		});
 		for (const timestamp of [0, 100, 400]) {
@@ -96,7 +96,7 @@ async function main() {
 		}
 		await page.evaluate(() => {
 			const content = editor.layers.find(layer => layer.clipped), base = getClipBase(editor.layers, content);
-			content.animations = []; base.animations = [GlitterAnimation.normalizeAnimation({ type: 'marquee', repeat: 'wrap', angle: 0, periodMs: 400 })]; editor.requestPreviewUpdate();
+			content.animations = []; base.animations = [GlitterAnimation.normalizeAnimation({ id: editor.layerManager.generateLayerId(), type: 'marquee', repeat: 'wrap', angle: 0, periodMs: 400 })]; editor.requestPreviewUpdate();
 		});
 		for (const timestamp of [100, 300]) {
 			await page.evaluate(timestamp => { editor.animationTicker._elapsedAt = () => timestamp; editor.animationTicker.refresh(); }, timestamp);
@@ -129,7 +129,7 @@ async function main() {
 			const base = editor.shapeGlitterManager.createLayer({ shapeId: 'square', width: 100, height: 90 }); editor.layerManager.insertLayer(base);
 			const asset = editor.stickerLibrary.content.find(item => item.isAnimated); await editor.stickerLibrary.ensureAssetDetails(asset.id);
 			const layer = editor.stickerManager.createLayer(asset.id); layer.clipped = true; editor.layerManager.insertLayer(layer);
-			base.animations = [GlitterAnimation.normalizeAnimation({ type: 'bounce', periodMs: 400 })];
+			base.animations = [GlitterAnimation.normalizeAnimation({ id: editor.layerManager.generateLayerId(), type: 'bounce', periodMs: 400 })];
 			editor.saveState('Clip fixture'); window.clipFixture = layer.id;
 		});
 		const first = await exportSnapshot(page, { baseImage: true, maxFrames: 6 }, { minLayers: 2 });

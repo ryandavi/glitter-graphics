@@ -132,6 +132,7 @@ class LayerManager {
 		});
 		serialized.opacity = layer.opacity;
 		serialized.clipped = Boolean(layer.clipped);
+		if (layer.animationsEnabled === false) serialized.animationsEnabled = false;
 		if (layer.loopOriginalPeriods) serialized.loopOriginalPeriods = structuredClone(layer.loopOriginalPeriods);
 		if (isTransformableLayerType(type)) serialized.transform = cloneTransform(getLayerTransform(layer));
 		if (LAYER_UI_CONFIG[type]?.blendable) serialized.blendMode = GlitterBlendModes.forLayer(layer);
@@ -179,6 +180,7 @@ class LayerManager {
 			...(spec.defaults ? structuredClone(spec.defaults) : {})
 		};
 		if (!spec.omit?.includes('name')) restored.name = layerData.name || spec.defaultName?.(this.editor, layerData[spec.dataKey]);
+		if (layerData.animationsEnabled === false) restored.animationsEnabled = false;
 		if (layerData.loopOriginalPeriods) restored.loopOriginalPeriods = structuredClone(layerData.loopOriginalPeriods);
 		if (!spec.omit?.includes('settings')) restored.settings = structuredClone(layerData.settings || {});
 		[spec.dataKey, ...(spec.extraKeys || [])].filter(Boolean).forEach((key) => {
@@ -187,7 +189,7 @@ class LayerManager {
 		});
 		if (spec.includeMaskVersion) restored.maskVersion = layerData.maskVersion || 0;
 		if (layerData.animations?.length && isAnimatableLayerType(type)) {
-			restored.animations = GlitterAnimation.normalizeAnimations(layerData.animations);
+			restored.animations = GlitterAnimation.normalizeAnimations(layerData.animations).map(animation => ({ ...animation, id: typeof animation.id === 'string' && animation.id ? animation.id : this.generateLayerId() }));
 		}
 		restored.clipped = Boolean(layerData.clipped);
 		spec.normalize?.(this.editor, restored);
@@ -446,7 +448,7 @@ class LayerManager {
 			if (options.source === 'canvas') this.revealLayerInList(nextActiveId);
 			return;
 		}
-		this.editor.timelineKeyRecording?.selectionWillChange(normalized, nextActiveId);
+		this.editor.keyRecording?.selectionWillChange(normalized, nextActiveId);
 
 		if (this.editor.textGlitterManager?.editSession?.layerId !== nextActiveId) this.editor.textGlitterManager?.endTextEdit();
 		if (this.editor.pathEdit?.session && this.editor.pathEdit.session.layerId !== nextActiveId) this.editor.pathEdit.end();
@@ -839,6 +841,13 @@ class LayerManager {
 
 		const clonedLayer = structuredClone(this.serializeLayer(sourceLayer, { includeMaskVersion: false }));
 		clonedLayer.id = this.generateLayerId();
+		const motionIds = new Map();
+		for (const animation of clonedLayer.animations || []) { const id = this.generateLayerId(); motionIds.set(animation.id, id); animation.id = id; }
+		if (clonedLayer.loopOriginalPeriods) clonedLayer.loopOriginalPeriods = Object.fromEntries(Object.entries(clonedLayer.loopOriginalPeriods).map(([key, period]) => {
+			let next = key.replace(sourceLayer.id, clonedLayer.id);
+			for (const [before, after] of motionIds) if (next === GlitterAnimation.sourceKey(clonedLayer.id, { id: before })) next = GlitterAnimation.sourceKey(clonedLayer.id, { id: after });
+			return [next, period];
+		}));
 		clonedLayer.locked = false;
 		if (isTransformableLayerType(clonedLayer.type)) {
 			clonedLayer.transform.position.x += positionOffset.x;

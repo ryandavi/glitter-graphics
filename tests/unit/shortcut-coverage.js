@@ -40,7 +40,7 @@ assert(guideBuild.ok, 'modals/guide.html is out of date: run node tools/build-mo
 
 const keyboardGroups = Array.from(context.__getShortcutGroups('keyboard'), ({ title }) => title);
 const gestureGroups = Array.from(context.__getShortcutGroups('gesture'), ({ title }) => title);
-assert.deepStrictEqual(keyboardGroups, ['Essentials', 'Tools', 'Canvas & View', 'Selection', 'Transform', 'Brush', 'Select Area', 'Pen', 'Gradient', 'Text']);
+assert.deepStrictEqual(keyboardGroups, ['Essentials', 'Tools', 'Canvas & View', 'Selection', 'Transform', 'Brush', 'Select Area', 'Pen', 'Gradient', 'Animation', 'Text']);
 assert.deepStrictEqual(gestureGroups, ['Navigate', 'Move & Transform', 'Pen', 'Select Area']);
 
 process.stdout.write('PASS shortcut structure; generated guide is current\n');

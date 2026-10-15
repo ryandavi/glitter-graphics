@@ -1,6 +1,6 @@
 // Export timeline planning primitives. Loaded before SceneCompositor and the exporters.
 class AuthoredAnimationSource {
-	constructor({ key, label = null, rowLabel = null, ownerLayerId = null, effectSlot = null, frameCount = 0, frameDurations = [], fallbackDuration = 100, fileCycleDuration = null, periodRange = null, resolvePeriod = null, setPeriod = null, retimeDelays = null }) {
+	constructor({ key, label = null, rowLabel = null, ownerLayerId = null, effectSlot = null, frameCount = 0, frameDurations = [], fallbackDuration = 100, fileCycleDuration = null, periodRange = null, resolvePeriod = null, adjustable = false, retimeDelays = null }) {
 		this.kind = 'authored';
 		this.key = key;
 		this.label = label;
@@ -19,14 +19,13 @@ class AuthoredAnimationSource {
 		});
 		this.cycleDuration = this.isStatic ? Infinity : this.cumulativeBoundaries.at(-1);
 		this.cycleMarks = this.cumulativeBoundaries.slice(1, -1).map(ms => ms / this.cycleDuration);
-		// A GIF whose cycle can be set reads like any source with a speed:
-		// loop fitting takes its period, range and setter by the same names.
-		// The kind stays authored, so only a user action ever calls the setter.
+		// Authored sources retain native frame sampling when their cycle changes.
+		// The timing model supplies adjustability; planners never mutate documents.
 		this.naturalPeriod = this.cycleDuration;
-		Object.assign(this, { fileCycleDuration, periodRange, resolvePeriod, setPeriod, retimeDelays });
+		Object.assign(this, { fileCycleDuration, periodRange, resolvePeriod, adjustable, retimeDelays });
 	}
 
-	// A copy playing one pass in `period`, as its setter would leave it.
+	// A copy playing one pass in `period`.
 	get displayLabel() { return this.label || String(this.key); }
 
 	atPeriod(period) {
@@ -86,7 +85,7 @@ class AuthoredAnimationSource {
 }
 
 class ProceduralAnimationSource {
-	constructor({ key, label = null, rowLabel = null, ownerLayerId = null, effectSlot = null, naturalPeriod, phase = 0, direction = 'normal', cycleMarks, keyTrack = null, preferredSamplingRate, sampler, resolvedPeriod = null, setPeriod = null, setRun = null, setPhase = null, setDirection = null, periodRange = null, resolvePeriod = null, nonLooping = false, run = null, closesAt = null }) {
+	constructor({ key, label = null, rowLabel = null, ownerLayerId = null, effectSlot = null, naturalPeriod, phase = 0, direction = 'normal', cycleMarks, keyTrack = null, preferredSamplingRate, sampler, resolvedPeriod = null, adjustable = false, periodRange = null, resolvePeriod = null, nonLooping = false, run = null, closesAt = null }) {
 		this.kind = 'procedural';
 		this.key = key;
 		this.label = label;
@@ -101,7 +100,7 @@ class ProceduralAnimationSource {
 		this.keyTrack = keyTrack;
 		this.preferredSamplingRate = Math.max(1, Number(preferredSamplingRate));
 		this.sampler = sampler;
-		Object.assign(this, { setPeriod, setRun, setPhase, setDirection, periodRange, resolvePeriod, nonLooping, run, closesAt });
+		Object.assign(this, { adjustable, periodRange, resolvePeriod, nonLooping, run, closesAt });
 	}
 
 	withPeriod(resolvedPeriod) {
@@ -116,7 +115,7 @@ class ProceduralAnimationSource {
 			preferredSamplingRate: this.preferredSamplingRate,
 			sampler: this.sampler,
 			resolvedPeriod,
-			setPeriod: this.setPeriod, setRun: this.setRun, setPhase: this.setPhase, setDirection: this.setDirection, periodRange: this.periodRange, resolvePeriod: this.resolvePeriod, nonLooping: this.nonLooping,
+			adjustable: this.adjustable, periodRange: this.periodRange, resolvePeriod: this.resolvePeriod, nonLooping: this.nonLooping,
 			run: this.run, closesAt: this.closesAt
 		});
 	}
@@ -155,7 +154,7 @@ function fitProceduralPeriods(procedural, duration, tolerance) {
 		const cycles = Math.max(1, Math.round(room / source.naturalPeriod));
 		const fittedPeriod = source.nonLooping ? source.naturalPeriod : room / cycles;
 		const drift = Math.abs(fittedPeriod - source.naturalPeriod) / source.naturalPeriod;
-		return { source, cycles, fittedPeriod, drift, fitted: fittedPeriod > 0 && drift <= tolerance };
+		return { key: source.key, source, cycles, fittedPeriod, drift, fitted: fittedPeriod > 0 && drift <= tolerance };
 	});
 	return {
 		fits,
@@ -174,8 +173,8 @@ function planLoopFit(timelines, { config, maxLoopDurationMs = config.maxLoopDura
 	const animated = timelines.filter((source) => source.kind === 'procedural' || Number.isFinite(source.cycleDuration));
 	const oneShots = animated.filter((source) => source.nonLooping);
 	const repeating = animated.filter((source) => !source.nonLooping);
-	const adjustable = repeating.filter((source) => typeof source.setPeriod === 'function');
-	const fixed = repeating.filter((source) => typeof source.setPeriod !== 'function').map((source) => ({
+	const adjustable = repeating.filter((source) => source.adjustable);
+	const fixed = repeating.filter((source) => !source.adjustable).map((source) => ({
 		source, cycleDuration: source.kind === 'procedural' ? source.naturalPeriod : source.cycleDuration
 	}));
 	const fixedLoop = planner._chooseLoopDuration(fixed, fallbackDuration, maxLoopDurationMs);
@@ -197,7 +196,7 @@ function planLoopFit(timelines, { config, maxLoopDurationMs = config.maxLoopDura
 				const fittedPeriod = source.resolvePeriod ? source.resolvePeriod(requested) : requested;
 				if (fittedPeriod < range.min || fittedPeriod > range.max || Math.abs(fittedPeriod - requested) > 0.01) continue;
 				const drift = Math.abs(fittedPeriod - source.naturalPeriod) / source.naturalPeriod;
-				if (!best || drift < best.drift) best = { source, cycles, fittedPeriod, drift, fitted: true };
+				if (!best || drift < best.drift) best = { key: source.key, source, cycles, fittedPeriod, drift, fitted: true };
 			}
 			return best || { ...fit, fitted: false };
 		});
@@ -223,7 +222,7 @@ function planLoopFit(timelines, { config, maxLoopDurationMs = config.maxLoopDura
 // Speed changes are measured against `originalPeriod`, the timing from before
 // any fit, and capped. The option nearest that timing is listed first.
 async function planFrameOptions(timelines, loopFit, currentFrameCount, { config, plan, originalPeriod = (source) => source.naturalPeriod }) {
-	const adjustable = loopFit.sources.filter((source) => typeof source.setPeriod === 'function' && !source.nonLooping);
+	const adjustable = loopFit.sources.filter((source) => source.adjustable && !source.nonLooping);
 	const candidates = loopFit.candidates.filter((candidate) => candidate.exact && candidate.canApply).map((candidate) => {
 		const fits = candidate.fits.filter((fit) => Math.abs(fit.fittedPeriod - fit.source.naturalPeriod) > 0.01);
 		const periods = new Map(fits.map((fit) => [fit.source, fit.fittedPeriod]));

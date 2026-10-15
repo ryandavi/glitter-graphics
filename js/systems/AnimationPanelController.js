@@ -7,145 +7,15 @@ class AnimationPanelController {
 			.filter(([, config]) => config.animatable && config.transformPrefix)
 			.map(([type, config]) => [type, config.transformPrefix]));
 
-		this.selectedByLayer = new Map();
-		this.selectedKeys = new WeakMap();
-		this.converted = new WeakMap();
 		this.keyStrips = new Map();
-		this.previewFrames = new Map();
-		// Least recently asked for first.
-		this.retimedPreviews = new Map();
-		this.retimedUrls = new Set();
-		this.shownPreviews = new WeakMap();
-		APP_MEMORY_LEDGER.register({
-			id: 'retimed-gifs', label: 'Retimed preview GIFs', category: 'Preview caches',
-			measure: () => Array.from(this.retimedPreviews.values()).reduce((sum, entry) => sum + entry.bytes, 0)
-		});
 		this.prefixByType.forEach((_prefix, type) => this._bind(type));
 		this.pauseButton = document.getElementById('pauseMotionTool');
 		this.pauseButton?.addEventListener('click', () => this.setPaused(!this.editor.animationTicker.paused));
+		window.addEventListener('motionselectionchange', event => { const layer = this.editor.layerManager.getActiveLayer(); if (layer?.id === event.detail.layerId) this.load(layer); });
 	}
 
-	// With the timeline open a pause holds the playhead; otherwise it shows
-	// the rest pose.
-	setPaused(paused) {
-		if (!paused) this.editor.timelineKeyRecording?.end();
-		const dock = this.editor.timelineDock?.available ? this.editor.timelineDock : null;
-		this.editor.animationTicker.setPaused(paused, { hold: Boolean(dock) });
-		dock?.syncPlayback();
-		if (this.pauseButton) {
-			this.pauseButton.classList.toggle('active', paused);
-			this.pauseButton.setAttribute('aria-pressed', String(paused));
-			this.pauseButton.title = paused ? 'Resume motion' : 'Pause motion';
-			this.pauseButton.querySelector('.name').textContent = paused ? 'Resume motion' : 'Pause motion';
-		}
-		if (!paused) this.previewFrames.clear();
-		this.editor.requestPreviewUpdate();
-	}
+	setPaused(paused) { this.editor.setPlayback(!paused); }
 
-	// The URL a preview element shows for an animated source: a still while
-	// motion is paused, a retimed copy when this use of the GIF stores a cycle
-	// length, otherwise the file. `use` is `{ element, timingRecord,
-	// sourceIdentity }` as the export's authored descriptor names them.
-	getPreviewImageUrl(url, use = null) {
-		if (!url) return url;
-		if (!this.editor.animationTicker.paused) {
-			if (use?.timingRecord?.gifCycleMs) return this.getRetimedPreviewUrl(url, use);
-			if (use?.element) this.shownPreviews.delete(use.element);
-			return url;
-		}
-		let entry = this.previewFrames.get(url);
-		if (!entry) {
-			entry = { url: null };
-			this.previewFrames.set(url, entry);
-			this.loadPreviewFrame(url).then(frameUrl => {
-				entry.url = frameUrl;
-				if (this.previewFrames.get(url) === entry && this.editor.animationTicker.paused) this.editor.requestPreviewUpdate();
-			}).catch(error => {
-				entry.url = url;
-				console.warn('Could not pause preview image:', error);
-			});
-		}
-		return entry.url || url;
-	}
-
-	// A copy of the file with the export's own delays for this use written
-	// into it. Until that copy has decoded, the element keeps the URL it
-	// already shows; the copy then replaces it in one swap.
-	getRetimedPreviewUrl(url, use) {
-		const gifCycleMs = use.timingRecord.gifCycleMs;
-		const key = `${gifCycleMs}|${url}`;
-		let entry = this.retimedPreviews.get(key);
-		if (entry) this.retimedPreviews.delete(key);
-		else {
-			entry = { url: null, bytes: 0, settled: false };
-			// The record may change again before the file has loaded.
-			entry.ready = this.buildRetimedPreview(url, { sourceIdentity: use.sourceIdentity, timingRecord: { gifCycleMs } }).then((built) => {
-				Object.assign(entry, built, { settled: true });
-				if (this.retimedPreviews.get(key) !== entry) this.releaseRetimedPreview(entry);
-				else this.editor.requestPreviewUpdate();
-			});
-		}
-		this.retimedPreviews.set(key, entry);
-		while (this.retimedPreviews.size > CONFIG.memory.retimedGifEntries) {
-			const [oldest, evicted] = this.retimedPreviews.entries().next().value;
-			this.retimedPreviews.delete(oldest);
-			this.releaseRetimedPreview(evicted);
-		}
-		const shown = this.shownPreviews.get(use.element);
-		const kept = !entry.settled && shown?.source === url && (shown.url === url || this.retimedUrls.has(shown.url));
-		const next = kept ? shown.url : entry.url || url;
-		if (use.element) this.shownPreviews.set(use.element, { source: url, url: next });
-		return next;
-	}
-
-	async buildRetimedPreview(url, use) {
-		let objectUrl = null;
-		try {
-			const bytes = await fetchGifBytes(url);
-			const timing = this.editor.sceneCompositor.getAuthoredPassTiming(use, readGifTiming(bytes), CONFIG.export.defaults.frameDelay);
-			if (timing.delays === timing.file) return {};
-			const retimed = retimeGifBytes(bytes, timing.delays);
-			objectUrl = URL.createObjectURL(new Blob([retimed], { type: 'image/gif' }));
-			await loadImageElement(objectUrl);
-			this.retimedUrls.add(objectUrl);
-			return { url: objectUrl, bytes: retimed.byteLength };
-		} catch (error) {
-			if (objectUrl) URL.revokeObjectURL(objectUrl);
-			console.warn('Could not retime preview image:', error);
-			return {};
-		}
-	}
-
-	releaseRetimedPreview(entry) {
-		if (!entry.url) return;
-		this.retimedUrls.delete(entry.url);
-		URL.revokeObjectURL(entry.url);
-		entry.url = null;
-	}
-
-	// Resolves once every retimed copy asked for so far has decoded.
-	retimedPreviewsSettled() {
-		return Promise.all(Array.from(this.retimedPreviews.values(), (entry) => entry.ready));
-	}
-
-	async loadPreviewFrame(url) {
-		const bytes = await fetchGifBytes(url);
-		const canvas = createAppCanvas(0, 0, 'systems/AnimationPanelController');
-		if (bytes[0] === 71 && bytes[1] === 73 && bytes[2] === 70) {
-			const reader = openGifReader(bytes);
-			canvas.width = reader.width;
-			canvas.height = reader.height;
-			const pixels = new Uint8ClampedArray(reader.width * reader.height * 4);
-			reader.decodeAndBlitFrameRGBA(0, pixels);
-			canvas.getContext('2d').putImageData(new ImageData(pixels, reader.width, reader.height), 0, 0);
-		} else {
-			const image = await loadImageElement(url);
-			canvas.width = image.naturalWidth;
-			canvas.height = image.naturalHeight;
-			canvas.getContext('2d').drawImage(image, 0, 0);
-		}
-		return canvas.toDataURL('image/png');
-	}
 
 	_id(prefix, suffix) {
 		return document.getElementById(`${prefix}Anim${suffix}`);
@@ -156,37 +26,29 @@ class AnimationPanelController {
 		return layer?.type === type ? layer : null;
 	}
 
-	_animations(layer) {
-		return Array.isArray(layer?.animations) ? layer.animations : [];
-	}
+	_animations(...args) { return this.editor.getAnimations(...args); }
 
-	_selectedIndex(layer) {
-		const animations = this._animations(layer);
-		const requested = this.selectedByLayer.get(layer?.id) || 0;
-		return Math.max(0, Math.min(animations.length - 1, requested));
-	}
+	_selectedIndex(...args) { return this.editor.selectedMotionIndex(...args); }
 
-	_selected(layer) {
-		return this._animations(layer)[this._selectedIndex(layer)] || null;
-	}
+	_selected(...args) { return this.editor.selectedMotion(...args); }
 
 	selectedMotion(layer) { return this._selected(layer); }
 	selectedMotionIndex(layer) { return this._selectedIndex(layer); }
-	selectMotion(layer, index) { this.selectedByLayer.set(layer.id, index); }
-	setKeySelection(animation, at) { this.selectedKeys.set(animation, at); }
+	selectMotion(...args) { return this.editor.selectMotion(...args); }
+	setKeySelection(...args) { return this.editor.setKeySelection(...args); }
 	keyAddControl(layer) {
 		const prefix = this.prefixByType.get(layer?.type);
 		return prefix ? this._id(prefix, 'KeyAdd') : null;
 	}
 	syncKeyAdd(layer = this.editor.layerManager.getActiveLayer(), animation = this.selectedMotion(layer)) {
 		if (!layer || !GlitterAnimation.MOTION_REGISTRY[animation?.type]?.keyed) { this.keyAddContext = null; return true; }
-		const dock = this.editor.timelineDock;
+		const held = this.editor.animationTicker.paused;
 		const progress = this.keyProgress(layer, animation);
-		const disabled = !this.canEditKeys(layer, animation) || (dock?.available && (dock.stale || !progress));
+		const disabled = !this.canEditKeys(layer, animation) || (held && !progress);
 		const add = this.keyAddControl(layer);
 		if (add) {
 			add.disabled = disabled;
-			add.title = disabled ? 'Move the playhead inside this animation' : dock?.available ? 'Add a key at the playhead' : 'Add a key halfway to the next key';
+			add.title = disabled ? 'Move the playhead inside this animation' : held ? 'Add a key at the playhead' : 'Add a key halfway to the next key';
 		}
 		const run = GlitterAnimation.runTiming({ ...animation, periodMs: this.keyPeriod(layer, animation) });
 		this.keyAddContext = { layer, animation, run, disabled, inside: Boolean(progress) };
@@ -211,169 +73,40 @@ class AnimationPanelController {
 		];
 	}
 
-	canEditKeys(layer, animation) {
-		return isFeatureAvailable('timeline') && this.editor.layers.includes(layer)
-			&& layer.animations?.includes(animation) && GlitterAnimation.MOTION_REGISTRY[animation?.type]?.keyed
-			&& this.editor.canEditLayer(layer);
-	}
+	canEditKeys(...args) { return this.editor.canEditKeys(...args); }
 
-	keyIndex(animation) {
-		const keys = GlitterAnimation.normalizeKeys(animation?.keys);
-		const at = this.selectedKeys.get(animation);
-		const index = keys.findIndex((key) => key.at === at);
-		return index < 0 ? (keys.length ? 0 : -1) : index;
-	}
+	keyIndex(...args) { return this.editor.keyIndex(...args); }
 
-	selectKey(layer, animation, at, { seek = false } = {}) {
-		this.selectedKeys.set(animation, at);
-		this.selectedByLayer.set(layer.id, layer.animations.indexOf(animation));
-		this.editor.timelineDock?.selectMotion(layer.id, this._selectedIndex(layer));
-		if (seek && this.editor.timelineDock?.available && !this.editor.timelineDock.stale) {
-			const ticker = this.editor.animationTicker;
-			const time = GlitterAnimation.timeAtProgress({ ...animation, periodMs: this.keyPeriod(layer, animation) }, at, ticker.getPlayheadTime());
-			if (time != null) { this.setPaused(true); ticker.seek(time); }
-		}
-		this.load(layer);
-		this.editor.timelineDock?.syncKeys();
-	}
+	selectKey(...args) { return this.editor.selectKey(...args); }
 
-	keyPeriod(layer, animation) {
-		const index = layer.animations?.indexOf(animation);
-		return this.editor.loopEstimate?.sourceAnalysis.find(entry => entry.key === `__anim_${layer.id}_${index}`)?.resolvedPeriod || animation.periodMs;
-	}
+	keyPeriod(...args) { return this.editor.keyPeriod(...args); }
 
-	keyProgress(layer, animation) {
-		return GlitterAnimation.cycleProgress({ ...animation, periodMs: this.keyPeriod(layer, animation) }, this.editor.animationTicker.getPlayheadTime(), { fill: false });
-	}
+	keyProgress(...args) { return this.editor.keyProgress(...args); }
 
-	setKeys(layer, animation, keys, { commit = true, rollback = false, label = 'Edit motion key', at, coalesceKey } = {}) {
-		if (!this.canEditKeys(layer, animation) && !(rollback && this.editor.layers.includes(layer) && layer.animations?.includes(animation))) return false;
-		const next = GlitterAnimation.normalizeKeys(keys);
-		if (isSameData(next, GlitterAnimation.normalizeKeys(animation.keys))) return false;
-		if (!rollback) {
-			const before = GlitterAnimation.normalizeKeys(animation.keys);
-			for (const id of Object.keys(GlitterAnimation.POSE_CHANNELS)) {
-				if (before.some(key => Object.hasOwn(key.values, id))) continue;
-				if (!next.some(key => Object.hasOwn(key.values, id))) continue;
-				for (const key of next) if (!Object.hasOwn(key.values, id)) key.values[id] = GlitterAnimation.keyRestSample(animation, key.at)[id];
-			}
-		}
-		animation.keys = next;
-		if (at != null) this.selectedKeys.set(animation, at);
-		if (!rollback) {
-			this.selectedByLayer.set(layer.id, layer.animations.indexOf(animation));
-			this.editor.timelineDock?.selectMotion(layer.id, this._selectedIndex(layer));
-		}
-		this._renderLayer(layer);
-		this.editor.requestPreviewUpdate();
-		this.load(layer);
-		this.editor.timelineDock?.frameView.invalidate({ keepFrame: Boolean(this.editor.timelineKeyRecording?.active) });
-		this.editor.timelineDock?.syncKeys();
-		if (commit) this.editor.saveState(label, { coalesceKey });
-		return true;
-	}
+	setKeys(...args) { return this.editor.setKeys(...args); }
 
-	beginKeyRetime(layer, entry, at) {
-		const keys = GlitterAnimation.normalizeKeys(entry.keys);
-		let finished = false;
-		return {
-			move: requested => finished || !this.canEditKeys(layer, entry) ? null : this.retimeKey(layer, entry, this.keyIndex(entry), requested, { commit: false }),
-			finish: cancelled => {
-				if (finished) return;
-				finished = true;
-				if (cancelled) this.setKeys(layer, entry, keys, { commit: false, rollback: true, at });
-				else if (!isSameData(keys, GlitterAnimation.normalizeKeys(entry.keys))) this.editor.saveState('Retime motion key');
-			}
-		};
-	}
+	beginKeyRetime(...args) { return this.editor.beginKeyRetime(...args); }
 
-	retimeKey(layer, animation, index, requested, options = {}) {
-		const keys = GlitterAnimation.normalizeKeys(animation.keys);
-		if (!keys[index] || !Number.isFinite(requested)) return null;
-		const tolerance = CONFIG.ui.timeline.keyPositionTolerance;
-		const at = clampNumber(requested, 0, 1);
-		const others = keys.filter((_key, candidate) => candidate !== index);
-		const distance = (a, b) => Math.abs(a - b);
-		const candidates = [at, ...others.flatMap((key) => [Math.max(0, key.at - tolerance), Math.min(1, key.at + tolerance)])];
-		const position = candidates.filter((candidate) => others.every((key) => distance(candidate, key.at) >= tolerance - 1e-9))
-			.sort((a, b) => distance(a, at) - distance(b, at))[0];
-		if (position == null) return null;
-		keys[index].at = position;
-		this.setKeys(layer, animation, keys, { ...options, at: position, label: 'Retime motion key' });
-		return position;
-	}
+	retimeKey(...args) { return this.editor.retimeKey(...args); }
 
-	addKey(layer, animation) {
-		if (!this.canEditKeys(layer, animation)) return;
-		const keys = GlitterAnimation.normalizeKeys(animation.keys);
-		const dock = this.editor.timelineDock;
-		const progress = dock?.available && !dock.stale ? this.keyProgress(layer, animation) : null;
-		if (dock?.available && !progress) return;
-		const index = this.keyIndex(animation), selectedAt = keys[index]?.at || 0;
-		const at = progress ? progress.eased : selectedAt === 1 ? ((keys[index - 1]?.at || 0) + 1) / 2 : (selectedAt + (keys[index + 1]?.at ?? 1)) / 2;
-		const existing = keys.find((key) => Math.abs(key.at - at) < CONFIG.ui.timeline.keyPositionTolerance);
-		if (existing) { this.selectKey(layer, animation, existing.at); return; }
-		if (keys.length >= CONFIG.tools.animation.maxKeys) { this.editor.updateStatus(`Maximum of ${CONFIG.tools.animation.maxKeys} motion keys`); return; }
-		const selected = keys[this.keyIndex(animation)];
-		const channels = selected && Object.keys(selected.values).length ? Object.keys(selected.values) : CONFIG.tools.animation.defaultKeyChannels;
-		const sample = GlitterAnimation.keyRestSample(animation, at);
-		keys.push({ at, easing: 'linear', values: Object.fromEntries(channels.map((id) => [id, sample[id]])) });
-		this.setKeys(layer, animation, keys, { label: 'Add motion key', at });
-	}
+	addKey(...args) { return this.editor.addKey(...args); }
 
-	editKeyEasing(layer, animation, at, easing) {
-		this.selectedKeys.set(animation, at);
-		this._editKey(layer, animation, key => { key.easing = easing; });
-	}
+	editKeyEasing(...args) { return this.editor.editKeyEasing(...args); }
 
-	duplicateKey(layer, animation, at) {
-		if (!this.canEditKeys(layer, animation)) return;
-		const keys = GlitterAnimation.normalizeKeys(animation.keys), original = keys.find(key => key.at === at);
-		if (!original || keys.length >= CONFIG.tools.animation.maxKeys) return;
-		const tolerance = CONFIG.ui.timeline.keyPositionTolerance;
-		let next = at + tolerance;
-		for (const key of keys) if (key.at >= at && Math.abs(key.at - next) < tolerance - 1e-9) next = key.at + tolerance;
-		if (next > 1) return;
-		keys.push({ ...original, at: next, values: { ...original.values } });
-		this.setKeys(layer, animation, keys, { at: next, label: 'Duplicate motion key' });
-	}
+	duplicateKey(...args) { return this.editor.duplicateKey(...args); }
 
-	deleteKey(layer, animation, index = this.keyIndex(animation)) {
-		const keys = GlitterAnimation.normalizeKeys(animation.keys);
-		if (!keys[index]) return;
-		keys.splice(index, 1);
-		this.setKeys(layer, animation, keys, { label: 'Delete motion key', at: keys[Math.min(index, keys.length - 1)]?.at });
-	}
+	deleteKey(...args) { return this.editor.deleteKey(...args); }
 
 	// Replaces one preset entry with the keys measured from it, in place in
 	// the stack. Timing, anchor and the rest transform are untouched.
-	convertToCustom(layer, animation) {
-		const index = this._animations(layer).indexOf(animation);
-		if (index < 0 || !isFeatureAvailable('timeline') || !this.editor.layers.includes(layer) || !this.editor.canEditLayer(layer)) return;
-		const result = this.conversion(animation);
-		if (!result) return;
-		layer.animations[index] = result.animation;
-		this.selectedByLayer.set(layer.id, index);
-		this._render(layer);
-		this.editor.saveState('Convert to custom motion');
-		const channel = GlitterAnimation.POSE_CHANNELS[result.error?.channel];
-		this.editor.updateStatus(channel
-			? `Converted to an approximate custom motion: ${channel.label} is within ${Number((result.error.value * channel.displayScale).toPrecision(2))}${channel.unit || '%'}`
-			: 'Converted to a custom motion');
-	}
+	convertToCustom(...args) { return this.editor.convertToCustom(...args); }
 
-	conversion(animation) {
-		const json = JSON.stringify(animation), cached = this.converted.get(animation);
-		if (cached?.json === json) return cached.result;
-		const result = GlitterAnimation.convertToKeys(animation);
-		this.converted.set(animation, { json, result });
-		return result;
-	}
+	conversion(...args) { return this.editor.conversion(...args); }
 
 	_loadConvertControl(prefix, layer, animation) {
 		const set = this._id(prefix, 'ConvertActions'), button = this._id(prefix, 'Convert');
 		if (!set || !button) return;
-		set.hidden = !animation || !GlitterAnimation.MOTION_REGISTRY[animation.type]?.convertible || !isFeatureAvailable('timeline');
+		set.hidden = !animation || !GlitterAnimation.MOTION_REGISTRY[animation.type]?.convertible || !isFeatureAvailable('customMotion');
 		if (set.hidden) return;
 		const result = this.conversion(animation);
 		button.disabled = !result || !this.editor.canEditLayer(layer);
@@ -392,7 +125,7 @@ class AnimationPanelController {
 		const held = (property) => Boolean(key) && property.channels.some((id) => Object.hasOwn(key.values, id));
 		const properties = GlitterAnimation.POSE_PROPERTIES;
 		const desktopNote = this._id(prefix, 'KeyDesktopNote');
-		if (desktopNote) desktopNote.hidden = !keyed || editable;
+		if (desktopNote) desktopNote.hidden = !keyed || !this.editor.mobileManager.isMobile;
 		const show = { KeySet: keyed, KeyActions: keyed, KeyValues: Boolean(key), KeyValueActions: Boolean(key) && !properties.every(held) };
 		for (const [suffix, visible] of Object.entries(show)) {
 			const node = this._id(prefix, suffix);
@@ -402,7 +135,7 @@ class AnimationPanelController {
 		const stripHost = this._id(prefix, 'KeyStrip');
 		if (stripHost) {
 			let strip = this.keyStrips.get(prefix);
-			if (!strip) { strip = new KeyStrip(stripHost, this, { layer, entry: animation }); this.keyStrips.set(prefix, strip); }
+			if (!strip) { strip = new KeyStrip(stripHost, this.editor, { layer, entry: animation }); this.keyStrips.set(prefix, strip); }
 			if (strip.drag && (strip.context.layer !== layer || strip.context.entry !== animation)) strip.pointerDrag.finish(true);
 			strip.context.layer = layer; strip.context.entry = animation; strip.update();
 		}
@@ -450,10 +183,10 @@ class AnimationPanelController {
 		const remove = this._id(prefix, 'KeyDelete');
 		this.syncKeyAdd(layer, animation);
 		if (remove) remove.disabled = !editable || !key;
-		const record = this._id(prefix, 'KeyRecord'), recording = this.editor.timelineKeyRecording;
+		const record = this._id(prefix, 'KeyRecord'), recording = this.editor.keyRecording;
 		if (record) {
 			const active = recording?.active && recording.entry === animation;
-			record.disabled = !active && (!recording || !recording.canBegin(layer, animation));
+			record.disabled = !active && (this.editor.mobileManager.isMobile || !editable || (recording && !recording.canBegin(layer, animation)));
 			record.querySelector('.name').textContent = active ? 'Done' : KEY_POSE_ACTION.label;
 			record.classList.toggle('active', Boolean(active));
 		}
@@ -468,20 +201,11 @@ class AnimationPanelController {
 	}
 
 	// Rewrites the selected key through `change(key, keys)`.
-	_editKey(layer, animation, change, options) {
-		if (!this.canEditKeys(layer, animation)) return false;
-		const keys = GlitterAnimation.normalizeKeys(animation.keys), key = keys[this.keyIndex(animation)];
-		if (!key) return false;
-		change(key, keys);
-		return this.setKeys(layer, animation, keys, options);
-	}
+	_editKey(...args) { return this.editor.editMotionKey(...args); }
 
 	// Keys every channel of a property the key does not hold yet, where the
 	// motion has it at this key.
-	_holdProperty(animation, key, property) {
-		const rest = GlitterAnimation.keyRestSample(animation, key.at);
-		for (const id of property.channels) if (!Object.hasOwn(key.values, id)) key.values[id] = rest[id];
-	}
+	_holdProperty(...args) { return this.editor.holdMotionProperty(...args); }
 
 	_bindKeys(type, prefix) {
 		const target = () => { const layer = this._active(type); return { layer, animation: this._selected(layer) }; };
@@ -499,7 +223,7 @@ class AnimationPanelController {
 				onCommit: () => {
 					const { layer, animation } = target(), changed = before != null && animation && !isSameData(before, GlitterAnimation.normalizeKeys(animation.keys));
 					before = null;
-					if (changed) this.editor.saveState(label);
+					if (changed) this.editor.commitMotionEdit(label);
 					else if (layer) this.load(layer);
 				}
 			});
@@ -562,61 +286,23 @@ class AnimationPanelController {
 		this._id(prefix, 'KeyAdd')?.addEventListener('click', () => { const { layer, animation } = target(); this.addKey(layer, animation); });
 		this._id(prefix, 'KeyDelete')?.addEventListener('click', () => { const { layer, animation } = target(); if (animation) this.deleteKey(layer, animation); });
 		this._id(prefix, 'Convert')?.addEventListener('click', () => { const { layer, animation } = target(); if (animation) this.convertToCustom(layer, animation); });
-		this._id(prefix, 'KeyRecord')?.addEventListener('click', () => {
-			const { layer, animation } = target(), recording = this.editor.timelineKeyRecording;
-			if (recording?.active) recording.end(); else recording?.begin(layer, animation);
+		this._id(prefix, 'KeyRecord')?.addEventListener('click', async () => {
+			const { layer, animation } = target(), recording = await this.editor.ensureKeyRecording();
+			if (recording.active) recording.end(); else recording.begin(layer, animation);
 		});
 	}
 
-	_createDefault(layer, type = CONFIG.tools.animation.defaultType) {
-		const animation = GlitterAnimation.normalizeAnimation({ type });
-		if (layer.type === LayerType.STICKER && layer.stickerData?.isPixelated !== false) animation.snapMode = 'pixel-snap';
-		return animation;
-	}
+	_createDefault(...args) { return this.editor.createMotion(...args); }
 
-	addAnimation(layer, type = CONFIG.tools.animation.defaultType) {
-		if (!this.editor.layers.includes(layer) || !this.editor.canEditLayer(layer) || this._animations(layer).length >= CONFIG.tools.animation.maxStackSize) return;
-		const feature = GlitterAnimation.MOTION_REGISTRY[type]?.feature;
-		if (feature && !isFeatureAvailable(feature)) return;
-		layer.animations ||= []; layer.animations.push(this._createDefault(layer, type));
-		this.selectedByLayer.set(layer.id, layer.animations.length - 1); this._render(layer);
-		this.editor.timelineDock?.expandLayer(layer.id);
-		this.editor.saveState('Add animation');
-	}
+	addAnimation(...args) { return this.editor.addAnimation(...args); }
 
-	duplicateAnimation(layer, index = this._selectedIndex(layer)) {
-		if (!this.editor.canEditLayer(layer) || !this._animations(layer)[index] || layer.animations.length >= CONFIG.tools.animation.maxStackSize) return;
-		layer.animations.splice(index + 1, 0, structuredClone(layer.animations[index]));
-		this.selectedByLayer.set(layer.id, index + 1); this._render(layer); this.editor.saveState('Duplicate animation');
-	}
+	duplicateAnimation(...args) { return this.editor.duplicateAnimation(...args); }
 
-	deleteAnimation(layer, index = this._selectedIndex(layer)) {
-		if (!this.editor.canEditLayer(layer) || !this._animations(layer)[index]) return;
-		layer.animations.splice(index, 1);
-		this.selectedByLayer.set(layer.id, Math.max(0, Math.min(index, layer.animations.length - 1)));
-		this._render(layer); this.editor.saveState('Delete animation');
-	}
+	deleteAnimation(...args) { return this.editor.deleteAnimation(...args); }
 
-	moveAnimation(layer, from, to) {
-		const animations = this._animations(layer);
-		if (!this.editor.layers.includes(layer) || !this.editor.canEditLayer(layer) || !Number.isInteger(from) || !Number.isInteger(to)
-			|| from === to || from < 0 || to < 0 || from >= animations.length || to >= animations.length) return false;
-		const [entry] = animations.splice(from, 1);
-		animations.splice(to, 0, entry);
-		this.selectMotion(layer, to);
-		this._render(layer);
-		this.editor.saveState('Reorder animations');
-		return true;
-	}
+	moveAnimation(...args) { return this.editor.moveAnimation(...args); }
 
-	toggleAnimation(layer, index) {
-		const animation = this._animations(layer)[index];
-		if (!animation || !this.editor.layers.includes(layer) || !this.editor.canEditLayer(layer)) return false;
-		animation.enabled = animation.enabled === false;
-		this._render(layer);
-		this.editor.saveState('Toggle animation');
-		return true;
-	}
+	toggleAnimation(...args) { return this.editor.toggleAnimation(...args); }
 
 	_renderStack(prefix, layer) {
 		const host = this._id(prefix, 'Stack');
@@ -652,16 +338,24 @@ class AnimationPanelController {
 			const description = GlitterAnimation.describe(animation), text = buildElement('list-row-text', null, 'span');
 			text.append(buildElement('list-row-name', description.name, 'span'), buildElement('list-row-meta', description.detail, 'span')); button.append(text);
 			row.setAttribute('aria-selected', String(index === this._selectedIndex(layer))); row.setAttribute('role', 'option');
-			const select = () => { this.selectMotion(layer, index); this.editor.timelineDock?.selectMotion(layer.id, index); this.load(layer); };
+			const select = () => { this.selectMotion(layer, index); this.load(layer); };
 			row.addEventListener('click', event => { if (!event.target.closest('button')) select(); });
 			row.addEventListener('keydown', event => { if (event.target === row && ['Enter', ' '].includes(event.key)) { event.preventDefault(); event.stopPropagation(); select(); } });
-			const enabled = buildIconButton({ className: 'btn-icon-simple icon-wrapper sm list-row-action', label: animation.enabled === false ? 'Enable animation' : 'Disable animation', icon: animation.enabled === false ? 'eye-slash' : 'eye' });
+			const enabled = buildIconButton({ className: 'btn-icon-simple icon-wrapper sm list-row-action', label: animation.enabled === false ? 'Show animation' : 'Hide animation', icon: animation.enabled === false ? 'eye-slash' : 'eye' });
 			enabled.setAttribute('aria-pressed', String(animation.enabled !== false));
 			enabled.addEventListener('click', () => this.toggleAnimation(layer, index));
 			const grip = buildIconButton({ label: 'Drag to reorder; arrow keys move this animation' });
 			const mark = buildElement('drag-handle-mark', undefined, 'span'); mark.setAttribute('aria-hidden', 'true'); grip.append(mark);
 			grip.classList.add('list-row-handle');
-			row.append(grip, enabled, button); host.appendChild(row);
+			const menu = buildIconButton({ className: 'btn-icon-simple icon-wrapper sm list-row-action', label: 'Animation actions', icon: 'ellipsis-vertical' });
+			const menuRoot = buildElement('app-menu');
+			menuRoot.append(menu);
+			menu.addEventListener('click', () => openActionMenu({ root: menuRoot, trigger: menu, actions: [
+				...this.editor.animationTimingActions(GlitterAnimation.sourceKey(layer.id, animation)),
+				{ label: 'Duplicate animation', disabled: !this.editor.canEditLayer(layer) || animations.length >= CONFIG.tools.animation.maxStackSize, run: () => this.editor.duplicateAnimation(layer, layer.animations.indexOf(animation)) },
+				{ label: 'Delete animation', disabled: !this.editor.canEditLayer(layer), run: () => this.editor.deleteAnimation(layer, layer.animations.indexOf(animation)) }
+			] }));
+			row.append(grip, enabled, button, menuRoot); host.appendChild(row);
 		});
 		const remove = this._id(prefix, 'Remove');
 		if (remove) remove.disabled = !animations.length;
@@ -673,16 +367,12 @@ class AnimationPanelController {
 		}
 	}
 
-	_renderLayer(layer) {
-		const manager = getLayerManagerForType(this.editor, layer.type);
-		manager?.renderLayer?.(layer);
-	}
+	_renderLayer(layer) { this.editor.touchMotion(layer, this._selected(layer)); this.editor.renderAnimationLayer(layer); }
 
-	_render(layer, commit = false) {
+	_render(layer, commitLabel) {
 		this._renderLayer(layer);
-		this.editor.timelineDock?.selectMotion(layer.id, this._selectedIndex(layer));
 		this.load(layer);
-		if (commit) this.editor.saveState('Edit animation');
+		if (commitLabel) this.editor.commitMotionEdit(commitLabel);
 	}
 
 	_updateLayerAnchor(layer, anchor) {
@@ -702,14 +392,7 @@ class AnimationPanelController {
 		this._id(prefix, 'Enabled')?.addEventListener('change', (event) => {
 			const layer = this._active(type);
 			if (!layer) return;
-			if (event.target.checked) {
-				if (layer.animations?.length) layer.animations.forEach(animation => { animation.enabled = true; });
-				else layer.animations = [this._createDefault(layer)];
-				this.selectedByLayer.set(layer.id, 0);
-			} else {
-				layer.animations?.forEach(animation => { animation.enabled = false; });
-			}
-			this._render(layer, true);
+			this.editor.setAnimationsEnabled(layer, event.target.checked);
 		});
 		this._id(prefix, 'Type')?.addEventListener('change', (event) => {
 			const layer = this._active(type);
@@ -717,14 +400,13 @@ class AnimationPanelController {
 			if (!animation) return;
 			const feature = GlitterAnimation.MOTION_REGISTRY[event.target.value]?.feature;
 			if (feature && !isFeatureAvailable(feature)) { this.load(layer); return; }
-			layer.animations[this._selectedIndex(layer)] = this._createDefault(layer, event.target.value);
-			this._render(layer, true);
+			this.editor.setAnimationType(layer, animation.id, event.target.value);
 		});
 		this._id(prefix, 'Add')?.addEventListener('click', () => {
 			const layer = this._active(type);
 			if (!layer || !this.editor.canEditLayer(layer) || this._animations(layer).length >= CONFIG.tools.animation.maxStackSize) return;
 			const append = motionType => this.addAnimation(layer, motionType);
-			if (!isFeatureAvailable('timeline')) { append(CONFIG.tools.animation.defaultType); return; }
+			if (!isFeatureAvailable('customMotion')) { append(CONFIG.tools.animation.defaultType); return; }
 			const trigger = this._id(prefix, 'Add');
 			openActionMenu({ root: trigger.closest('.app-menu'), trigger, actions: [CONFIG.tools.animation.defaultType, 'custom'].map(motionType => ({ label: motionType === 'custom' ? 'Custom keys' : 'Preset motion', run: () => append(motionType) })) });
 		});
@@ -757,13 +439,13 @@ class AnimationPanelController {
 						const key = field.endsWith('X') ? 'x' : 'y';
 						if (this._anchorDefinition(animation).stores === 'motion') animation[`orbitCenter${key.toUpperCase()}`] = value / scale;
 						else this._updateLayerAnchor(layer, { ...getLayerTransform(layer).anchor, [key]: value / scale });
-					} else animation[field] = Number((value / scale).toFixed(6));
-					this._renderLayer(layer);
-					this._syncSummary(prefix, layer.animations, animation);
+					} else this.editor.setMotionField(layer, animation.id, field, Number((value / scale).toFixed(6)), { live: true });
+					if (field === 'anchorX' || field === 'anchorY') this._renderLayer(layer);
+					this._syncSummary(prefix, GlitterAnimation.getLayerAnimations(layer), animation);
 				},
 				onCommit: () => {
 					const layer = this._active(type);
-					this.editor.saveState(this._anchorDefinition(this._selected(layer)).stores === 'layer' && (field === 'anchorX' || field === 'anchorY') ? 'Change anchor' : 'Edit animation');
+					this.editor.commitMotionEdit(this._anchorDefinition(this._selected(layer)).stores === 'layer' && (field === 'anchorX' || field === 'anchorY') ? 'Change anchor' : `Change ${FIELDS[spec].label}`);
 				}
 			});
 		});
@@ -783,9 +465,9 @@ class AnimationPanelController {
 					else {
 						this._updateLayerAnchor(layer, { x, y });
 					}
-				} else animation[field] = event.target.value;
+				} else this.editor.setMotionField(layer, animation.id, field, event.target.value, { live: true });
 				this._render(layer);
-				this.editor.saveState(field === 'anchor' && this._anchorDefinition(animation).stores === 'layer' ? 'Change anchor' : 'Edit animation');
+				this.editor.commitMotionEdit(field === 'anchor' && this._anchorDefinition(animation).stores === 'layer' ? 'Change anchor' : `Change ${suffix.replace(/([a-z])([A-Z])/g, '$1 $2')}`);
 			});
 		});
 		const applyRepeats = () => {
@@ -793,10 +475,11 @@ class AnimationPanelController {
 			const animation = this._selected(layer);
 			if (!animation) return;
 			const spec = FIELDS.animIterations;
-			animation.iterations = this._id(prefix, 'PlaysForever').checked
+			const iterations = this._id(prefix, 'PlaysForever').checked
 				? Infinity
 				: Number(clampNumber(this._id(prefix, 'Iterations').valueAsNumber, spec.min, spec.max, spec.value).toFixed(2));
-			this._render(layer, true);
+			this.editor.writeTiming(GlitterAnimation.sourceKey(layer.id, animation), { iterations }, { live: true });
+			this._render(layer, `Change ${spec.label}`);
 		};
 		this._id(prefix, 'Iterations')?.addEventListener('change', applyRepeats);
 		this._id(prefix, 'Plays')?.addEventListener('change', applyRepeats);
@@ -805,7 +488,7 @@ class AnimationPanelController {
 			const animation = this._selected(layer);
 			if (!animation) return;
 			animation.steps = Math.max(FIELDS.animSteps.min, Math.min(FIELDS.animSteps.max, Number(event.target.value) || FIELDS.animSteps.value));
-			this._render(layer, true);
+			this._render(layer, `Change ${FIELDS.animSteps.label}`);
 		});
 	}
 
@@ -824,15 +507,15 @@ class AnimationPanelController {
 	}
 
 	load(layer) {
-		this.editor.timelineKeyRecording?.validate();
+		this.editor.keyRecording?.validate();
 		const prefix = this.prefixByType.get(layer?.type);
 		if (!prefix) return;
-		const enabled = Boolean(layer.animations?.some(animation => animation.enabled !== false));
+		const enabled = layer.animationsEnabled !== false && Boolean(layer.animations?.length);
 		// Same contract as every other effect module (shadow, border, pixel
 		// effects): the card's own is-collapsed accordion shows/hides the body,
 		// so there's no separate content wrapper to toggle by hand here.
 		syncPanelEffectToggle(this._id(prefix, 'Enabled'), enabled);
-		this._syncSummary(prefix, layer.animations, this._selected(layer));
+		this._syncSummary(prefix, GlitterAnimation.getLayerAnimations(layer), this._selected(layer));
 		const data = GlitterAnimation.normalizeAnimation(this._selected(layer) || { type: CONFIG.tools.animation.defaultType });
 		this._id(prefix, 'Enabled').closest('.animation-module').classList.toggle('is-empty', !layer.animations?.length);
 		this._id(prefix, 'StackEmpty').hidden = Boolean(layer.animations?.length);
@@ -896,7 +579,7 @@ class AnimationPanelController {
 			const row = this._id(prefix, `${suffix}Row`);
 			if (row) row.hidden = this._selectedAnchorPreset(layer, data) !== 'custom';
 		});
-		this._syncSummary(prefix, layer.animations, data);
+		this._syncSummary(prefix, GlitterAnimation.getLayerAnimations(layer), data);
 		this.loadTimingStrip(prefix, layer);
 		for (const [suffix, easing] of [['Easing', data.easing], ['KeyEasing', GlitterAnimation.normalizeKeys(data.keys)[this.keyIndex(this._selected(layer))]?.easing || 'linear']]) {
 			const control = this._id(prefix, suffix); if (!control) continue;
@@ -907,18 +590,24 @@ class AnimationPanelController {
 
 	loadTimingStrip(prefix, layer) {
 		const host = this._id(prefix, 'TimingStrip'); if (!host) return;
-		const model = TimelineView.buildModel(this.editor.loopEstimate, this.editor.layers, this.editor);
-		const row = model.groups.find(group => group.layerId === layer.id)?.rows.find(row => TimelineView.motionIndex(row) === this._selectedIndex(layer));
-		host.replaceChildren(); host.parentElement.hidden = !row || !model.loopMs; if (host.parentElement.hidden) return;
+		const animation = this._selected(layer), estimate = this.editor.loopEstimate;
+		const target = listTimingTargets(this.editor, [layer]).find(target => target.kind === 'motion' && animation && target.motionId === animation.id);
+		const loopMs = this.editor.documentLoop.mode === 'set' ? this.editor.documentLoop.durationMs : estimate?.duration;
+		const analysis = estimate?.sourceAnalysis.find(entry => entry.key === target?.key);
+		const row = target && { cycleMs: target.period, exportCycleMs: analysis?.resolvedPeriod || target.period, startMs: target.run.start, endMs: Math.min(target.run.end, loopMs), phase: target.phase, direction: target.direction, can: target.can, source: { run: target.run }, closes: !estimate?.loopFit.sources.find(source => source.key === target.key) || sourceSeamError(estimate.loopFit.sources.find(source => source.key === target.key), loopMs, analysis?.resolvedPeriod || target.period) < 1e-8 };
+
+		const hint = this._id(prefix, 'TimingHint');
+		if (hint) { hint.hidden = !row || !(row.startMs > loopMs); hint.textContent = hint.hidden ? '' : TimelineView.seamTitle(row, loopMs); }
+		host.replaceChildren(); host.parentElement.hidden = !row || !loopMs; if (host.parentElement.hidden) return;
 		const track = buildElement('animation-timing-track'); host.appendChild(track);
-		const available = isFeatureAvailable('timeline'), bar = document.createElement(available ? 'button' : 'div');
-		if (available) { bar.type = 'button'; bar.addEventListener('click', async () => { PREFERENCES.set('timelineOpen', true); const dock = await this.editor.ensureTimelineDock(); dock.open(); dock.selectMotion(layer.id, this._selectedIndex(layer)); }); }
-		bar.className = 'timeline-bar animation-timing-bar'; bar.title = TimelineView.barTitle(row, model.loopMs);
-		const box = TimelineView.barBox(row, 100000 / model.loopMs, CONFIG.ui.timeline);
+		const available = isFeatureAvailable('customMotion'), bar = document.createElement(available ? 'button' : 'div');
+		if (available) { bar.type = 'button'; bar.addEventListener('click', () => this.editor.motionSelection.select(layer.id, this._selected(layer)?.id)); }
+		bar.className = 'timeline-bar animation-timing-bar'; bar.title = TimelineView.barTitle(row, loopMs);
+		const box = TimelineView.barBox(row, 100000 / loopMs, CONFIG.ui.timeline);
 		bar.style.left = `${box.left}%`; bar.style.width = `${Math.min(100 - box.left, box.width)}%`;
 		bar.style.setProperty('--cycle-share', `${row.exportCycleMs / Math.max(1, row.endMs - row.startMs) * 100}%`);
 		bar.classList.toggle('is-seam', !row.closes); if (!row.closes) bar.append(createIcon('triangle-exclamation'));
-		host.title = `Loop ${formatSeconds(model.loopMs)}`; track.append(bar);
+		host.title = `Loop ${formatSeconds(loopMs)}`; track.append(bar);
 	}
 
 	_anchorDefinition(animation) {

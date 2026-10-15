@@ -162,7 +162,7 @@ async function main() {
 		await page.evaluate(async () => {
 			await editor.loadBlankImage(180, 140, '#ffffff');
 			const base = editor.shapeGlitterManager.createLayer({ shapeId: 'circle', width: 90, height: 80 }); editor.layerManager.insertLayer(base);
-			base.animations = [GlitterAnimation.normalizeAnimation({ type: 'bounce', periodMs: 400 })];
+			base.animations = [GlitterAnimation.normalizeAnimation({ id: editor.layerManager.generateLayerId(), type: 'bounce', periodMs: 400 })];
 			const asset = editor.stickerLibrary.content.find(item => item.isAnimated); await editor.stickerLibrary.ensureAssetDetails(asset.id);
 			const content = editor.stickerManager.createLayer(asset.id); content.clipped = true; editor.layerManager.insertLayer(content);
 			const filter = editor.filterLayerManager.createLayer({ filterData: { type: 'invert', region: { width: 80, height: 70 } } }); editor.layerManager.insertLayer(filter);

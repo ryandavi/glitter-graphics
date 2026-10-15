@@ -1055,62 +1055,66 @@ const CONFIG = deepFreeze({
 
 		},
 		progress: { yieldEveryFrames: 2 },
-		timeline: {
-			estimateDebounceMs: 150,
-			maxSamplingFps: 30,
-			proceduralPeriodTolerance: 0.10,
-			preRenderBudgetMultiplier: 1.5,
-			preferredFrameBudget: 60,
-			// Frame-count floor derived from the resolved loop length, so a long
-			// loop (e.g. an 8s zoom) doesn't get merged down to the same fixed
-			// frame count as a short one and end up choppy.
-			minFrameRateFps: 24,
-			hardFrameLimit: 1000,
+		timeline: (() => {
+			const maxTimelineMs = 20000;
+			return {
+				estimateDebounceMs: 150,
+				maxSamplingFps: 30,
+				proceduralPeriodTolerance: 0.10,
+				preRenderBudgetMultiplier: 1.5,
+				preferredFrameBudget: 60,
+				// Frame-count floor derived from the resolved loop length, so a long
+				// loop (e.g. an 8s zoom) doesn't get merged down to the same fixed
+				// frame count as a short one and end up choppy.
+				minFrameRateFps: 24,
+				hardFrameLimit: 1000,
 
-			maxLoopDurationMs: 12000,
-			setLoopRange: { min: 200, max: 20000 },
-			// The composite render clock owns displayed time once any procedural
-			// (continuously evaluated) source is present: source boundaries stop
-			// being automatic output timestamps, so continuous motion is sampled
-			// on a deliberate, format-representable cadence instead of the union
-			// of unrelated source events.
-			renderClock: {
-				// gif.js encodes delays as Math.round(ms / 10) centiseconds, so a
-				// planned delay is only honoured unchanged on that grid. Viewers
-				// clamp anything under 2 cs, which is the floor here.
-				gifDelayQuantumMs: 10,
-				gifMinimumDelayMs: 20,
-				gifMaximumDelayMs: 200,
-				mp4OutputFpsStops: [12, 15, 20, 24, 25, 30, 50, 60],
-				// Cadence shortfalls within this relative band count as equal, so
-				// delay regularity — not a hair's difference in average rate —
-				// decides between otherwise comparable clocks.
-				cadenceShortfallTolerance: 0.05,
-				loopCandidateShortlist: 4,
-				// TEMPORARY A/B switch; remove after comparing glitter timing with the free grid.
-				// On: every glitter or GIF frame change starts an output frame, so
-				// each frame plays for its own time; motion is fitted around it.
-				// Off: the older free grid, where a frame change can show up to one
-				// frame late. Delete this switch and the losing path after the test.
-				glitterLocked: true,
-				// A locked clock runs no faster than the preferred rate times this,
-				// unless a frame change needs it: 30 ms GIF frames (33 fps) pass,
-				// 20 ms (50 fps) does not, so exact glitter does not grow the file.
-				lockedRateAllowance: 1.25
-			},
-			// Timings offered for a smaller export (planFrameOptions). An option
-			// must save `minimumSaving` of the frames, and never moves a speed
-			// further than `maximumSpeedChange` from where it was before any fit.
-			frameOptions: {
-				candidateLimit: 8,
-				minimumSaving: 0.2,
-				maximumSpeedChange: 0.25,
-				labels: { closest: 'Closest to original', fewest: 'Fewest frames' }
-			},
-			fidelityStops: EXPORT_FIDELITY_STOPS,
-			fidelityEndLabels: ['Best quality', 'Smallest file'],
+				maxLoopDurationMs: 12000,
+				maxTimelineMs,
+				setLoopRange: { min: 200, max: maxTimelineMs },
+				// The composite render clock owns displayed time once any procedural
+				// (continuously evaluated) source is present: source boundaries stop
+				// being automatic output timestamps, so continuous motion is sampled
+				// on a deliberate, format-representable cadence instead of the union
+				// of unrelated source events.
+				renderClock: {
+					// gif.js encodes delays as Math.round(ms / 10) centiseconds, so a
+					// planned delay is only honoured unchanged on that grid. Viewers
+					// clamp anything under 2 cs, which is the floor here.
+					gifDelayQuantumMs: 10,
+					gifMinimumDelayMs: 20,
+					gifMaximumDelayMs: 200,
+					mp4OutputFpsStops: [12, 15, 20, 24, 25, 30, 50, 60],
+					// Cadence shortfalls within this relative band count as equal, so
+					// delay regularity — not a hair's difference in average rate —
+					// decides between otherwise comparable clocks.
+					cadenceShortfallTolerance: 0.05,
+					loopCandidateShortlist: 4,
+					// TEMPORARY A/B switch; remove after comparing glitter timing with the free grid.
+					// On: every glitter or GIF frame change starts an output frame, so
+					// each frame plays for its own time; motion is fitted around it.
+					// Off: the older free grid, where a frame change can show up to one
+					// frame late. Delete this switch and the losing path after the test.
+					glitterLocked: true,
+					// A locked clock runs no faster than the preferred rate times this,
+					// unless a frame change needs it: 30 ms GIF frames (33 fps) pass,
+					// 20 ms (50 fps) does not, so exact glitter does not grow the file.
+					lockedRateAllowance: 1.25
+				},
+				// Timings offered for a smaller export (planFrameOptions). An option
+				// must save `minimumSaving` of the frames, and never moves a speed
+				// further than `maximumSpeedChange` from where it was before any fit.
+				frameOptions: {
+					candidateLimit: 8,
+					minimumSaving: 0.2,
+					maximumSpeedChange: 0.25,
+					labels: { closest: 'Closest to original', fewest: 'Fewest frames' }
+				},
+				fidelityStops: EXPORT_FIDELITY_STOPS,
+				fidelityEndLabels: ['Best quality', 'Smallest file'],
 
-		},
+			};
+		})(),
 		defaults: {
 			outputMode: 'animation',
 			stillFormat: 'png',

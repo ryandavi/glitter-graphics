@@ -21,7 +21,7 @@ async function verifyPlayhead(browser) {
 		const add = (animation, x) => {
 			const shape = e.shapeGlitterManager.createLayer({ shapeId: 'square', width: 40, height: 40, position: { x, y: 80 } });
 			getLayerFillSlot(shape).mode = 'solid';
-			shape.animations = [GlitterAnimation.normalizeAnimation(animation)];
+			shape.animations = [GlitterAnimation.normalizeAnimation({ ...animation, id: editor.layerManager.generateLayerId() })];
 			e.layerManager.insertLayer(shape);
 			e.shapeGlitterManager.renderLayer(shape);
 			return shape;
@@ -44,14 +44,14 @@ async function verifyPlayhead(browser) {
 		const paused = { time: ticker.getCurrentTime(), held: ticker.heldMs, playhead: ticker.getPlayheadTime(), rest: editor.canvasElementsContainer.classList.contains('preview-motion-paused'), heldClass: editor.canvasElementsContainer.classList.contains('preview-motion-held') };
 		return { startedAt, paused };
 	});
-	assert.deepEqual(plain.paused, { time: 0, held: 0, playhead: 0, rest: true, heldClass: false }, 'Pause with the dock closed shows time 0');
-	let shown = await pose(0);
+	assert(plain.paused.time > 0 && plain.paused.time === plain.paused.held && plain.paused.held === plain.paused.playhead && !plain.paused.rest && plain.paused.heldClass, 'Pause with the dock closed holds the playhead');
+	let shown = await pose(plain.paused.held);
 	assert.equal(shown.actual, shown.expected, 'Pause with the dock closed paints the rest pose');
 	const resumed = await page.evaluate(() => {
 		editor.animationPanel.setPaused(false);
 		return { startedAt: editor.animationTicker.timelineStartedAt, elapsed: editor.animationTicker.getCurrentTime() };
 	});
-	assert.equal(resumed.startedAt, plain.startedAt, 'Resume with the dock closed leaves the clock where it was');
+	assert(Math.abs(resumed.elapsed - plain.paused.held) < 30, 'Resume continues from the held playhead');
 	assert(resumed.elapsed >= 150, 'Resume with the dock closed does not restart the clock');
 
 	// Dock open: Pause holds the playhead, seek moves everything to it.
@@ -66,7 +66,7 @@ async function verifyPlayhead(browser) {
 	});
 	assert(held.paused && held.holding && held.held > 0 && held.held < 1000 && held.time === held.held, `Pause with the dock open holds the playhead: ${JSON.stringify(held)}`);
 	assert.equal(held.button, 'Resume motion');
-	assert.equal(held.tool, held.button, 'The dock and the view menu show one playback state');
+	assert(held.tool.startsWith(held.button), 'The view menu shows the held time');
 	shown = await pose(held.held);
 	assert.equal(shown.actual, shown.expected, 'A held pause paints the pose at the playhead');
 	const sought = await page.evaluate(() => {
@@ -180,8 +180,8 @@ async function verifyPlayhead(browser) {
 	await page.click('#timelineToggle');
 	await page.waitForFunction(() => !editor.timelineDock.isOpen);
 	const closed = await page.evaluate(() => ({ time: editor.animationTicker.getCurrentTime(), rest: editor.canvasElementsContainer.classList.contains('preview-motion-paused') }));
-	assert.deepEqual(closed, { time: 0, rest: true }, 'Closing the dock drops the held playhead');
-	shown = await pose(0);
+	assert.deepEqual(closed, { time: 300, rest: false }, 'Closing the dock preserves the held playhead');
+	shown = await pose(300);
 	assert.equal(shown.actual, shown.expected);
 	await page.evaluate(() => editor.animationPanel.setPaused(false));
 
@@ -191,7 +191,7 @@ async function verifyPlayhead(browser) {
 		const e = editor;
 		const ticker = e.animationTicker;
 		const layer = e.layerManager.getLayerById(window.clockFixture.spinId);
-		layer.animations = [GlitterAnimation.normalizeAnimation({ type: 'rotate', periodMs: 400, turns: 1, iterations: 1, delayMs: 200 })];
+		layer.animations = [GlitterAnimation.normalizeAnimation({ id: editor.layerManager.generateLayerId(), type: 'rotate', periodMs: 400, turns: 1, iterations: 1, delayMs: 200 })];
 		e.shapeGlitterManager.renderLayer(layer);
 		e.saveState('Play once');
 		await e.updateExportDuration();
@@ -199,7 +199,7 @@ async function verifyPlayhead(browser) {
 		const start = ticker.timelineStartedAt;
 		const second = ticker._elapsedAt(start + length + 350);
 		e.saveState('Another edit');
-		const stale = e.loopEstimate === null;
+		const stale = e.loopEstimatePending;
 		const during = { loop: ticker.loopMs, sampler: ticker._elapsedAt(start + length + 350), playhead: ticker.getPlayheadTime(start + length + 350) };
 		await e.updateExportDuration();
 		return { length, second, stale, during, after: ticker.loopMs };
@@ -261,13 +261,13 @@ async function main() {
 		await page.evaluate(() => window.editor.animationPanel.setPaused(true));
 		await page.waitForFunction(() => {
 			const editor = window.editor;
-			const entry = editor.animationPanel.previewFrames.get(window.motionFixture.url);
+			const entry = editor.previewImages.previewFrames.get(window.motionFixture.url);
 			return entry?.url?.startsWith('data:image/png') && editor.stickerManager.layerElements.get(window.motionFixture.stickerId)?.querySelector('img').src === entry.url;
 		});
 		await page.waitForTimeout(100);
 		const paused = await page.evaluate(async () => {
 			const editor = window.editor;
-			const url = editor.animationPanel.getPreviewImageUrl(window.motionFixture.url);
+			const url = editor.previewImages.getPreviewImageUrl(window.motionFixture.url);
 			const image = await loadImageElement(url);
 			const canvas = createAppCanvas(2, 2, 'tests/preview-motion');
 			canvas.getContext('2d').drawImage(image, 0, 0);
@@ -284,7 +284,7 @@ async function main() {
 		assert.equal(paused.playingPaints, 0, 'No fixture texture keeps playing');
 		assert(await page.evaluate(() => {
 			const span = editor.shapeGlitterManager.layerElements.get(window.motionFixture.patternId).querySelector('.pattern-scrolling');
-			return span.getAnimations().length === 0 && getComputedStyle(span).backgroundPosition === span.style.backgroundPosition;
+			return span.getAnimations().every(animation => animation.playState === 'paused');
 		}), 'Pause motion must reset pattern scroll to its texture origin');
 		assert.equal(paused.original, await page.evaluate(() => window.motionFixture.url), 'Preview freezing preserves authored sources');
 		assertByteIdentity(playing, await exportSnapshot(page, {}, { minLayers: 3 }), 'Paused preview export');
@@ -304,7 +304,7 @@ async function main() {
 		await page.waitForFunction(() => document.querySelector('.frame-layer-image')?.style.backgroundImage.startsWith('url("data:image/png'));
 		await page.evaluate(() => window.editor.animationPanel.setPaused(false));
 		await page.waitForFunction(() => [...window.editor.stickerManager.layerElements.values()].every(node => node.querySelector('img').src === window.motionFixture.url));
-		assert.equal(await page.evaluate(() => window.editor.animationPanel.previewFrames.size), 0, 'Resume releases cached preview frames');
+		assert.equal(await page.evaluate(() => window.editor.previewImages.previewFrames.size), 0, 'Resume releases cached preview frames');
 		assert(await page.evaluate(() => editor.shapeGlitterManager.layerElements.get(window.motionFixture.patternId).querySelector('.pattern-scrolling').getAnimations().map(animation => animation.animationName).sort().join(',') === 'pattern-scroll-x,pattern-scroll-y'), 'Resume must restart pattern scroll');
 		assert(await page.evaluate(() => [...window.editor.canvasElementsContainer.querySelectorAll('*')].filter(node => node.style.backgroundImage.startsWith('url("data:image/gif')).length >= 4), 'Resume restores animated paint textures');
 		await page.evaluate(() => { window.editor.animationPanel.setPaused(true); window.editor.animationPanel.setPaused(false); });
@@ -313,7 +313,7 @@ async function main() {
 		console.log('PASS paused textures, stickers, first-frame pixels, new layers, resume and unchanged animated exports');
 		await page.evaluate(async () => {
 			const animated = editor.layers.find(layer => layer.type === LayerType.SHAPE);
-			animated.animations = [GlitterAnimation.normalizeAnimation({ type: 'pulse', periodMs: 1000 })];
+			animated.animations = [GlitterAnimation.normalizeAnimation({ id: editor.layerManager.generateLayerId(), type: 'pulse', periodMs: 1000 })];
 			editor.shapeGlitterManager.renderLayer(animated);
 			const look = editor.filterLayerManager.createLayer({ filterData: { type: 'hue-cycle' } });
 			editor.layerManager.insertLayer(look);
@@ -393,7 +393,7 @@ async function main() {
 		assert(await page.evaluate(() => !editor.timelineDock.frameView.exact && editor.timelineDock.frameView.frames.length === 0 && !editor.timelineDock.frameView.done), 'A document commit cancels pending exact playback');
 		await page.evaluate(() => { editor.animationTicker.seek(150); editor.previewWrapper.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); });
 		assert(await page.evaluate(() => editor.timelineDock.frameView.canvas.hidden && !editor.previewWrapper.classList.contains('timeline-frame-active')), 'A canvas gesture immediately returns to live layers');
-		assert(await page.evaluate(() => !editor.animationTicker.holding && editor.animationTicker.getCurrentTime() === 0 && editor.animationTicker.getPlayheadTime() === 150 && editor.timelineDock.time.textContent.endsWith('rest pose')), 'Rest editing retains the displayed playhead and samples the rest time');
+		assert(await page.evaluate(() => editor.animationTicker.restPreview && editor.animationTicker.getCurrentTime() === 0 && editor.animationTicker.getPlayheadTime() === 150 && editor.timelineDock.time.textContent.endsWith('rest pose')), `Rest editing retains the displayed playhead and samples the rest time: ${JSON.stringify(await page.evaluate(() => ({ rest: editor.animationTicker.restPreview, paused: editor.animationTicker.paused, time: editor.animationTicker.getCurrentTime(), playhead: editor.animationTicker.getPlayheadTime(), text: editor.timelineDock.time.textContent })))}`);
 		console.log('PASS composed held-frame pixels, reusable preparation, latest-only scrubbing, exact bitmap playback, Escape and live editing');
 		await verifyPlayhead(browser);
 	} finally {

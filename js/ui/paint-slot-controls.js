@@ -367,7 +367,13 @@ function bindPaintSlotFields(host, definition, prefix, include = () => true, wit
 		if (!control) return;
 		bindFieldControl(control, binding, {
 			apply: (value, ticket) => withLayer((layer) => {
-				const result = host.apply(layer, () => writeFieldValue(host.ensureSlot(layer, definition.key), binding, value), { live: true, geometry: binding.geometry, ticket });
+				const result = host.apply(layer, () => {
+					if (['sparkleCycle', 'patternScrollCycle'].includes(binding.field)) {
+						const target = listTimingTargets(host.editor, [layer]).find(entry => entry.slot === definition.key && entry.kind === (binding.field === 'sparkleCycle' ? 'sparkles' : 'patternScroll'));
+						if (target) return host.editor.writeTiming(target.key, { period: value }, { live: true });
+					}
+					writeFieldValue(host.ensureSlot(layer, definition.key), binding, value);
+				}, { live: true, geometry: binding.geometry, ticket });
 				refreshSlotFieldSwatch(host, layer, definition, binding);
 				host.afterFieldChange?.(layer, definition.key, binding);
 				return result;

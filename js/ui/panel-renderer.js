@@ -1983,7 +1983,9 @@ function readPanelCardState() {
 
 // A section or a collapsible set: the toggle is its title row or its name.
 function setPanelCardCollapsed(card, collapsed) {
+	const changed = card.classList.contains('is-collapsed') !== Boolean(collapsed);
 	card.classList.toggle('is-collapsed', collapsed);
+	if (changed) card.dispatchEvent(new CustomEvent('panelcollapsechange', { bubbles: true, detail: { collapsed: Boolean(collapsed) } }));
 	card.querySelector(':scope > :is(.property-card-title, [data-set-toggle])')?.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
 }
 

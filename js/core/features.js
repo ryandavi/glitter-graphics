@@ -1,9 +1,10 @@
 'use strict';
 
 const FEATURES = Object.freeze({
+	customMotion: Object.freeze({ stage: 'local' }),
 	timeline: Object.freeze({ stage: 'local', layouts: Object.freeze(['desktop']) }),
-	loopLength: Object.freeze({ stage: 'local' }),
-	gifCycle: Object.freeze({ stage: 'local' }),
+	loopLength: Object.freeze({ stage: 'on' }),
+	gifCycle: Object.freeze({ stage: 'on' }),
 	history: Object.freeze({ stage: 'local' }),
 	personalWeb: Object.freeze({ stage: 'local' }),
 	htmlScene: Object.freeze({ stage: 'local' }),

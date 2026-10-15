@@ -8,9 +8,9 @@
 // window shut for it. `flyout` returns the session's own section for the
 // window to show in a layer section's place, or null.
 const SESSIONS = Object.freeze([
-	{ id: 'keyRecording', isActive: editor => Boolean(editor.timelineKeyRecording?.active),
-		end: editor => editor.timelineKeyRecording.end(), cancel: editor => editor.timelineKeyRecording.end(), confirm: editor => editor.timelineKeyRecording.end(),
-		nudge: (editor, event) => editor.timelineKeyRecording.nudge(event), delete: editor => editor.animationPanel.deleteKey(editor.timelineKeyRecording.layer, editor.timelineKeyRecording.entry),
+	{ id: 'keyRecording', isActive: editor => Boolean(editor.keyRecording?.active),
+		end: editor => editor.keyRecording.end(), cancel: editor => editor.keyRecording.end(), confirm: editor => editor.keyRecording.end(),
+		nudge: (editor, event) => editor.keyRecording.nudge(event), delete: editor => editor.animationPanel.deleteKey(editor.keyRecording.layer, editor.keyRecording.entry),
 		allows: (_editor, command) => command.group !== 'Transform' || command === COMMANDS.nudge },
 	{ id: 'autoGlitter', isActive: editor => editor.autoGlitterManager.isSessionActive(),
 		panel: 'autoGlitterSettings', closesLibrary: true,
@@ -85,7 +85,7 @@ const ESCAPE_HANDLERS = Object.freeze([
 	} },
 	{ id: 'picker', handle: editor => editor.pickers.closeActive() },
 	{ id: 'drag', handle: editor => {
-		if (editor.timelineKeyRecording?.drag) { editor.timelineKeyRecording.finish(true); return true; }
+		if (editor.keyRecording?.drag) { editor.keyRecording.finish(true); return true; }
 		if (editor.timelineDock?.keyLane.drag) { editor.timelineDock.keyLane.finish(true); return true; }
 		if (editor.maskEditor.strokeActive) { editor.maskEditor._cancelStroke(); return true; }
 		if (editor.pathEdit.session?.drag) { editor.pathEdit.cancelDrag(); return true; }

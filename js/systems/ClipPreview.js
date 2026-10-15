@@ -65,7 +65,7 @@ class ClipPreview {
 			const dragging = editor.isLayerPointerInteractionActive?.() || getLayerManagerForType(editor, base.type)?.layerTransforms?.get(base.id)?.isDraggingHandle;
 			if (!dragging) entry.slow = false;
 			if (entry.key !== key && !entry.pending && !(dragging && entry.slow)) this.updateMask(entry, key);
-			if (GlitterAnimation.isActive(base.animations)) {
+			if (GlitterAnimation.isActive(GlitterAnimation.getLayerAnimations(base))) {
 				editor.animationTicker.register(`clip-${layer.id}`, {
 					getWrapper: () => wrapper,
 					paint: elapsed => this.paintMotion(entry, elapsed)
@@ -113,7 +113,7 @@ class ClipPreview {
 				entry.url = url;
 				entry.space = space;
 				this.placeMask(entry);
-				this.paintMotion(entry, GlitterAnimation.isActive(entry.base.animations) ? this.editor.animationTicker.getCurrentTime() : 0);
+				this.paintMotion(entry, GlitterAnimation.isActive(GlitterAnimation.getLayerAnimations(entry.base)) ? this.editor.animationTicker.getCurrentTime() : 0);
 				entry.wrapper.style.visibility = '';
 				entry.key = key;
 				if (previous) URL.revokeObjectURL(previous);
@@ -132,7 +132,7 @@ class ClipPreview {
 	paintMotion(entry, elapsed) {
 		const { wrapper, base } = entry;
 		const context = getLayerAnimationSamplingContext(this.editor, base);
-		const sample = GlitterAnimation.sampleAt(GlitterAnimation.normalizeAnimations(this.editor.timelineKeyRecording?.previewAnimations(base) || base.animations), elapsed, context);
+		const sample = GlitterAnimation.sampleAt(GlitterAnimation.normalizeAnimations(this.editor.keyRecording?.previewAnimations(base) || GlitterAnimation.getLayerAnimations(base)), elapsed, context);
 		const frame = getLayerFrame(this.editor, base);
 		if (!frame) {
 			wrapper.style.opacity = '0';

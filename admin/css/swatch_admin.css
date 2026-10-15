@@ -214,6 +214,10 @@
   --opacity-muted: .6;
   --opacity-soft: .7;
   /* Spacing: one scale. Every gap, inset and margin is a step of it. */
+  --size-timeline-info: 120px;
+  --size-timeline-key: 10px;
+  --color-timeline-authored: var(--color-accent);
+  --color-timeline-procedural: color-mix(in srgb, var(--color-accent) 60%, var(--color-accent-visited));
   --spacing-2xs: 2px;
   --spacing-xs: 4px;
   --spacing-sm: 6px;

@@ -28,6 +28,8 @@ const EDITOR_TIMELINE_METHODS = {
 		}
 	},
 	async ensureTimelineDock() {
+		await this.ensurePreviewFrameView();
+		await this.ensureKeyRecording();
 		const { TimelineDock } = await loadScriptGroup('timeline');
 		this.timelineDock ||= new TimelineDock(this, document.getElementById('timelineDock'));
 		return this.timelineDock;

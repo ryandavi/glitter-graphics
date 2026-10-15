@@ -116,7 +116,7 @@ registerLayerType(LayerType.PATH, {
 	sparkleHost: (editor, layer) => editor.pathLayerManager?.getSparkleHost(layer) || null,
 	hasVisibleContent: (layer) => PathGeometry.countPoints(layer.pathData?.subpaths) > 0,
 	animatable: true,
-	animate: (...args) => animateTransformableLayerPreview(...args),
+	animate: (...args) => paintLayerAnimationPreview(...args),
 	animationBox: (editor, layer) => {
 		const frame = getLayerFrame(editor, layer);
 		return { width: frame?.width || 1, height: frame?.height || 1 };

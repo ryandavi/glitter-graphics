@@ -1,4 +1,8 @@
 const COMMANDS = {
+	playbackToggle: { label: 'Play / Pause Motion', group: 'Animation', displayKey: 'Space (tap)', when: editor => editor.hasMotionForPlayback(), run: editor => editor.setPlayback(editor.animationTicker.paused) },
+	playheadStepBack: { label: 'Previous Frame', group: 'Animation', keys: [','], displayKey: ',', when: editor => editor.hasMotionForPlayback(), run: editor => editor.animationTicker.step(-1) },
+	playheadStepForward: { label: 'Next Frame', group: 'Animation', keys: ['.'], displayKey: '.', when: editor => editor.hasMotionForPlayback(), run: editor => editor.animationTicker.step(1) },
+	playheadStart: { label: 'Go to Loop Start', group: 'Animation', keys: ['Home'], displayKey: 'Home', when: editor => editor.hasMotionForPlayback(), run: editor => editor.animationTicker.goToStart() },
 	canvasBoundsRatioMenu: { run: (editor) => editor.openCanvasBoundsMenu('contextCropRatio', getCanvasRatioOptions(editor), (id) => editor.setCanvasBoundsRatio(id)) },
 	canvasBoundsFitMenu: { run: (editor) => editor.openCanvasBoundsMenu('contextCropFit', CANVAS_BOUNDS_SOURCES.map((source) => ({ ...source, disabled: !canFitCanvasBounds(editor, source.id) })), (id) => editor.setCanvasBoundsSource(id)) },
 	canvasBoundsApply: { run: (editor) => editor.applyCanvasBounds() },

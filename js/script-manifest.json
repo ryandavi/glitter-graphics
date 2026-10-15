@@ -114,6 +114,7 @@
 		"js/ui/settings-renderer.js",
 		"js/ui/settings-store.js",
 		"js/ui/menu-popover.js",
+		"js/core/animation-timing.js",
 		"js/ui/timeline-view.js",
 		"js/ui/key-strip.js",
 		"js/ui/keyboard.js",
@@ -123,6 +124,7 @@
 		"js/editor/keyboard.js",
 		"js/editor/settings.js",
 		"js/editor/animation-loop.js",
+		"js/editor/animation-edit.js",
 		"js/editor/timeline.js",
 		"js/editor/panels.js",
 		"js/editor/asset-info.js",
@@ -155,6 +157,8 @@
 		"js/export/GifEncodingPipeline.js",
 		"js/systems/AnimationTicker.js",
 		"js/systems/ClipPreview.js",
+		"js/systems/MotionSelection.js",
+		"js/systems/PreviewImageResolver.js",
 		"js/systems/AnimationPanelController.js",
 		"js/ui/task-progress-presenter.js",
 		"js/export/ExportProgressPresenter.js",
@@ -224,10 +228,14 @@
 		"js/systems/MobileManager.js",
 		"js/app.js"
 	],
+	"key-recording": [
+		"js/ui/key-recording.js"
+	],
+	"preview-frames": [
+		"js/systems/PreviewFrameView.js"
+	],
 	"timeline": [
-		"js/ui/timeline-frame-view.js",
 		"js/ui/timeline-key-lane.js",
-		"js/ui/timeline-key-recording.js",
 		"js/ui/timeline-dock.js",
 		"js/ui/timeline-group.js"
 	],

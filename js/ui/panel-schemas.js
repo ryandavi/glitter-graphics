@@ -299,10 +299,18 @@ function createAnimationSectionSpec(prefix) {
 		// accordion (syncPanelEffectToggle) hides the whole body.
 		kind: 'section', title: 'Animation', badge: 'beta', classes: 'animation-module', presentation: 'flyout',
 		summary: { id: id('Summary'), text: 'Off' },
-		toggle: { id: id('Enabled'), label: '', title: 'Enable animation' },
+		toggle: { id: id('Enabled'), label: '', title: 'Show animations' },
+		cards: [
+			{ id: id('AnimationsCard'), title: 'Animations', classes: 'animation-stack-card', sets: [
+				{ rows: [{ kind: 'host', id: id('Stack'), classes: 'animation-stack' }, { kind: 'note', id: id('StackEmpty'), text: 'No animations yet', classes: 'property-empty' }] },
+				{ classes: 'animation-stack-actions is-split', actions: [
+					{ id: id('Add'), label: 'Add animation', icon: 'plus', menu: true },
+					{ id: id('Remove'), label: 'Remove', icon: 'trash' }
+				] }
+			] }
+		],
 		sets: [
 			{ rows: [
-				{ kind: 'host', id: id('Stack'), classes: 'animation-stack' },
 				{ kind: 'select', id: id('Type'), label: 'Type', ariaLabel: 'Animation type', options: ANIMATION_PRESET_OPTIONS,
 					stepper: {
 						prev: { id: id('PresetPrev'), label: 'Previous preset', icon: 'chevron-left', title: 'Previous preset' },
@@ -312,11 +320,12 @@ function createAnimationSectionSpec(prefix) {
 			] },
 			{ label: 'Timing', rows: [
 				{ kind: 'host', id: id('TimingStrip'), classes: 'animation-timing-strip', rowClasses: 'is-control' },
+				{ kind: 'note', id: id('TimingHint'), hidden: true },
 				...sliders(['delayMs', 'periodMs']),
-				{ kind: 'radioSegmented', id: id('Plays'), label: 'Plays', options: [
-					{ id: id('PlaysForever'), value: 'forever', label: 'Forever' }, { id: id('PlaysTimes'), value: 'times', label: 'Times' }
+				{ kind: 'radioSegmented', id: id('Plays'), label: 'Repeats', options: [
+					{ id: id('PlaysForever'), value: 'forever', label: 'Forever' }, { id: id('PlaysTimes'), value: 'times', label: 'Count' }
 				] },
-				{ kind: 'field', id: id('Iterations'), type: 'number', ...FIELDS.animIterations, label: 'Times', rowId: id('IterationsRow') },
+				{ kind: 'field', id: id('Iterations'), type: 'number', ...FIELDS.animIterations, rowId: id('IterationsRow') },
 				{ kind: 'select', id: id('Easing'), label: 'Easing', options: ANIMATION_EASING_OPTIONS, optionPreview: value => buildEasingCurve(value, FIELDS.animSteps.value) },
 				{ kind: 'field', id: id('Steps'), type: 'number', label: 'Steps', ...FIELDS.animSteps, rowId: id('StepsRow') }
 			] },
@@ -327,8 +336,8 @@ function createAnimationSectionSpec(prefix) {
 					options: [{ value: 'none', label: 'None' }, { value: 'wrap', label: 'Wrap' }, { value: 'tile', label: 'Tile' }] },
 				...sliders(['gap'], true)
 			] },
-			{ rows: [{ kind: 'note', id: id('KeyDesktopNote'), hidden: true, text: 'Custom keys are edited on desktop.' }] },
-			{ id: id('KeySet'), label: 'Key', feature: 'timeline', hidden: true, rows: [
+			{ rows: [{ kind: 'note', id: id('KeyDesktopNote'), hidden: true, text: 'Pose keys is available on desktop.' }] },
+			{ id: id('KeySet'), label: 'Key', feature: 'customMotion', hidden: true, rows: [
 				{ kind: 'host', id: id('KeyStrip'), classes: 'animation-key-strip' },
 				{ kind: 'select', id: id('KeySelect'), label: 'Key', options: [],
 					stepper: {
@@ -339,24 +348,20 @@ function createAnimationSectionSpec(prefix) {
 				{ kind: 'select', id: id('KeyEasing'), label: 'Easing', hint: 'How it travels from this key to the next', options: ANIMATION_EASING_OPTIONS, optionPreview: value => buildEasingCurve(value, FIELDS.animSteps.value) },
 				{ kind: 'field', id: id('KeySteps'), rowId: id('KeyStepsRow'), type: 'number', ...FIELDS.animSteps, hidden: true }
 			] },
-			{ id: id('KeyValues'), label: 'Values', feature: 'timeline', hidden: true, rows: [
+			{ id: id('KeyValues'), label: 'Values', feature: 'customMotion', hidden: true, rows: [
 				...createKeyValueRows(id),
 				{ kind: 'note', id: id('KeyEmpty'), hidden: true, text: 'This key holds no values. Add one to pose the layer here.' }
 			] },
-			{ id: id('KeyValueActions'), feature: 'timeline', hidden: true, actions: [
+			{ id: id('KeyValueActions'), feature: 'customMotion', hidden: true, actions: [
 				{ id: id('KeyAddValue'), label: 'Add value', icon: 'plus', menu: true }
 			] },
-			{ id: id('KeyActions'), feature: 'timeline', hidden: true, actions: [
+			{ id: id('KeyActions'), feature: 'customMotion', hidden: true, actions: [
 				{ id: id('KeyRecord'), label: KEY_POSE_ACTION.label, icon: KEY_POSE_ACTION.icon },
 				{ id: id('KeyAdd'), label: 'Add key', icon: 'plus' },
 				{ id: id('KeyDelete'), label: 'Delete key', icon: 'trash' }
 			] },
-			{ id: id('ConvertActions'), feature: 'timeline', hidden: true, actions: [
+			{ id: id('ConvertActions'), feature: 'customMotion', hidden: true, actions: [
 				{ id: id('Convert'), label: 'Convert to custom', icon: 'timeline' }
-			] },
-			{ classes: 'animation-stack-actions is-split', actions: [
-				{ id: id('Add'), label: 'Add animation', icon: 'plus', menu: true },
-				{ id: id('Remove'), label: 'Remove', icon: 'trash' }
 			] }
 		],
 		advancedId: id('Advanced'),
@@ -381,14 +386,6 @@ function createAnimationSectionSpec(prefix) {
 			] }
 		]
 	};
-	const preset = spec.sets.shift(), actions = spec.sets.pop();
-	const stack = preset.rows.shift();
-	spec.cards = [
-		{ id: id('AnimationsCard'), title: 'Animations', classes: 'animation-stack-card', sets: [
-			{ rows: [stack, { kind: 'note', id: id('StackEmpty'), text: 'No animations yet', classes: 'property-empty' }] }, actions
-		] }
-	];
-	spec.sets = [preset, ...spec.sets];
 	return spec;
 }
 
@@ -720,7 +717,7 @@ const PANEL_SCHEMAS = {
 						{ kind: 'toggle', id: 'baseBackgroundAnimate', label: 'Play animation', checked: true,
 							title: 'Play the animated GIF on the canvas and in exports. Off uses its first frame.' },
 						{ kind: 'note', id: 'baseBackgroundAnimateNote' }
-					] }
+					] }, createGifCycleSet('baseImage')
 				] }
 			] },
 			{ title: 'Layout', sections: [

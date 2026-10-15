@@ -18,9 +18,9 @@
 	--timeline-z-guides: 3;
 	--timeline-z-handle: 4;
 	--timeline-z-readout: 5;
-	--timeline-row-height: 28px;
-	--timeline-info-width: 120px;
-	--timeline-key-size: 10px;
+	--timeline-row-height: var(--control-height);
+	--timeline-info-width: var(--size-timeline-info);
+	--timeline-key-size: var(--size-timeline-key);
 	container: timeline / inline-size;
 	position: relative;
 	flex: 0 0 auto;
@@ -38,8 +38,8 @@
 	--timeline-line: color-mix(in srgb, var(--color-border) 60%, transparent);
 	--timeline-row-bg: color-mix(in srgb, var(--color-bg-secondary) 40%, var(--color-bg-primary));
 	--timeline-bar-inset: var(--spacing-xs);
-	--timeline-hue-authored: var(--color-info);
-	--timeline-hue-procedural: var(--color-success);
+	--timeline-hue-authored: var(--color-timeline-authored);
+	--timeline-hue-procedural: var(--color-timeline-procedural);
 
 	> .timeline-section {
 		flex: 1;
@@ -277,6 +277,10 @@
 		--list-row-background: var(--color-bg-secondary);
 		min-width: 0;
 	}
+	.timeline-group-label .lock { opacity: 0; }
+	.timeline-group-label:is(:hover, :focus-within, .is-locked) .lock { opacity: 1; }
+	.timeline-group-track { background: transparent; }
+	.timeline-group-header.is-selected .timeline-group-track { background: color-mix(in srgb, var(--color-accent) 10%, transparent); }
 	.timeline-group-span {
 		position: absolute;
 		top: 50%;
@@ -375,10 +379,10 @@
 		&:focus-visible { outline: none; --timeline-bar-ring: inset var(--control-focus-ring); }
 	}
 	.timeline-group.is-locked .timeline-bar { cursor: not-allowed; }
-	&.is-stale .timeline-track { &, .timeline-bar { cursor: progress; } }
+
 	.timeline-row:is(:hover, :focus-within) .timeline-bar { --timeline-bar-strength: 50%; }
 	.timeline-row:is(.is-selected, .is-dragging) .timeline-bar {
-		--timeline-bar-strength: 78%;
+		--timeline-bar-strength: 100%;
 		--timeline-bar-ring: inset 0 0 0 1px color-mix(in srgb, var(--color-text-primary) 70%, transparent);
 	}
 	// An edge or a cycle boundary that can be dragged: a wide target around a
@@ -506,52 +510,7 @@
 	@container timeline (max-width: #{tokens.$timeline-compact-width}) {
 		&.shows-details .timeline-stage { --timeline-info-column: 0px; }
 		.timeline-row-info { display: none; }
-	}
-
-	@container timeline (max-width: #{tokens.$timeline-narrow-width}) {
-		.section-header-title-text { display: none; }
-		// The summary stays as the spacer between the transport and the actions.
-		.timeline-readout:not(.is-warning), .timeline-readout-text { display: none; }
-		.timeline-stage { --timeline-label-column: 0px; }
-		// No label column: the layer's row is a bar across the visible width.
-		.timeline-group-header { display: block; position: sticky; left: 0; width: 100%; }
-		.timeline-group-track, .timeline-label-handle, .timeline-stage::before { display: none; }
-		.timeline-group-label { border-right: 0; }
-		// No label column: the lane's name and buttons sit on a line of their
-		// own at the track's left edge, clear of the keys under them.
-		.timeline-row-lane { display: block; }
-		.timeline-key-label {
-			width: max-content;
-			padding-left: var(--spacing-base);
-			border-right: 0;
-			background: none;
-		}
-		// Motion controls sit above the bar so even a short bar keeps its drag body.
-		.timeline-row.has-motion {
-			min-height: calc(2 * var(--timeline-row-height));
-			> .timeline-track { align-self: end; height: var(--timeline-row-height); }
-			> .timeline-row-label {
-				left: 0;
-				top: 0;
-				width: 100%;
-				max-width: 100%;
-				height: var(--timeline-row-height);
-				> .list-row-content { pointer-events: auto; }
-			}
-		}
-		// Authored source names sit inside their bar, on its own fill.
-		.timeline-row-label {
-			position: absolute;
-			left: var(--timeline-bar-left);
-			top: var(--timeline-bar-inset);
-			width: max-content;
-			max-width: calc(var(--timeline-loop-x) - var(--timeline-bar-left));
-			height: calc(var(--timeline-row-height) - 2 * var(--timeline-bar-inset));
-			border-right: 0;
-			background: none;
-			color: var(--color-text-primary);
-			pointer-events: none;
-			> .list-row-handle, > .timeline-motion-enabled { pointer-events: auto; }
-		}
+		.timeline-stage { --timeline-label-column: var(--timeline-label-min); }
+		.timeline-group-label > .layer-drag-handle, .timeline-group-label > .timeline-group-chevron { display: none; }
 	}
 }

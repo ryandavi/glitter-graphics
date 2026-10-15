@@ -17,7 +17,7 @@ const sources = {
 	GlitterManager: fs.readFileSync(path.join(root, 'js/layers/GlitterManager.js'), 'utf8'),
 	BaseBackgroundManager: fs.readFileSync(path.join(root, 'js/layers/BaseBackgroundManager.js'), 'utf8'),
 	AnimationTicker: fs.readFileSync(path.join(root, 'js/systems/AnimationTicker.js'), 'utf8'),
-	AnimationPanelController: fs.readFileSync(path.join(root, 'js/systems/AnimationPanelController.js'), 'utf8'),
+	PreviewImageResolver: fs.readFileSync(path.join(root, 'js/systems/PreviewImageResolver.js'), 'utf8'),
 	animationPreview: fs.readFileSync(path.join(root, 'js/systems/AnimationTicker.js'), 'utf8'),
 	SceneCompositor: fs.readFileSync(path.join(root, 'js/export/SceneCompositor.js'), 'utf8'),
 	HtmlSceneExporter: fs.readFileSync(path.join(root, 'js/export/HtmlSceneExporter.js'), 'utf8'),

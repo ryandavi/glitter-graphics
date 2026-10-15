@@ -64,7 +64,7 @@ class GestureManager {
 		if (event.target.closest('.ui-ignore-gestures')) {
 			return;
 		}
-		if (this.editor?.timelineKeyRecording?.routeTouch(event)) return;
+		if (this.editor?.keyRecording?.routeTouch(event)) return;
 		const activeLayer = this.editor?.layerManager.getActiveLayer();
 		const activeTransform = activeLayer && this.getLayerTransform(activeLayer.id);
 		if (activeTransform?.isDraggingHandle || this.editor?.groupTransformManager?.isDraggingHandle) {
@@ -334,7 +334,7 @@ class GestureManager {
 
 	resolveTwoFingerRoute() {
 		const editor = this.editor;
-		if (editor?.timelineKeyRecording?.active) return { type: 'viewportTwoFinger' };
+		if (editor?.keyRecording?.active) return { type: 'viewportTwoFinger' };
 		if (editor?.isCanvasToolSuspended?.()) return { type: 'viewportTwoFinger' };
 		if (!editor) {
 			return { type: 'viewportTwoFinger' };

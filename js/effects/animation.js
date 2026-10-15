@@ -11,7 +11,7 @@ const GlitterAnimation = (() => {
 		pose
 	});
 	const MOTION_DEFINITIONS = Object.freeze({
-		custom: motion(({ out, data, p }) => sampleKeys(out, data, p), { label: 'Custom', group: 'Custom', feature: 'timeline', keyed: true, activeWhen: () => true }),
+		custom: motion(({ out, data, p }) => sampleKeys(out, data, p), { label: 'Custom', group: 'Custom', feature: 'customMotion', keyed: true, activeWhen: () => true }),
 		breath: motion(({ out, amount, oscillation }) => { out.scaleX = out.scaleY = 1 + amount / 100 * oscillation; }, { label: 'Breath', convertible: true, group: 'Ambient', fields: ['amount'] }),
 		float: motion(({ out, amount, oscillation, angle }) => {
 			const lift = amount * oscillation;
@@ -139,7 +139,7 @@ const GlitterAnimation = (() => {
 		radius: 0, turns: 0, duty: 50, opacityFloor: 0, repeat: 'none', gap: 0,
 		orbitCenter: 'center', orbitCenterX: 0.5, orbitCenterY: 0.5, snapMode: 'smooth'
 	});
-	const CONVERT_TIMING_KEYS = Object.freeze(['enabled', 'periodMs', 'steps', 'direction', 'iterations', 'delayMs', 'phase', 'fillMode', 'snapMode']);
+	const CONVERT_TIMING_KEYS = Object.freeze(['id', 'enabled', 'periodMs', 'steps', 'direction', 'iterations', 'delayMs', 'phase', 'fillMode', 'snapMode']);
 	function mod(value, span) { return ((value % span) + span) % span; }
 
 	function wrap(u0, span, progress) { return span > 0 ? mod(u0 + span * progress, span) - u0 : 0; }
@@ -218,8 +218,9 @@ const GlitterAnimation = (() => {
 		const requested = value && typeof value === 'object' ? value : {};
 		const type = ANIMATION_TYPES.includes(requested.type) ? requested.type : cfg.defaultType;
 		const normalized = { ...BASE_DEFAULTS, ...cfg.presets[type], ...requested, type };
-		if (requested.iterations == null || requested.iterations === 'Infinity') {
-			normalized.iterations = cfg.presets[type].iterations;
+		if (typeof normalized.id !== 'string' || !normalized.id) delete normalized.id;
+		if (requested.iterations === null || requested.iterations === 'Infinity') {
+			normalized.iterations = Infinity;
 		}
 		if (MOTION_REGISTRY[type].keyed) {
 			normalized.keys = normalizeKeys(normalized.keys);
@@ -264,7 +265,7 @@ const GlitterAnimation = (() => {
 	function sampleKeys(out, data, progress) {
 		const p = Math.max(0, Math.min(1, progress));
 		Object.entries(POSE_CHANNELS).forEach(([id, channel]) => {
-			const keys = data.keys.filter((key) => Object.hasOwn(key.values, id));
+			const keys = data.channelKeys?.[id] || data.keys.filter((key) => Object.hasOwn(key.values, id));
 			if (!keys.length) return;
 			if (keys.length === 1) { out[id] = keys[0].values[id]; return; }
 			const index = keys.findLastIndex((key) => key.at <= p);
@@ -503,13 +504,21 @@ const GlitterAnimation = (() => {
 		return candidates.sort((a, b) => Math.abs(a - timestamp) - Math.abs(b - timestamp))[0] ?? null;
 	}
 
+	function prepare(animations) {
+		const entries = normalizeAnimations(animations).filter(data => data.enabled !== false && MOTION_REGISTRY[data.type].activeWhen(data));
+		for (const data of entries) if (MOTION_REGISTRY[data.type].keyed) data.channelKeys = Object.fromEntries(Object.keys(POSE_CHANNELS).map(id => [id, data.keys.filter(key => Object.hasOwn(key.values, id))]));
+		return { entries, hasRun: entries.some(data => data.delayMs > 0 || Number.isFinite(data.iterations)) };
+	}
+
+	function samplePrepared(prepared, tMs, options = {}) {
+		return composeSamples(prepared.entries.map(data => {
+			const position = progressAt(data, tMs, true);
+			return position ? pose(data, position.progress, tMs, options, position.eased) : { ...IDENTITY, originX: options.origin?.[0] ?? 0.5, originY: options.origin?.[1] ?? 0.5 };
+		}), options);
+	}
+
 	function sampleAt(value, tMs, options = {}) {
-		if (Array.isArray(value)) {
-			return composeSamples(
-				normalizeAnimations(value).filter((animation) => isActive(animation)).map((animation) => sampleAt(animation, tMs, options)),
-				options
-			);
-		}
+		if (Array.isArray(value)) return samplePrepared(prepare(value), tMs, options);
 		const data = normalizeAnimation(value);
 		const position = progressAt(data, tMs, true);
 		return position && data.enabled !== false ? pose(data, position.progress, tMs, options, position.eased)
@@ -677,8 +686,12 @@ const GlitterAnimation = (() => {
 		ctx.translate(-x, -y);
 	}
 
+	function sourceKey(layerId, animation) { return `__anim_${layerId}_${animation.id}`; }
+	function slotKey(animation) { return `motion-${animation.id}`; }
+	function getLayerAnimations(layer) { return layer?.animationsEnabled === false ? [] : layer?.animations || []; }
+
 	return {
-		ANIMATION_TYPES, MOTION_REGISTRY, ANIMATION_CONTROLS, POSE_CHANNELS, POSE_PROPERTIES, keyRestSample, normalizeAnimation, normalizeAnimations, normalizeKeys, interpolateChannel, cycleProgress, timeAtProgress, convertToKeys, isActive, includesOffCanvas, summaryText, describe, loopDurationMs,
+		prepare, samplePrepared, sourceKey, slotKey, getLayerAnimations, ANIMATION_TYPES, MOTION_REGISTRY, ANIMATION_CONTROLS, POSE_CHANNELS, POSE_PROPERTIES, keyRestSample, normalizeAnimation, normalizeAnimations, normalizeKeys, interpolateChannel, cycleProgress, timeAtProgress, convertToKeys, isActive, includesOffCanvas, summaryText, describe, loopDurationMs,
 		isSeamlessLoop, runTiming, iterationsForRun, repeatsForRun, isReversedCycle, cycleAt, timeAtCycle, travelSpeed, sampleAt, composeSamples, seededRandom01, domTransformString, applyToContext, resolveOrigin,
 		hashString, mulberry32, createSamplingContext, splitSample, sampleMatrix, multiplyMatrices, wrap, reflect
 	};

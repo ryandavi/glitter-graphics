@@ -100,6 +100,18 @@ const element = (page) => page.evaluate(() => {
 	let shown = await element(page);
 	assert(shown && shown.width === '60px' && shown.height === '40px' && shown.left === '0px', `Preview element: ${JSON.stringify(shown)}`);
 	console.log('PASS An uploaded GIF animates the base: timing, preview element and panel');
+	const timingEdit = await page.evaluate(async () => {
+		const e = editor; await e.updateExportDuration();
+		const layer = e.getBaseLayer(), target = listTimingTargets(e, [layer]).find(target => target.kind === 'gifCycle');
+		const period = target.period, index = e.historyManager.historyIndex;
+		const written = e.writeTiming(target.key, { period: period * 2 });
+		const doubled = layer.background.gifCycleMs === period * 2;
+		e.resetAnimationLoop(); await e.updateExportDuration();
+		return { locked: layer.locked, can: target.can.period, written, doubled, restored: layer.background.gifCycleMs == null, steps: e.historyManager.historyIndex - index, control: Boolean(document.getElementById('baseImageGifCycle')) };
+	});
+	assert(timingEdit.locked && timingEdit.can && timingEdit.written && timingEdit.doubled && timingEdit.restored && timingEdit.steps === 2 && timingEdit.control, 'Locked Canvas timing has a Cycle row, one-step writes and Restore');
+	console.log('PASS Locked Canvas cycle editing and Restore');
+
 
 	// Export frames follow the GIF, and its first frame is the still base.
 	const first = await compose(page, 0);

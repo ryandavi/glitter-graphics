@@ -33,8 +33,8 @@ assert(!fixture({ stage: 'off', local: true, debug: true, search: '?features=tim
 const app = fixture({ local: true });
 assert.throws(() => app.run("isFeatureEnabled('missing')"), /Unknown feature/);
 assert.throws(() => app.run("isFeatureEnabled('toString')"), /Unknown feature/);
-assert.strictEqual(app.run('Object.keys(FEATURES).join()'), 'timeline,loopLength,gifCycle,history,personalWeb,htmlScene,stylePresetCopy,memoryOverlay,welcomeOnStartup');
-for (const id of ['history', 'personalWeb', 'htmlScene']) {
+assert.strictEqual(app.run('Object.keys(FEATURES).join()'), 'customMotion,timeline,loopLength,gifCycle,history,personalWeb,htmlScene,stylePresetCopy,memoryOverlay,welcomeOnStartup');
+for (const id of ['customMotion', 'history', 'personalWeb', 'htmlScene']) {
 	assert(app.run(`isFeatureEnabled('${id}')`));
 	assert(!fixture().run(`isFeatureEnabled('${id}')`));
 	assert(fixture({ search: `?features=${id}` }).run(`isFeatureEnabled('${id}')`));
@@ -48,7 +48,9 @@ assert(!fixture({ local: true, debug: true, search: '?features=welcomeOnStartup'
 assert.strictEqual(app.run("featureLayout('timeline')"), 'desktop');
 assert.strictEqual(app.run("featureLayout('loopLength')"), null);
 assert(app.run("isFeatureAvailable('timeline')"));
+assert(fixture().run("isFeatureEnabled('loopLength') && isFeatureEnabled('gifCycle')"));
 app.media.matches = true;
+assert(app.run("isFeatureAvailable('customMotion')"));
 assert(!app.run("isFeatureAvailable('timeline')"));
 assert(app.run("isFeatureAvailable('loopLength')"));
 assert.strictEqual(app.mediaCalls(), 1);

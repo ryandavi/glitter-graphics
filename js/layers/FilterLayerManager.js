@@ -144,7 +144,11 @@ class FilterLayerManager {
 		const layer = this.getActiveLayer();
 		if (!layer) return;
 		if (key === 'opacity') layer.opacity = value;
-		else layer.filterData[key] = value;
+		else if (key === 'speed' || (key === 'crawl' && value !== 'off')) {
+			const next = GlitterFilter.animation({ ...layer.filterData, [key]: value });
+			if (next) this.editor.writeTiming(`__filter_anim_${layer.id}`, { period: next.frames * next.frameMs }, { live: true });
+			else layer.filterData[key] = value;
+		} else layer.filterData[key] = value;
 		this.editor.layerManager.renderLayersList();
 		this.editor.requestPreviewUpdate();
 		if (commit) this.editor.saveState('Edit filter');

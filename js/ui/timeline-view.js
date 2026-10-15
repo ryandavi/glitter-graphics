@@ -1,14 +1,14 @@
 'use strict';
 
 const DRAG_KINDS = {
-	left: { capability: 'run', setter: 'setRun', commitLabel: 'Trim animation', label: FIELDS.animDelay.label, text: (row, run) => formatSeconds(run.start) },
-	move: { capability: 'run', setter: 'setRun', commitLabel: 'Move animation', label: FIELDS.animDelay.label, text: (row, run) => formatSeconds(run.start) },
-	right: { capability: 'run', setter: 'setRun', commitLabel: 'Trim animation', label: FIELDS.animIterations.label, text: (row, run) => TimelineView.repeatsText(TimelineView.repeats(row, run)) },
-	slip: { capability: 'phase', setter: 'setPhase', commitLabel: 'Slip animation', label: FIELDS.animPhase.label, text: (row, value) => `${Number((value * 100).toFixed(1))}%` },
-	period: { capability: 'period', setter: 'setPeriod', commitLabel: 'Change animation speed', label: FIELDS.animDuration.label, text: (row, ms) => formatSeconds(ms) },
+	left: { capability: 'run', setter: 'run', commitLabel: 'Trim animation', label: FIELDS.animDelay.label, text: (row, run) => formatSeconds(run.start) },
+	move: { capability: 'run', setter: 'run', commitLabel: 'Move animation', label: FIELDS.animDelay.label, text: (row, run) => formatSeconds(run.start) },
+	right: { capability: 'run', setter: 'run', commitLabel: 'Trim animation', label: FIELDS.animIterations.label, text: (row, run) => TimelineView.repeatsText(TimelineView.repeats(row, run)) },
+	slip: { capability: 'phase', setter: 'phase', commitLabel: 'Slip animation', label: FIELDS.animPhase.label, text: (row, value) => `${Number((value * 100).toFixed(1))}%` },
+	period: { capability: 'period', setter: 'period', commitLabel: 'Change cycle', label: FIELDS.animDuration.label, text: (row, ms) => formatSeconds(ms) },
 	duration: {
 		capability: 'period', commitLabel: 'Change animation length', label: 'Lasts',
-		setter: (dock, value, row) => { row.source.setPeriod(value.period); row.source.setRun(value.run); },
+		setter: (dock, value, row) => { dock.editor.writeTiming(row.key, { period: value.period, run: value.run }, { live: true }); },
 		text: (row, value) => TimelineView.durationText(row, value)
 	},
 	loop: { setter: (dock, value) => dock.editor.setDocumentLoop(value, { commit: false }), commitLabel: 'Set loop length', label: 'Loop', text: (row, ms) => formatSeconds(ms) },
@@ -22,36 +22,39 @@ const TimelineView = {
 		const analyses = new Map((estimate?.sourceAnalysis || []).map(entry => [entry.key, entry]));
 		const owners = new Map(layers.map(layer => [layer.id, layer]));
 		const groups = new Map();
-		(estimate?.loopFit?.sources || []).forEach(source => {
-			if (!source.ownerLayerId) return;
-			const cycleMs = source.kind === 'authored' ? source.cycleDuration : source.naturalPeriod;
-			if (!Number.isFinite(cycleMs) || cycleMs <= 0) return;
-			const exportCycleMs = analyses.get(source.key)?.resolvedPeriod ?? cycleMs;
-			if (!Number.isFinite(exportCycleMs) || exportCycleMs <= 0) return;
-			const rows = groups.get(source.ownerLayerId) || [];
+		const sourceMap = new Map((estimate?.loopFit?.sources || []).map(source => [source.key, source]));
+		const targets = editor ? listTimingTargets(editor, layers) : [];
+		const entries = editor ? targets.filter(target => target.active !== false && owners.get(target.layerId)?.visible !== false && target.period > 0).map(target => ({ target, source: sourceMap.get(target.key) })) : (estimate?.loopFit?.sources || []).map(source => ({ source }));
+		entries.forEach(({ source, target }) => {
+			const layerId = target?.layerId || source.ownerLayerId;
+			const cycleMs = target?.period ?? (source.kind === 'authored' ? source.cycleDuration : source.naturalPeriod);
+			const exportCycleMs = analyses.get(target?.key || source.key)?.resolvedPeriod ?? cycleMs;
+			if (!Number.isFinite(cycleMs) || cycleMs <= 0 || !Number.isFinite(exportCycleMs) || exportCycleMs <= 0 || !layerId) return;
+			const run = target?.run || source?.run;
+			const rows = groups.get(layerId) || [];
 			rows.push({
-				key: source.key, layerId: source.ownerLayerId, effectSlot: source.effectSlot,
-				label: source.rowLabel || source.label, kind: source.kind, cycleMs, exportCycleMs,
-				originalPeriod: owners.get(source.ownerLayerId)?.loopOriginalPeriods?.[source.key],
-				startMs: source.run?.start || 0, endMs: Math.min(source.run?.end ?? Infinity, loopMs),
-				phase: source.phase || 0, direction: source.direction || 'normal',
-				frameCount: source.frameCount, cycleMarks: source.cycleMarks || [],
-				closes: sourceSeamError(source, loopMs, exportCycleMs) < 1e-8, nonLooping: source.nonLooping,
-				can: { period: typeof source.setPeriod === 'function', run: typeof source.setRun === 'function', phase: typeof source.setPhase === 'function' },
-				curveKey: source.key, source
+				key: target?.key || source.key, layerId, effectSlot: target?.slot || source?.effectSlot,
+				label: target?.label || source.rowLabel || source.label, kind: target ? (target.kind === 'gifCycle' ? 'authored' : 'procedural') : source.kind,
+				cycleMs, exportCycleMs, originalPeriod: owners.get(layerId)?.loopOriginalPeriods?.[target?.key || source.key],
+				startMs: run?.start || 0, endMs: Math.min(run?.end ?? Infinity, loopMs),
+				phase: target?.phase ?? source?.phase ?? 0, direction: target?.direction || source?.direction || 'normal',
+				frameCount: source?.frameCount, cycleMarks: source?.cycleMarks || [],
+				closes: source ? sourceSeamError(source, loopMs, exportCycleMs) < 1e-8 : true, nonLooping: Number.isFinite(run?.end),
+				can: target?.can || { period: source.adjustable === true, run: Boolean(source.run), phase: Boolean(source.run), direction: Boolean(source.run) }, target, curveKey: target?.key || source.key,
+				source: { ...source, run, naturalPeriod: cycleMs, periodRange: target?.periodRange || source?.periodRange, resolvePeriod: target?.resolvePeriod || source?.resolvePeriod, fileCycleDuration: target?.fileCycleDuration || source?.fileCycleDuration }
 			});
-			groups.set(source.ownerLayerId, rows);
+			groups.set(layerId, rows);
 		});
 		return {
 			loopMs, loopFit: estimate?.loopFit, exact: estimate?.exact, frameStarts: estimate?.renderClock?.frameStarts || [],
 			frameCount: estimate?.renderClock?.frameCount || 0, outputFormat: estimate?.outputFormat,
 			groups: [...layers].reverse().filter(layer => !layer.isPreview).map(layer => {
 				const sourceRows = groups.get(layer.id) || [];
-				const motions = (layer.animations || []).map((animation, index) => {
-					const effectSlot = `animation-${index}`, description = GlitterAnimation.describe(animation);
-					const active = animation.enabled !== false && layer.visible !== false && sourceRows.find(row => row.effectSlot === effectSlot);
+				const motions = (layer.animations || []).map((animation) => {
+					const effectSlot = GlitterAnimation.slotKey(animation), description = GlitterAnimation.describe(animation);
+					const active = layer.animationsEnabled !== false && animation.enabled !== false && layer.visible !== false && sourceRows.find(row => row.effectSlot === effectSlot);
 					return { ...(active || {
-						key: `__anim_${layer.id}_${index}`, layerId: layer.id, effectSlot, kind: 'procedural',
+						key: GlitterAnimation.sourceKey(layer.id, animation), layerId: layer.id, effectSlot, kind: 'procedural',
 						cycleMs: animation.periodMs, exportCycleMs: animation.periodMs, startMs: 0, endMs: 0,
 						phase: animation.phase, direction: animation.direction, cycleMarks: [], closes: true,
 						can: { period: false, run: false, phase: false }, curve: null, source: null
@@ -59,14 +62,14 @@ const TimelineView = {
 				});
 				return {
 					layerId: layer.id, name: describeLayer(layer, editor).name, visible: layer.visible !== false,
-					locked: isLayerFullyLocked(layer), stackLocked: Boolean(layer.locked),
-					rows: [...sourceRows.filter(row => this.motionIndex(row) == null), ...motions]
+					locked: isLayerFullyLocked(layer) && !sourceRows.some(row => Object.values(row.can).some(Boolean)), stackLocked: Boolean(layer.locked),
+					rows: [...sourceRows.filter(row => this.motionId(row) == null), ...motions]
 				};
 			})
 		};
 	},
 	motionCurve(source, cycleMs) {
-		if (source.kind !== 'procedural' || !source.sampler || !/^animation-\d+$/.test(source.effectSlot)) return null;
+		if (source.kind !== 'procedural' || !source.sampler || !/^motion-.+/.test(source.effectSlot)) return null;
 		const count = CONFIG.ui.timeline.curveSamples;
 		const samples = Array.from({ length: count + 1 }, (_, i) => source.sampler((source.run?.start || 0) + (Math.ceil(source.phase || 0) - (source.phase || 0) + i / count) * cycleMs, cycleMs)?.sample);
 		if (!samples.every(Boolean)) return null;
@@ -117,9 +120,8 @@ const TimelineView = {
 	revealScroll(start, end, scroll, view) {
 		return start < scroll ? start : end > scroll + view ? end - view : scroll;
 	},
-	motionIndex(row) {
-		const match = /^animation-(\d+)$/.exec(row?.effectSlot);
-		return match ? Number(match[1]) : null;
+	motionId(row) {
+		return row?.effectSlot?.startsWith('motion-') ? row.effectSlot.slice(7) : null;
 	},
 	// How many times a run plays its cycle; Infinity to the loop's end.
 	repeats(row, run = row.source.run) {
@@ -292,32 +294,33 @@ const TimelineView = {
 	periodFromNotch(row, notchIndex, timeMs) { return (timeMs - row.startMs) / (notchIndex - row.phase); },
 	barActions(row, model, context = {}) {
 		const actions = [];
+		const write = patch => context.write?.(row.key, patch);
 		const playhead = context.playhead ?? 0;
 		if (row.can.run) {
-			actions.push({ id: 'once', label: 'Play once', checked: Math.abs(this.repeats(row) - 1) < 1e-6, run: () => row.source.setRun({ start: row.startMs, end: row.startMs + (1 - row.phase) * row.cycleMs }) },
-				{ id: 'forever', label: 'Repeat forever', checked: !Number.isFinite(row.source.run.end), run: () => row.source.setRun({ start: row.startMs, end: Infinity }) },
-				{ id: 'start', label: 'Start at playhead', run: () => row.source.setRun({ start: clampNumber(playhead, 0, FIELDS.animDelay.max * 1000), end: row.source.run.end }) },
-				{ id: 'end', label: 'End at playhead', disabled: playhead <= row.startMs, run: () => row.source.setRun({ start: row.startMs, end: playhead }) });
+			actions.push({ id: 'once', label: 'Play once', checked: Math.abs(this.repeats(row) - 1) < 1e-6, run: () => write({ run: { start: row.startMs, end: row.startMs + (1 - row.phase) * row.cycleMs } }) },
+				{ id: 'forever', label: 'Repeat forever', checked: !Number.isFinite(row.source.run.end), run: () => write({ run: { start: row.startMs, end: Infinity } }) },
+				{ id: 'start', label: 'Start at playhead', run: () => write({ run: { start: clampNumber(playhead, 0, FIELDS.animDelay.max * 1000), end: row.source.run.end } }) },
+				{ id: 'end', label: 'End at playhead', disabled: playhead <= row.startMs, run: () => write({ run: { start: row.startMs, end: playhead } }) });
 		}
-		if (row.source.setDirection) for (const { value: direction, label } of ANIMATION_DIRECTION_OPTIONS) actions.push({ id: `direction-${direction}`, label, checked: row.direction === direction, run: () => row.source.setDirection(direction) });
-		const writePeriod = period => row.source.setPeriod(row.source.resolvePeriod ? row.source.resolvePeriod(period) : period);
+		if (row.can.direction) for (const { value: direction, label } of ANIMATION_DIRECTION_OPTIONS) actions.push({ id: `direction-${direction}`, label, checked: row.direction === direction, run: () => write({ direction }) });
+		const writePeriod = period => write({ period });
 		if (row.can.period) {
 			const fit = model.loopFit?.candidates.find(candidate => candidate.duration === model.loopMs)?.fits.find(entry => entry.source.key === row.key && entry.fitted);
 			if (fit) actions.push({ id: 'fit', label: 'Fit to loop', changesPeriod: true, run: () => writePeriod(fit.fittedPeriod) });
-			if (row.source.fileCycleDuration) actions.push({ id: 'reset-speed', label: 'Reset speed', changesPeriod: true, run: () => writePeriod(row.source.fileCycleDuration) });
+			if (row.source.fileCycleDuration) actions.push({ id: 'reset-speed', label: 'Original cycle', changesPeriod: true, run: () => writePeriod(row.source.fileCycleDuration) });
 		}
-		if (row.can.run) actions.push({ id: 'fill', label: 'Fill the loop', run: () => row.source.setRun({ start: 0, end: Infinity }) });
+		if (row.can.run) actions.push({ id: 'fill', label: 'Fill the loop', run: () => write({ run: { start: 0, end: Infinity } }) });
 		if (row.can.run || row.can.phase || row.can.period) actions.push({ id: 'reset', label: 'Reset timing', run: () => {
-			if (row.can.run) row.source.setRun({ start: 0, end: Infinity });
-			if (row.can.phase) row.source.setPhase(0);
-			if (row.source.setDirection) row.source.setDirection('normal');
+			if (row.can.run) write({ run: { start: 0, end: Infinity } });
+			if (row.can.phase) write({ phase: 0 });
+			if (row.can.direction) write({ direction: 'normal' });
 		} });
 		if (context.copy) actions.push({ id: 'copy', label: 'Copy timing', commits: false, run: () => context.copy(row) }, { id: 'paste', label: 'Paste timing', disabled: !context.clipboard, changesPeriod: row.can.period, run: () => {
 			const timing = context.clipboard;
 			if (row.can.period) writePeriod(clampNumber(timing.cycle, row.source.periodRange.min, row.source.periodRange.max));
-			if (row.can.phase) row.source.setPhase(timing.phase);
-			if (row.source.setDirection) row.source.setDirection(timing.direction);
-			if (row.can.run && timing.run) row.source.setRun({ ...timing.run });
+			if (row.can.phase) write({ phase: timing.phase });
+			if (row.can.direction) write({ direction: timing.direction });
+			if (row.can.run && timing.run) write({ run: { ...timing.run } });
 		} });
 		return actions.map(action => ({ ...action, group: ['once', 'forever', 'start', 'end'].includes(action.id) ? 'Run' : action.id.startsWith('direction-') ? 'Direction' : ['copy', 'paste'].includes(action.id) ? 'Timing clipboard' : 'Loop' }));
 	},

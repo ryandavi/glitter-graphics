@@ -92,7 +92,7 @@ registerLayerType(LayerType.GLITTER_FILL, {
 	sparkleHost: (editor, layer) => editor.glitterManager?.getSparkleHost(layer) || null,
 	hasVisibleContent: (layer) => hasMaskContent(layer),
 	animatable: true,
-	animate: (...args) => animateTransformableLayerPreview(...args),
+	animate: (...args) => paintLayerAnimationPreview(...args),
 	animationBox: (_editor, _layer, canvas) => ({ width: canvas.width, height: canvas.height }),
 	timelineSources: (layer, context) => [
 		...context.compositor._createLayerAnimationTimelineSources(layer, context),

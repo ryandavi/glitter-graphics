@@ -3,6 +3,11 @@
 const EDITOR_DOCUMENT_IO_METHODS = {
 	beginDocumentReplace() {
 		this.timelineDock?.resetDocumentView();
+		this.previewFrameView?.invalidate();
+		this.animationTicker.resetDocument();
+		this.animationRevisions?.clear();
+		this.motionSelection.byLayer.clear();
+		this.animationRevisionEpoch = (this.animationRevisionEpoch || 0) + 1;
 		// Session teardown can commit edits, so it precedes resource release and history reset.
 		getSessionDefinition(this)?.end?.(this);
 		TOOLS[this.currentTool]?.onDeactivate?.(this, this.currentTool, { commitStroke: false });

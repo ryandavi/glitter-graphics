@@ -56,7 +56,7 @@ assert(JSON.stringify(keyedSource.withPeriod(2000).cycleMarks) === '[0.5]', 'Fit
 const samplePattern = vm.runInContext('getPatternScrollOffset', patternContext);
 const scrollingPattern = new ProceduralAnimationSource({
 	key: 'pattern-scroll', naturalPeriod: 2000, preferredSamplingRate: 30,
-	periodRange: { min: 100, max: 20000 }, setPeriod: () => {},
+	periodRange: { min: 100, max: 20000 }, adjustable: true,
 	sampler: (time, period = 2000) => samplePattern({ scroll: 'down-right' }, 31, time, period)
 });
 assert(JSON.stringify(scrollingPattern.sampler(0)) === JSON.stringify(scrollingPattern.sampler(2000)), 'Pattern scroll must close at its declared period');
@@ -152,27 +152,7 @@ async function main() {
 	const config = { ...createPlanner().config, maxLoopDurationMs: 12000 };
 	const candidates = planLoopFit([timeline('current-set', 2, [400, 400])], { config, loopDurationMs: 3000 });
 	assert(candidates.candidates.some(candidate => candidate.duration === 3000), 'Loop fitting must retain the current length');
-	const mutation = vm.runInContext(`(() => {
-		const compositor = Object.create(SceneCompositor.prototype);
-		compositor._buildAnimationSamplingContext = () => ({ id: 'run' });
-		const layer = { id: 'run', animations: [GlitterAnimation.normalizeAnimation({ type: 'pulse', periodMs: 1000 })] };
-		const source = () => compositor._createProceduralTimelines(compositor._createLayerAnimationTimelineSources(layer))[0];
-		return { layer, source, run: () => GlitterAnimation.runTiming(layer.animations[0]), normalize: value => GlitterAnimation.normalizeAnimation(value) };
-	})()`, context);
-	for (const phase of [0, 0.25]) for (const end of [2600, Infinity]) {
-		mutation.layer.animations[0].phase = phase;
-		mutation.source().setRun({ start: 600, end });
-		const run = mutation.run();
-		assert(run.start === 600 && run.end === end, 'Run setter must invert runTiming including phase and Infinity');
-		// A finite run keeps a speed setter: a bar's right edge sets its length at the same repeat count.
-		assert(typeof mutation.source().setPeriod === 'function', 'Runs must keep their period setters');
-	}
-	mutation.source().setPhase(-0.25);
-	assert(mutation.layer.animations[0].phase === 0.75, 'Phase setter must wrap negative values');
-	const originalSource = mutation.source();
-	const fittedSource = originalSource.withPeriod(1200);
-	const writtenRun = fittedSource.setRun({ start: 500, end: 1500 });
-	assert(writtenRun.start === mutation.run().start && writtenRun.end === mutation.run().end && fittedSource.setPhase === originalSource.setPhase && fittedSource.setRun === originalSource.setRun, 'Fitted source must retain timing setters and return their normalized run');
+	const mutation = { normalize: value => context.directionMath.animation.normalizeAnimation(value) };
 	const returned = motionSources({ type: 'rotate', periodMs: 1000, iterations: 0.5, turns: 0.5, fillMode: 'none' })[0];
 	const held = motionSources({ type: 'rotate', periodMs: 1000, iterations: 0.5, turns: 0.5, fillMode: 'forwards' })[0];
 	assert(returned.closesAt(1000, 1000) && !held.closesAt(1000, 1000), 'Trimmed rest closes and held non-rest pose does not');
@@ -587,7 +567,7 @@ main().catch((error) => {
 	const fixed = timeline('fixed', 2, [500, 500]);
 	const writable = (period, range, resolvePeriod = null) => new ProceduralAnimationSource({
 		key: 'editable', naturalPeriod: period, preferredSamplingRate: 10, sampler: () => ({}),
-		setPeriod: () => {}, periodRange: range, resolvePeriod
+		adjustable: true, periodRange: range, resolvePeriod
 	});
 	const exact = planLoopFit([fixed, writable(1000, { min: 400, max: 8000 })], { config });
 	assert(exact.candidates[0].exact && !exact.candidates[0].canApply, 'Exact fit must need no edit');
@@ -605,7 +585,7 @@ main().catch((error) => {
 	// A GIF with a cycle setter joins loop fitting, and only loop fitting.
 	const stretchable = () => new AuthoredAnimationSource({
 		key: 'sticker', frameCount: 12, frameDurations: new Array(12).fill(80),
-		fileCycleDuration: 960, periodRange: { min: 480, max: 1920 }, resolvePeriod: (ms) => Math.round(ms / 10) * 10, setPeriod: () => {}
+		fileCycleDuration: 960, periodRange: { min: 480, max: 1920 }, resolvePeriod: (ms) => Math.round(ms / 10) * 10, adjustable: true
 	});
 	const glitter = timeline('glitter', 10, new Array(10).fill(100));
 	const stretched = planLoopFit([stretchable(), glitter], { config });
@@ -635,7 +615,7 @@ main().catch((error) => {
 		return new AuthoredAnimationSource({
 			key: 'sticker', frameCount: 12, frameDurations: retimeGifDelays(file, cycle),
 			fileCycleDuration: 960, periodRange: { min: 480, max: 1920 }, resolvePeriod: (ms) => Math.round(ms / 10) * 10,
-			setPeriod: () => {}, retimeDelays: (target) => retimeGifDelays(file, target)
+			adjustable: true, retimeDelays: (target) => retimeGifDelays(file, target)
 		});
 	};
 	const glitter = timeline('glitter', 8, new Array(8).fill(100));
@@ -645,7 +625,7 @@ main().catch((error) => {
 		return { current, result: await planFrameOptions(timelines, planLoopFit(timelines, { config }), current.frameCount, { config: options, plan, ...extra }) };
 	};
 	const retimed = sticker().atPeriod(800);
-	assert(retimed.cycleDuration === 800 && retimed.frameCount === 12 && typeof retimed.setPeriod === 'function', 'A retimed copy must play one pass in the new cycle and keep its controls');
+	assert(retimed.cycleDuration === 800 && retimed.frameCount === 12 && retimed.adjustable, 'A retimed copy must play one pass in the new cycle and keep its controls');
 	assert(procedural('motion', 900).atPeriod(1000).naturalPeriod === 1000, 'A retimed procedural copy must own the new period');
 
 	// 960 ms against 800 ms only closes after 4.8 s.

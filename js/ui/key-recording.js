@@ -1,13 +1,13 @@
 'use strict';
 
-class TimelineKeyRecording {
-	constructor(dock) {
-		this.dock = dock; this.editor = dock.editor; this.panel = this.editor.animationPanel;
-		this.editor.timelineKeyRecording = this;
+class KeyRecording {
+	constructor(editor) {
+		this.editor = editor; this.panel = this.editor.animationPanel;
+		this.editor.keyRecording = this;
 		this.blockedPointers = new Set();
 		this.clickPointers = new Set();
 		this.pointerDrag = bindPointerDrag(null, {
-			bindPress: false, threshold: dock.config.dragThresholdPx, capture: () => this.drag.handle,
+			bindPress: false, threshold: CONFIG.ui.timeline.dragThresholdPx, capture: () => this.drag.handle,
 			move: event => this.move(event), end: cancelled => this.finish(cancelled), suppress: () => this.suppressClick()
 		});
 		this.sessionEvents = [];
@@ -21,6 +21,7 @@ class TimelineKeyRecording {
 			this.blockedPointers.clear(); this.clickPointers.clear();
 		});
 		window.addEventListener('resize', () => this.validate());
+		window.addEventListener('animationChanged', () => this.validate());
 		listen(document, 'keydown', event => {
 			if (!this.active || event.key !== 'Escape' || this.editor.modalManager.isAnyOpen() || focusKeyClaim().typing) return;
 			event.preventDefault(); event.stopImmediatePropagation();
@@ -46,13 +47,13 @@ class TimelineKeyRecording {
 	get active() { return Boolean(this.entry); }
 	handles(layer) { return this.active && layer === this.layer && this.editor.currentTool === ToolType.SELECT; }
 	canBegin(layer, entry) {
-		return this.dock.available && this.panel.canEditKeys(layer, entry) && !layer.isPreview
+		return !this.editor.mobileManager.isMobile && this.editor.canEditKeys(layer, entry) && !layer.isPreview
 			&& Boolean(this.editor.getMovableLayerContext(layer)) && !this.editor.layerManager.hasMultiSelection();
 	}
 	validate() {
 		if (!this.active) return false;
 		if (!this.canBegin(this.layer, this.entry) || this.editor.layerManager.getActiveLayer() !== this.layer
-			|| this.panel.selectedMotion(this.layer) !== this.entry || !isSameData(this.layer.transform, this.restToken)
+			|| this.editor.selectedMotion(this.layer) !== this.entry || !isSameData(this.layer.transform, this.restToken)
 			|| !isSameData(this.transform.getFrame(), this.frameToken)
 			|| (this.editor.currentTool !== ToolType.SELECT && !this.editor.temporaryHandToolActive)) { this.end(); return false; }
 		return true;
@@ -64,18 +65,19 @@ class TimelineKeyRecording {
 		const context = this.editor.getMovableLayerContext(layer);
 		this.layer = layer; this.entry = entry; this.transform = context.manager.layerTransforms.get(layer.id);
 		this.unsubscribeSeek = this.editor.animationTicker.subscribeSeek(() => { if (this.drag) this.finish(true); });
-		this.dock.syncClock();
+		window.dispatchEvent(new CustomEvent('playbackChanged'));
 		for (const { target, type, listener, capture } of this.sessionEvents) target.addEventListener(type, listener, capture);
-		this.periodMs = this.panel.keyPeriod(layer, entry);
+		this.periodMs = this.editor.keyPeriod(layer, entry);
 		this.restToken = structuredClone(layer.transform); this.frameToken = structuredClone(this.transform.getFrame());
 		this.disabledControls = new Map();
-		this.dock.frameView.invalidate({ keepFrame: true }); this.dock.frameView.seek();
-		this.editor.animationPanel.setPaused(true);
+		this.editor.previewFrameView.invalidate({ keepFrame: true }); this.editor.previewFrameView.seek();
+		this.editor.setPlayback(false);
 		this.editor.previewContainer.classList.remove('alt-duplicate-armed');
 		this.syncControls();
 		this.transform.createTransformHandles();
+		getLayerManagerForType(this.editor, layer.type)?.renderLayer?.(layer);
 		this.refresh();
-		this.dock.syncKeys();
+		window.dispatchEvent(new CustomEvent('animationChanged', { detail: { layerId: layer.id } }));
 	}
 	end() {
 		if (!this.active || this.ending) return;
@@ -84,18 +86,18 @@ class TimelineKeyRecording {
 		const layer = this.layer, transform = this.transform;
 		this.entry = null; this.layer = null;
 		this.unsubscribeSeek?.(); this.unsubscribeSeek = null;
-		this.dock.syncClock();
+		window.dispatchEvent(new CustomEvent('playbackChanged'));
 		for (const { target, type, listener, capture } of this.sessionEvents) target.removeEventListener(type, listener, capture);
 		this.blockedPointers.clear(); this.clickPointers.clear();
 		for (const [control, disabled] of this.disabledControls || []) if (control.isConnected) control.disabled = disabled;
 		this.disabledControls = null;
 		this.note?.remove(); this.note = null;
 		if (this.editor.notifications.mode === this.mode) this.editor.notifications.setMode(null);
-		this.dock.frameView.invalidate({ keepFrame: this.dock.available });
-		if (!this.dock.available && this.editor.animationTicker.paused) this.editor.animationTicker.setPaused(true);
+		this.editor.previewFrameView.invalidate({ keepFrame: true });
+		if (!!this.editor.mobileManager.isMobile && this.editor.animationTicker.paused) this.editor.animationTicker.setPaused(true);
 		transform?.createTransformHandles();
-		if (this.editor.layers.includes(layer)) this.panel.load(layer);
-		this.dock.syncKeys();
+		if (this.editor.layers.includes(layer)) { getLayerManagerForType(this.editor, layer.type)?.renderLayer?.(layer); this.panel.load(layer); }
+		window.dispatchEvent(new CustomEvent('animationChanged', { detail: { layerId: layer.id } }));
 		this.editor.requestPreviewUpdate();
 		// The held frame still shows the isolated motion; recompose it with the full stack.
 		this.editor.animationTicker.refresh();
@@ -199,7 +201,7 @@ class TimelineKeyRecording {
 		let key = keys.find(key => Math.abs(key.at - at) < CONFIG.ui.timeline.keyPositionTolerance);
 		if (!key) { key = { at, easing: 'linear', values: {} }; keys.push(key); }
 		Object.assign(key.values, values);
-		return this.panel.setKeys(this.layer, this.entry, keys, { commit, at: key.at, label: KEY_POSE_ACTION.history, coalesceKey });
+		return this.editor.setKeys(this.layer, this.entry, keys, { commit, at: key.at, label: KEY_POSE_ACTION.history, coalesceKey });
 	}
 	move(event) {
 		const drag = this.drag;
@@ -235,8 +237,8 @@ class TimelineKeyRecording {
 			values = { rotate: snapRotationDeg(angle, event.shiftKey) };
 		} else values = this.scaleValues(drag, nextPoint, startPoint, event);
 		if (values && Object.entries(values).some(([id, value]) => Math.abs(value - sample[id]) > CONFIG.ui.timeline.keySingularTolerance)) this.write(values);
-		else this.panel.setKeys(this.layer, this.entry, drag.keys, { commit: false, rollback: true, at: drag.at });
-		this.dock.frameView.invalidate({ keepFrame: true }); this.dock.frameView.seek();
+		else this.editor.setKeys(this.layer, this.entry, drag.keys, { commit: false, rollback: true, at: drag.at });
+		this.editor.previewFrameView.invalidate({ keepFrame: true }); this.editor.previewFrameView.seek();
 		this.editor.requestPreviewUpdate(); this.paint();
 	}
 	scaleValues(drag, point, grab, event) {
@@ -280,7 +282,7 @@ class TimelineKeyRecording {
 		this.drag = null;
 		drag.transform.isDraggingHandle = false; drag.transform.dragStartState = null;
 		if (drag.moved) {
-			if (cancel) this.panel.setKeys(this.layer, this.entry, drag.keys, { commit: false, rollback: true, at: drag.at });
+			if (cancel) this.editor.setKeys(this.layer, this.entry, drag.keys, { commit: false, rollback: true, at: drag.at });
 			else if (!isSameData(drag.keys, GlitterAnimation.normalizeKeys(this.entry.keys))) this.editor.saveState(KEY_POSE_ACTION.history);
 		}
 		this.editor.clearSmartGuides();
@@ -298,3 +300,5 @@ class TimelineKeyRecording {
 		this.refresh();
 	}
 }
+
+SCRIPT_GROUP_EXPORTS.set('key-recording', { KeyRecording });

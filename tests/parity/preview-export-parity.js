@@ -37,7 +37,7 @@ const PREVIEW_EXPORT_TWINS = [
 		// the export's timing source was built from written into it.
 		feature: 'GIF cycle delays',
 		shared: 'getAuthoredPassTiming',
-		preview: ['AnimationPanelController.buildRetimedPreview'],
+		preview: ['PreviewImageResolver.buildRetimedPreview'],
 		export: ['SceneCompositor._createAuthoredTimingSource']
 	},
 	{

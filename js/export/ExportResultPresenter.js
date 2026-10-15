@@ -19,11 +19,17 @@ class ExportResultPresenter {
 
 		let canShare = false;
 		try { canShare = Boolean(navigator.canShare?.({ files: [file] })); } catch (error) { canShare = false; }
-		const report = buildExportReport({
-			blob, fileName: file.name, target, width, height, frameCount, duration, timelinePlan, colorAnalysis, fit, frameOptions: this.getFrameOptions(),
+		const frameOptions = timelinePlan ? this.getFrameOptions() : null;
+		const makeReport = options => buildExportReport({
+			blob, fileName: file.name, target, width, height, frameCount, duration, timelinePlan, colorAnalysis, fit, frameOptions: options,
 			platform: { isIOS: CONFIG.debug.forceIOSExportPreview || isIOSDevice(), canShare }
 		});
 
+		const pendingOptions = frameOptions && typeof frameOptions.then === 'function';
+		const report = makeReport(pendingOptions ? null : frameOptions);
+		if (pendingOptions) frameOptions.then(options => {
+			if (this.previewBlobUrl === blobUrl && options) this._renderNotices(makeReport(options).notices);
+		}).catch(error => console.warn('Export frame options could not be shown:', error));
 		this._renderFacts(report.facts);
 		this._renderSaveGuide(modal, report.saveGuide);
 		this._renderUploadLimits(report.uploadLimits, fit);

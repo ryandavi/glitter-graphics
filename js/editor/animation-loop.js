@@ -1,4 +1,59 @@
 const EDITOR_ANIMATION_LOOP_METHODS = {
+	hasMotionForPlayback() { return Boolean(this.originalImage && listTimingTargets(this).some(target => target.active !== false && this.layerManager.getLayerById(target.layerId)?.visible !== false && (target.kind === 'gifCycle' || target.period > 0))); },
+	writeTiming(key, patch, { label = 'Change animation timing', coalesceKey, commit = true, live = false } = {}) {
+		const target = listTimingTargets(this).find(entry => entry.key === key);
+		if (!target) return false;
+		const names = { period: 'period', run: 'run', delayMs: 'run', iterations: 'run', phase: 'phase', direction: 'direction' };
+		if (Object.keys(patch).some(name => !target.can[names[name]])) return false;
+		const layer = this.layerManager.getLayerById(target.layerId);
+		if (['period', 'delayMs', 'phase'].some(name => patch[name] != null && !Number.isFinite(patch[name]))) return false;
+		ANIMATION_TIMING_KINDS[target.kind].write(this, layer, target, patch);
+		const next = ANIMATION_TIMING_KINDS[target.kind].collect(this, layer).find(entry => entry.key === key);
+		const values = entry => ({ period: entry.period, run: entry.run, phase: entry.phase, direction: entry.direction });
+		if (!next || isSameData(values(target), values(next))) return false;
+		if (target.period > 0 && Math.abs(next.period - target.period) > 0.01) {
+			layer.loopOriginalPeriods ||= {};
+			layer.loopOriginalPeriods[key] ??= target.period;
+		}
+		if (target.kind === 'motion') this.touchMotion?.(layer, next.animation);
+		this.documentRevision = (this.documentRevision || 0) + 1;
+		getLayerManagerForType(this, layer.type)?.renderLayer?.(layer);
+		this.previewFrameView?.invalidate({ keepFrame: Boolean(this.keyRecording?.active) });
+		this.requestPreviewUpdate();
+		window.dispatchEvent(new CustomEvent('animationChanged', { detail: { layerId: layer.id } }));
+		if (commit && !live) this.commitAnimationTiming(label, { coalesceKey });
+		return true;
+	},
+
+	setPlayback(playing) {
+		if (playing) this.keyRecording?.end();
+		this.animationTicker.setPaused(!playing);
+		this.syncPlaybackControls();
+		if (playing) this.previewImages.previewFrames.clear();
+		else if (listTimingTargets(this).some(target => ['gifCycle', 'filterAnimation'].includes(target.kind))) this.ensurePreviewFrameView().then(view => view.paint(this.animationTicker.getPlayheadTime())).catch(error => console.warn('Preview frame loading failed:', error));
+		window.dispatchEvent(new CustomEvent('playbackChanged'));
+		this.requestPreviewUpdate();
+	},
+	syncPlaybackControls() {
+		const button = document.getElementById('pauseMotionTool');
+		const playing = !this.animationTicker.paused;
+		const label = playing ? 'Pause motion' : `Resume motion \u00b7 ${formatSeconds(this.animationTicker.getPlayheadTime())}`;
+		button?.classList.toggle('active', !playing);
+		button?.setAttribute('aria-pressed', String(!playing));
+		if (button) { button.title = label; button.querySelector('.name').textContent = label; }
+	},
+
+	async ensureKeyRecording() {
+		await this.ensurePreviewFrameView();
+		const { KeyRecording } = await loadScriptGroup('key-recording');
+		this.keyRecording ||= new KeyRecording(this);
+		return this.keyRecording;
+	},
+	async ensurePreviewFrameView() {
+		const { PreviewFrameView } = await loadScriptGroup('preview-frames');
+		this.previewFrameView ||= new PreviewFrameView(this);
+		return this.previewFrameView;
+	},
 	setDocumentLoop({ mode, durationMs } = CONFIG.project.loop, { commit = true } = {}) {
 		const config = CONFIG.export.timeline;
 		const loop = mode === 'set' ? {
@@ -6,18 +61,20 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		} : { ...CONFIG.project.loop };
 		if (commit && this.documentLoop.mode === loop.mode && this.documentLoop.durationMs === loop.durationMs) return;
 		this.documentLoop = loop;
+		if (loop.mode === 'set') this.animationTicker.setLoop(loop.durationMs);
 		this.scheduleExportDuration();
 		this.requestPreviewUpdate();
 		if (commit) this.saveState(mode === 'set' ? 'Set loop length' : 'Automatic loop length');
 	},
 	setupAnimationLoop() {
+		document.getElementById('animationLoopSection')?.addEventListener('panelcollapsechange', event => { if (!event.detail.collapsed) this.syncAnimationLoop(this.loopEstimate); });
 		const select = document.getElementById('animationLoopCandidate');
-		if (select && isFeatureEnabled('loopLength')) {
+		if (select) {
 			select.closest('.property-row').querySelector('.property-label').textContent = 'Loop length';
 			select.setAttribute('aria-label', 'Loop length');
 		}
 		select?.addEventListener('change', () => {
-			if (isFeatureEnabled('loopLength')) this.setDocumentLoop(select.value === 'auto' ? CONFIG.project.loop : { mode: 'set', durationMs: Number(select.value) });
+			this.setDocumentLoop(select.value === 'auto' ? CONFIG.project.loop : { mode: 'set', durationMs: Number(select.value) });
 			this.syncLoopCandidate();
 		});
 		document.getElementById('fitAnimationsToLoop')?.addEventListener('click', () => this.fitAnimationsToLoop());
@@ -25,7 +82,7 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		const frames = document.getElementById('animationFrameOptions');
 		const root = frames?.closest('.app-menu-popover');
 		const panel = root?.querySelector('.app-menu-panel');
-		if (panel) setupMenuPopover({ root, trigger: frames, panel, fixed: true, beforeOpen: () => this.fillFrameOptionsMenu(panel) });
+		if (panel) setupMenuPopover({ root, trigger: frames, panel, fixed: true, beforeOpen: async () => { this.fillFrameOptionsMenu(panel); await this.ensureFrameOptions(); this.fillFrameOptionsMenu(panel); } });
 		document.getElementById('animationOpenTimeline')?.addEventListener('click', () => PREFERENCES.set('timelineOpen', true));
 		this.scheduleExportDuration();
 	},
@@ -49,9 +106,7 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		this.updateExportDuration();
 	},
 	// A Cycle row sets how long one pass of the GIF its section shows takes.
-	// It writes through that source's own setter, the one Fit and Restore call,
-	// so there is one writer and one range. `getKey` returns the timeline key of
-	// the GIF the section is showing, or null.
+	// `getKey` addresses the document timing target, independent of estimates.
 	bindGifCycleControl(id, getKey) {
 		const slider = document.getElementById(id);
 		if (!slider) return;
@@ -68,14 +123,14 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 				const source = control.source;
 				const layer = source && this.layerManager.getLayerById(source.ownerLayerId);
 				if (!layer) return;
-				source.setPeriod(seconds * 1000);
+				this.writeTiming(source.key, { period: seconds * 1000 }, { live: true });
 				getLayerManagerForType(this, layer.type)?.renderLayer?.(layer);
 				this.requestPreviewUpdate();
 				// The run lasts until the retimed image is on screen, so a slow
 				// file waits for the value to settle.
-				await this.animationPanel.retimedPreviewsSettled();
+				await this.previewImages.retimedPreviewsSettled();
 			},
-			onCommit: () => this.saveState('Change animation speed')
+			onCommit: () => this.commitAnimationTiming('Change cycle')
 		});
 		(this.gifCycleControls ||= []).push(control);
 	},
@@ -83,15 +138,12 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 	getGifCycleDefault(source) {
 		return roundTo(source.fileCycleDuration, CONFIG.export.timeline.renderClock.gifDelayQuantumMs) / 1000;
 	},
-	// Rows follow the estimate, which is where the sources and their ranges
-	// come from. While it is being recomputed a row keeps the source it has,
-	// unless its section now shows a different GIF.
+	// File timing ranges become available after their shared decode completes.
 	syncGifCycleControls() {
 		(this.gifCycleControls || []).forEach((control) => {
 			const key = control.getKey();
-			if (key == null || this.loopEstimate) {
-				control.source = key == null ? null : this.loopEstimate.loopFit.sources.find((source) => source.key === key && source.fileCycleDuration && typeof source.setPeriod === 'function') || null;
-			} else if (control.source?.key !== key) control.source = null;
+			const target = listTimingTargets(this).find(entry => entry.key === key && entry.kind === 'gifCycle' && entry.can.period);
+			control.source = target ? { ...target, ownerLayerId: target.layerId, naturalPeriod: target.period } : null;
 			const { slider, source } = control;
 			(slider.closest('[data-gif-cycle-set]') || slider.closest('.property-row')).hidden = !source;
 			// The same source means the same estimate: the value on the track
@@ -108,8 +160,12 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 	},
 	syncAnimationLoop(estimate, message = 'No animation sources.') {
 		this.loopEstimate = estimate;
-		this.animationTicker.setLoop(estimate?.duration);
+		this.loopAnalysisRevision = (this.loopAnalysisRevision || 0) + 1;
+		this.loopEstimatePending = false;
+		this.animationTicker.setLoop(this.documentLoop.mode === 'set' ? this.documentLoop.durationMs : estimate?.duration);
+		this.previewFrameView?.invalidate({ keepFrame: Boolean(this.keyRecording?.active) });
 		this.syncGifCycleControls();
+		this.animationTicker.refresh();
 		this.timelineDock?.sync(estimate);
 		const status = document.getElementById('animationLoopStatus');
 		const sources = document.getElementById('animationLoopSources');
@@ -128,11 +184,13 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 			badge.title = clean ? 'The loop closes cleanly.' : TimelineView.SEAM_TEXT;
 			status.append(value, badge);
 		} else status.textContent = message;
+		const section = document.getElementById('animationLoopSection');
+		if (section?.classList.contains('is-collapsed') || !section?.getClientRects().length) return;
 		const analyses = new Map((estimate?.sourceAnalysis || []).map((entry) => [entry.key, entry]));
 		const showBefore = (fit?.sources || []).some((source) => this.layerManager.getLayerById(source.ownerLayerId)?.loopOriginalPeriods?.[source.key] != null);
 		sources.replaceChildren();
 		const head = sources.createTHead().insertRow();
-		['Source', 'Current', ...(showBefore ? ['Before'] : [])].forEach((label, index) => {
+		['Source', 'Cycle', ...(showBefore ? ['Before'] : [])].forEach((label, index) => {
 			const cell = document.createElement('th'); cell.scope = 'col'; cell.textContent = label;
 			if (index) cell.className = 'is-numeric';
 			if (label === 'Before') cell.title = 'Timing saved before the first speed change';
@@ -144,7 +202,7 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 			const period = source.kind === 'authored' ? source.cycleDuration : source.naturalPeriod;
 			const resolved = analysis?.resolvedPeriod || period;
 			const label = source.displayLabel;
-			const title = `Edit ${label}${source.nonLooping ? ' (plays once)' : typeof source.setPeriod !== 'function' ? ' (fixed timing)' : ''}${TimelineView.exportNote({ cycleMs: period, exportCycleMs: resolved })}`;
+			const title = `Edit ${label}${source.nonLooping ? ' (plays once)' : !source.adjustable ? ' (fixed timing)' : ''}${TimelineView.exportNote({ cycleMs: period, exportCycleMs: resolved })}`;
 			const row = body.insertRow();
 			const name = document.createElement('th'); name.scope = 'row';
 			const button = document.createElement('button'); button.type = 'button'; button.className = 'btn-text';
@@ -159,21 +217,16 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 				if (value == null) cell.setAttribute('aria-label', 'No saved timing');
 			});
 		});
-		const loopLengthEnabled = isFeatureEnabled('loopLength');
-		const previous = select.value;
 		select.replaceChildren(...(fit?.candidates || []).map((candidate) => {
 			const option = document.createElement('option');
 			option.value = String(candidate.duration);
 			option.textContent = `${formatSeconds(candidate.duration)}${candidate.exact ? '' : ' / ends do not match'}`;
 			return option;
 		}));
-		if (loopLengthEnabled) {
+		{
 			const automatic = document.createElement('option'); automatic.value = 'auto'; automatic.textContent = 'Automatic';
 			select.prepend(automatic);
 			select.value = this.documentLoop.mode === 'set' ? String(this.documentLoop.durationMs) : 'auto';
-		} else {
-			if (Array.from(select.options).some((option) => option.value === previous)) select.value = previous;
-			else if (Array.from(select.options).some((option) => Number(option.value) === estimate?.duration)) select.value = String(estimate.duration);
 		}
 		select.disabled = !select.options.length;
 		sources.hidden = !fit?.sources.length;
@@ -181,9 +234,7 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		this.syncLoopCandidate();
 	},
 	getLoopCandidate() {
-		const duration = isFeatureEnabled('loopLength')
-			? (this.documentLoop.mode === 'set' ? this.documentLoop.durationMs : this.loopEstimate?.duration)
-			: Number(document.getElementById('animationLoopCandidate')?.value);
+		const duration = this.documentLoop.mode === 'set' ? this.documentLoop.durationMs : this.loopEstimate?.duration;
 		return this.loopEstimate?.loopFit.candidates.find((candidate) => candidate.duration === duration);
 	},
 	syncLoopCandidate() {
@@ -216,24 +267,22 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		// Offered here only when there is a timing to choose; the timeline's
 		// frame count opens the same menu.
 		const frames = document.getElementById('animationFrameOptions')?.closest('.app-menu-popover');
-		if (frames) frames.hidden = !this.loopEstimate?.frameOptions.options.length;
-		document.getElementById('animationLoopLengthSet').hidden = isFeatureEnabled('loopLength') ? !fit?.sources.length : !fit?.candidates.some((entry) => entry.canApply);
+		if (frames) frames.hidden = !this.loopEstimate?.loopFit?.sources.length;
+		document.getElementById('animationLoopLengthSet').hidden = !fit?.sources.length;
 		document.getElementById('animationLoopActionSet').hidden = button.hidden && (!reset || reset.hidden) && (!frames || frames.hidden) && !isFeatureAvailable('timeline');
 		const layer = this.layerManager.getActiveLayer();
 		if (layer) { const prefix = this.animationPanel.prefixByType.get(layer.type); if (prefix) this.animationPanel.loadTimingStrip(prefix, layer); }
 	},
 	hasLoopTimingToRestore() {
-		return (this.loopEstimate?.loopFit.sources || []).some((source) => {
-			const before = this.layerManager.getLayerById(source.ownerLayerId)?.loopOriginalPeriods?.[source.key];
-			return typeof source.setPeriod === 'function' && before != null && Math.abs(before - source.naturalPeriod) > 0.01;
-		});
+		return listTimingTargets(this).some(target => target.can.period && this.layerManager.getLayerById(target.layerId)?.loopOriginalPeriods?.[target.key] != null);
 	},
 	// The frame count's menu: what the export would write now, the timings
 	// that would write fewer frames, and the way back to the saved timing.
 	fillFrameOptionsMenu(panel) {
-		const options = this.loopEstimate?.frameOptions;
+		if (!this.loopEstimate?.frameOptions && !this.frameMenuPending) { this.frameMenuPending = true; this.ensureFrameOptions().then(() => { if (panel.isConnected) this.fillFrameOptionsMenu(panel); }).finally(() => { this.frameMenuPending = false; }); }
+		const options = !this.loopEstimatePending && this.loopEstimate?.documentRevision === this.documentRevision ? this.loopEstimate?.frameOptions : null;
 		const labels = CONFIG.export.timeline.frameOptions.labels;
-		const heading = buildMenuLabel(options ? `About ${formatCount(options.frameCount, 'frame')} now` : 'Measuring the animation');
+		const heading = buildMenuLabel(options ? `About ${formatCount(options.frameCount, 'frame')} now` : this.loopEstimate?.frameOptionsError ? 'Could not measure frame options. Open this menu to retry.' : 'Measuring the animation');
 		const entries = (options?.options || []).map(option => buildMenuItem({
 			label: `${labels[option.kind]}: about ${formatCount(option.frameCount, 'frame')}, ${formatSeconds(option.duration)} loop`,
 			run: () => this.applyFrameOption(option),
@@ -246,24 +295,19 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		panel.replaceChildren(heading, ...entries);
 	},
 	applyFrameOption(option) {
-		if (this.loopEstimate?.frameOptions.options.includes(option)) this.applyLoopFits(option.fits, 'Change animation timing', `Animation timing changed: about ${formatCount(option.frameCount, 'frame')}`);
+		if (!this.loopEstimatePending && this.loopEstimate?.documentRevision === this.documentRevision && this.loopEstimate?.frameOptions?.options.includes(option)) this.applyLoopFits(option.fits, 'Change animation timing', `Animation timing changed: about ${formatCount(option.frameCount, 'frame')}`);
 	},
-	fitAnimationsToLoop() {
+	async fitAnimationsToLoop() {
+		if (this.loopEstimatePending) await this.refreshLoopEstimate();
 		const candidate = this.getLoopCandidate();
 		if (candidate?.canApply) this.applyLoopFits(candidate.fits, 'Fit animations to loop', 'Animation speeds fitted to the loop');
 	},
-	// A source keeps its timing from before the first speed change until restored.
-	rememberAnimationPeriod(source) {
-		const layer = this.layerManager.getLayerById(source.ownerLayerId);
-		if (!layer || typeof source.setPeriod !== 'function') return;
-		layer.loopOriginalPeriods ||= {};
-		layer.loopOriginalPeriods[source.key] ??= source.naturalPeriod ?? source.cycleDuration;
-	},
 	restoreAnimationPeriod(source) {
-		const layer = this.layerManager.getLayerById(source.ownerLayerId);
+		const target = listTimingTargets(this).find(target => target.key === source.key);
+		const layer = target && this.layerManager.getLayerById(target.layerId);
 		const period = layer?.loopOriginalPeriods?.[source.key];
-		if (period == null || typeof source.setPeriod !== 'function') return false;
-		source.setPeriod(period);
+		if (period == null || !target.can.period) return false;
+		this.writeTiming(source.key, { period }, { commit: false });
 		delete layer.loopOriginalPeriods[source.key];
 		if (!Object.keys(layer.loopOriginalPeriods).length) delete layer.loopOriginalPeriods;
 		return true;
@@ -277,24 +321,20 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 	// Writes fitted periods as one undo step, saving each source's timing
 	// from before its first speed change.
 	applyLoopFits(fits, label, status) {
-		// A queued estimate is invalidated on every document commit or restore,
-		// so these setters always belong to the current layer objects.
 		fits.forEach((fit) => {
 			if (Math.abs(fit.fittedPeriod - fit.source.naturalPeriod) < 0.01) return;
 			if (!this.layerManager.getLayerById(fit.source.ownerLayerId)) return;
-			this.rememberAnimationPeriod(fit.source);
-			fit.source.setPeriod(fit.fittedPeriod);
+			this.writeTiming(fit.key, { period: fit.fittedPeriod }, { commit: false });
 		});
 		this.commitAnimationTiming(label);
 		this.updateStatus(status);
 	},
 	resetAnimationLoop() {
 		let changed = false;
-		(this.loopEstimate?.loopFit.sources || []).forEach((source) => {
+		listTimingTargets(this).forEach((source) => {
 			changed = this.restoreAnimationPeriod(source) || changed;
 		});
 		if (!changed) return;
-		document.getElementById('animationLoopCandidate').value = '';
 		this.commitAnimationTiming('Restore previous animation timing');
 		this.updateStatus('Restored previous animation timing');
 	}

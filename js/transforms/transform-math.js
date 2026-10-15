@@ -361,7 +361,7 @@ function getLayerMotionBox(editor, layer, steps = 64) {
 	const clipBase = getClipBase(editor.layers, layer);
 	if (clipBase) return getClippedLayerMotionBox(editor, layer, clipBase, steps);
 	const rest = getLayerCanvasBox(editor, layer, { visual: true });
-	const animations = GlitterAnimation.normalizeAnimations(layer.animations).filter((animation) => GlitterAnimation.isActive(animation));
+	const animations = GlitterAnimation.normalizeAnimations(GlitterAnimation.getLayerAnimations(layer)).filter((animation) => GlitterAnimation.isActive(animation));
 	if (!rest || !animations.length) return rest;
 	if (animations.some((animation) => GlitterAnimation.MOTION_REGISTRY[animation.type].needsBounds)) return { left: 0, top: 0, right: editor.originalCanvas.width, bottom: editor.originalCanvas.height };
 	const context = getLayerAnimationSamplingContext(editor, layer);
@@ -387,8 +387,8 @@ function getLayerMotionBox(editor, layer, steps = 64) {
 
 function getClippedLayerMotionBox(editor, layer, base, steps) {
 	if (base.visible === false || base.opacity <= 0) return null;
-	const own = GlitterAnimation.normalizeAnimations(layer.animations).filter(GlitterAnimation.isActive);
-	const inherited = GlitterAnimation.normalizeAnimations(base.animations).filter(GlitterAnimation.isActive);
+	const own = GlitterAnimation.normalizeAnimations(GlitterAnimation.getLayerAnimations(layer)).filter(GlitterAnimation.isActive);
+	const inherited = GlitterAnimation.normalizeAnimations(GlitterAnimation.getLayerAnimations(base)).filter(GlitterAnimation.isActive);
 	const animations = [...own, ...inherited];
 	if (!animations.length) return getLayerCanvasBox(editor, layer, { visual: true });
 	if (animations.some(animation => GlitterAnimation.MOTION_REGISTRY[animation.type].needsBounds)) return { left: 0, top: 0, right: editor.originalCanvas.width, bottom: editor.originalCanvas.height };

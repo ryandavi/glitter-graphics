@@ -10,7 +10,7 @@ const { openApp } = require('../lib/app');
 		await page.evaluate(async () => {
 			const layer = editor.shapeGlitterManager.createLayer({ shapeId: 'square', width: 80, height: 60, position: { x: 160, y: 120 } });
 			getLayerFillSlot(layer).mode = 'solid';
-			layer.animations = [GlitterAnimation.normalizeAnimation({ type: 'custom', periodMs: 1000, keys: [
+			layer.animations = [GlitterAnimation.normalizeAnimation({ id: editor.layerManager.generateLayerId(), type: 'custom', periodMs: 1000, keys: [
 				{ at: 0, values: { tx: 0, opacity: 1, scaleX: 1 } }, { at: 0.5, values: { tx: 80, opacity: 0.4, scaleX: 1.5 } }
 			] })];
 			editor.layerManager.insertLayer(layer);
@@ -105,7 +105,7 @@ const { openApp } = require('../lib/app');
 		});
 		await ready();
 		assert.strictEqual(await page.evaluate(() => editor.layerManager.getActiveLayer().animations.length), 2);
-		assert.strictEqual(await page.evaluate(() => editor.timelineDock.keyLane.row.source.keyTrack.index), 1, 'Adding Custom selects its new lane');
+		assert(await page.evaluate(() => editor.timelineDock.keyLane.row.source.keyTrack.motionId === editor.layerManager.getActiveLayer().animations[1].id), 'Adding Custom selects its new lane by identity');
 		assert.strictEqual((await state()).history, menuBefore.history + 1);
 		await page.evaluate(() => editor.historyManager.undo()); await ready();
 		assert.strictEqual(await page.locator('.timeline-row-lane:not([hidden]) .timeline-key[data-key-at]').count(), 2);
@@ -249,11 +249,12 @@ const { openApp } = require('../lib/app');
 			const layer = editor.layerManager.getActiveLayer(), animation = layer.animations[0], panel = editor.animationPanel;
 			animation.keys = [{ at: 0, easing: 'linear', values: { opacity: 1 } }, { at: 0.5, easing: 'linear', values: { opacity: 0.5 } }];
 			const keys = GlitterAnimation.normalizeKeys(animation.keys); panel.setKeySelection(animation, keys[0].at);
-			const at = (keys[0].at + (keys[1]?.at ?? 1)) / 2;
+			editor.animationTicker.seek(250);
+			const at = panel.keyProgress(layer, animation).eased;
 			panel.addKey(layer, animation);
 			return { at, added: animation.keys.some(key => key.at === at), seeded: animation.keys.length };
 		});
-		assert(closedAdd.added, 'With the dock closed, Add key inserts halfway to the next key');
+		assert(closedAdd.added, 'With the dock closed, Add key uses the held playhead');
 		await page.evaluate(() => editor.historyManager.undo());
 		before = await state();
 		await change('shapeAnimKeyPropOpacity', 60);
@@ -274,7 +275,7 @@ const { openApp } = require('../lib/app');
 		assert.strictEqual((await state()).history, stripBefore.history + 1, 'A panel-strip drag saves one history step');
 		await page.evaluate(() => editor.historyManager.undo());
 		assert.deepStrictEqual((await state()).keys, stripBefore.keys, 'One Undo restores panel-strip timing');
-		await page.evaluate(() => PREFERENCES.set('timelineOpen', true)); await ready();
+		await page.evaluate(() => { editor.pickers.closeFlyout(); PREFERENCES.set('timelineOpen', true); }); await ready();
 		await page.evaluate(() => {
 			const layer = editor.layerManager.getActiveLayer(), entry = layer.animations[0];
 			editor.animationPanel.setKeys(layer, entry, []);
@@ -306,7 +307,7 @@ const { openApp } = require('../lib/app');
 			const stored = await gated.page.evaluate(async () => {
 				const layer = editor.shapeGlitterManager.createLayer({ shapeId: 'square', width: 30, height: 20, position: { x: 80, y: 60 } });
 				getLayerFillSlot(layer).mode = 'solid';
-				layer.animations = [GlitterAnimation.normalizeAnimation({ type: 'custom', periodMs: 1000, keys: [{ at: 0, values: { tx: 0 } }, { at: 0.5, values: { tx: 40 } }] })];
+				layer.animations = [GlitterAnimation.normalizeAnimation({ id: editor.layerManager.generateLayerId(), type: 'custom', periodMs: 1000, keys: [{ at: 0, values: { tx: 0 } }, { at: 0.5, values: { tx: 40 } }] })];
 				editor.layerManager.insertLayer(layer); editor.layerManager.setActiveLayer(layer.id);
 				editor.shapeGlitterManager.renderLayer(layer); editor.animationPanel.load(layer);
 				editor.animationTicker.stop();
@@ -320,7 +321,7 @@ const { openApp } = require('../lib/app');
 				return { preview, frame: frame.width > 0, tx: source.sampleAt(250).sample.tx, editable: editor.animationPanel.canEditKeys(layer, layer.animations[0]), optionDisabled: option.disabled,
 					timelineLoaded: performance.getEntriesByType('resource').some(entry => /timeline-(dock|key-lane)\.js/.test(entry.name)) };
 			});
-			assert.deepStrictEqual(stored, { preview: true, frame: true, tx: 20, editable: false, optionDisabled: true, timelineLoaded: false });
+			assert.deepStrictEqual(stored, { preview: true, frame: true, tx: 20, editable: phone, optionDisabled: !phone, timelineLoaded: false });
 			assert.deepStrictEqual(gated.errors, []);
 			console.log(`PASS stored Custom playback/export with authoring gated on ${phone ? 'phone' : 'deployed host'}, without the lazy timeline group`);
 		} finally { await gated.browser.close(); }

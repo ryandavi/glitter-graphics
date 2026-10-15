@@ -529,7 +529,7 @@ initializeExportSettings() {
 	},
 
 	hasAnimatedExportContent() {
-		return this.layers.some((layer) => layer.visible && (GlitterAnimation.isActive(layer.animations) || layer.type === LayerType.STICKER || layer.type === LayerType.GLITTER_FILL));
+		return this.layers.some((layer) => layer.visible && (GlitterAnimation.isActive(GlitterAnimation.getLayerAnimations(layer)) || layer.type === LayerType.STICKER || layer.type === LayerType.GLITTER_FILL));
 	},
 
 	clearExportDurationUI() {
@@ -561,7 +561,8 @@ initializeExportSettings() {
 	scheduleExportDuration() {
 		clearTimeout(this.exportDurationTimer);
 		this.exportDurationRequestId = (this.exportDurationRequestId || 0) + 1;
-		this.loopEstimate = null;
+		this.loopEstimatePending = true;
+		this.previewFrameView?.invalidate({ keepFrame: Boolean(this.keyRecording?.active) });
 		this.timelineDock?.markStale();
 		const fit = document.getElementById('fitAnimationsToLoop');
 		if (fit) fit.disabled = true;
@@ -571,10 +572,24 @@ initializeExportSettings() {
 	},
 
 	async updateExportDuration() {
+		return this.refreshLoopEstimate();
+	},
+	async ensureFrameOptions() {
+		if (this.loopEstimatePending || !this.loopEstimate || this.loopEstimate.documentRevision !== this.documentRevision) await this.refreshLoopEstimate();
+		const estimate = this.loopEstimate, revision = this.documentRevision;
+		if (!estimate || estimate.frameOptions) return estimate?.frameOptions;
+		if (!estimate.frameOptionsPromise) estimate.frameOptionsPromise = estimate.computeFrameOptions();
+		let options;
+		try { options = await estimate.frameOptionsPromise; } catch (error) { estimate.frameOptionsPromise = null; estimate.frameOptionsError = true; console.warn('Frame options could not be measured:', error); return null; }
+		if (estimate === this.loopEstimate && revision === this.documentRevision) { estimate.frameOptions = options; this.timelineDock?.syncReadout(estimate); }
+		return options;
+	},
+	async refreshLoopEstimate() {
 		clearTimeout(this.exportDurationTimer);
 		const output = document.getElementById('exportMp4Duration');
 		const fidelityOutput = document.getElementById('exportFidelityEstimate');
 		if (!output && !fidelityOutput && !document.getElementById('animationLoopStatus') && !(this.timelineDock?.isOpen)) return;
+		const revision = this.documentRevision;
 		const requestId = (this.exportDurationRequestId || 0) + 1;
 		this.exportDurationRequestId = requestId;
 		const usesTargetDuration = this.exportSettings.mp4LengthMode === 'duration';
@@ -622,8 +637,20 @@ initializeExportSettings() {
 		try {
 			const estimate = await this.estimateExportAnimation(visibleLayers);
 			if (requestId !== this.exportDurationRequestId) return;
+			estimate.documentRevision = revision;
 			this.syncAnimationLoop(estimate);
-			const loopDurationSeconds = estimate.duration / 1000;
+			this.renderExportDurationText(estimate, { output, fidelityOutput, usesTargetDuration, targetDuration, loopCount, formatSeconds });
+		} catch (error) {
+			if (requestId !== this.exportDurationRequestId) return;
+			this.syncAnimationLoop(null, 'Animation timing unavailable. Try again after the artwork loads.');
+			console.warn('Export duration estimate failed:', error);
+			if (output && !usesTargetDuration) output.textContent = 'Could not load an animation source to estimate the duration. Export will try again.';
+			if (fidelityOutput) fidelityOutput.textContent = 'Could not estimate this animation. Export will calculate it again.';
+		}
+	},
+
+	renderExportDurationText(estimate, { output, fidelityOutput, usesTargetDuration, targetDuration, loopCount, formatSeconds }) {
+		const loopDurationSeconds = estimate.duration / 1000;
 			if (output && usesTargetDuration) {
 				const repeats = targetDuration / loopDurationSeconds;
 				const completeRepeats = Math.round(repeats);
@@ -636,18 +663,11 @@ initializeExportSettings() {
 			}
 			if (fidelityOutput) {
 				fidelityOutput.textContent = estimate.sourceAnalysis?.length || estimate.loopFit?.oneShots.length || estimate.estimatedFrameCount > 1
-					? `About ${formatCount(estimate.estimatedFrameCount, 'frame')} in a ${loopDurationSeconds.toFixed(1)} s loop.${estimate.frameOptions.optimizable ? ` Animation Loop has a timing with about ${Math.min(...estimate.frameOptions.options.map((option) => option.frameCount))}.` : ''}`
+					? `About ${formatCount(estimate.estimatedFrameCount, 'frame')} in a ${loopDurationSeconds.toFixed(1)} s loop.${estimate.frameOptions?.optimizable ? ` Animation Loop has a timing with about ${Math.min(...estimate.frameOptions.options.map((option) => option.frameCount))}.` : ''}`
 					: getActiveExportTarget(this.exportSettings).isGif
 						? 'Nothing in this project is animated, so the GIF has one frame.'
 						: 'Nothing in this project is animated.';
 			}
-		} catch (error) {
-			if (requestId !== this.exportDurationRequestId) return;
-			this.syncAnimationLoop(null, 'Animation timing unavailable. Try again after the artwork loads.');
-			console.warn('Export duration estimate failed:', error);
-			if (output && !usesTargetDuration) output.textContent = 'Could not load an animation source to estimate the duration. Export will try again.';
-			if (fidelityOutput) fidelityOutput.textContent = 'Could not estimate this animation. Export will calculate it again.';
-		}
 	},
 
 	// Timing-only plan of the next export (no frames are composed): loop
@@ -826,7 +846,7 @@ async resetAllSettings() {
 			this.exportCurrentTarget();
 		}));
 		document.querySelectorAll('#exportSettingsMenuItem, #exportResultSettings').forEach((button) => {
-			button.addEventListener('click', () => this.modalManager.open('exportSettingsModal'));
+			button.addEventListener('click', () => { this.modalManager.open('exportSettingsModal'); this.ensureFrameOptions(); });
 		});
 		document.getElementById('exportSettingsExport')?.addEventListener('click', () => {
 			this.modalManager.close('exportSettingsModal');

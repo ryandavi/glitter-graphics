@@ -195,7 +195,7 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 	],
 	hasVisibleContent: (layer) => Boolean(layer.textData?.text?.trim()),
 	animatable: true,
-	animate: (...args) => animateTransformableLayerPreview(...args),
+	animate: (...args) => paintLayerAnimationPreview(...args),
 	animationBox: (_editor, layer) => ({ width: layer.textData.width, height: layer.textData.height }),
 	timelineSources: (layer, context) => [
 		...context.compositor._createLayerAnimationTimelineSources(layer, context),

@@ -11,7 +11,7 @@ const LAYER_ROW_PARTS = [
 	{ id: 'badges', variants: ['panel'] },
 	{ id: 'lock', variants: ['panel', 'timeline'] },
 	{ id: 'locate', variants: ['panel'] },
-	{ id: 'delete', variants: ['panel', 'timeline'] }
+	{ id: 'delete', variants: ['panel'] }
 ];
 
 function getLayerRowState(layer) {
@@ -118,7 +118,7 @@ function getLayerActions(editor, layer) {
 			return { id: `arrange${name}`, label: command.label, disabled: !selected.some(canEditLayerInStack), run: runSelected(() => command.run(editor)) };
 		})
 	];
-	if (isAnimatableLayerType(layer.type) && isFeatureAvailable('timeline')) actions.push({ id: 'animation', label: 'Add animation', disabled: !editable || (layer.animations?.length || 0) >= CONFIG.tools.animation.maxStackSize, run: () => editor.animationPanel.addAnimation(layer) });
+	if (isAnimatableLayerType(layer.type)) actions.push({ id: 'animation', label: 'Add animation', disabled: !editable || (layer.animations?.length || 0) >= CONFIG.tools.animation.maxStackSize, run: () => editor.addAnimation(layer) });
 	actions.push({ id: 'delete', label: 'Delete', disabled: state.delete.disabled, run: () => manager.deleteLayerFromRow(layer) });
 	return actions;
 }
@@ -141,7 +141,7 @@ function syncLayerRow(row, layer) {
 	for (const [name, value] of Object.entries({ selected: manager.isLayerSelected(layer.id), active: manager.activeLayerId === layer.id, 'is-hidden': !layer.visible, 'is-locked': Boolean(layer.locked), 'is-clipped': Boolean(clip) })) row.classList.toggle(name, value);
 	row.setAttribute('aria-selected', String(manager.isLayerSelected(layer.id))); row.tabIndex = layer.id === manager.activeLayerId ? 0 : -1;
 	const name = row.querySelector('.layer-name');
-	if (name) name.textContent = description.name;
+	if (name) { name.textContent = description.name; name.title = `${description.name}\nDouble-click to rename`; }
 	const meta = row.querySelector('.list-row-meta');
 	meta.replaceChildren();
 	if (LAYER_ROW_PARTS.find(part => part.id === 'detail').variants.includes(variant)) {
@@ -157,6 +157,7 @@ function syncLayerRow(row, layer) {
 	handle.disabled = !canEditLayerInStack(layer); handle.setAttribute('aria-label', handle.disabled ? 'Layer is locked' : `Reorder ${description.name}`);
 	for (const [key, selector] of Object.entries({ visibility: '.layer-visibility', lock: '.lock', delete: '.delete' })) {
 		const button = row.querySelector(selector), values = state[key];
+		if (!button) continue;
 		button.title = values.title; button.setAttribute('aria-label', values.title); button.disabled = Boolean(values.disabled);
 		button.classList.toggle('active', Boolean(values.active)); button.classList.toggle('permanent', Boolean(values.permanent));
 		button.classList.toggle('unavailable', Boolean(values.disabled));

@@ -11,6 +11,7 @@ class TimelineDock {
 		this.rowNodesByKey = new Map();
 		this.curves = new Map();
 		this.stale = false;
+		host.style.setProperty('--timeline-label-min', `${this.config.labelMinWidth}px`);
 		host.style.setProperty('--timeline-ruler-height', `${this.config.rulerHeight}px`);
 		host.style.setProperty('--timeline-grip', `${this.config.gripPx}px`);
 		this.resizeHandle = buildElement('timeline-resize-handle');
@@ -26,9 +27,12 @@ class TimelineDock {
 		const actions = buildElement('section-header-actions');
 		const action = 'section-header-action btn-icon-simple icon-wrapper sm visible';
 		// Shows the same state as the view menu's Pause motion.
-		this.play = this.button(action, 'Pause motion', 'motion-pause', () => editor.animationPanel.setPaused(!editor.animationTicker.paused));
+		this.play = this.button(action, 'Pause motion', 'motion-pause', () => editor.setPlayback(editor.animationTicker.paused));
 		this.time = buildElement('timeline-time', undefined, 'span');
-		const transport = buildElement('timeline-transport');
+		this.time.tabIndex = 0; this.time.setAttribute('role', 'button'); this.time.title = 'Go to time';
+		this.time.addEventListener('keydown', event => { if (event.target === this.time && ['Enter', ' '].includes(event.key)) { event.preventDefault(); event.stopPropagation(); this.editTime(); } });
+		this.time.addEventListener('click', () => this.editTime());
+		const transport = buildElement('timeline-transport'); this.transport = transport;
 		this.exact = this.button(action, 'Play exact export frames', 'frame', () => this.frameView.playExact());
 		this.exact.setAttribute('aria-pressed', 'false');
 		transport.append(this.play, this.exact, this.time);
@@ -42,7 +46,7 @@ class TimelineDock {
 		this.zoom.addEventListener('dblclick', () => this.setZoom('fit'));
 		const windowActions = buildElement('timeline-window-actions');
 		windowActions.append(this.minimize, this.button(action, 'Close timeline', 'x-mark', () => editor.toggleTimeline()));
-		this.addAnimation = this.button(action, 'Add animation', 'plus', () => editor.animationPanel.addAnimation(editor.layerManager.getActiveLayer()));
+		this.addAnimation = this.button(action, 'Add animation', 'plus', () => editor.addAnimation(editor.layerManager.getActiveLayer()));
 		actions.append(this.addAnimation, this.zoom, this.buildOptionsMenu(), windowActions);
 		this.header.append(this.title, transport, this.summary, actions);
 		// The ruler stays above the scrolling rows and follows their sideways
@@ -61,9 +65,12 @@ class TimelineDock {
 		const section = buildElement('timeline-section section');
 		section.append(this.header, this.stage);
 		host.replaceChildren(this.resizeHandle, section);
-		this.frameView = new TimelineFrameView(this);
+		this.frameView = editor.previewFrameView;
+		window.addEventListener('playbackChanged', () => { this.syncPlayback(); this.syncClock(); });
+		window.addEventListener('motionselectionchange', event => { const { layerId, motionId } = event.detail; this.selectedKey = GlitterAnimation.sourceKey(layerId, { id: motionId }); this.syncSelection(); this.syncKeys(); });
+		window.addEventListener('animationChanged', event => { this.keyRecording.validate(); this.frameView.invalidate({ keepFrame: this.keyRecording.active }); if (this.available && !this.timingEdit) { this.expandLayer(event.detail.layerId); this.sync(this.editor.loopEstimate); } });
 		this.keyLane = new TimelineKeyLane(this);
-		this.keyRecording = new TimelineKeyRecording(this);
+		this.keyRecording = editor.keyRecording;
 		this.bindResize();
 		this.bindLabelResize();
 		this.host.addEventListener('wheel', event => {
@@ -216,34 +223,25 @@ class TimelineDock {
 		this.sync(this.editor.loopEstimate);
 		const activeLayer = this.editor.layerManager.getActiveLayer();
 		if (activeLayer) this.editor.animationPanel.load(activeLayer);
-		// An open dock keeps the preview clock running for its playhead.
-		this.editor.animationTicker.refresh();
 		this.syncPlayback();
 		if (changed) this.editor.viewport.handleWindowResize();
 	}
 
-	// A held playhead belongs to the open dock: closed, a paused preview
-	// shows its rest pose again.
 	close() {
 		if (!this.isOpen) return;
 		this.scrubDrag.finish(true);
 		this.stopEdgeScroll();
-		this.keyRecording.end();
 		this.keyLane.finish(true);
 		this.finishDrag(true);
 		this.menu?.close();
 		this.frameMenu.close();
 		this.optionsMenu.close();
-		this.frameView.invalidate();
 		this.host.hidden = true;
 		this.syncClock();
 		this.editor.animationPanel.syncKeyAdd();
 		if (this.resizeFrame != null) cancelAnimationFrame(this.resizeFrame);
 		this.resizeFrame = null;
 		document.removeEventListener('keydown', this.onEscapeFrame, true);
-		const ticker = this.editor.animationTicker;
-		if (ticker.paused) ticker.setPaused(true);
-		else ticker.refresh();
 		this.editor.viewport.handleWindowResize();
 	}
 
@@ -278,7 +276,7 @@ class TimelineDock {
 	bindPlayhead() {
 		const ticker = this.editor.animationTicker;
 		const hold = () => {
-			if (!ticker.paused || !ticker.holding) this.editor.animationPanel.setPaused(true);
+			if (!ticker.paused || !ticker.holding) this.editor.setPlayback(false);
 		};
 		const scrub = event => {
 			const { loopMs, frameStarts } = this.model;
@@ -288,7 +286,7 @@ class TimelineDock {
 			ticker.seek(event.altKey || !PREFERENCES.get('timelineSnap') ? inside : TimelineView.nearestFrameStart(frameStarts, inside));
 		};
 		this.scrubDrag = bindPointerDrag(this.stage, {
-			canStart: event => this.available && !this.stale && this.model?.loopMs
+			canStart: event => this.available && this.model?.loopMs
 				&& event.target.closest('.timeline-ruler-track') && !event.target.closest('.timeline-loop-end'),
 			start: event => {
 				this.rulerTrack.focus({ preventScroll: true });
@@ -312,11 +310,11 @@ class TimelineDock {
 		this.stage.addEventListener('keydown', event => {
 			if (!this.available || !this.model?.loopMs || event.ctrlKey || event.metaKey || event.altKey) return;
 			const step = { ArrowLeft: -1, ArrowRight: 1 }[event.key];
-			if (event.key === ' ') this.editor.animationPanel.setPaused(!ticker.paused);
+			if (event.key === ' ') this.editor.setPlayback(ticker.paused);
 			else if (!event.target.closest('.timeline-ruler-track') || (!step && event.key !== 'Home')) return;
 			else {
 				hold();
-				ticker.seek(step ? TimelineView.stepFrame(this.model.frameStarts, ticker.getPlayheadTime(), step) : 0);
+				if (step) ticker.step(step); else ticker.goToStart();
 			}
 			event.preventDefault();
 			// The canvas shortcuts on these keys belong to the canvas.
@@ -462,14 +460,14 @@ class TimelineDock {
 			this.playhead.style.setProperty('--timeline-frame-width', `${width}px`);
 		}
 		this.playhead.style.setProperty('--timeline-frame-left', `${TimelineView.timeToX(this.frameStart - Math.min(ms, loopMs), this.scale)}px`);
-		const rest = this.editor.animationTicker.paused && (this.frameView.blocked || !this.editor.animationTicker.holding);
+		const rest = this.editor.animationTicker.paused && (this.frameView.blocked || this.editor.animationTicker.restPreview || !this.editor.animationTicker.holding);
 		this.host.classList.toggle('shows-rest', rest);
 		this.playheadTime.hidden = this.scrubPointer == null && !this.drag;
 		const hundredth = Math.round(ms / 10);
 		if (this.displayTime === hundredth && this.displayLoop === loopMs && this.displayRest === rest) return;
 		this.displayTime = hundredth; this.displayLoop = loopMs; this.displayRest = rest;
 		const text = `${formatSeconds(ms, { unit: false })} / ${formatSeconds(loopMs)}${rest ? ' · rest pose' : ''}`;
-		if (this.time.textContent === text) return;
+		if (this.time.querySelector('input') || this.time.textContent === text) return;
 		this.time.textContent = text;
 		this.playheadTime.textContent = formatSeconds(ms);
 		this.rulerTrack.setAttribute('aria-valuenow', formatSeconds(ms, { unit: false }));
@@ -538,9 +536,9 @@ class TimelineDock {
 		this.keyRecording.validate();
 		this.frameView.invalidate({ keepFrame: this.keyRecording.active });
 		this.stale = true;
-		this.editablePending = Boolean(this.timingCommit);
+
 		clearTimeout(this.staleTimer);
-		this.staleTimer = setTimeout(() => { if (this.stale && !this.editablePending) this.host.classList.add('is-stale'); }, this.config.staleShowMs);
+		this.staleTimer = setTimeout(() => { if (this.stale) this.host.classList.add('is-stale'); }, this.config.staleShowMs);
 		this.frameMenu.close();
 		this.readout.disabled = true;
 		this.fit.disabled = true;
@@ -550,6 +548,8 @@ class TimelineDock {
 
 	syncControls() {
 		if (!this.available) return;
+		this.transport.hidden = !this.hasTimedRows;
+		this.zoom.hidden = !this.hasTimedRows;
 		const layer = this.editor.layerManager.getActiveLayer();
 		const reason = !layer ? 'Select a layer to add an animation' : !isAnimatableLayerType(layer.type) ? 'This layer cannot take animations'
 			: !this.editor.canEditLayer(layer) ? 'Unlock the layer to add an animation'
@@ -569,18 +569,19 @@ class TimelineDock {
 		if (this.drag || this.keyLane.drag || this.isStackReordering()) { this.syncPending = true; return; }
 		this.syncPending = false;
 		const model = TimelineView.buildModel(estimate, this.editor.layers, this.editor);
-		const signature = TimelineView.modelSignature(model) + JSON.stringify(this.show);
+		const signature = [this.editor.documentRevision, this.editor.loopAnalysisRevision, ...Object.values(this.show), ...this.editor.layers.map(layer => `${layer.id}:${layer.visible}:${layer.locked}:${layer.animationsEnabled}`)].join('|');
 		const unchanged = signature === this.modelSignature && !this.rowsPending && Boolean(this.body.querySelector('.timeline-group'));
 		this.modelSignature = signature;
 		for (const group of model.groups) for (let index = 0; index < group.rows.length; index++) {
 			const fresh = group.rows[index], previous = this.rowsByKey.get(String(fresh.key));
 			if (previous) { Object.assign(previous, fresh); group.rows[index] = previous; }
 		}
-		if (!unchanged) { this.menu?.close(); this.frameMenu.close(); }
+		if (this.modelDocumentRevision !== this.editor.documentRevision) { this.menu?.close(); this.frameMenu.close(); }
+		this.modelDocumentRevision = this.editor.documentRevision;
 		this.model = model;
 		this.rowsByKey = new Map(this.model.groups.flatMap(group => group.rows).map(row => [String(row.key), row]));
 		clearTimeout(this.staleTimer);
-		this.editablePending = false;
+
 		this.host.classList.remove('is-stale');
 		this.stale = false;
 		this.syncReadout(estimate);
@@ -613,7 +614,7 @@ class TimelineDock {
 		this.rowNodesByKey.clear();
 		this.hasRows = this.model.groups.some(group => group.rows.length);
 		this.stage.classList.toggle('is-empty', !this.hasRows);
-		if (!this.hasRows) this.ruler.appendChild(buildElement('property-note', "Nothing is animated yet. Use a layer's menu to add one."));
+		if (!this.hasTimedRows && !this.editor.layers.some(layer => layer.animations?.length)) this.ruler.appendChild(buildElement('property-note', 'Nothing moves yet. Select a layer and press + to add an animation.'));
 		if (!this.model.groups.length) {
 			reconcileKeyedChildren(this.body, [], { key: group => group.layerId, build: group => this.buildGroup(group) });
 			this.syncControls();
@@ -644,6 +645,7 @@ class TimelineDock {
 		this.syncControls();
 		this.syncSelection();
 		if (keyWasFocused) this.keyLane.focusSelected();
+		this.paintPlayhead(this.editor.animationTicker.getPlayheadTime());
 	}
 
 	syncReadout(estimate) {
@@ -651,15 +653,30 @@ class TimelineDock {
 		this.readout.disabled = false;
 		const { loopMs, frameCount, outputFormat, exact, groups } = this.model;
 		if (!this.hasTimedRows || !groups.length || !(loopMs > 0)) return;
-		const optimizable = estimate.frameOptions.optimizable;
+		const optimizable = estimate?.frameOptions?.optimizable;
 		this.readout.replaceChildren();
 		if (!exact || optimizable) this.readout.appendChild(createIcon('triangle-exclamation'));
-		this.readout.appendChild(buildElement('timeline-readout-text', `${frameCount} frames · ${outputFormat.toUpperCase()}`, 'span'));
+		this.readout.appendChild(buildElement('timeline-readout-text', `${frameCount} frames · ${(outputFormat || 'gif').toUpperCase()}`, 'span'));
 		this.readout.hidden = false;
 		this.readout.classList.toggle('is-warning', !exact || optimizable);
 		this.readout.title = [!exact ? TimelineView.SEAM_TEXT : '',
 			optimizable ? 'A change of timing would export fewer frames.' : '', 'Press for frame options.'].filter(Boolean).join(' ');
-		this.readout.setAttribute('aria-label', `${frameCount} frames · ${outputFormat.toUpperCase()}. ${this.readout.title}`);
+		this.readout.setAttribute('aria-label', `${frameCount} frames · ${(outputFormat || 'gif').toUpperCase()}. ${this.readout.title}`);
+	}
+
+	editTime() {
+		if (this.time.querySelector('input')) return;
+		const input = document.createElement('input'); input.type = 'number'; input.step = '0.01'; input.min = '0'; input.max = String(this.model.loopMs / 1000);
+		input.value = String(Number((this.editor.animationTicker.getPlayheadTime() / 1000).toFixed(2))); input.setAttribute('aria-label', 'Time in seconds');
+		let finished = false;
+		const finish = apply => {
+			if (finished) return; finished = true;
+			const seconds = input.valueAsNumber; this.time.replaceChildren(); this.displayTime = null;
+			if (apply && Number.isFinite(seconds)) { this.editor.setPlayback(false); this.editor.animationTicker.seek(clampNumber(seconds * 1000, 0, this.model.loopMs - 1)); }
+			this.paintPlayhead(this.editor.animationTicker.getPlayheadTime());
+		};
+		input.addEventListener('keydown', event => { event.stopPropagation(); if (event.key === 'Enter' || event.key === 'Escape') { event.preventDefault(); finish(event.key === 'Enter'); } });
+		input.addEventListener('blur', () => finish(false)); this.time.replaceChildren(input); input.focus(); input.select();
 	}
 
 	buildRuler() {
@@ -689,7 +706,8 @@ class TimelineDock {
 			event.preventDefault();
 			const ms = clampNumber(TimelineView.xToTime(event.clientX - track.getBoundingClientRect().left, this.scale), 0, this.model.loopMs * (1 + this.nextLoopShare));
 			this.menu = openActionMenu({ root: view, trigger: track, actions: [
-				{ label: 'Set loop end here', disabled: this.stale || ms <= 0, run: () => this.editor.setDocumentLoop({ mode: 'set', durationMs: ms }) },
+				{ label: 'Move playhead here', run: () => { this.editor.setPlayback(false); this.editor.animationTicker.seek(ms); } },
+				{ label: 'Set loop end here', disabled: ms <= 0, run: () => this.editor.setDocumentLoop({ mode: 'set', durationMs: ms }) },
 				{ label: 'Automatic loop length', checked: this.editor.documentLoop.mode === 'auto', run: () => this.editor.setDocumentLoop(CONFIG.project.loop) },
 				{ label: 'Zoom to fit', run: () => this.setZoom('fit') }
 			], event });
@@ -761,6 +779,12 @@ class TimelineDock {
 				else { this.keyLane.syncState(); this.keyLane.paint(this.editor.animationTicker.getPlayheadTime()); }
 			}
 		});
+		label.setAttribute('aria-keyshortcuts', 'ArrowLeft ArrowRight');
+		label.addEventListener('keydown', event => {
+			if (event.target !== label || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || !['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+			event.preventDefault(); event.stopPropagation();
+			if (node.classList.contains('is-collapsed') === (event.key === 'ArrowRight')) chevron.click();
+		});
 		node._syncChevron = syncChevron;
 		header.append(label); node.appendChild(header);
 		this.syncGroupChevron(node, group);
@@ -778,7 +802,7 @@ class TimelineDock {
 				const to = insertion - Number(from < insertion);
 				return from !== to && to >= 0 && to < this.editor.layerManager.getLayerById(group.layerId).animations.length ? { from, to } : null;
 			},
-			commit: ({ from, to }) => this.editor.animationPanel.moveAnimation(this.editor.layerManager.getLayerById(group.layerId), from, to)
+			commit: ({ from, to }) => this.editor.moveAnimation(this.editor.layerManager.getLayerById(group.layerId), from, to)
 		});
 		return node;
 	}
@@ -803,12 +827,13 @@ class TimelineDock {
 	}
 
 	reconcileRows(container, group) {
-		const signature = row => JSON.stringify({ ...row, source: row.source && { run: row.source.run, keys: row.source.keyTrack?.entry?.keys }, curve: undefined, curveInputs: undefined, show: this.show, locked: group.locked });
+		const signature = row => [row.key, row.label, row.enabled, Boolean(row.source), Boolean(row.source?.keyTrack), group.locked, ...Object.values(row.can), ...Object.values(this.show)].join('|');
 		const build = row => { const node = this.buildRow(row); node._rowSignature = signature(row); return node; };
 		reconcileKeyedChildren(container, group.rows, {
 			key: row => row.key, build,
 			reuse: (node, row) => {
 				if (node._rowSignature !== signature(row)) return build(row);
+				if (row.animation) node.dataset.motionIndex = this.editor.layerManager.getLayerById(row.layerId).animations.indexOf(row.animation);
 				this.rowNodesByKey.set(String(row.key), node);
 				row.curve = this.resolveCurve(row);
 				this.layoutRow(node, row); return node;
@@ -818,7 +843,7 @@ class TimelineDock {
 
 	resolveCurve(row) {
 		if (!row.source || !row.animation) return null;
-		const signature = row.curveInputs;
+		const signature = `${this.editor.animationRevisionEpoch}|${this.editor.animationRevisions?.get(row.key)}|${row.cycleMs}|${row.phase}|${row.direction}`;
 		let cached = this.curves.get(row.curveKey);
 		if (!cached || cached.signature !== signature) {
 			cached = { signature, curve: TimelineView.motionCurve(row.source, row.cycleMs) }; this.curves.set(row.curveKey, cached);
@@ -832,25 +857,32 @@ class TimelineDock {
 		node.tabIndex = 0;
 		node.classList.toggle('is-inactive', !row.source);
 		node.classList.toggle('has-motion', Boolean(row.animation));
-		if (row.animation) node.dataset.motionIndex = TimelineView.motionIndex(row);
+		if (row.animation) node.dataset.motionIndex = this.editor.layerManager.getLayerById(row.layerId).animations?.findIndex(animation => animation.id === TimelineView.motionId(row));
 		this.rowNodesByKey.set(String(row.key), node);
+		node.addEventListener('keydown', event => {
+			if (!row.animation || !this.canEdit(row)) return;
+			const layer = this.editor.layerManager.getLayerById(row.layerId), index = layer.animations.indexOf(row.animation);
+			if (['Delete', 'Backspace'].includes(event.key)) this.editor.deleteAnimation(layer, index);
+			else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'd') this.editor.duplicateAnimation(layer, index);
+			else return; event.preventDefault(); event.stopPropagation();
+		});
 		const select = () => {
 			this.selectedKey = String(row.key);
-			const index = TimelineView.motionIndex(row);
-			if (index != null) this.editor.animationPanel.selectMotion(this.editor.layerManager.getLayerById(row.layerId), index);
+			const index = this.editor.layerManager.getLayerById(row.layerId).animations?.findIndex(animation => animation.id === TimelineView.motionId(row));
+			if (index >= 0) this.editor.motionSelection.select(row.layerId, this.editor.layerManager.getLayerById(row.layerId)?.animations?.[index]?.id);
 			this.editor.layerManager.setActiveLayer(row.layerId);
 			this.editor.refreshInspector();
 			this.openRowSection(row);
 			this.syncSelection();
 		};
 		const label = buildElement('timeline-row-label');
-		const name = buildElement('list-row-content', row.label);
+		const name = buildElement('list-row-content', row.label); name.title = row.label;
 		if (row.animation) {
-			const layer = this.editor.layerManager.getLayerById(row.layerId), index = TimelineView.motionIndex(row);
+			const layer = this.editor.layerManager.getLayerById(row.layerId);
 			const grip = buildIconButton({ className: 'list-row-handle', label: `Reorder ${row.label}` });
 			const mark = buildElement('drag-handle-mark', undefined, 'span'); mark.setAttribute('aria-hidden', 'true'); grip.append(mark);
 			grip.disabled = !this.editor.canEditLayer(layer);
-			const eye = this.button('btn-icon-simple icon-wrapper sm timeline-motion-enabled', row.enabled ? 'Disable animation' : 'Enable animation', row.enabled ? 'eye' : 'eye-slash', () => this.editor.animationPanel.toggleAnimation(this.editor.layerManager.getLayerById(row.layerId), index));
+			const eye = this.button('btn-icon-simple icon-wrapper sm timeline-motion-enabled', row.enabled ? 'Hide animation' : 'Show animation', row.enabled ? 'eye' : 'eye-slash', () => this.editor.toggleAnimation(layer, layer.animations.findIndex(animation => animation.id === TimelineView.motionId(row))));
 			eye.disabled = !this.editor.canEditLayer(layer); eye.setAttribute('aria-pressed', String(row.enabled));
 			label.append(grip, eye);
 		} else {
@@ -874,7 +906,7 @@ class TimelineDock {
 		bar.classList.toggle('is-movable', body === 'move');
 		bar.classList.toggle('is-slippable', body === 'slip');
 		bar.title = TimelineView.barTitle(row, this.model.loopMs);
-		const kindIcon = row.kind === 'authored' ? LAYER_UI_CONFIG[this.editor.layerManager.getLayerById(row.layerId).type]?.icon || 'glitter' : TimelineView.motionIndex(row) != null ? 'motion-play' : 'sparkles';
+		const kindIcon = row.kind === 'authored' ? LAYER_UI_CONFIG[this.editor.layerManager.getLayerById(row.layerId).type]?.icon || 'glitter' : TimelineView.motionId(row) != null ? 'motion-play' : 'sparkles';
 		const icon = buildElement('timeline-bar-icon icon-wrapper sm', undefined, 'span'); icon.append(createIcon(kindIcon)); bar.append(icon);
 		bar.dataset.drag = 'body';
 		for (const side of ['left', 'right']) if (TimelineView.edgeDrag(row, side)) {
@@ -979,7 +1011,7 @@ class TimelineDock {
 		const layer = this.editor.layerManager.getLayerById(row.layerId);
 		const prefix = LAYER_UI_CONFIG[layer.type].transformPrefix;
 		let section;
-		if (TimelineView.motionIndex(row) != null) section = document.getElementById(`${prefix}AnimationSection`);
+		if (TimelineView.motionId(row) != null) section = document.getElementById(`${prefix}AnimationSection`);
 		else if (row.effectSlot) {
 			section = document.querySelector(`#${prefix}SettingsSection [data-slot="${row.effectSlot}"]`)
 				|| Array.from(document.querySelectorAll('.flyout-host:not([hidden]) [data-slot]'))
@@ -996,7 +1028,7 @@ class TimelineDock {
 	resetDocumentView() { this.collapsed.clear(); }
 
 	canEdit(row) {
-		return this.available && (!this.stale || this.editablePending) && row && !isLayerFullyLocked(this.editor.layerManager.getLayerById(row.layerId));
+		return this.available && row && (!isLayerFullyLocked(this.editor.layerManager.getLayerById(row.layerId)) || this.editor.layerManager.getLayerById(row.layerId).type === LayerType.BASE_IMAGE);
 	}
 
 	commitTiming(label, options) {
@@ -1007,29 +1039,16 @@ class TimelineDock {
 
 	applyRowEdit(row, label, edit, options) {
 		if (!this.canEdit(row)) return;
-		const source = row.source;
-		let period;
-		const setPeriod = source.setPeriod;
-		if (row.kind === 'authored' && setPeriod) source.setPeriod = value => { period = setPeriod(value); };
-		try { edit(); }
-		finally { source.setPeriod = setPeriod; }
-		if (row.kind === 'authored') {
-			if (period != null) row.source = source.atPeriod(period);
-		} else {
-			const layer = this.editor.layerManager.getLayerById(row.layerId), compositor = this.editor.sceneCompositor;
-			row.source = compositor._createProceduralTimelines(compositor._collectProceduralSources([layer], { includeBaseImage: this.editor.exportSettings.baseImage })).find(fresh => fresh.key === row.key) || source;
+		this.timingEdit = true;
+		try { edit(); } finally { this.timingEdit = false; }
+		const target = listTimingTargets(this.editor).find(entry => entry.key === row.key);
+		if (target) {
+			row.cycleMs = row.exportCycleMs = target.period;
+			row.phase = target.phase || 0; row.direction = target.direction || 'normal';
+			row.startMs = target.run?.start || 0; row.endMs = Math.min(target.run?.end ?? Infinity, this.model.loopMs);
+			row.source = { ...row.source, run: target.run, naturalPeriod: target.period };
+			this.layoutRow(this.rowNodesByKey.get(String(row.key)), row);
 		}
-		const fresh = row.source;
-		row.cycleMs = row.exportCycleMs = row.kind === 'authored' ? fresh.cycleDuration : fresh.naturalPeriod;
-		row.phase = fresh.phase || 0; row.direction = fresh.direction || 'normal';
-		row.startMs = fresh.run?.start || 0; row.endMs = Math.min(fresh.run?.end ?? Infinity, this.model.loopMs);
-		row.cycleMarks = fresh.cycleMarks || []; row.nonLooping = fresh.nonLooping;
-		row.closes = sourceSeamError(fresh, this.model.loopMs, row.exportCycleMs) < 1e-8;
-		row.curveInputs = JSON.stringify({ animation: row.animation, period: row.cycleMs, phase: row.phase });
-		row.curve = this.resolveCurve(row);
-		this.layoutRow(this.rowNodesByKey.get(String(row.key)), row);
-		const group = this.model.groups.find(group => group.layerId === row.layerId);
-		this.layoutGroup([...this.body.children].find(node => node.dataset.layerId === row.layerId), group);
 		this.renderTiming(row);
 		this.commitTiming(label, options);
 	}
@@ -1044,15 +1063,12 @@ class TimelineDock {
 	}
 
 	barActions(row) {
-		const actions = TimelineView.barActions(row, this.model, {
-			playhead: this.editor.animationTicker.getPlayheadTime(), clipboard: this.timingClipboard,
-			copy: row => { this.timingClipboard = { cycle: row.cycleMs, run: row.source.run && { ...row.source.run }, phase: row.phase, direction: row.direction }; }
-		});
-		const index = TimelineView.motionIndex(row), layer = this.editor.layerManager.getLayerById(row.layerId), panel = this.editor.animationPanel;
-		if (index != null) {
+		const actions = this.editor.animationTimingActions(row.key, { live: true });
+		const layer = this.editor.layerManager.getLayerById(row.layerId), index = layer.animations?.findIndex(animation => animation.id === TimelineView.motionId(row)), panel = this.editor.animationPanel;
+		if (index >= 0) {
 			const animation = layer.animations[index];
-			if (GlitterAnimation.MOTION_REGISTRY[animation.type].convertible) actions.push({ id: 'convert', group: 'Animation', label: 'Convert to custom', commits: false, disabled: !panel.conversion(animation), run: () => panel.convertToCustom(layer, animation) });
-			actions.push({ id: 'duplicate', group: 'Animation', label: 'Duplicate animation', disabled: layer.animations.length >= CONFIG.tools.animation.maxStackSize, commits: false, run: () => panel.duplicateAnimation(layer, index) }, { id: 'delete', group: 'Animation', label: 'Delete animation', commits: false, run: () => panel.deleteAnimation(layer, index) });
+			if (GlitterAnimation.MOTION_REGISTRY[animation.type].convertible) actions.push({ id: 'convert', group: 'Animation', label: 'Convert to custom', commits: false, disabled: !panel.conversion(animation), run: () => this.editor.convertToCustom(layer, animation) });
+			actions.push({ id: 'duplicate', group: 'Animation', label: 'Duplicate animation', disabled: layer.animations.length >= CONFIG.tools.animation.maxStackSize, commits: false, run: () => this.editor.duplicateAnimation(layer, index) }, { id: 'delete', group: 'Animation', label: 'Delete animation', commits: false, run: () => this.editor.deleteAnimation(layer, index) });
 		}
 		return actions;
 	}
@@ -1070,7 +1086,6 @@ class TimelineDock {
 			if (!this.canEdit(row)) return;
 			if (action.commits === false) { action.run(); return; }
 			this.applyRowEdit(row, action.commitLabel || action.label, () => {
-				if (action.changesPeriod) this.editor.rememberAnimationPeriod(row.source);
 				if (action.id === 'reset') this.editor.restoreAnimationPeriod(row.source);
 				action.run();
 			});
@@ -1081,7 +1096,7 @@ class TimelineDock {
 		this.pointerDrag = bindPointerDrag(this.stage, {
 			threshold: this.config.dragThresholdPx, axis: 'x', clickHost: this.host,
 			start: event => {
-				if (!this.available || this.stale || this.drag) return false;
+				if (!this.available || this.drag) return false;
 				const target = event.target.closest('[data-drag]');
 				if (!target) return false;
 				this.keyRecording.end();
@@ -1110,7 +1125,7 @@ class TimelineDock {
 					: kind === 'duration' ? { period: row.cycleMs, run: { ...row.source.run } }
 						: kind === 'period' ? row.cycleMs : kind === 'slip' ? row.phase : { ...row.source.run };
 				this.drag = {
-					kind, row, node, initial, count, loopMs: this.model.loopMs, trackLeft: track.getBoundingClientRect().left,
+					kind, row, node, initial, count, originalPeriods: row ? structuredClone(this.editor.layerManager.getLayerById(row.layerId).loopOriginalPeriods) : null, loopMs: this.model.loopMs, trackLeft: track.getBoundingClientRect().left,
 					x: event.clientX, pointerId: event.pointerId, edge: target.dataset.drag === 'right',
 					notch: target.dataset.drag === 'right'
 						? (row.endMs - row.startMs) / row.cycleMs + row.phase : Number(target.dataset.notchIndex),
@@ -1129,7 +1144,7 @@ class TimelineDock {
 			event.preventDefault(); event.stopPropagation(); this.frameView.invalidate();
 		};
 		this.stage.addEventListener('dblclick', event => {
-			if (event.target.closest('.timeline-loop-end') && this.available && !this.stale) this.editor.setDocumentLoop(CONFIG.project.loop);
+			if (event.target.closest('.timeline-loop-end') && this.available) this.editor.setDocumentLoop(CONFIG.project.loop);
 		});
 	}
 
@@ -1187,7 +1202,7 @@ class TimelineDock {
 		drag.value = value;
 		const { setter } = DRAG_KINDS[drag.kind];
 		if (typeof setter === 'function') setter(this, value, drag.row);
-		else drag.row.source[setter](value);
+		else this.editor.writeTiming(drag.row.key, { [setter]: value }, { live: true });
 		if (drag.row) this.renderTiming(drag.row);
 	}
 
@@ -1254,13 +1269,12 @@ class TimelineDock {
 			if (this.syncPending) this.resync();
 			return;
 		}
-		if (cancelled) this.writeDrag(drag, drag.initial);
+		if (cancelled) {
+			this.writeDrag(drag, drag.initial);
+			if (drag.row) { const layer = this.editor.layerManager.getLayerById(drag.row.layerId); if (drag.originalPeriods) layer.loopOriginalPeriods = drag.originalPeriods; else delete layer.loopOriginalPeriods; }
+		}
 		else if (!isSameData(drag.value, drag.initial)) {
-			if (DRAG_KINDS[drag.kind].capability === 'period') {
-				const period = drag.kind === 'duration' ? drag.value.period : drag.value;
-				const before = drag.kind === 'duration' ? drag.initial.period : drag.initial;
-				if (period !== before) this.editor.rememberAnimationPeriod(drag.row.source);
-			}
+
 			this.commitTiming(DRAG_KINDS[drag.kind].commitLabel);
 		}
 		this.frameView.seek();
@@ -1278,30 +1292,24 @@ class TimelineDock {
 			: TimelineView.runFromBodyMove(row,
 				clampNumber(row.startMs + direction * (this.model.frameStarts[1] || row.cycleMs), 0, FIELDS.animDelay.max * 1000) - row.startMs);
 		if (next.start === row.source.run.start && next.end === row.source.run.end) return;
-		this.applyRowEdit(row, event.shiftKey ? 'Trim animation' : 'Move animation', () => row.source.setRun(next), { coalesceKey: this.editor.historyManager.burstCoalesceKey('timeline-nudge') });
+		this.applyRowEdit(row, event.shiftKey ? 'Trim animation' : 'Move animation', () => this.editor.writeTiming(row.key, { run: next }, { live: true }), { coalesceKey: this.editor.historyManager.burstCoalesceKey('timeline-nudge') });
 	}
 
 	selectMotion(layerId, index) {
-		if (!this.available) return;
-		this.pendingMotion = { layerId, index };
-		this.syncSelection();
+		const layer = this.editor.layerManager.getLayerById(layerId);
+		this.editor.motionSelection.select(layerId, layer?.animations?.[index]?.id);
 	}
 
 	syncKeys() { if (this.available) this.keyLane.refresh(); }
 
 	syncSelection() {
-		if (this.pendingMotion) {
-			const { layerId, index } = this.pendingMotion;
-			const row = this.model?.groups.find(group => group.layerId === layerId)?.rows.find(entry => TimelineView.motionIndex(entry) === index);
-			if (row) { this.selectedKey = String(row.key); this.pendingMotion = null; }
-		}
-		if (this.selectedKey && !this.rowsByKey.has(this.selectedKey)) {
-			const layer = this.editor.layerManager.getActiveLayer();
-			const group = this.model?.groups.find(entry => entry.layerId === layer?.id);
-			const index = this.editor.animationPanel.selectedMotionIndex(layer);
-			const row = group?.rows.find(entry => TimelineView.motionIndex(entry) === index) || group?.rows[0];
-			this.selectedKey = row ? String(row.key) : null;
-		}
+		const layer = this.editor.layerManager.getActiveLayer();
+		const motionId = this.editor.motionSelection.get(layer?.id).motionId;
+		const group = this.model?.groups.find(group => group.layerId === layer?.id);
+		const selected = group?.rows.find(row => TimelineView.motionId(row) === motionId);
+		if (selected && (!this.rowsByKey.has(this.selectedKey) || TimelineView.motionId(this.rowsByKey.get(this.selectedKey)) != null)) this.selectedKey = String(selected.key);
+		else if (!this.rowsByKey.has(this.selectedKey)) this.selectedKey = group?.rows[0]?.key;
+
 		for (const node of this.body.querySelectorAll('.timeline-row')) {
 			const selected = node.dataset.sourceKey === this.selectedKey;
 			node.classList.toggle('is-selected', selected);
@@ -1309,13 +1317,14 @@ class TimelineDock {
 			const row = this.rowFor(node), lane = node.querySelector('.timeline-row-lane');
 			const layer = this.editor.layerManager.getLayerById(row.layerId);
 			const showKeys = selected && row.layerId === this.editor.activeLayerId && Boolean(row.source?.keyTrack)
-				&& row.source.keyTrack.entry === this.editor.animationPanel.selectedMotion(layer);
+				&& row.source.keyTrack.entry === this.editor.selectedMotion(layer);
 			if (!showKeys && lane === this.keyLane.host) this.keyLane.finish(true);
 			lane.hidden = !showKeys;
 			if (showKeys) this.keyLane.mount(row, lane);
 		}
 		for (const group of this.body.querySelectorAll('.timeline-group')) {
 			syncLayerRow(group.querySelector('.timeline-group-label'), this.editor.layerManager.getLayerById(group.dataset.layerId));
+			group.querySelector('.timeline-group-header').classList.toggle('is-selected', this.editor.layerManager.isLayerSelected(group.dataset.layerId));
 		}
 	}
 

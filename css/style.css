@@ -906,6 +906,10 @@
   --opacity-muted: .6;
   --opacity-soft: .7;
   /* Spacing: one scale. Every gap, inset and margin is a step of it. */
+  --size-timeline-info: 120px;
+  --size-timeline-key: 10px;
+  --color-timeline-authored: var(--color-accent);
+  --color-timeline-procedural: color-mix(in srgb, var(--color-accent) 60%, var(--color-accent-visited));
   --spacing-2xs: 2px;
   --spacing-xs: 4px;
   --spacing-sm: 6px;
@@ -5071,9 +5075,9 @@ body.tool-select .preview-container.is-over-picked-layer {
   --timeline-z-guides: 3;
   --timeline-z-handle: 4;
   --timeline-z-readout: 5;
-  --timeline-row-height: 28px;
-  --timeline-info-width: 120px;
-  --timeline-key-size: 10px;
+  --timeline-row-height: var(--control-height);
+  --timeline-info-width: var(--size-timeline-info);
+  --timeline-key-size: var(--size-timeline-key);
   container: timeline/inline-size;
   position: relative;
   flex: 0 0 auto;
@@ -5086,8 +5090,8 @@ body.tool-select .preview-container.is-over-picked-layer {
   --timeline-line: color-mix(in srgb, var(--color-border) 60%, transparent);
   --timeline-row-bg: color-mix(in srgb, var(--color-bg-secondary) 40%, var(--color-bg-primary));
   --timeline-bar-inset: var(--spacing-xs);
-  --timeline-hue-authored: var(--color-info);
-  --timeline-hue-procedural: var(--color-success);
+  --timeline-hue-authored: var(--color-timeline-authored);
+  --timeline-hue-procedural: var(--color-timeline-procedural);
 }
 .timeline-dock > .timeline-section {
   flex: 1;
@@ -5352,6 +5356,18 @@ body.tool-select .preview-container.is-over-picked-layer {
   --list-row-background: var(--color-bg-secondary);
   min-width: 0;
 }
+.timeline-dock .timeline-group-label .lock {
+  opacity: 0;
+}
+.timeline-dock .timeline-group-label:is(:hover, :focus-within, .is-locked) .lock {
+  opacity: 1;
+}
+.timeline-dock .timeline-group-track {
+  background: transparent;
+}
+.timeline-dock .timeline-group-header.is-selected .timeline-group-track {
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
 .timeline-dock .timeline-group-span {
   position: absolute;
   top: 50%;
@@ -5490,14 +5506,11 @@ body.tool-select .preview-container.is-over-picked-layer {
 .timeline-dock .timeline-group.is-locked .timeline-bar {
   cursor: not-allowed;
 }
-.timeline-dock.is-stale .timeline-track, .timeline-dock.is-stale .timeline-track .timeline-bar {
-  cursor: progress;
-}
 .timeline-dock .timeline-row:is(:hover, :focus-within) .timeline-bar {
   --timeline-bar-strength: 50%;
 }
 .timeline-dock .timeline-row:is(.is-selected, .is-dragging) .timeline-bar {
-  --timeline-bar-strength: 78%;
+  --timeline-bar-strength: 100%;
   --timeline-bar-ring: inset 0 0 0 1px color-mix(in srgb, var(--color-text-primary) 70%, transparent);
 }
 .timeline-dock .timeline-bar-handle, .timeline-dock .timeline-period-notch {
@@ -5664,69 +5677,11 @@ body.tool-select .preview-container.is-over-picked-layer {
   .timeline-dock .timeline-row-info {
     display: none;
   }
-}
-@container timeline (max-width: 600px) {
-  .timeline-dock .section-header-title-text {
-    display: none;
-  }
-  .timeline-dock .timeline-readout:not(.is-warning), .timeline-dock .timeline-readout-text {
-    display: none;
-  }
   .timeline-dock .timeline-stage {
-    --timeline-label-column: 0px;
+    --timeline-label-column: var(--timeline-label-min);
   }
-  .timeline-dock .timeline-group-header {
-    display: block;
-    position: sticky;
-    left: 0;
-    width: 100%;
-  }
-  .timeline-dock .timeline-group-track, .timeline-dock .timeline-label-handle, .timeline-dock .timeline-stage::before {
+  .timeline-dock .timeline-group-label > .layer-drag-handle, .timeline-dock .timeline-group-label > .timeline-group-chevron {
     display: none;
-  }
-  .timeline-dock .timeline-group-label {
-    border-right: 0;
-  }
-  .timeline-dock .timeline-row-lane {
-    display: block;
-  }
-  .timeline-dock .timeline-key-label {
-    width: max-content;
-    padding-left: var(--spacing-base);
-    border-right: 0;
-    background: none;
-  }
-  .timeline-dock .timeline-row.has-motion {
-    min-height: calc(2 * var(--timeline-row-height));
-  }
-  .timeline-dock .timeline-row.has-motion > .timeline-track {
-    align-self: end;
-    height: var(--timeline-row-height);
-  }
-  .timeline-dock .timeline-row.has-motion > .timeline-row-label {
-    left: 0;
-    top: 0;
-    width: 100%;
-    max-width: 100%;
-    height: var(--timeline-row-height);
-  }
-  .timeline-dock .timeline-row.has-motion > .timeline-row-label > .list-row-content {
-    pointer-events: auto;
-  }
-  .timeline-dock .timeline-row-label {
-    position: absolute;
-    left: var(--timeline-bar-left);
-    top: var(--timeline-bar-inset);
-    width: max-content;
-    max-width: calc(var(--timeline-loop-x) - var(--timeline-bar-left));
-    height: calc(var(--timeline-row-height) - 2 * var(--timeline-bar-inset));
-    border-right: 0;
-    background: none;
-    color: var(--color-text-primary);
-    pointer-events: none;
-  }
-  .timeline-dock .timeline-row-label > .list-row-handle, .timeline-dock .timeline-row-label > .timeline-motion-enabled {
-    pointer-events: auto;
   }
 }
 

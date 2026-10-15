@@ -30,7 +30,7 @@ function getClipInsertion(layers, layer, index) {
 }
 
 function getClipRestPoints(editor, base, x, y) {
-	const animations = editor.timelineKeyRecording?.previewAnimations(base) || base.animations;
+	const animations = editor.keyRecording?.previewAnimations(base) || base.animations;
 	const sample = GlitterAnimation.sampleAt(GlitterAnimation.normalizeAnimations(animations), editor.animationTicker.getCurrentTime(), getLayerAnimationSamplingContext(editor, base));
 	if (sample.opacity <= 0 || base.opacity <= 0) return [];
 	const frame = getLayerFrame(editor, base);

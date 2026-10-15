@@ -10,7 +10,7 @@ const EDITOR_EXPORT_FLOW_METHODS = {
 	_layerIntersectsExportCanvas(layer) {
 		if (!isTransformableLayerType(layer?.type)) return true;
 		if (!this.originalCanvas?.width || !this.originalCanvas?.height) return true;
-		if (GlitterAnimation.includesOffCanvas(layer.animations)) return true;
+		if (GlitterAnimation.includesOffCanvas(GlitterAnimation.getLayerAnimations(layer))) return true;
 
 		try {
 			const base = getClipBase(this.layers, layer);
@@ -62,7 +62,7 @@ const EDITOR_EXPORT_FLOW_METHODS = {
 	// own snapshot and never writes to the stored export settings.
 	async exportCurrentTarget({ fit = null } = {}) {
 		if (this.exportInProgress) return;
-		this.timelineKeyRecording?.end();
+		this.keyRecording?.end();
 		const selectedTarget = getActiveExportTarget(this.exportSettings, { mp4Supported: this.mp4ExportSupported !== false });
 		if (selectedTarget.isVector && !SvgExporter.count(this.layers).vectors) { this.showError('No visible vector layers to export.'); return; }
 		// Filter visible layers (ephemeral Auto Glitter previews never export)

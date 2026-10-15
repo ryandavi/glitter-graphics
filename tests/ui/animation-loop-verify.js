@@ -5,6 +5,7 @@ const path = require('path');
 
 // Serves the local app under a non-local host name.
 async function routeDeployedHost(page) {
+	await page.route('https://*.goatcounter.com/**', route => route.fulfill({ status: 204, body: '' }));
 	await page.route('http://timeline.test/**', async route => {
 		if (process.env.GLITTER_TEST_CSS && route.request().url().includes('/css/style.css')) { await route.fallback(); return; }
 		const response = await route.fetch({ url: route.request().url().replace('timeline.test', 'localhost') });
@@ -18,10 +19,51 @@ async function closeDeployedHost({ browser, page }) {
 	await browser.close();
 }
 
+async function verifyMotionIdentity() {
+	const { browser, page, errors } = await openApp({ document: { width: 160, height: 120 } });
+	try {
+		const result = await page.evaluate(async () => {
+			const layer = editor.shapeGlitterManager.createLayer({ shapeType: 'rectangle' });
+			editor.layerManager.insertLayer(layer);
+			editor.layerManager.setActiveLayer(layer.id);
+			const panel = editor.animationPanel;
+			panel.addAnimation(layer, 'pulse'); panel.addAnimation(layer, 'rotate');
+			const first = layer.animations[0], second = layer.animations[1];
+			first.periodMs = 1400; first.delayMs = 300; first.phase = 0.25; first.iterations = 2;
+			const secondPeriod = second.periodMs; second.enabled = false;
+			const source = editor.sceneCompositor._createLayerAnimationTimelineSources(layer)[0];
+			editor.writeTiming(source.key, { period: 800 }, { commit: false });
+			panel.moveAnimation(layer, 0, 1);
+			const follows = editor.loopOriginalPeriods == null && layer.loopOriginalPeriods[source.key] === 1400;
+			editor.restoreAnimationPeriod(editor.sceneCompositor._createLayerAnimationTimelineSources(layer)[0]);
+			const restored = first.periodMs === 1400 && second.periodMs === secondPeriod;
+			panel.load(layer);
+			const prefix = panel.prefixByType.get(layer.type), toggle = document.getElementById(`${prefix}AnimEnabled`);
+			toggle.checked = false; toggle.dispatchEvent(new Event('change'));
+			const off = GlitterAnimation.getLayerAnimations(layer).length === 0;
+			toggle.checked = true; toggle.dispatchEvent(new Event('change'));
+			const preserved = first.enabled && !second.enabled;
+			panel.selectMotion(layer, 1); panel.load(layer);
+			const type = document.getElementById(`${prefix}AnimType`);
+			type.value = 'float'; type.dispatchEvent(new Event('change'));
+			const changed = layer.animations[1];
+			const timing = changed.id === first.id && changed.delayMs === 300 && changed.phase === 0.25 && changed.iterations === 2;
+			panel.duplicateAnimation(layer, 1);
+			const distinct = new Set(layer.animations.map(entry => entry.id)).size === 3;
+			const snapshot = editor.layerManager.serializeLayer(layer);
+			const hydrated = await editor.layerManager.deserializeLayer(snapshot);
+			return { follows, restored, off, preserved, timing, distinct, roundTrip: hydrated.animations[1].id === first.id };
+		});
+		assert(Object.values(result).every(Boolean), JSON.stringify(result));
+		assert.deepStrictEqual(errors, []);
+		console.log('PASS stable motion identities, reorder/restore, layer switch, type timing and duplicate identities');
+	} finally { await browser.close(); }
+}
+
 async function verifyTimelineDock() {
 	const originalUrl = process.env.GLITTER_URL;
 	const localUrl = originalUrl || 'http://localhost/glitter/';
-	const { browser, page, errors } = await openApp({ viewport: { width: 1600, height: 900 }, document: { width: 320, height: 240 } });
+	const { browser, page, errors } = await openApp({ viewport: { width: 1920, height: 900 }, document: { width: 320, height: 240 } });
 	try {
 		assert(await page.locator('#timelineToggle').isVisible());
 		assert.strictEqual(await page.evaluate(() => !!editor.timelineDock), false, 'Closed dock must not load its lazy group');
@@ -41,7 +83,7 @@ async function verifyTimelineDock() {
 			await e.stickerLibrary.ensureAssetDetails(asset.id);
 			const sticker = e.stickerManager.createLayer(asset.id);
 			e.layerManager.insertLayer(sticker);
-			sticker.animations = [GlitterAnimation.normalizeAnimation({ type: 'pulse', periodMs: 1400 }), GlitterAnimation.normalizeAnimation({ type: 'rotate', periodMs: 1000, iterations: 1, turns: 0.5, fillMode: 'forwards' })];
+			sticker.animations = [GlitterAnimation.normalizeAnimation({ id: editor.layerManager.generateLayerId(), type: 'pulse', periodMs: 1400 }), GlitterAnimation.normalizeAnimation({ id: editor.layerManager.generateLayerId(), type: 'rotate', periodMs: 1000, iterations: 1, turns: 0.5, fillMode: 'forwards' })];
 			const text = e.textGlitterManager.createLayer({ text: 'hello', position: { x: 160, y: 120 } });
 			e.layerManager.insertLayer(text);
 			const glitter = e.glitterLibrary.content.find(item => item.isAnimated);
@@ -59,14 +101,14 @@ async function verifyTimelineDock() {
 		await page.locator('.timeline-bar').first().click();
 		assert.strictEqual(await page.evaluate(() => editor.activeLayerId), sources.textId);
 		await page.evaluate(() => { window.collapseRow = editor.timelineDock.body.querySelector('.timeline-row'); });
-		await page.locator('.timeline-group-header button[aria-expanded]').first().click();
+		await page.locator('.timeline-group-header button[aria-expanded]').first().locator('..').press('ArrowLeft');
 		assert(await page.evaluate(() => collapseRow === editor.timelineDock.body.querySelector('.timeline-row')), 'Collapse preserves the existing row nodes');
 		await page.evaluate(() => editor.updateExportDuration());
 		assert(await page.locator('.timeline-group').first().evaluate(node => node.classList.contains('is-collapsed')));
 		assert(await page.evaluate(() => !Object.hasOwn(PREFERENCES.schema, 'timelineCollapsed')), 'Collapse state is not a user preference');
 		await page.evaluate(() => { editor.timelineDock.close(); editor.timelineDock.open(); });
 		assert(await page.locator('.timeline-group').first().evaluate(node => node.classList.contains('is-collapsed')), 'Collapse state survives closing and reopening this document');
-		await page.locator('.timeline-group-header button[aria-expanded]').first().click();
+		await page.locator('.timeline-group-header button[aria-expanded]').first().locator('..').press('ArrowRight');
 		const gif = await page.locator('.timeline-readout').textContent();
 		await page.evaluate(async () => { editor.exportSettings.animationFormat = 'mp4'; editor.exportSettings.type = 'animation'; await editor.updateExportDuration(); });
 		assert((await page.locator('.timeline-readout').textContent()).includes('MP4'));
@@ -204,14 +246,14 @@ async function verifyTimelineDock() {
 		await page.evaluate(() => editor.timelineDock.showItems.find(item => item.dataset.show === 'nextLoop').click());
 		assert.deepStrictEqual(await page.evaluate(() => { const dock = editor.timelineDock; return { ghosts: dock.body.querySelectorAll('.timeline-bar-ghost').length, share: dock.nextLoopShare, loopFills: Math.abs(TimelineView.timeToX(dock.model.loopMs, dock.scale) - dock.trackWidth) < 0.5 }; }),
 			{ ghosts: 0, share: 0, loopFills: true }, 'Next pass off ends the track at the loop line');
-		assert(Math.abs(await page.evaluate(() => editor.timelineDock.trackWidth) - fitWidth) < 1, 'Fit zoom uses the whole width either way');
+		assert(await page.evaluate(before => { const dock = editor.timelineDock; return Math.abs(dock.trackWidth - before) < 1 || dock.fitScale === dock.config.minPxPerSecond; }, fitWidth), 'Fit zoom fills the available width or stops at the readable minimum scale');
 		await page.evaluate(() => { editor.applyDefaultPanelLayout(); });
 		assert(await page.evaluate(() => editor.timelineDock.show.nextLoop && editor.timelineDock.body.querySelectorAll('.timeline-bar-ghost').length > 0), 'Reset Panels restores the dock view choices');
 		await page.setViewportSize({ width: 1100, height: 900 });
 		await page.waitForTimeout(250);
 		if (process.env.GLITTER_TEST_CSS) {
 			assert.strictEqual(await page.locator('.timeline-row-info').first().evaluate(node => getComputedStyle(node).display), 'none');
-			assert.strictEqual(await page.locator('.timeline-row-label').first().evaluate(node => getComputedStyle(node).position), 'absolute');
+			assert.strictEqual(await page.locator('.timeline-row-label').first().evaluate(node => getComputedStyle(node).position), 'sticky');
 		}
 		await page.setViewportSize({ width: 390, height: 844 });
 		assert(!(await page.locator('#timelineToggle').isVisible()));
@@ -282,7 +324,7 @@ async function verifyTimingModel() {
 			const e = editor;
 			const layer = e.layerManager.addLayer(LayerType.SHAPE);
 			getLayerFillSlot(layer).mode = 'solid';
-			layer.animations = [GlitterAnimation.normalizeAnimation({ type: 'rotate', periodMs: 1000, turns: 1, fillMode: 'none' })];
+			layer.animations = [GlitterAnimation.normalizeAnimation({ id: editor.layerManager.generateLayerId(), type: 'rotate', periodMs: 1000, turns: 1, fillMode: 'none' })];
 			e.animationPanel.load(layer);
 			const forever = document.getElementById('shapeAnimPlaysTimes');
 			forever.checked = true; forever.dispatchEvent(new Event('change', { bubbles: true }));
@@ -339,7 +381,7 @@ async function verifyTimingModel() {
 		await page.setViewportSize({ width: 390, height: 844 });
 		await page.evaluate(async () => {
 			const layer = editor.layerManager.addLayer(LayerType.SHAPE);
-			getLayerFillSlot(layer).mode = 'solid'; layer.animations = [GlitterAnimation.normalizeAnimation({ type: 'pulse' })];
+			getLayerFillSlot(layer).mode = 'solid'; layer.animations = [GlitterAnimation.normalizeAnimation({ id: editor.layerManager.generateLayerId(), type: 'pulse' })];
 			editor.openAnimationLoop(); await editor.updateExportDuration();
 		});
 		await page.waitForFunction(() => editor.mobileManager.sheetSection?.element.id === 'animationLoopSection');
@@ -358,14 +400,14 @@ async function verifyTimingModel() {
 			} });
 			try {
 				const result = await deployed.page.evaluate(async project => {
-					editor.isSaved = true; await editor.projectSerializer.load(project); await editor.updateExportDuration();
+					editor.isSaved = true; await editor.projectSerializer.load(project); await editor.openAnimationLoop(); await editor.updateExportDuration();
 					const { plan } = await editor.sceneCompositor.planAnimation({ ...editor.getSceneSnapshotParams(editor.layers.filter(layer => layer.visible)), exportSettings: { ...editor.exportSettings, watermarkEnabled: false }, schedule: true });
 					return { loop: editor.documentLoop, duration: plan.totalDuration, label: document.getElementById('animationLoopCandidate').getAttribute('aria-label'), options: Array.from(document.getElementById('animationLoopCandidate').options).map(option => option.textContent) };
 				}, data.project);
 				assert.deepStrictEqual(result.loop, data.set);
 				assert.strictEqual(result.duration, 3000, 'Saved loop must export on a non-local host');
-				assert.strictEqual(result.label, 'Fit to');
-				assert(!result.options.includes('Automatic'));
+				assert.strictEqual(result.label, 'Loop length');
+				assert(result.options.includes('Automatic'));
 				assert.deepStrictEqual(deployed.errors, []);
 			} finally { await closeDeployedHost(deployed); }
 		} finally {
@@ -377,7 +419,7 @@ async function verifyTimingModel() {
 }
 
 async function verifyGifCycle() {
-	const { browser, page, errors } = await openApp({ viewport: { width: 1600, height: 900 }, document: { width: 200, height: 160 } });
+	const { browser, page, errors } = await openApp({ viewport: { width: 1920, height: 900 }, document: { width: 200, height: 160 } });
 	let stickerIds = [];
 	const readPreview = () => page.evaluate(async (ids) => Promise.all(ids.map(async (id) => {
 		const image = editor.stickerManager.layerElements.get(id).querySelector('img.sticker-image');
@@ -406,7 +448,7 @@ async function verifyGifCycle() {
 			const slider = document.getElementById('stickerGifCycle');
 			return {
 				id: sticker.id, assetId: asset.id, url: sticker.stickerData.url, kind: source.kind, native: source.cycleDuration, file: source.fileCycleDuration,
-				range: source.periodRange, settable: typeof source.setPeriod === 'function',
+				range: source.periodRange, settable: source.adjustable,
 				row: !slider.closest('[data-gif-cycle-set]').hidden,
 				slider: { min: Number(slider.min), max: Number(slider.max), value: Number(slider.value) }
 			};
@@ -430,7 +472,7 @@ async function verifyGifCycle() {
 			const steps = e.historyManager.historyIndex - start;
 			await e.updateExportDuration();
 			await new Promise(resolve => requestAnimationFrame(resolve));
-			await e.animationPanel.retimedPreviewsSettled();
+			await e.previewImages.retimedPreviewsSettled();
 			await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 			const layer = e.layerManager.getLayerById(id);
 			const source = e.loopEstimate.loopFit.sources.find(entry => entry.key === id);
@@ -441,7 +483,7 @@ async function verifyGifCycle() {
 				sources: window.stickerSources.slice()
 			};
 		}, { id: fixture.id, target });
-		assert(fitted.note.includes(`${(fixture.native / 1000).toFixed(2)} s to ${(target / 1000).toFixed(2)} s`), `Fit must list the GIF change: ${fitted.note}`);
+		assert.strictEqual(fitted.note, '', 'A hidden Animation Loop panel does not render candidate notes');
 		assert.strictEqual(fitted.steps, 1);
 		assert.strictEqual(fitted.stored, target);
 		assert.strictEqual(fitted.before, fixture.native);
@@ -465,12 +507,12 @@ async function verifyGifCycle() {
 			e.layerManager.insertLayer(sticker);
 			e.saveState('Second sticker');
 			await e.updateExportDuration();
-			e.loopEstimate.loopFit.sources.find(entry => entry.key === sticker.id).setPeriod(cycle);
+			e.writeTiming(sticker.id, { period: cycle }, { commit: false });
 			e.requestPreviewUpdate();
 			e.saveState('Change animation speed');
 			await e.updateExportDuration();
 			await new Promise(resolve => requestAnimationFrame(resolve));
-			await e.animationPanel.retimedPreviewsSettled();
+			await e.previewImages.retimedPreviewsSettled();
 			await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 			return { id: sticker.id, stored: sticker.stickerData.gifCycleMs, keys: e.loopEstimate.loopFit.sources.map(entry => entry.key) };
 		}, { assetId: fixture.assetId, cycle: fixture.range.max });
@@ -545,19 +587,19 @@ async function verifyGifCycle() {
 					const { plan } = await e.sceneCompositor.planAnimation({ ...e.getSceneSnapshotParams([stickers[0]]), exportSettings: { ...e.exportSettings, watermarkEnabled: false }, schedule: true });
 					e.requestPreviewUpdate();
 					await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-					await e.animationPanel.retimedPreviewsSettled();
+					await e.previewImages.retimedPreviewsSettled();
 					await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 					return {
 						stored: stickers.map(layer => layer.stickerData.gifCycleMs), first: stickers[0].stickerData.gifCycleMs, duration: plan.totalDuration,
-						settable: e.loopEstimate.loopFit.sources.some(source => typeof source.setPeriod === 'function'),
+						settable: e.loopEstimate.loopFit.sources.some(source => source.adjustable),
 						fixed: e.loopEstimate.loopFit.fixed.length, control: Boolean(document.getElementById('stickerGifCycle')),
 						src: e.stickerManager.layerElements.get(stickers[0].id).querySelector('img.sticker-image').getAttribute('src')
 					};
 				}, { ...project, loop: { mode: 'auto', durationMs: null } });
 				assert.deepStrictEqual(result.stored, saved, 'A stored cycle must load on a non-local host');
 				assert.strictEqual(result.duration, result.first, 'A stored cycle must export on a non-local host');
-				assert(!result.settable && result.fixed === 2, 'A non-local host must leave GIFs fixed in Fit');
-				assert(!result.control, 'A non-local host must not build the Cycle row');
+				assert(result.settable && result.fixed === 0, 'Released GIF cycles remain adjustable on a non-local host');
+				assert(result.control, 'Released GIF cycles build their control on a non-local host');
 				assert(result.src.startsWith('blob:'), 'A stored cycle must preview on a non-local host');
 				assert.deepStrictEqual(deployed.errors, []);
 			} finally { await closeDeployedHost(deployed); }
@@ -581,7 +623,7 @@ async function verifyGifCycle() {
 			const e = editor;
 			const layer = e.layerManager.addLayer(LayerType.SHAPE);
 			getLayerFillSlot(layer).mode = 'solid';
-			layer.animations = [GlitterAnimation.normalizeAnimation({ type: 'tada', periodMs: 1000, iterations: 1, delayMs: 2000 })];
+			layer.animations = [GlitterAnimation.normalizeAnimation({ id: editor.layerManager.generateLayerId(), type: 'tada', periodMs: 1000, iterations: 1, delayMs: 2000 })];
 			e.shapeGlitterManager.renderLayer(layer);
 			await e.updateExportDuration();
 			e.animationTicker.stop();
@@ -645,7 +687,7 @@ async function verifyGifCycle() {
 			hue.filterData = GlitterFilter.normalizeFilterData({ type: 'hue-cycle', speed: 1.4 });
 			const shape = e.layerManager.addLayer(LayerType.SHAPE);
 			getLayerFillSlot(shape).mode = 'solid';
-			shape.animations = [GlitterAnimation.normalizeAnimation({ type: 'wobble', periodMs: 1400 })];
+			shape.animations = [GlitterAnimation.normalizeAnimation({ id: editor.layerManager.generateLayerId(), type: 'wobble', periodMs: 1400 })];
 			e.saveState('Loop fixture');
 			e.modalManager.open('exportSettingsModal');
 			document.getElementById('openAnimationLoop').click();
@@ -673,7 +715,7 @@ async function verifyGifCycle() {
 			e.saveState('Invalidate loop');
 			const fittedColumns = document.getElementById('animationLoopSources').tHead.rows[0].cells.length;
 			const badge = document.querySelector('#animationLoopStatus .badge').textContent;
-			return { fitted, undone, refitted, seam, selected, beforeUi, beforeColumns, fittedColumns, badge, candidate: candidate.exact, staleCleared: !e.loopEstimate && !!staleCandidate };
+			return { fitted, undone, refitted, seam, selected, beforeUi, beforeColumns, fittedColumns, badge, candidate: candidate.exact, staleCleared: e.loopEstimatePending && !!staleCandidate };
 		});
 		assert(fitting.candidate && fitting.seam);
 		assert.deepStrictEqual(fitting.fitted, { hue: 0.8, motion: 800, history: 1 });
@@ -722,6 +764,7 @@ async function verifyGifCycle() {
 			return Array.from({ length: animation.frames + 1 }, (_, index) => GlitterFilter.resolve(data, index).ops[0].gradient.offset);
 		});
 		assert.deepStrictEqual(slow, [...Array.from({ length: 16 }, (_, index) => index / 4), 0], 'Slow crawl must advance uniformly through the wrap');
+		await verifyMotionIdentity();
 		await verifyTimelineDock();
 		await verifyTimingModel();
 		await verifyGifCycle();

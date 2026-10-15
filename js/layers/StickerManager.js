@@ -659,7 +659,7 @@ class StickerManager {
 		}
 
 		// Reassigning an identical URL restarts animated GIFs in some browsers.
-		const previewUrl = (layer.stickerData.isAnimated && this.editor.animationPanel?.getPreviewImageUrl(layer.stickerData.url, { element: img, timingRecord: layer.stickerData, sourceIdentity: layer.stickerData })) || layer.stickerData.url;
+		const previewUrl = (layer.stickerData.isAnimated && this.editor.previewImages?.getPreviewImageUrl(layer.stickerData.url, { element: img, timingRecord: layer.stickerData, sourceIdentity: layer.stickerData })) || layer.stickerData.url;
 		if (img.dataset.sourceUrl !== previewUrl) {
 			img.src = previewUrl;
 			img.dataset.sourceUrl = previewUrl;

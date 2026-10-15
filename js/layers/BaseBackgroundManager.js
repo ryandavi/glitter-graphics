@@ -91,7 +91,7 @@ class BaseBackgroundManager {
 		}
 		const canvas = this.editor.previewCanvas;
 		if (canvas.nextSibling !== image) canvas.after(image);
-		const url = this.editor.animationPanel?.getPreviewImageUrl(animation.url, { element: image, timingRecord: layer.background, sourceIdentity: animation.file }) || animation.url;
+		const url = this.editor.previewImages?.getPreviewImageUrl(animation.url, { element: image, timingRecord: layer.background, sourceIdentity: animation.file }) || animation.url;
 		if (image.dataset.source !== url) {
 			image.dataset.source = url;
 			image.src = url;
@@ -306,6 +306,8 @@ class BaseBackgroundManager {
 		this.fieldHost = this.createFieldHost();
 		bindFieldControls(this.fieldHost);
 		bindPaintSlotFields(this.fieldHost, getPaintSlotDefinition(LayerType.BASE_IMAGE, 'background'), 'baseBackground', (binding) => binding.keys[0] === 'pattern');
+		this.editor.bindGifCycleControl('baseImageGifCycle', () => { const layer = this.getBaseLayer(); return this.getAnimation(layer) ? getBaseAnimationSourceKey(layer) : null; });
+		this.editor.bindGifCycleControl('baseBackgroundGifCycle', () => { const layer = this.getBaseLayer(), entry = layer && getLayerPaintSlots(layer).find(entry => entry.key === 'background'); return entry?.data.mode === 'glitter' ? getPaintSlotSourceKey(layer, entry) : null; });
 		installEffectPatternEditor({ prefix: 'baseBackground', getData: () => this.getActiveLayer()?.background || null, onUpdate: (commit) => this.applyChange(commit) });
 		this.ui.imageChange?.addEventListener('click', () => this.chooseReplacementImage());
 		this.ui.animate?.addEventListener('change', () => {

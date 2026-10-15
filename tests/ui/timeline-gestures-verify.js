@@ -4,9 +4,10 @@ const assert = require('assert/strict');
 const { openApp } = require('../lib/app');
 
 async function verifyTimelineGestures(browser) {
-	const { page, context, errors } = await openApp({ browser, viewport: { width: 1600, height: 900 }, document: { width: 200, height: 160 } });
+	const { page, context, errors } = await openApp({ browser, viewport: { width: 1920, height: 900 }, document: { width: 200, height: 160 } });
 	try {
 		await page.evaluate(async () => {
+			editor.historyManager.limit = 100;
 			const layer = editor.shapeGlitterManager.createLayer({ shapeId: 'square', width: 40, height: 40 });
 			getLayerFillSlot(layer).mode = 'solid'; editor.layerManager.insertLayer(layer); editor.layerManager.setActiveLayer(layer.id);
 			window.emptyTimelineLayerId = layer.id;
@@ -21,17 +22,17 @@ async function verifyTimelineGestures(browser) {
 		});
 		assert.equal(emptyBand.empty, 0, 'Empty timeline has no body empty state or group tracks');
 		assert.equal(emptyBand.columns, 1, 'Empty timeline is a single-column layer list');
-		assert.equal(emptyBand.hint, "Nothing is animated yet. Use a layer's menu to add one.");
+		assert.equal(emptyBand.hint, "Nothing moves yet. Select a layer and press + to add an animation.");
 		assert.equal(emptyBand.disabled, false, 'Header Add animation is enabled for the active animatable layer');
 		await page.locator('.timeline-dock .section-header-actions button[aria-label="Add animation"]').click();
 		await page.evaluate(async () => { await editor.updateExportDuration(); });
 		assert(await page.evaluate(() => editor.layerManager.getLayerById(emptyTimelineLayerId).animations.length === 1), 'Header Add animation adds a motion');
 		assert.equal(await page.evaluate(() => editor.timelineDock.ruler.getBoundingClientRect().height), emptyBand.height, 'First animation preserves ruler band height');
 		const chevron = page.locator(`.timeline-group[data-layer-id="${await page.evaluate(() => emptyTimelineLayerId)}"] .timeline-group-chevron`);
-		const enabledBox = await chevron.boundingBox();
+		const enabledBox = await chevron.evaluate(node => node.getBoundingClientRect().toJSON());
 		assert.equal(enabledBox.width, emptyBand.chevron.width, 'Disabled chevron preserves width');
 		assert.equal(enabledBox.height, emptyBand.chevron.height, 'Disabled chevron preserves height');
-		await chevron.click();
+		await chevron.locator('..').press('ArrowLeft');
 		await chevron.locator('..').click({ button: 'right' });
 		await page.getByRole('menuitem', { name: 'Add animation', exact: true }).click();
 		await page.evaluate(async () => { await editor.updateExportDuration(); });
@@ -44,7 +45,7 @@ async function verifyTimelineGestures(browser) {
 		await page.evaluate(async () => {
 			const layer = editor.shapeGlitterManager.createLayer({ shapeId: 'square', width: 40, height: 40, position: { x: 60, y: 80 } });
 			getLayerFillSlot(layer).mode = 'solid';
-			layer.animations = [GlitterAnimation.normalizeAnimation({ type: 'pulse', periodMs: 1000 })];
+			layer.animations = [GlitterAnimation.normalizeAnimation({ id: editor.layerManager.generateLayerId(), type: 'pulse', periodMs: 1000 })];
 			editor.layerManager.insertLayer(layer);
 			editor.shapeGlitterManager.renderLayer(layer);
 			window.timelineFixtureId = layer.id;
@@ -275,7 +276,7 @@ async function verifyTimelineGestures(browser) {
 		await page.evaluate(() => {
 			const dock = editor.timelineDock, row = dock.model.groups.flatMap(group => group.rows).find(row => row.kind === 'procedural');
 			dock.barActions(row).find(action => action.id === 'copy').run();
-			dock.timingClipboard.cycle = 1200;
+			editor.timingClipboard.cycle = 1200;
 		});
 		await gifBar.click({ button: 'right' });
 		await page.getByRole('menuitem', { name: 'Paste timing', exact: true }).click();
@@ -286,7 +287,7 @@ async function verifyTimelineGestures(browser) {
 		await page.getByRole('menuitem', { name: 'Reset timing', exact: true }).click(); await ready();
 		assert(await page.evaluate(() => editor.layerManager.getLayerById(window.timelineGifId).stickerData.gifCycleMs == null), 'Reset timing also restores the speed remembered by Paste timing');
 		await gifBar.click({ button: 'right' });
-		await page.getByRole('menuitem', { name: 'Reset speed', exact: true }).click();
+		await page.getByRole('menuitem', { name: 'Original cycle', exact: true }).click();
 		await ready();
 		assert.equal(await page.evaluate(() => editor.layerManager.getLayerById(window.timelineGifId).stickerData.gifCycleMs == null), true, 'Reset speed restores the native GIF');
 		await gifBar.click({ button: 'right' });
@@ -519,11 +520,11 @@ async function verifyTimelineGestures(browser) {
 			const row = dock.model.groups.find(group => group.layerId === layer.id).rows[0];
 			const delay = layer.animations[0].delayMs, history = editor.historyManager.historyIndex;
 			dock.markStale(); dock.nudgeRow(row, { key: 'ArrowRight', shiftKey: false });
-			const held = dock.stale && !dock.host.classList.contains('is-stale') && !dock.canEdit(row)
-				&& layer.animations[0].delayMs === delay && editor.historyManager.historyIndex === history;
+			const held = dock.stale && !dock.host.classList.contains('is-stale') && dock.canEdit(row)
+				&& layer.animations[0].delayMs > delay && editor.historyManager.historyIndex === history + 1;
 			dock.resync();
 			return held && !dock.stale;
-		}), 'A stale model rejects nudges until a resync clears its state');
+		}), 'Timing remains editable while the estimate is pending');
 		assert(await page.evaluate(() => {
 			const dock = editor.timelineDock, row = dock.model.groups.find(group => group.layerId === window.timelineFixtureId).rows[0];
 			const drawing = { ...row, exportCycleMs: 1000, cycleMarks: [0.5], source: { ...row.source, keyTrack: {} } };
@@ -554,7 +555,7 @@ async function verifyTimelineGestures(browser) {
 		assert.equal(await page.evaluate(() => PREFERENCES.get('timelineZoom')), 'fit', 'Double-clicking the zoom slider fits the loop');
 		await page.evaluate(async () => {
 			const layer = editor.layerManager.getLayerById(window.timelineFixtureId);
-			layer.animations = [GlitterAnimation.normalizeAnimation({ type: 'pulse', periodMs: 1000, phase: 0.2, delayMs: 200, iterations: 2 })];
+			layer.animations = [GlitterAnimation.normalizeAnimation({ id: editor.layerManager.generateLayerId(), type: 'pulse', periodMs: 1000, phase: 0.2, delayMs: 200, iterations: 2 })];
 			editor.setDocumentLoop({ mode: 'set', durationMs: 4000 }, { commit: false });
 			editor.shapeGlitterManager.renderLayer(layer); editor.saveState('Menu fixture'); await editor.updateExportDuration();
 			editor.animationPanel.setPaused(true); editor.animationTicker.seek(1500);
@@ -588,7 +589,7 @@ async function verifyTimelineGestures(browser) {
 				chevron.click(); chevron.click();
 				const renameKept = groups.every(node => node.isConnected) && nodes.every(node => node.isConnected) && sampled === 0
 					&& chevron.getAttribute('aria-label') === 'Toggle Renamed motion timeline rows';
-				layer.animations[0].periodMs += 100; editor.saveState('Retime fixture'); await editor.updateExportDuration();
+				editor.writeTiming(GlitterAnimation.sourceKey(layer.id, layer.animations[0]), { period: layer.animations[0].periodMs + 100 }); await editor.updateExportDuration();
 				return renameKept && groups.every(node => node.isConnected) && sampled === 1;
 			} finally { TimelineView.motionCurve = curve; }
 		}), 'Rename retains groups and rows without curve sampling; retime samples only its changed curve');

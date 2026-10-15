@@ -121,7 +121,7 @@ registerLayerType(LayerType.STICKER, {
 	contentScalesWithTransform: true,
 	hasVisibleContent: (layer) => !layer.stickerData || !layer.stickerData.isEmpty,
 	animatable: true,
-	animate: (...args) => animateTransformableLayerPreview(...args),
+	animate: (...args) => paintLayerAnimationPreview(...args),
 	animationBox: (_editor, layer) => ({ width: layer.stickerData.width, height: layer.stickerData.height }),
 	timelineSources: (layer, context) => [
 		...context.compositor._createLayerAnimationTimelineSources(layer, context),
