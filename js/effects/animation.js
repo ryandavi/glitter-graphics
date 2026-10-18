@@ -335,7 +335,8 @@ const GlitterAnimation = (() => {
 		const data = normalizeAnimation(animation);
 		if (end === Infinity) return Infinity;
 		const delayMs = clampNumber(start, 0, FIELDS.animDelay.max * 1000);
-		return Number(clampNumber(repeatsForRun({ cycleMs: data.periodMs, phase: data.phase }, { start: delayMs, end }), FIELDS.animIterations.min, FIELDS.animIterations.max).toFixed(2));
+		const count = clampNumber(repeatsForRun({ cycleMs: data.periodMs, phase: data.phase }, { start: delayMs, end }), Math.max(Number(data.phase), FIELDS.animIterations.min), FIELDS.animIterations.max);
+		return Math.abs(count - data.iterations) <= Number.EPSILON * Math.max(1, count, data.iterations) * 8 && Number.isFinite(data.iterations) ? data.iterations : count;
 	}
 
 	// Typical canvas speed of a traveling motion in px/s: the median step over
@@ -442,14 +443,12 @@ const GlitterAnimation = (() => {
 		const localTime = Number(tMs) - Number(data.delayMs);
 		if (!fill && localTime < 0) return null;
 		const timing = { start: Number(data.delayMs), cycleMs: period, phase: Number(data.phase || 0), direction: data.direction };
-		let current = cycleAt(timing, Number(tMs));
-		let u = current.position;
-		let held = false;
-		if (u < 0) {
+		const current = cycleAt(timing, Number(tMs));
+		const u = current.position;
+		if (localTime < 0) {
 			if (!fill || !['backwards', 'both'].includes(data.fillMode)) return null;
-			u = 0;
-			current = cycleAt({ ...timing, start: 0, phase: 0 }, 0);
-			held = true;
+			const { cycle, progress } = cycleAt(timing, timing.start);
+			return { cycle, progress, eased: easedProgress(data, progress), held: true };
 		}
 		const iterations = data.iterations === Infinity ? Infinity : Math.max(0, Number(data.iterations));
 		if (Number.isFinite(iterations) && u >= iterations) {
@@ -459,7 +458,7 @@ const GlitterAnimation = (() => {
 			return { cycle: finalCycle, progress: finalProgress, eased: easedProgress(data, finalProgress), held: true };
 		}
 		const { cycle, progress } = current;
-		return { cycle, progress, eased: easedProgress(data, progress), held };
+		return { cycle, progress, eased: easedProgress(data, progress), held: false };
 	}
 
 	function cycleProgress(value, tMs, { fill = true } = {}) {
@@ -468,12 +467,23 @@ const GlitterAnimation = (() => {
 
 	// A key's intrinsic position can occur more than once under elastic or
 	// bounce easing. Pick the nearest occurrence in the current repetition.
-	function timeAtProgress(value, at, timestamp) {
+	function timeAtProgress(value, at, timestamp, { endMs = Infinity } = {}) {
 		const data = normalizeAnimation(value);
 		const current = progressAt(data, timestamp, false);
-		if (MOTION_REGISTRY[data.type].keyed && current && Number.isFinite(at)) {
-			const time = timeAtCycle({ start: Number(data.delayMs), cycleMs: data.periodMs, phase: data.phase, direction: data.direction }, current.cycle, Math.max(0, Math.min(1, at)));
-			return time >= data.delayMs && time <= runTiming(data).end ? time : null;
+		if (MOTION_REGISTRY[data.type].keyed && Number.isFinite(at)) {
+			const timing = { start: Number(data.delayMs), cycleMs: data.periodMs, phase: data.phase, direction: data.direction };
+			const run = runTiming(data);
+			const first = Math.floor(Number(data.phase));
+			const last = Math.min(Number.isFinite(data.iterations) ? Math.ceil(data.iterations) - 1 : Infinity,
+				Number.isFinite(endMs) ? Math.ceil((endMs - timing.start) / timing.cycleMs + Number(data.phase)) - 1 : Infinity);
+			const nearest = Math.max(first, Math.min(last, Math.floor((timestamp - timing.start) / timing.cycleMs + Number(data.phase))));
+			// Adjacent cycles cover both direction parities and partial edge cycles.
+			const cycles = new Set([first, first + 1, nearest - 1, nearest, nearest + 1, last - 1, last]);
+			return Array.from(cycles).filter(cycle => Number.isFinite(cycle) && cycle >= first && cycle <= last)
+				.map(cycle => timeAtCycle(timing, cycle, Math.max(0, Math.min(1, at))))
+				.filter(time => time >= run.start && time <= run.end && time < endMs)
+				.filter(time => { const position = progressAt(data, time, true); return position && Math.abs(position.progress - Math.max(0, Math.min(1, at))) < config().keySeek.tolerance; })
+				.sort((a, b) => Math.abs(a - timestamp) - Math.abs(b - timestamp) || a - b)[0] ?? null;
 		}
 		if (!current || data.easing === 'steps' || data.snapMode === 'step' || !Number.isFinite(at)) return null;
 		const { samples, iterations, tolerance } = config().keySeek;

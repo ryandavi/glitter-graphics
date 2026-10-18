@@ -297,6 +297,7 @@ for (const direction of ['normal', 'reverse', 'alternate', 'alternate-reverse'])
 		const data = { ...keyed, direction, easing, delayMs: 100, phase: 0.2 };
 		for (const time of [1100, 1600, 2450]) for (const at of [0, 0.25, 0.6]) {
 			const found = Animation.timeAtProgress(data, at, time);
+			if (direction === 'reverse' && at === 0) { assert.strictEqual(found, null, 'A reversed forever run jumps before the explicit zero endpoint can be sampled'); continue; }
 			assert.notStrictEqual(found, null, `${direction}/${easing}/${at} has an occurrence`);
 			const progress = Animation.cycleProgress(data, found, { fill: false });
 			const actual = ((progress.eased % 1) + 1) % 1;
@@ -306,8 +307,8 @@ for (const direction of ['normal', 'reverse', 'alternate', 'alternate-reverse'])
 }
 assert.strictEqual(Animation.timeAtProgress({ ...keyed, easing: 'steps' }, 0.25, 500), 250);
 assert.strictEqual(Animation.timeAtProgress({ ...keyed, snapMode: 'step' }, 0.25, 500), 250);
-assert.strictEqual(Animation.timeAtProgress({ ...keyed, delayMs: 100 }, 0.25, 99), null);
-assert.strictEqual(Animation.timeAtProgress({ ...keyed, delayMs: 100, phase: 0.2, easing: 'bounceOut' }, 0.1, 100), null, 'A key before the trimmed first repetition is selected without seeking outside its run');
+assert.strictEqual(Animation.timeAtProgress({ ...keyed, delayMs: 100 }, 0.25, 99), 350, 'Seek enters the delayed run');
+assert(near(Animation.timeAtProgress({ ...keyed, delayMs: 100, phase: 0.2, easing: 'bounceOut' }, 0.1, 100), 1000), 'Seek finds the key in the next reachable repetition');
 assert.deepStrictEqual(customStack, Animation.composeSamples([Animation.sampleAt(keyed, 250), Animation.sampleAt({ type: 'pulse', amount: 30 }, 250)]));
 const customCalls = [];
 const customContext = Object.fromEntries(['translate', 'rotate', 'scale', 'transform'].map(method => [method, (...args) => customCalls.push([method, ...args])]));

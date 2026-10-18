@@ -1,4 +1,5 @@
 const COMMANDS = {
+	timelineToggle: { label: 'Timeline', group: 'View', feature: 'timeline', when: editor => Boolean(editor.originalImage), run: editor => editor.toggleTimeline() },
 	playbackToggle: { label: 'Play / Pause Motion', group: 'Animation', displayKey: 'Space (tap)', when: editor => editor.hasMotionForPlayback(), run: editor => editor.setPlayback(editor.animationTicker.paused) },
 	playheadStepBack: { label: 'Previous Frame', group: 'Animation', keys: [','], displayKey: ',', when: editor => editor.hasMotionForPlayback(), run: editor => editor.animationTicker.step(-1) },
 	playheadStepForward: { label: 'Next Frame', group: 'Animation', keys: ['.'], displayKey: '.', when: editor => editor.hasMotionForPlayback(), run: editor => editor.animationTicker.step(1) },

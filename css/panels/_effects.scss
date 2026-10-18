@@ -305,6 +305,17 @@
 .animation-module.is-empty > .property-card-body {
 	> .property-set, > .advanced-disclosure { display: none; }
 }
+.animation-transport {
+	display: grid;
+	gap: var(--spacing-xs);
+	width: 100%;
+	input[type="range"] { width: 100%; min-width: 0; }
+}
+.animation-transport-actions {
+	display: flex;
+	gap: var(--spacing-xs);
+	flex-wrap: wrap;
+}
 .animation-timing-strip {
 	padding: var(--spacing-xs);
 	.animation-timing-track { position: relative; height: 100%; }

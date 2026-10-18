@@ -5589,9 +5589,9 @@ body.tool-select .preview-container.is-over-picked-layer {
   position: absolute;
   inset: 0;
   background-image: var(--motion-curve);
-  background-size: var(--cycle-px) 100%;
-  background-position: var(--cycle-offset-px) 0;
-  background-repeat: repeat-x;
+  background-size: var(--curve-px) 100%;
+  background-position: 0 0;
+  background-repeat: no-repeat;
 }
 .timeline-dock .timeline-cycle-mark {
   position: absolute;
@@ -8524,6 +8524,22 @@ body.tool-text .text-hover-baselines {
 
 .animation-module.is-empty > .property-card-body > .property-set, .animation-module.is-empty > .property-card-body > .advanced-disclosure {
   display: none;
+}
+
+.animation-transport {
+  display: grid;
+  gap: var(--spacing-xs);
+  width: 100%;
+}
+.animation-transport input[type=range] {
+  width: 100%;
+  min-width: 0;
+}
+
+.animation-transport-actions {
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-wrap: wrap;
 }
 
 .animation-timing-strip {

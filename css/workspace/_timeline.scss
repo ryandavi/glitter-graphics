@@ -449,9 +449,9 @@
 		content: '';
 		@include cover;
 		background-image: var(--motion-curve);
-		background-size: var(--cycle-px) 100%;
-		background-position: var(--cycle-offset-px) 0;
-		background-repeat: repeat-x;
+		background-size: var(--curve-px) 100%;
+		background-position: 0 0;
+		background-repeat: no-repeat;
 	}
 	.timeline-cycle-mark { position: absolute; top: 60%; bottom: 0; width: 1px; background: var(--timeline-row-bg); opacity: var(--opacity-soft); }
 	// A keyed motion's keys, repeated in every cycle of its bar.

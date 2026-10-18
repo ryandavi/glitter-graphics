@@ -562,6 +562,7 @@ initializeExportSettings() {
 		clearTimeout(this.exportDurationTimer);
 		this.exportDurationRequestId = (this.exportDurationRequestId || 0) + 1;
 		this.loopEstimatePending = true;
+		this.syncAnimationTransports();
 		this.previewFrameView?.invalidate({ keepFrame: Boolean(this.keyRecording?.active) });
 		this.timelineDock?.markStale();
 		const fit = document.getElementById('fitAnimationsToLoop');
@@ -572,16 +573,26 @@ initializeExportSettings() {
 	},
 
 	async updateExportDuration() {
-		return this.refreshLoopEstimate();
+		this.loopEstimateTask = this.refreshLoopEstimate();
+		while (this.loopEstimateTask) {
+			const task = this.loopEstimateTask;
+			await task;
+			if (task !== this.loopEstimateTask) continue;
+			if (!this.loopEstimatePending || !this.originalImage || !this.sceneCompositor || !this.glitterLibrary?.content) break;
+			this.loopEstimateTask = this.refreshLoopEstimate();
+		}
+		return this.loopEstimate;
 	},
 	async ensureFrameOptions() {
-		if (this.loopEstimatePending || !this.loopEstimate || this.loopEstimate.documentRevision !== this.documentRevision) await this.refreshLoopEstimate();
+		if (!this.isLoopEstimateCurrent()) await this.updateExportDuration();
 		const estimate = this.loopEstimate, revision = this.documentRevision;
-		if (!estimate || estimate.frameOptions) return estimate?.frameOptions;
+		if (!this.isLoopEstimateCurrent(estimate)) return null;
+		if (estimate.frameOptions) return estimate.frameOptions;
 		if (!estimate.frameOptionsPromise) estimate.frameOptionsPromise = estimate.computeFrameOptions();
 		let options;
 		try { options = await estimate.frameOptionsPromise; } catch (error) { estimate.frameOptionsPromise = null; estimate.frameOptionsError = true; console.warn('Frame options could not be measured:', error); return null; }
-		if (estimate === this.loopEstimate && revision === this.documentRevision) { estimate.frameOptions = options; this.timelineDock?.syncReadout(estimate); }
+		if (estimate !== this.loopEstimate || revision !== this.documentRevision || !this.isLoopEstimateCurrent(estimate)) return null;
+		estimate.frameOptions = options; this.timelineDock?.syncReadout(estimate);
 		return options;
 	},
 	async refreshLoopEstimate() {
@@ -590,6 +601,8 @@ initializeExportSettings() {
 		const fidelityOutput = document.getElementById('exportFidelityEstimate');
 		if (!output && !fidelityOutput && !document.getElementById('animationLoopStatus') && !(this.timelineDock?.isOpen)) return;
 		const revision = this.documentRevision;
+		const context = this.loopAnalysisContext();
+		this.loopEstimatePending = true;
 		const requestId = (this.exportDurationRequestId || 0) + 1;
 		this.exportDurationRequestId = requestId;
 		const usesTargetDuration = this.exportSettings.mp4LengthMode === 'duration';
@@ -637,11 +650,14 @@ initializeExportSettings() {
 		try {
 			const estimate = await this.estimateExportAnimation(visibleLayers);
 			if (requestId !== this.exportDurationRequestId) return;
+			if (!isSameData({ ...context, sources: null }, { ...this.loopAnalysisContext(), sources: null })) { this.scheduleExportDuration(); return; }
 			estimate.documentRevision = revision;
+			estimate.analysisContext = this.loopAnalysisContext();
 			this.syncAnimationLoop(estimate);
 			this.renderExportDurationText(estimate, { output, fidelityOutput, usesTargetDuration, targetDuration, loopCount, formatSeconds });
 		} catch (error) {
 			if (requestId !== this.exportDurationRequestId) return;
+			if (!isSameData({ ...context, sources: null }, { ...this.loopAnalysisContext(), sources: null })) { this.scheduleExportDuration(); return; }
 			this.syncAnimationLoop(null, 'Animation timing unavailable. Try again after the artwork loads.');
 			console.warn('Export duration estimate failed:', error);
 			if (output && !usesTargetDuration) output.textContent = 'Could not load an animation source to estimate the duration. Export will try again.';

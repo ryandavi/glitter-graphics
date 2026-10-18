@@ -174,7 +174,7 @@ async function verifyTimelineGestures(browser) {
 		await ready();
 		assert.equal((await state()).repeats, Infinity, 'One Undo restores the drag');
 		await drag('right', 2040, { alt: true, shift: true });
-		assert.equal((await state()).repeats, 2.04, 'Alt bypasses snapping');
+		assert(Math.abs((await state()).repeats - 2.04) < 1e-6, 'Alt bypasses snapping without rounding stored repeats');
 		assert.equal(feedback.guide, null, 'An unsnapped drag has no guide');
 		before = await state();
 		await drag('left', 600, { alt: true, cancel: true });
@@ -182,11 +182,11 @@ async function verifyTimelineGestures(browser) {
 		await drag('left', 600, { alt: true });
 		after = await state();
 		assert(Math.abs(after.delay - 600) < 0.01);
-		assert.equal(after.repeats, 1.44, 'Left edge keeps the finite end');
+		assert(Math.abs(after.repeats - 1.44) < 1e-6, 'Left edge keeps the finite end');
 		before = await state();
 		await drag('body', 300, { delta: true, alt: false });
 		after = await state();
-		assert(after.delay > before.delay && after.repeats === before.repeats, 'Body moves a trimmed bar without changing its length');
+		assert(after.delay > before.delay && Math.abs(after.repeats - before.repeats) < 1e-10, 'Body moves a trimmed bar without changing its length');
 		before = await state();
 		await drag('body', 500, { delta: true, alt: true, pointerCancel: true });
 		assert.deepEqual(await state(), before, 'Pointer cancellation restores values without history');
@@ -344,7 +344,7 @@ async function verifyTimelineGestures(browser) {
 		assert(Math.abs((await state()).period - 400) < 0.01 && Math.abs((await state()).repeats - 2) < 0.01, 'An ordinary repeating edge sets length and keeps its count');
 		after = await state();
 		await drag('right', after.delay + 1200, { alt: true, shift: true });
-		assert.equal((await state()).repeats, 3, 'Shift on a repeating edge changes the count');
+		assert(Math.abs((await state()).repeats - 3) < 1e-4, `Shift on a repeating edge changes the count: ${JSON.stringify(await state())}`);
 		assert(Math.abs((await state()).period - 400) < 0.01);
 		await page.evaluate(async () => {
 			const layer = editor.layerManager.getLayerById(window.timelineFixtureId);
@@ -555,7 +555,7 @@ async function verifyTimelineGestures(browser) {
 		assert.equal(await page.evaluate(() => PREFERENCES.get('timelineZoom')), 'fit', 'Double-clicking the zoom slider fits the loop');
 		await page.evaluate(async () => {
 			const layer = editor.layerManager.getLayerById(window.timelineFixtureId);
-			layer.animations = [GlitterAnimation.normalizeAnimation({ id: editor.layerManager.generateLayerId(), type: 'pulse', periodMs: 1000, phase: 0.2, delayMs: 200, iterations: 2 })];
+			layer.animations = [GlitterAnimation.normalizeAnimation({ id: editor.layerManager.generateLayerId(), type: 'pulse', direction: 'normal', periodMs: 1000, phase: 0.2, delayMs: 200, iterations: 2 })];
 			editor.setDocumentLoop({ mode: 'set', durationMs: 4000 }, { commit: false });
 			editor.shapeGlitterManager.renderLayer(layer); editor.saveState('Menu fixture'); await editor.updateExportDuration();
 			editor.animationPanel.setPaused(true); editor.animationTicker.seek(1500);
@@ -564,7 +564,7 @@ async function verifyTimelineGestures(browser) {
 			const dock = editor.timelineDock, row = dock.model.groups.find(group => group.layerId === window.timelineFixtureId).rows[0];
 			const node = dock.rowNodesByKey.get(String(row.key)); dock.openBarMenu(row, node, node.querySelector('.timeline-bar'));
 		});
-		for (const [label, field, value] of [['Play once', 'repeats', 1], ['Repeat forever', 'repeats', Infinity], ['Start at playhead', 'delay', 1500], ['End at playhead', 'repeats', 1.5], ['Reverse', 'direction', 'reverse'], ['Ping-pong', 'direction', 'alternate']]) {
+		for (const [label, field, value] of [['Play once', 'repeats', 1], ['Repeat forever', 'repeats', Infinity], ['Start at playhead', 'delay', 1500], ['Trim end at playhead', 'repeats', 1.5], ['Reverse', 'direction', 'reverse'], ['Ping-pong', 'direction', 'alternate']]) {
 			const before = await state(); await openMotionMenu();
 			await page.getByRole('menuitem', { name: label, exact: true }).click(); await ready();
 			const after = await state();

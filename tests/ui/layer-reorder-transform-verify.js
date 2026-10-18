@@ -92,7 +92,7 @@ async function verifyReorderControls(page) {
 		const start = await rows.nth(from).locator('.list-row-text, .list-row-content').first().boundingBox(), end = await rows.nth(target).boundingBox();
 		assert(start && end, 'Row bodies and targets must have layout boxes');
 		await page.mouse.move(start.x + start.width / 2, start.y + start.height / 2); await page.mouse.down();
-		await page.mouse.move(end.x + 70, place === 'above' ? end.y + 1 : end.y + end.height - 1);
+		await page.mouse.move(start.x + start.width / 2, place === 'above' ? end.y + 1 : end.y + end.height - 1);
 		await page.waitForTimeout(250);
 		const geometry = await container.locator(':scope > .list-insertion-line').evaluate(node => ({ opacity: getComputedStyle(node).opacity, line: node.getBoundingClientRect().toJSON(), list: node.parentElement.getBoundingClientRect().toJSON(), classes: node.className }));
 		assert(await container.locator(':scope > .list-insertion-line').evaluate(node => {
@@ -173,7 +173,7 @@ async function verifyReorderControls(page) {
 		const layer = editor.layers[1]; editor.layerManager.setActiveLayer(layer.id);
 		layer.animations = []; editor.animationPanel.load(layer);
 		const section = document.getElementById('stickerAnimEnabled').closest('.animation-module');
-		if (!section.querySelector('.animation-stack-card') || section.querySelectorAll('.property-object-card').length !== 1) throw new Error('Only the Animations object has a card');
+		if (!section.querySelector('.animation-stack-card') || section.querySelectorAll('.property-object-card').length !== 2) throw new Error('Animations and Scene preview share object cards');
 		if (!section.classList.contains('is-empty') || document.getElementById('stickerAnimStackEmpty').hidden) throw new Error('Empty stack must show its empty state');
 		const controls = [...section.querySelectorAll('[id]')];
 		const movement = () => ['Amount', 'Angle', 'Distance', 'Radius', 'Turns', 'Duty', 'OpacityFloor'].map(suffix => document.getElementById(`stickerAnim${suffix}Row`).hidden).join();

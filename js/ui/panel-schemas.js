@@ -290,6 +290,18 @@ function createKeyValueRows(id) {
 	});
 }
 
+function createAnimationPreviewCard(id, motion = false) {
+	return { id: id('PreviewCard'), title: 'Scene preview', sets: [{ rows: [
+		{ kind: 'host', id: id('Transport'), classes: 'animation-transport', rowClasses: 'is-control' },
+		...(motion ? [
+			{ kind: 'host', id: id('TimingStrip'), classes: 'animation-timing-strip', rowClasses: 'is-control' },
+			{ kind: 'note', id: id('TimingHint'), hidden: true },
+			{ kind: 'note', id: id('KeyStripNote'), feature: 'customMotion', hidden: true, text: 'Keys · one cycle of the selected motion' },
+			{ kind: 'host', id: id('KeyStrip'), feature: 'customMotion', hidden: true, classes: 'animation-key-strip', rowClasses: 'is-control' }
+		] : [])
+	] }] };
+}
+
 function createAnimationSectionSpec(prefix) {
 	const id = (suffix) => `${prefix}Anim${suffix}`;
 	const sliders = (keys, hidden = false) => keys.map(key => GlitterAnimation.ANIMATION_CONTROLS.find(control => control.key === key))
@@ -304,10 +316,11 @@ function createAnimationSectionSpec(prefix) {
 			{ id: id('AnimationsCard'), title: 'Animations', classes: 'animation-stack-card', sets: [
 				{ rows: [{ kind: 'host', id: id('Stack'), classes: 'animation-stack' }, { kind: 'note', id: id('StackEmpty'), text: 'No animations yet', classes: 'property-empty' }] },
 				{ classes: 'animation-stack-actions is-split', actions: [
-					{ id: id('Add'), label: 'Add animation', icon: 'plus', menu: true },
+					{ id: id('Add'), label: 'Add animation', icon: 'plus' },
 					{ id: id('Remove'), label: 'Remove', icon: 'trash' }
 				] }
-			] }
+			] },
+			createAnimationPreviewCard(id, true)
 		],
 		sets: [
 			{ rows: [
@@ -319,13 +332,11 @@ function createAnimationSectionSpec(prefix) {
 				{ kind: 'note', id: id('LoopHint'), classes: 'animation-loop-hint' }
 			] },
 			{ label: 'Timing', rows: [
-				{ kind: 'host', id: id('TimingStrip'), classes: 'animation-timing-strip', rowClasses: 'is-control' },
-				{ kind: 'note', id: id('TimingHint'), hidden: true },
 				...sliders(['delayMs', 'periodMs']),
 				{ kind: 'radioSegmented', id: id('Plays'), label: 'Repeats', options: [
 					{ id: id('PlaysForever'), value: 'forever', label: 'Forever' }, { id: id('PlaysTimes'), value: 'times', label: 'Count' }
 				] },
-				{ kind: 'field', id: id('Iterations'), type: 'number', ...FIELDS.animIterations, rowId: id('IterationsRow') },
+				{ kind: 'field', id: id('Iterations'), type: 'number', ...FIELDS.animIterations, step: 'any', rowId: id('IterationsRow') },
 				{ kind: 'select', id: id('Easing'), label: 'Easing', options: ANIMATION_EASING_OPTIONS, optionPreview: value => buildEasingCurve(value, FIELDS.animSteps.value) },
 				{ kind: 'field', id: id('Steps'), type: 'number', label: 'Steps', ...FIELDS.animSteps, rowId: id('StepsRow') }
 			] },
@@ -336,9 +347,9 @@ function createAnimationSectionSpec(prefix) {
 					options: [{ value: 'none', label: 'None' }, { value: 'wrap', label: 'Wrap' }, { value: 'tile', label: 'Tile' }] },
 				...sliders(['gap'], true)
 			] },
+			{ actions: [{ id: id('IncludeInLoop'), label: 'Set loop to include content', hidden: true }] },
 			{ rows: [{ kind: 'note', id: id('KeyDesktopNote'), hidden: true, text: 'Pose keys is available on desktop.' }] },
 			{ id: id('KeySet'), label: 'Key', feature: 'customMotion', hidden: true, rows: [
-				{ kind: 'host', id: id('KeyStrip'), classes: 'animation-key-strip' },
 				{ kind: 'select', id: id('KeySelect'), label: 'Key', options: [],
 					stepper: {
 						prev: { id: id('KeyPrev'), label: 'Previous key', icon: 'chevron-left', title: 'Previous key' },
@@ -359,13 +370,14 @@ function createAnimationSectionSpec(prefix) {
 				{ id: id('KeyRecord'), label: KEY_POSE_ACTION.label, icon: KEY_POSE_ACTION.icon },
 				{ id: id('KeyAdd'), label: 'Add key', icon: 'plus' },
 				{ id: id('KeyDelete'), label: 'Delete key', icon: 'trash' }
-			] },
-			{ id: id('ConvertActions'), feature: 'customMotion', hidden: true, actions: [
-				{ id: id('Convert'), label: 'Convert to custom', icon: 'timeline' }
 			] }
 		],
 		advancedId: id('Advanced'),
 		advanced: [
+			{ label: 'Precise timing', rows: [
+				{ kind: 'field', id: id('TrimEnd'), type: 'number', ...FIELDS.animEnd, step: 'any', hint: 'End time in seconds. Changes repeats at the same cycle speed. Empty means forever.' },
+				{ kind: 'field', id: id('StretchDuration'), type: 'number', ...FIELDS.animLasts, step: 'any', hint: 'Length in seconds. Changes cycle speed while keeping repeats and offset.' }
+			] },
 			{ label: 'Playback', rows: [
 				...sliders(['phase']),
 				{ kind: 'select', id: id('Direction'), label: 'Direction', options: ANIMATION_DIRECTION_OPTIONS },
@@ -383,6 +395,9 @@ function createAnimationSectionSpec(prefix) {
 				{ kind: 'select', id: id('SnapMode'), label: 'Motion', ariaLabel: 'Motion sampling', options: [
 					{ value: 'smooth', label: 'Smooth' }, { value: 'pixel-snap', label: 'Pixel snap' }, { value: 'step', label: 'Step' }
 				] }
+			] },
+			{ id: id('ConvertActions'), feature: 'customMotion', hidden: true, actions: [
+				{ id: id('Convert'), label: 'Convert to custom', icon: 'timeline' }
 			] }
 		]
 	};
@@ -427,17 +442,20 @@ const PANEL_SCHEMAS = {
 					// sizing belongs to Canvas Properties.
 				] },
 				{ title: 'Animation', sections: [
-					{ kind: 'section', id: 'animationLoopSection', key: 'Animation Loop', title: 'Animation loop', collapsed: true, sets: [{ rows: [
+					{ kind: 'section', id: 'animationLoopSection', key: 'Animation Loop', title: 'Animation loop', collapsed: true,
+						cards: [createAnimationPreviewCard(suffix => `animation${suffix}`)], sets: [{ rows: [
 						{ kind: 'host', id: 'animationLoopStatus', classes: 'property-result', rowClasses: 'is-control', text: 'No animation sources.', attrs: { 'aria-live': 'polite' } }
-					] }, { id: 'animationLoopSourceSet', hidden: true, rows: [
+					] }, { id: 'animationLoopLengthSet', hidden: true, rows: [
+						{ kind: 'select', id: 'animationLoopCandidate', label: 'Loop length', options: [] }
+					] }, { actions: [
+						{ id: 'animationIncludeContent', label: 'Set loop to include content', hidden: true },
+						{ id: 'animationOpenTimeline', label: 'Open timeline', icon: 'timeline', feature: 'timeline' }
+					] }], advanced: [{ id: 'animationLoopSourceSet', hidden: true, rows: [
 						{ kind: 'host', tag: 'table', id: 'animationLoopSources', classes: 'export-detail-table inset-surface', rowClasses: 'is-control', attrs: { 'aria-label': 'Animation loop times in seconds' } },
 						{ kind: 'note', text: 'Select a source to edit.' }
-					] }, { id: 'animationLoopLengthSet', hidden: true, rows: [
-						{ kind: 'select', id: 'animationLoopCandidate', label: 'Fit to', options: [] }
 					] }, { id: 'animationLoopChangeSet', hidden: true, rows: [
 						{ kind: 'note', id: 'animationLoopChanges', classes: 'is-result' }
 					] }, { id: 'animationLoopActionSet', hidden: true, actions: [
-						{ id: 'animationOpenTimeline', label: 'Open timeline', icon: 'timeline', feature: 'timeline' },
 						{ id: 'fitAnimationsToLoop', label: 'Fit animations to loop', primary: true },
 						{ id: 'animationFrameOptions', label: 'Frame options', title: 'Timings that export fewer frames', menu: true },
 						{ id: 'resetAnimationLoop', label: 'Restore previous timing', title: 'Restore the timing saved before the first loop fit' }

@@ -1,5 +1,7 @@
 'use strict';
 
+const TIMING_TARGET_OWNERS = new WeakMap();
+
 const ANIMATION_TIMING_KINDS = {
 	motion: {
 		collect(editor, layer) {
@@ -13,16 +15,24 @@ const ANIMATION_TIMING_KINDS = {
 			}));
 		},
 		write(editor, layer, target, patch) {
-			const data = layer.animations.find(animation => animation.id === target.motionId);
+			const animation = layer.animations.find(animation => animation.id === target.motionId);
+			const data = { ...animation };
+			const previousRun = GlitterAnimation.runTiming(data);
 			if (patch.period != null) data.periodMs = clampNumber(patch.period, target.periodRange.min, target.periodRange.max);
 			if (patch.delayMs != null) data.delayMs = clampNumber(patch.delayMs, 0, CONFIG.export.timeline.maxTimelineMs);
 			if (patch.iterations != null) data.iterations = Number.isFinite(patch.iterations) ? clampNumber(patch.iterations, FIELDS.animIterations.min, FIELDS.animIterations.max) : Infinity;
 			if (patch.phase != null) data.phase = ((Number(patch.phase) % 1) + 1) % 1;
+			if (data.phase !== animation.phase && patch.iterations == null && !patch.run && Number.isFinite(previousRun.end)) {
+				const iterations = GlitterAnimation.repeatsForRun({ cycleMs: data.periodMs, phase: data.phase }, { start: data.delayMs, end: previousRun.end });
+				if (iterations < FIELDS.animIterations.min || iterations > FIELDS.animIterations.max) return;
+				data.iterations = iterations;
+			}
 			if (patch.direction && ANIMATION_DIRECTION_OPTIONS.some(option => option.value === patch.direction)) data.direction = patch.direction;
 			if (patch.run) {
 				data.delayMs = clampNumber(patch.run.start, 0, CONFIG.export.timeline.maxTimelineMs);
 				data.iterations = GlitterAnimation.iterationsForRun(data, patch.run);
 			}
+			Object.assign(animation, data);
 		}
 	},
 	sparkles: {
@@ -76,8 +86,24 @@ const ANIMATION_TIMING_KINDS = {
 };
 
 function listTimingTargets(editor, layers = editor.layers) {
-	return layers.flatMap(layer => Object.entries(ANIMATION_TIMING_KINDS).flatMap(([kind, spec]) => spec.collect(editor, layer).map(target => ({
+	const targets = layers.flatMap(layer => Object.entries(ANIMATION_TIMING_KINDS).flatMap(([kind, spec]) => spec.collect(editor, layer).map(target => ({
 		...target, kind, layerId: layer.id, rowLabel: target.label,
 		can: Object.fromEntries(Object.entries(target.can).map(([name, enabled]) => [name, enabled && (!isLayerFullyLocked(layer) || layer.type === LayerType.BASE_IMAGE)]))
 	}))));
+	const cached = TIMING_TARGET_OWNERS.get(editor);
+	const owners = layers === editor.layers || !cached || cached.epoch !== editor.animationRevisionEpoch ? new Map() : cached.owners;
+	for (const target of targets) owners.set(target.key, { layerId: target.layerId, kind: target.kind });
+	TIMING_TARGET_OWNERS.set(editor, { epoch: editor.animationRevisionEpoch, owners });
+	return targets;
+}
+
+function findTimingTarget(editor, key) {
+	const cached = TIMING_TARGET_OWNERS.get(editor);
+	const owner = cached && cached.epoch === editor.animationRevisionEpoch && cached.owners.get(key);
+	if (!owner) return listTimingTargets(editor).find(target => target.key === key);
+	const layer = editor.layerManager.getLayerById(owner.layerId);
+	const target = layer && ANIMATION_TIMING_KINDS[owner.kind].collect(editor, layer).find(target => target.key === key);
+	if (!target) { cached.owners.delete(key); return null; }
+	return { ...target, kind: owner.kind, layerId: layer.id, rowLabel: target.label,
+		can: Object.fromEntries(Object.entries(target.can).map(([name, enabled]) => [name, enabled && (!isLayerFullyLocked(layer) || layer.type === LayerType.BASE_IMAGE)])) };
 }

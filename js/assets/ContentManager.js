@@ -294,6 +294,8 @@ class ContentManager {
 				.then((detail) => {
 					const normalized = this.normalizeAsset({ ...asset, ...detail }, asset);
 					Object.assign(asset, normalized, { _detailLoaded: true });
+					this.timingRevision = (this.timingRevision || 0) + 1;
+					if (!this.editor?.loopEstimatePending) this.editor?.scheduleExportDuration?.();
 					return asset;
 				})
 				.catch((error) => {

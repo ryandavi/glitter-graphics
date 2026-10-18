@@ -29,6 +29,8 @@ class ImageFillStore {
 			}
 		}
 		this.assets.set(imageRef, asset);
+		this.timingRevision = (this.timingRevision || 0) + 1;
+		if (!this.editor.loopEstimatePending) this.editor.scheduleExportDuration?.();
 		return asset;
 	}
 
@@ -42,6 +44,7 @@ class ImageFillStore {
 
 	clear() {
 		this.assets.clear();
+		this.timingRevision = (this.timingRevision || 0) + 1;
 	}
 
 	prune() {

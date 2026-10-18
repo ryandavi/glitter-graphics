@@ -101,13 +101,13 @@ const { openApp } = require('../lib/app');
 		let menuBefore = await state();
 		await page.evaluate(() => {
 			const trigger = document.getElementById('shapeAnimAdd'); trigger.click();
-			[...document.querySelectorAll('.app-menu-panel.is-fixed-menu:not([hidden]) .app-menu-item')].find(button => button.textContent === 'Custom keys').click();
+			const type = document.getElementById('shapeAnimType'); type.value = 'custom'; type.dispatchEvent(new Event('change', { bubbles: true }));
 		});
 		await ready();
 		assert.strictEqual(await page.evaluate(() => editor.layerManager.getActiveLayer().animations.length), 2);
 		assert(await page.evaluate(() => editor.timelineDock.keyLane.row.source.keyTrack.motionId === editor.layerManager.getActiveLayer().animations[1].id), 'Adding Custom selects its new lane by identity');
-		assert.strictEqual((await state()).history, menuBefore.history + 1);
-		await page.evaluate(() => editor.historyManager.undo()); await ready();
+		assert.strictEqual((await state()).history, menuBefore.history + 2, 'Add preset and change Type are separate undoable actions');
+		await page.evaluate(async () => { await editor.historyManager.undo(); await editor.historyManager.undo(); }); await ready();
 		assert.strictEqual(await page.locator('.timeline-row-lane:not([hidden]) .timeline-key[data-key-at]').count(), 2);
 		const shown = () => page.evaluate(() => ['Position', 'Rotation', 'Scale', 'Skew', 'Opacity', 'Hue'].filter(name => !document.getElementById(`shapeAnimKeyProp${name}Row`).hidden));
 		assert.deepStrictEqual(await shown(), ['Position', 'Scale', 'Opacity'], 'The Values set lists what the key holds');

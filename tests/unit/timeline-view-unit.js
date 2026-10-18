@@ -143,6 +143,8 @@ assert.deepEqual(json(view.runFromBodyMove(trimmed, 300)), { start: 900, end: 29
 assert.deepEqual(json(view.runFromBodyMove(trimmed, -1000)), { start: 0, end: 2000 });
 assert.equal(view.runFromRightEdge(trimmed, 4800, 4800).end, Infinity);
 assert.equal(view.runFromRightEdge(trimmed, 2040, 4800).end, 2040);
+assert.equal(view.runFromRightEdge({ ...trimmed, phase: 0, cycleMs: 1000 }, -100, 4800).end, trimmed.startMs + 250, 'Trim feedback respects the minimum repeat count');
+assert.equal(view.runFromLeftEdge({ ...trimmed, phase: 0, cycleMs: 1000 }, 3000).start, trimmed.source.run.end - 250, 'Left trim keeps an accepted finite run');
 assert.equal(view.phaseFromSlip(trimmed, 500), 0.5);
 assert.equal(view.phaseFromSlip({ ...trimmed, phase: 0.25 }, 500), 0.75);
 assert.equal(view.periodFromNotch({ ...trimmed, startMs: 0 }, 2, 2400), 1200);
@@ -172,7 +174,7 @@ assert.deepEqual(json(view.cycleStarts(outside, 4800)), []);
 assert.deepEqual(json(view.barBox(outside, 100, config)), { left: 600, width: 12, gripsOutside: true, leftGripInside: false });
 vm.runInContext(fs.readFileSync(path.join(root, 'js/ui/timeline-dock.js'), 'utf8'), context);
 const seamTitle = view.seamTitle;
-assert.equal(seamTitle.call(view, outside, 4800), 'Starts after the loop ends, so it never plays.');
+assert.equal(seamTitle.call(view, outside, 4800), 'Starts at or after the loop ends, so it never plays.');
 assert.equal(view.hasGripRoom(23.99, config), false, 'A cycle needs room for two grips and a body');
 assert.equal(view.hasGripRoom(24, config), true);
 for (const cycleMs of [0, -1, Infinity, NaN]) {

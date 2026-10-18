@@ -223,6 +223,12 @@ updateOrientationButtons(width, height) {
 		const root = document.getElementById('viewMenu');
 		const trigger = document.getElementById('viewMenuBtn');
 		const panel = document.getElementById('viewMenuPanel');
+		if (isFeatureEnabled('timeline')) {
+			const timeline = buildIconButton({ className: 'btn-icon icon-wrapper', label: 'Timeline', icon: 'timeline', onClick: () => COMMANDS.timelineToggle.run(this) });
+			timeline.id = 'viewTimelineToggle'; timeline.dataset.feature = 'timeline'; timeline.dataset.layout = featureLayout('timeline');
+			timeline.setAttribute('aria-pressed', String(PREFERENCES.get('timelineOpen')));
+			timeline.append(buildElement('name', 'Timeline', 'span')); panel.append(timeline);
+		}
 		const popover = setupMenuPopover({
 			root, trigger, panel,
 			liftHost: root?.closest('.preview-controls'),

@@ -3,7 +3,7 @@
 const EDITOR_TIMELINE_METHODS = {
 	setupTimeline() {
 		if (!isFeatureEnabled('timeline')) return;
-		document.getElementById('timelineToggle').addEventListener('click', () => this.toggleTimeline());
+		document.getElementById('timelineToggle').addEventListener('click', () => COMMANDS.timelineToggle.run(this));
 		PREFERENCES.onChange('timelineOpen', () => this.syncTimelineVisibility());
 		this.syncTimelineVisibility();
 	},
@@ -17,6 +17,8 @@ const EDITOR_TIMELINE_METHODS = {
 		const button = document.getElementById('timelineToggle');
 		button.classList.toggle('active', open);
 		button.setAttribute('aria-pressed', String(open));
+		const view = document.getElementById('viewTimelineToggle');
+		if (view) { view.classList.toggle('active', open); view.setAttribute('aria-pressed', String(open)); }
 		if (!open) { this.timelineDock?.close(); return; }
 		try {
 			const dock = await this.ensureTimelineDock();

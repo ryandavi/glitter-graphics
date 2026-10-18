@@ -314,7 +314,7 @@
 .property-panel .property-card.is-off {
 	> .property-card-title > span:first-of-type { color: var(--color-text-tertiary); }
 
-	&:is(:not(.is-collapsed), .is-flyout-open) > :not(.property-card-title) {
+	&:not(.animation-module.is-empty):is(:not(.is-collapsed), .is-flyout-open) > :not(.property-card-title) {
 		opacity: var(--opacity-disabled);
 		pointer-events: none;
 	}

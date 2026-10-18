@@ -18,7 +18,9 @@ const DRAG_KINDS = {
 const TimelineView = {
 	SEAM_TEXT: 'Visible seam: the end does not match the start.',
 	buildModel(estimate, layers, editor) {
-		const loopMs = estimate?.duration || 0;
+		const loop = editor?.resolveAnimationLoop?.(estimate);
+		if (loop) estimate = loop.estimate;
+		const loopMs = loop?.duration ?? estimate?.duration ?? 0;
 		const analyses = new Map((estimate?.sourceAnalysis || []).map(entry => [entry.key, entry]));
 		const owners = new Map(layers.map(layer => [layer.id, layer]));
 		const groups = new Map();
@@ -29,19 +31,22 @@ const TimelineView = {
 			const layerId = target?.layerId || source.ownerLayerId;
 			const cycleMs = target?.period ?? (source.kind === 'authored' ? source.cycleDuration : source.naturalPeriod);
 			const exportCycleMs = analyses.get(target?.key || source.key)?.resolvedPeriod ?? cycleMs;
+			const resolved = target && editor?.resolveTimingTarget?.(target, estimate);
 			if (!Number.isFinite(cycleMs) || cycleMs <= 0 || !Number.isFinite(exportCycleMs) || exportCycleMs <= 0 || !layerId) return;
-			const run = target?.run || source?.run;
+			const run = editor?.previewFrameView?.exact && resolved?.exportRun ? resolved.exportRun : target?.run || source?.run;
 			const rows = groups.get(layerId) || [];
 			rows.push({
 				key: target?.key || source.key, layerId, effectSlot: target?.slot || source?.effectSlot,
 				label: target?.label || source.rowLabel || source.label, kind: target ? (target.kind === 'gifCycle' ? 'authored' : 'procedural') : source.kind,
-				cycleMs, exportCycleMs, originalPeriod: owners.get(layerId)?.loopOriginalPeriods?.[target?.key || source.key],
+				cycleMs, exportCycleMs, viewCycleMs: editor?.previewFrameView?.exact ? exportCycleMs : cycleMs, originalPeriod: owners.get(layerId)?.loopOriginalPeriods?.[target?.key || source.key],
 				startMs: run?.start || 0, endMs: Math.min(run?.end ?? Infinity, loopMs),
 				phase: target?.phase ?? source?.phase ?? 0, direction: target?.direction || source?.direction || 'normal',
-				frameCount: source?.frameCount, cycleMarks: source?.cycleMarks || [],
-				closes: source ? sourceSeamError(source, loopMs, exportCycleMs) < 1e-8 : true, nonLooping: Number.isFinite(run?.end),
+				frameCount: source?.frameCount, cycleMarks: source?.cycleMarks || (target?.animation?.keys || []).map(key => key.at),
+				closes: resolved ? resolved.closes : source ? sourceSeamError(source, loopMs, exportCycleMs) < 1e-8 : null, nonLooping: Number.isFinite(run?.end),
 				can: target?.can || { period: source.adjustable === true, run: Boolean(source.run), phase: Boolean(source.run), direction: Boolean(source.run) }, target, curveKey: target?.key || source.key,
-				source: { ...source, run, naturalPeriod: cycleMs, periodRange: target?.periodRange || source?.periodRange, resolvePeriod: target?.resolvePeriod || source?.resolvePeriod, fileCycleDuration: target?.fileCycleDuration || source?.fileCycleDuration }
+				source: { ...source, run, naturalPeriod: cycleMs,
+					keyTrack: target?.animation && GlitterAnimation.MOTION_REGISTRY[target.animation.type].keyed ? { entry: target.animation, motionId: target.motionId } : source?.keyTrack,
+					periodRange: target?.periodRange || source?.periodRange, resolvePeriod: target?.resolvePeriod || source?.resolvePeriod, fileCycleDuration: target?.fileCycleDuration || source?.fileCycleDuration }
 			});
 			groups.set(layerId, rows);
 		});
@@ -68,10 +73,12 @@ const TimelineView = {
 			})
 		};
 	},
-	motionCurve(source, cycleMs) {
+	motionCurve(source, cycleMs, span = null) {
 		if (source.kind !== 'procedural' || !source.sampler || !/^motion-.+/.test(source.effectSlot)) return null;
 		const count = CONFIG.ui.timeline.curveSamples;
-		const samples = Array.from({ length: count + 1 }, (_, i) => source.sampler((source.run?.start || 0) + (Math.ceil(source.phase || 0) - (source.phase || 0) + i / count) * cycleMs, cycleMs)?.sample);
+		const start = span?.start ?? source.run?.start ?? 0, end = span?.end ?? start + cycleMs;
+		if (!(end > start)) return null;
+		const samples = Array.from({ length: count + 1 }, (_, i) => source.sampler(start + i / count * (end - start), cycleMs)?.sample);
 		if (!samples.every(Boolean)) return null;
 		let best = null;
 		for (const id of Object.keys(GlitterAnimation.POSE_CHANNELS)) {
@@ -134,8 +141,12 @@ const TimelineView = {
 		return `${formatSeconds(run.end - run.start)} · ${this.repeatsText(count)} × ${formatSeconds(period)}`;
 	},
 	seamTitle(row, loopMs) {
-		if (row.startMs > loopMs) return 'Starts after the loop ends, so it never plays.';
-		if (row.nonLooping) return 'Still holding its last pose when the loop restarts.';
+		if (row.startMs >= loopMs) return 'Starts at or after the loop ends, so it never plays.';
+		if (row.closes == null) return 'Export loop matching has not been measured for this motion.';
+		if (row.nonLooping) {
+			if (row.source.run.end > loopMs) return 'The loop ends before this motion finishes. Its authored run is kept.';
+			return ['forwards', 'both'].includes(row.animation?.fillMode) ? 'Holds its last pose until the loop restarts.' : 'Returns to rest after its last repeat.';
+		}
 		const time = TimelineView.timeToCycle({ ...row, cycleMs: row.exportCycleMs, endMs: Infinity }, loopMs);
 		if (!time) return 'Starts after the loop ends, so it never plays.';
 		return `Ends ${formatSeconds(time.progress * row.exportCycleMs)} into a ${formatSeconds(row.exportCycleMs)} cycle, so it jumps when the loop restarts.`;
@@ -151,7 +162,7 @@ const TimelineView = {
 		let text = `${row.label}: ${this.rowInfo(row)}`;
 		const body = this.bodyDrag(row, false);
 		text += this.exportNote(row);
-		if (!row.closes) text += ` ${TimelineView.seamTitle(row, loopMs)}`;
+		if (row.closes === false) text += ` ${TimelineView.seamTitle(row, loopMs)}`;
 		if (body === 'move') text += row.can.phase ? ' Drag to move it. Alt-drag to slip the motion inside it.' : ' Drag to move it.';
 		else if (body === 'slip') text += ' Drag to slip the motion inside it.';
 		return text;
@@ -207,25 +218,25 @@ const TimelineView = {
 		return `${label} ${now}${now === before ? '' : ` (was ${before})`}${snap ? ` · ${snap}` : ''}`;
 	},
 	// Key positions are times within a cycle; direction only reverses their placement.
-	keyDrawing(row) { return { ...row, cycleMs: row.exportCycleMs, endMs: Infinity }; },
-	keyEntry(row, entry) { return { ...entry, periodMs: row.exportCycleMs }; },
+	keyDrawing(row) { return { ...row, endMs: Infinity }; },
+	keyEntry(row, entry) { return { ...entry, periodMs: row.cycleMs }; },
 	// The cycle the lane opens: the one a moment is in, or the first whole one.
 	keyCycle(row, ms) {
 		const inside = this.timeToCycle({ ...this.keyDrawing(row), endMs: row.endMs }, ms);
 		if (inside) return inside.index;
 		const first = Math.ceil(row.phase - 1e-9) + 0;
-		return row.startMs + (first + 1 - row.phase) * row.exportCycleMs <= (row.source.run?.end ?? Infinity) + 1e-6 ? first : Math.floor(row.phase);
+		return row.startMs + (first + 1 - row.phase) * row.cycleMs <= (row.source.run?.end ?? Infinity) + 1e-6 ? first : Math.floor(row.phase);
 	},
 	cycleSpan(row, index) {
-		const start = row.startMs + (index - row.phase) * row.exportCycleMs;
-		return { start, end: start + row.exportCycleMs };
+		const start = row.startMs + (index - row.phase) * row.cycleMs;
+		return { start, end: start + row.cycleMs };
 	},
 	keyToTime(row, entry, at, index) {
 		return { ms: this.cycleToTime(this.keyDrawing(row), index, at), untimed: false };
 	},
 	timeToKey(row, entry, ms, index) {
 		const span = this.cycleSpan(row, index);
-		const fraction = clampNumber((ms - span.start) / row.exportCycleMs, 0, 1);
+		const fraction = clampNumber((ms - span.start) / row.cycleMs, 0, 1);
 		return this.isReversed(row, index) ? 1 - fraction : fraction;
 	},
 	snapTime(ms, targets, thresholdMs) {
@@ -281,10 +292,15 @@ const TimelineView = {
 		return { period, run: { start: row.startMs, end: row.startMs + remaining * period } };
 	},
 	runFromRightEdge(row, timeMs, loopMs) {
-		return { start: row.startMs, end: timeMs >= loopMs ? Infinity : Math.max(row.startMs + row.cycleMs * Number.EPSILON, timeMs) };
+		if (timeMs >= loopMs) return { start: row.startMs, end: Infinity };
+		const count = clampNumber(this.repeats(row, { start: row.startMs, end: timeMs }), Math.max(row.phase, FIELDS.animIterations.min), FIELDS.animIterations.max);
+		return { start: row.startMs, end: row.startMs + (count - row.phase) * row.cycleMs };
 	},
 	runFromLeftEdge(row, timeMs) {
-		return { start: Math.max(0, Math.min(timeMs, (row.source.run?.end ?? Infinity) - 1)), end: row.source.run?.end ?? Infinity };
+		const end = row.source.run?.end ?? Infinity;
+		const min = Number.isFinite(end) ? Math.max(0, end - (FIELDS.animIterations.max - row.phase) * row.cycleMs) : 0;
+		const max = Number.isFinite(end) ? Math.max(min, end - Math.max(0, FIELDS.animIterations.min - row.phase) * row.cycleMs) : FIELDS.animDelay.max * 1000;
+		return { start: clampNumber(timeMs, min, Math.min(max, FIELDS.animDelay.max * 1000)), end };
 	},
 	runFromBodyMove(row, deltaMs) {
 		const start = Math.max(0, row.startMs + deltaMs);
@@ -300,7 +316,11 @@ const TimelineView = {
 			actions.push({ id: 'once', label: 'Play once', checked: Math.abs(this.repeats(row) - 1) < 1e-6, run: () => write({ run: { start: row.startMs, end: row.startMs + (1 - row.phase) * row.cycleMs } }) },
 				{ id: 'forever', label: 'Repeat forever', checked: !Number.isFinite(row.source.run.end), run: () => write({ run: { start: row.startMs, end: Infinity } }) },
 				{ id: 'start', label: 'Start at playhead', run: () => write({ run: { start: clampNumber(playhead, 0, FIELDS.animDelay.max * 1000), end: row.source.run.end } }) },
-				{ id: 'end', label: 'End at playhead', disabled: playhead <= row.startMs, run: () => write({ run: { start: row.startMs, end: playhead } }) });
+				{ id: 'end', label: 'Trim end at playhead', disabled: playhead <= row.startMs, run: () => write({ run: { start: row.startMs, end: playhead } }) });
+			if (row.can.period) actions.push({ id: 'stretch', label: 'Stretch duration to playhead', disabled: playhead <= row.startMs, run: () => {
+				const count = this.durationRepeats(row, model.loopMs, FIELDS.animIterations.max), value = this.durationFromEdge(row, count, playhead);
+				return value && write({ period: value.period, run: value.run });
+			} });
 		}
 		if (row.can.direction) for (const { value: direction, label } of ANIMATION_DIRECTION_OPTIONS) actions.push({ id: `direction-${direction}`, label, checked: row.direction === direction, run: () => write({ direction }) });
 		const writePeriod = period => write({ period });
@@ -311,16 +331,20 @@ const TimelineView = {
 		}
 		if (row.can.run) actions.push({ id: 'fill', label: 'Fill the loop', run: () => write({ run: { start: 0, end: Infinity } }) });
 		if (row.can.run || row.can.phase || row.can.period) actions.push({ id: 'reset', label: 'Reset timing', run: () => {
-			if (row.can.run) write({ run: { start: 0, end: Infinity } });
-			if (row.can.phase) write({ phase: 0 });
-			if (row.can.direction) write({ direction: 'normal' });
+			const patch = {};
+			if (row.can.run) patch.run = { start: 0, end: Infinity };
+			if (row.can.phase) patch.phase = 0;
+			if (row.can.direction) patch.direction = 'normal';
+			return Object.keys(patch).length ? write(patch) : false;
 		} });
 		if (context.copy) actions.push({ id: 'copy', label: 'Copy timing', commits: false, run: () => context.copy(row) }, { id: 'paste', label: 'Paste timing', disabled: !context.clipboard, changesPeriod: row.can.period, run: () => {
 			const timing = context.clipboard;
-			if (row.can.period) writePeriod(clampNumber(timing.cycle, row.source.periodRange.min, row.source.periodRange.max));
-			if (row.can.phase) write({ phase: timing.phase });
-			if (row.can.direction) write({ direction: timing.direction });
-			if (row.can.run && timing.run) write({ run: { ...timing.run } });
+			const patch = {};
+			if (row.can.period && Number.isFinite(timing.cycle)) patch.period = timing.cycle;
+			if (row.can.phase && timing.phase != null) patch.phase = timing.phase;
+			if (row.can.direction && timing.direction) patch.direction = timing.direction;
+			if (row.can.run && timing.run) patch.run = { ...timing.run };
+			return Object.keys(patch).length ? write(patch) : false;
 		} });
 		return actions.map(action => ({ ...action, group: ['once', 'forever', 'start', 'end'].includes(action.id) ? 'Run' : action.id.startsWith('direction-') ? 'Direction' : ['copy', 'paste'].includes(action.id) ? 'Timing clipboard' : 'Loop' }));
 	},

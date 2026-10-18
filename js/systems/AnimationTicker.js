@@ -72,7 +72,7 @@ class AnimationTicker {
 		this.refresh();
 	}
 
-	step(direction, frameStarts = this.editor.loopEstimate?.renderClock?.frameStarts) {
+	step(direction, frameStarts = this.editor.isLoopEstimateCurrent() ? this.editor.loopEstimate.renderClock?.frameStarts : null) {
 		this.editor.setPlayback(false);
 		const time = this.getPlayheadTime();
 		let next;
@@ -170,6 +170,9 @@ class AnimationTicker {
 	_isPreviewPaused() {
 		return this.paused || this.reducedMotion?.matches || PREFERENCES.get('reduceMotion');
 	}
+	isRestPreview() {
+		return Boolean(this._isPreviewPaused() && (!this.holding || this.restPreview || this.reducedMotion?.matches || PREFERENCES.get('reduceMotion')));
+	}
 
 	start() {
 		if (this.frameRequest != null || !this._hasWork()) return;
@@ -211,7 +214,8 @@ class AnimationTicker {
 			editor: this.editor,
 			layerId,
 			data: target.getData(),
-			prepared: entry.prepared
+			prepared: entry.prepared,
+			rest: this.isRestPreview()
 		});
 	}
 }
@@ -219,7 +223,8 @@ class AnimationTicker {
 function paintLayerAnimationPreview(layer, elapsed, wrapper, context) {
 	const transform = getLayerTransform(layer);
 	const samplingContext = getLayerAnimationSamplingContext(context.editor, layer);
-	const sample = context.prepared ? GlitterAnimation.samplePrepared(context.prepared, elapsed, samplingContext) : GlitterAnimation.sampleAt(context.data, elapsed, samplingContext);
+	const sample = context.rest ? GlitterAnimation.sampleAt([], 0, samplingContext)
+		: context.prepared ? GlitterAnimation.samplePrepared(context.prepared, elapsed, samplingContext) : GlitterAnimation.sampleAt(context.data, elapsed, samplingContext);
 	const { move, local } = GlitterAnimation.splitSample(sample);
 	// The sample moves the layer in document px. The wrapper sits inside the
 	// element's rotation and flip but outside its scale (the element is sized,

@@ -2,6 +2,11 @@
 
 const EDITOR_DOCUMENT_IO_METHODS = {
 	beginDocumentReplace() {
+		this.unsubscribeAnimationTransport?.(); this.unsubscribeAnimationTransport = null;
+		this.animationTransports?.forEach(control => { control.gesture = null; });
+		clearTimeout(this.exportDurationTimer);
+		this.exportDurationRequestId = (this.exportDurationRequestId || 0) + 1;
+		this.loopEstimate = null; this.lastLoopDuration = null; this.loopEstimateFailed = false;
 		this.timelineDock?.resetDocumentView();
 		this.previewFrameView?.invalidate();
 		this.animationTicker.resetDocument();

@@ -726,6 +726,7 @@ async function verifyGifCycle() {
 		assert.strictEqual(fitting.fittedColumns, 3);
 		assert.strictEqual(fitting.badge, 'Seamless');
 		assert.strictEqual(await page.locator('#animationLoopStatus').innerText(), '0.80 s loop\nSeamless');
+		await page.locator('#animationLoopSection [data-advanced-toggle]').click();
 		assert(await page.locator('#animationLoopChangeSet').isVisible(), 'Already fitted timing belongs below the source table');
 		assert.strictEqual(await page.locator('#animationLoopChanges').innerText(), 'Timing already fits.');
 		assert.strictEqual(await page.locator('#animationLoopSources td[aria-label="No saved timing"]').innerText(), '-');

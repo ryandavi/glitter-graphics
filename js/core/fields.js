@@ -42,6 +42,8 @@ const FIELDS = Object.freeze({
 	animOpacityFloor: { label: 'Opacity floor', unit: '%', min: 0, max: 95, step: 1, value: 0 },
 	animGap: { label: 'Gap', unit: 'px', min: 0, max: 500, step: 1, value: 0 },
 	animIterations: { label: 'Repeats', min: 0.25, max: 200, step: 0.25, value: 1 },
+	animEnd: { label: 'Trim end', unit: 's', min: 0, get max() { return CONFIG.export.timeline.maxTimelineMs / 1000; }, step: 0.001, value: 1 },
+	animLasts: { label: 'Stretch duration', unit: 's', min: 0, get max() { return CONFIG.export.timeline.maxTimelineMs / 1000; }, step: 0.001, value: 1 },
 	animDelay: { label: 'Starts at', unit: 's', min: 0, get max() { return CONFIG.export.timeline.maxTimelineMs / 1000; }, step: 0.05, value: 0 },
 	animPhase: { label: 'Start offset', unit: '%', min: 0, max: 100, step: 1, value: 0 },
 	animAnchorX: { label: 'Anchor X', unit: '%', min: 0, max: 100, step: 1, value: 50 },

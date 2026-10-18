@@ -127,6 +127,7 @@ class SceneCompositor {
 		// when an export finishes. Timing reads (no pixels) are small and kept.
 		this.decodedSources = new Map();
 		this.sourceTimings = new Map();
+		this.timingRevision = 0;
 	}
 
 	releaseDecodedSources() {
@@ -146,7 +147,9 @@ class SceneCompositor {
 		try {
 			if (timingOnly) this.sourceTimings.set(url, readGifTiming(await fetchGifBytes(url)));
 			else this.decodedSources.set(url, await decodeGifFromUrl(url));
+			this.timingRevision++;
 		} catch (error) {
+			this.timingRevision++;
 			throw new Error(failure);
 		}
 	}

@@ -140,7 +140,7 @@ class PreviewFrameView {
 	playExact() {
 		this.editor.keyRecording?.end();
 		if (this.exact || this.done) { this.invalidate(); return; }
-		if (!Boolean(this.editor.originalImage) || this.editor.loopEstimatePending) return;
+		if (!Boolean(this.editor.originalImage) || !this.editor.isLoopEstimateCurrent()) return;
 		this.invalidate();
 		this.blocked = false;
 		const generation = this.generation;
@@ -190,7 +190,7 @@ class PreviewFrameView {
 				}
 			} finally {
 				frames.forEach(frame => frame.close());
-				if (generation === this.generation) { this.done?.(); this.done = null; }
+				if (generation === this.generation) { this.done?.(); this.done = null; window.dispatchEvent(new CustomEvent('playbackChanged')); }
 			}
 		});
 	}

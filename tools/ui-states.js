@@ -491,7 +491,28 @@ async function timelineStates(page, visit, viewport) {
 	});
 	await wait(page);
 	await visit(`${viewport} timeline empty`, { shot: '#timelineDock' });
-	if (!await page.evaluate(() => editor.timelineDock.available)) return;
+	if (!await page.evaluate(() => editor.timelineDock.available)) {
+		await page.evaluate(async () => {
+			const layer = editor.shapeGlitterManager.createLayer({ shapeId: 'square', width: 40, height: 40 });
+			layer.animations = [GlitterAnimation.normalizeAnimation({ id: editor.layerManager.generateLayerId(), type: 'pulse', periodMs: 1200, delayMs: 500, phase: 0.3, iterations: 2 })];
+			editor.layerManager.insertLayer(layer); editor.layerManager.setActiveLayer(layer.id);
+			editor.saveState('Phone animation'); await editor.updateExportDuration();
+			editor.animationPanel.load(layer);
+			editor.pickers.toggleFlyout(document.getElementById('shapeAnimationSection').dataset.flyoutKey);
+		});
+		await wait(page);
+		await visit(`${viewport} timeline Inspector`);
+		await page.evaluate(() => {
+			const layer = editor.layerManager.getActiveLayer();
+			editor.setAnimationType(layer, layer.animations[0].id, 'custom');
+		});
+		await wait(page);
+		await visit(`${viewport} timeline custom Inspector`);
+		await page.evaluate(() => editor.openAnimationLoop());
+		await wait(page);
+		await visit(`${viewport} timeline loop Inspector`);
+		return;
+	}
 	await page.evaluate(async () => {
 		const circle = editor.shapeGlitterManager.createLayer({ shapeId: 'circle', width: 40, height: 40, position: { x: 40, y: 40 } });
 		getLayerFillSlot(circle).mode = 'solid';
@@ -572,6 +593,27 @@ async function timelineStates(page, visit, viewport) {
 	});
 	await wait(page);
 	await visit(`${viewport} timeline key fields`, { shot: '#flyoutSection', tall: true });
+	await page.evaluate(() => {
+		const layer = editor.layerManager.getActiveLayer();
+		editor.animationPanel.selectMotion(layer, 1);
+	});
+	await wait(page);
+	await visit(`${viewport} timeline preset fields`, { shot: '#flyoutSection', tall: true });
+	await page.evaluate(() => {
+		const layer = editor.layerManager.getActiveLayer();
+		editor.animationPanel.selectMotion(layer, 0);
+	});
+	await page.evaluate(() => { editor.scheduleExportDuration(); clearTimeout(editor.exportDurationTimer); editor.timelineDock.sync(editor.loopEstimate); });
+	await wait(page);
+	await visit(`${viewport} timeline pending`, { shot: '#timelineDock' });
+	await page.evaluate(async () => {
+		const estimate = editor.estimateExportAnimation;
+		editor.estimateExportAnimation = () => Promise.reject(new Error('Contact-sheet timing failure fixture'));
+		try { await editor.updateExportDuration(); } finally { editor.estimateExportAnimation = estimate; }
+	});
+	await wait(page);
+	await visit(`${viewport} timeline failed`, { shot: '#timelineDock' });
+	await page.evaluate(() => editor.updateExportDuration());
 	await page.evaluate(() => editor.timelineDock.openRowSection(editor.timelineDock.keyLane.row)); await wait(page);
 	const motionMenu = page.getByRole('button', { name: 'Animation actions', exact: true }).first();
 	if (await motionMenu.isVisible()) { await motionMenu.click(); await wait(page); await visit(`${viewport} animation row menu`); await page.keyboard.press('Escape'); }
@@ -591,6 +633,12 @@ async function timelineStates(page, visit, viewport) {
 	await page.evaluate(() => editor.timelineDock.minimize.click());
 	await wait(page);
 	await visit(`${viewport} timeline minimized`, { shot: '#timelineDock' });
+	await page.evaluate(() => editor.openAnimationLoop());
+	await wait(page);
+	await visit(`${viewport} timeline loop Inspector`, { shot: '#animationLoopSection', tall: true });
+	await page.locator('#animationLoopSection [data-advanced-toggle]').click();
+	await wait(page);
+	await visit(`${viewport} timeline loop Advanced`, { shot: '#animationLoopSection', tall: true });
 }
 
 module.exports = { routeSourceSnapshot, chromium, URL, VIEWPORTS, boot, wait, desktopStates, phoneStates, recolorStates, backgroundRemovalStates, animatedFilterStates, patternStates, creationStates, clippingStates, timelineStates };

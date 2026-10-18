@@ -24,8 +24,7 @@ const EDITOR_ANIMATION_EDIT_METHODS = {
 		return index < 0 ? (keys.length ? 0 : -1) : index;
 	},
 	keyPeriod(layer, animation) {
-		const analysis = this.loopEstimate && this.loopEstimate.documentRevision === this.documentRevision ? this.loopEstimate.sourceAnalysis.find(entry => entry.key === GlitterAnimation.sourceKey(layer.id, animation)) : null;
-		return analysis?.resolvedPeriod || animation.periodMs;
+		return animation.periodMs;
 	},
 	keyProgress(layer, animation) {
 		return GlitterAnimation.cycleProgress({ ...animation, periodMs: this.keyPeriod(layer, animation) }, this.animationTicker.getPlayheadTime(), { fill: false });
@@ -55,14 +54,20 @@ const EDITOR_ANIMATION_EDIT_METHODS = {
 			write: (key, patch) => this.writeTiming(key, patch, { live: true }),
 			copy: () => this.copyTiming(key)
 		});
-		return actions.map(action => ({ ...action, disabled: action.disabled || (action.id === 'fit' && this.loopEstimatePending), run: () => { if (action.id === 'reset') this.restoreAnimationPeriod({ key }); action.run(); if (!live && action.commits !== false) this.commitAnimationTiming(action.label); } }));
+		return actions.map(action => ({ ...action, disabled: action.disabled || (action.id === 'fit' && !this.isLoopEstimateCurrent()), run: () => {
+			const revision = this.documentRevision, restored = action.id === 'reset' && this.restoreAnimationPeriod({ key });
+			action.run();
+			const changed = restored || revision !== this.documentRevision;
+			if (!live && action.commits !== false && changed) this.commitAnimationTiming(action.label);
+			return changed;
+		} }));
 	},
 	copyTiming(key) {
-		const target = listTimingTargets(this).find(entry => entry.key === key);
+		const target = findTimingTarget(this, key);
 		if (target) this.timingClipboard = { cycle: target.period, phase: target.phase, direction: target.direction, run: target.run && { ...target.run } };
 	},
 	pasteTiming(key) {
-		const target = listTimingTargets(this).find(entry => entry.key === key), timing = this.timingClipboard;
+		const target = findTimingTarget(this, key), timing = this.timingClipboard;
 		if (!target || !timing) return false;
 		const patch = {};
 		if (target.can.period) patch.period = timing.cycle;
@@ -73,8 +78,16 @@ const EDITOR_ANIMATION_EDIT_METHODS = {
 	},
 	playOnce(key) { return this.runTimingAction(key, 'once'); },
 	repeatForever(key) { return this.runTimingAction(key, 'forever'); },
-	startAt(key, ms) { const target = listTimingTargets(this).find(entry => entry.key === key); return target && this.writeTiming(key, { run: { ...target.run, start: ms } }, { label: 'Change Starts at' }); },
-	endAt(key, ms) { const target = listTimingTargets(this).find(entry => entry.key === key); return target && this.writeTiming(key, { run: { ...target.run, end: ms } }, { label: 'Change Lasts' }); },
+	startAt(key, ms) { const target = findTimingTarget(this, key); return target && this.writeTiming(key, { run: { ...target.run, start: ms } }, { label: 'Change Starts at' }); },
+	endAt(key, ms) { const target = findTimingTarget(this, key); return target && this.writeTiming(key, { run: { ...target.run, end: ms } }, { label: 'Change Lasts' }); },
+	stretchDuration(key, durationMs) {
+		const target = findTimingTarget(this, key);
+		if (!target?.can.period || !target.can.run || !Number.isFinite(durationMs) || durationMs <= 0) return false;
+		const row = { cycleMs: target.period, startMs: target.run.start, phase: target.phase, source: { run: target.run, periodRange: target.periodRange, resolvePeriod: target.resolvePeriod } };
+		const count = TimelineView.durationRepeats(row, this.resolveAnimationLoop().duration, FIELDS.animIterations.max);
+		const value = TimelineView.durationFromEdge(row, count, row.startMs + durationMs);
+		return value && this.writeTiming(key, { period: value.period, run: value.run }, { label: 'Stretch duration' });
+	},
 	fillLoop(key) { return this.runTimingAction(key, 'fill'); },
 	resetTiming(key) { return this.runTimingAction(key, 'reset'); },
 	fitToLoop(key) { return this.runTimingAction(key, 'fit'); },
@@ -82,7 +95,8 @@ const EDITOR_ANIMATION_EDIT_METHODS = {
 	runTimingAction(key, id) {
 		const action = this.animationTimingActions(key, { live: true }).find(action => action.id === id);
 		if (!action || action.disabled) return false;
-		action.run(); this.commitAnimationTiming(action.label); return true;
+		if (!action.run()) return false;
+		this.commitAnimationTiming(action.label); return true;
 	},
 	setAnimationsEnabled(layer, enabled) {
 		if (!this.canEditLayer(layer)) return;
@@ -97,7 +111,7 @@ const EDITOR_ANIMATION_EDIT_METHODS = {
 		const feature = GlitterAnimation.MOTION_REGISTRY[type]?.feature;
 		if (!animation || (feature && !isFeatureAvailable(feature))) return;
 		const next = this.createMotion(layer, type);
-		for (const key of ['id', 'enabled', 'delayMs', 'iterations', 'phase', 'direction', 'fillMode', 'snapMode']) next[key] = animation[key];
+		for (const key of ['id', 'enabled', 'periodMs', 'delayMs', 'iterations', 'phase', 'direction', 'fillMode', 'snapMode']) next[key] = animation[key];
 		layer.animations[index] = GlitterAnimation.normalizeAnimation(next);
 		this.touchMotion(layer, layer.animations[index]);
 		this.renderAnimationEdit(layer); this.saveState('Change animation type');
@@ -145,6 +159,7 @@ const EDITOR_ANIMATION_EDIT_METHODS = {
 		if (feature && !isFeatureAvailable(feature)) return;
 		layer.animations ||= []; layer.animations.push(this.createMotion(layer, type));
 		this.selectMotion(layer, layer.animations.length - 1); this.renderAnimationEdit(layer);
+		this.timelineDock?.expandLayer(layer.id);
 		this.saveState('Add animation');
 	},
 	duplicateAnimation(layer, index = this.selectedMotionIndex(layer)) {

@@ -15,8 +15,9 @@ class MotionSelection {
 		if (seek && keyAt != null) {
 			const ticker = this.editor.animationTicker;
 			const periodMs = this.editor.keyPeriod(layer, animation);
-			const time = GlitterAnimation.timeAtProgress({ ...animation, periodMs }, keyAt, ticker.getPlayheadTime());
+			const time = GlitterAnimation.timeAtProgress({ ...animation, periodMs }, keyAt, ticker.getPlayheadTime(), { endMs: ticker.loopMs > 0 ? ticker.loopMs : Infinity });
 			if (time != null) { this.editor.setPlayback(false); ticker.seek(time); }
+			else this.editor.updateStatus('This key is outside the played run or loop. Extend the run or loop to reach it.');
 		}
 		window.dispatchEvent(new CustomEvent('motionselectionchange', { detail: { layerId, motionId, keyAt } }));
 	}
