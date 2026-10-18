@@ -528,7 +528,6 @@ class AnimationPanelController {
 		// effects): the card's own is-collapsed accordion shows/hides the body,
 		// so there's no separate content wrapper to toggle by hand here.
 		syncPanelEffectToggle(this._id(prefix, 'Enabled'), enabled);
-		this._syncSummary(prefix, GlitterAnimation.getLayerAnimations(layer), this._selected(layer));
 		const data = GlitterAnimation.normalizeAnimation(this._selected(layer) || { type: CONFIG.tools.animation.defaultType });
 		this._id(prefix, 'Enabled').closest('.animation-module').classList.toggle('is-empty', !layer.animations?.length);
 		this._id(prefix, 'StackEmpty').hidden = Boolean(layer.animations?.length);
@@ -597,39 +596,38 @@ class AnimationPanelController {
 			if (row) row.hidden = this._selectedAnchorPreset(layer, data) !== 'custom';
 		});
 		this._syncSummary(prefix, GlitterAnimation.getLayerAnimations(layer), data);
-		this.loadTimingStrip(prefix, layer);
+		this.loadTimingSummary(layer);
 		for (const [suffix, easing] of [['Easing', data.easing], ['KeyEasing', GlitterAnimation.normalizeKeys(data.keys)[this.keyIndex(this._selected(layer))]?.easing || 'linear']]) {
 			const control = this._id(prefix, suffix); if (!control) continue;
-			for (const option of control.options) option.querySelector('svg')?.replaceWith(buildEasingCurve(option.value, data.steps));
+			const option = control.querySelector('option[value="steps"]'), preview = option?.querySelector('svg');
+			if (preview && preview.dataset.steps !== String(data.steps)) {
+				const next = buildEasingCurve('steps', data.steps); next.classList.add('asset-browser-rail-preview');
+				preview.replaceWith(next);
+			}
 			control.value = easing;
 		}
 	}
 
-	loadTimingStrip(prefix, layer) {
-		const host = this._id(prefix, 'TimingStrip'); if (!host) return;
+	loadTimingSummary(layer = this.editor.layerManager.getActiveLayer()) {
+		const prefix = this.prefixByType.get(layer?.type); if (!prefix) return;
+		const summary = this._id(prefix, 'TimingSummary'); if (!summary) return;
 		const animation = this._selected(layer), loop = this.editor.resolveAnimationLoop();
 		const target = listTimingTargets(this.editor, [layer]).find(target => target.kind === 'motion' && animation && target.motionId === animation.id);
-		const loopMs = loop.duration, resolved = target && this.editor.resolveTimingTarget(target);
-		const row = target && { label: target.label, kind: 'procedural', nonLooping: Number.isFinite(target.run.end), animation,
-			cycleMs: target.period, exportCycleMs: resolved.exportPeriod || target.period, startMs: target.run.start, endMs: Math.min(target.run.end, loopMs), phase: target.phase, direction: target.direction, can: target.can, source: { run: target.run }, closes: resolved.closes };
-
+		summary.hidden = !target;
+		if (target) {
+			const name = GlitterAnimation.describe(animation).name;
+			const end = Number.isFinite(target.run.end) ? `ends at ${formatSeconds(target.run.end)}` : 'repeats to the loop end';
+			summary.textContent = `${name}: starts at ${formatSeconds(target.run.start)}; ${end}.`;
+		}
+		const beyond = target && loop.duration > 0 && (target.run.start >= loop.duration || Number.isFinite(target.run.end) && target.run.end > loop.duration);
 		const hint = this._id(prefix, 'TimingHint');
-		const beyond = row && (row.startMs >= loopMs || target.run.end > loopMs && Number.isFinite(target.run.end));
-		if (hint) { hint.hidden = !beyond; hint.textContent = hint.hidden ? '' : row.startMs >= loopMs ? TimelineView.seamTitle(row, loopMs) : 'The loop ends before this motion finishes. Its authored run is kept.'; }
+		if (hint) {
+			hint.hidden = !beyond;
+			hint.textContent = !beyond ? '' : target.run.start >= loop.duration
+				? 'This motion starts after the loop ends. Extend the loop to see it.'
+				: 'The loop ends before this motion finishes. Extend the loop to see the full motion.';
+		}
 		const include = this._id(prefix, 'IncludeInLoop'); if (include) include.hidden = !beyond;
-		host.parentElement.hidden = !row || !loopMs; if (host.parentElement.hidden) return;
-		let track = host.firstElementChild;
-		if (!track) { track = buildElement('animation-timing-track'); host.appendChild(track); }
-		let bar = track.firstElementChild;
-		if (!bar) { bar = buildElement('timeline-bar animation-timing-bar'); track.appendChild(bar); }
-		bar.title = `${row.label}: ${TimelineView.rowInfo(row)}${TimelineView.exportNote(row)}`;
-		bar.style.left = `${Math.min(100, row.startMs / loopMs * 100)}%`;
-		bar.style.width = `${Math.max(0, row.endMs - row.startMs) / loopMs * 100}%`;
-		bar.style.setProperty('--cycle-share', `${row.cycleMs / Math.max(1, row.endMs - row.startMs) * 100}%`);
-		bar.classList.toggle('is-seam', row.closes === false);
-		if (row.closes === false && !bar.firstElementChild) bar.append(createIcon('triangle-exclamation'));
-		else if (row.closes !== false) bar.replaceChildren();
-		host.title = `Loop ${formatSeconds(loopMs)}`; track.append(bar);
 	}
 
 	_anchorDefinition(animation) {

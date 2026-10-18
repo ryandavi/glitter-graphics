@@ -97,6 +97,7 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		this.documentLoop = loop;
 		if (loop.mode === 'set') this.animationTicker.setLoop(loop.durationMs);
 		this.scheduleExportDuration();
+		this.animationPanel?.loadTimingSummary();
 		this.requestPreviewUpdate();
 		if (commit) this.saveState(mode === 'set' ? 'Set loop length' : 'Automatic loop length');
 	},
@@ -139,7 +140,10 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		const observer = new IntersectionObserver(entries => {
 			for (const entry of entries) {
 				const control = this.animationTransports.find(control => control.host === entry.target);
-				if (control) control.visible = entry.isIntersecting;
+				if (control) {
+					control.visible = entry.isIntersecting;
+					if (!control.visible) control.cancel();
+				}
 			}
 			this.syncAnimationTransports();
 		});
@@ -152,28 +156,48 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 			const exact = button('Preview export', 'frame', async () => { const view = await this.ensurePreviewFrameView(); view.playExact(); this.syncAnimationTransports(); });
 			exact.dataset.feature = 'timeline'; exact.hidden = !isFeatureAvailable('timeline');
 			const loop = button('Animation loop', 'timeline', () => this.openAnimationLoop());
-			for (const [button, label] of [[play, 'Play'], [start, 'Start'], [exact, 'Preview export'], [loop, 'Loop']]) {
+			for (const [button, label] of [[play, 'Play'], [exact, 'Preview export'], [loop, 'Loop settings']]) {
 				button.classList.remove('is-icon'); button.append(buildElement('name', label, 'span'));
 			}
-			const seek = document.createElement('input'); seek.type = 'range'; seek.min = 0; seek.step = 'any'; seek.setAttribute('aria-label', 'Document time');
+			const seek = document.createElement('input'); seek.type = 'range'; seek.min = 0; seek.step = 'any'; seek.id = `${host.id}Seek`;
+			const position = buildElement('animation-transport-position');
+			const label = buildElement('property-note', 'Scene time', 'label'); label.htmlFor = seek.id;
 			const time = document.createElement('output'); time.className = 'property-note'; time.setAttribute('aria-live', 'off');
-			const controls = buildElement('animation-transport-actions'); controls.append(play, start, back, forward, exact);
-			if (!host.closest('#animationLoopSection')) controls.append(loop);
-			host.append(controls, seek, time);
-			const control = { host, play, start, back, forward, exact, loop, seek, time, visible: false };
+			position.append(label, time);
+			const controls = buildElement('animation-transport-actions'); controls.append(play, start, back, forward);
+			const options = buildElement('animation-transport-options'); options.append(exact);
+			if (!host.closest('#animationLoopSection')) options.append(loop);
+			host.append(controls, position, seek, options);
+			const control = { host, play, start, back, forward, exact, loop, seek, time, options, visible: false };
 			const cancel = () => {
 				if (!control.gesture) return;
 				const previous = control.gesture; control.gesture = null;
+				if (previous.epoch !== (this.animationRevisionEpoch || 0)) return;
 				this.animationTicker.seek(previous.time); this.setPlayback(previous.playing);
+				this.animationTicker.setRestPreview(previous.rest);
 			};
-			seek.addEventListener('pointerdown', () => { control.gesture = { time: this.animationTicker.getPlayheadTime(), playing: !this.animationTicker.paused }; });
+			control.cancel = cancel;
+			seek.addEventListener('pointerdown', () => { control.gesture = {
+				time: this.animationTicker.getPlayheadTime(), playing: !this.animationTicker.paused, rest: Boolean(this.animationTicker.restPreview),
+				epoch: this.animationRevisionEpoch || 0, layerId: this.activeLayerId
+			}; });
 			seek.addEventListener('input', () => { const ms = seek.valueAsNumber; this.setPlayback(false); this.animationTicker.seek(ms); });
 			seek.addEventListener('pointerup', () => { control.gesture = null; });
 			seek.addEventListener('pointercancel', cancel);
-			seek.addEventListener('keydown', event => { if (event.key === 'Escape' && control.gesture) { event.preventDefault(); event.stopPropagation(); cancel(); } });
+			seek.addEventListener('lostpointercapture', cancel);
 			seek.addEventListener('blur', cancel);
 			this.animationTransports.push(control); observer.observe(host);
 		});
+		const cancel = () => this.animationTransports.forEach(control => control.cancel());
+		window.addEventListener('keydown', event => {
+			if (event.key !== 'Escape') return;
+			const control = this.animationTransports.find(control => control.gesture);
+			if (!control) return;
+			event.preventDefault(); event.stopImmediatePropagation(); control.cancel();
+		}, true);
+		window.addEventListener('blur', cancel);
+		window.addEventListener('resize', cancel);
+		document.addEventListener('visibilitychange', () => { if (document.hidden) cancel(); });
 		for (const event of ['playbackChanged', 'animationChanged', 'layerChanged', 'imageLoaded', 'imageRemoved']) window.addEventListener(event, () => this.syncAnimationTransports());
 		this.syncAnimationTransports();
 	},
@@ -181,6 +205,7 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		if (!this.animationTransports) return;
 		const available = this.hasMotionForPlayback(), loop = this.resolveAnimationLoop();
 		for (const control of this.animationTransports) {
+			if (control.gesture && control.gesture.layerId !== this.activeLayerId) control.cancel();
 			const label = this.animationTicker.paused ? 'Play' : 'Pause';
 			control.play.title = label; control.play.setAttribute('aria-label', label);
 			control.play.querySelector('.name').textContent = label;
@@ -189,6 +214,7 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 			for (const button of [control.play, control.start, control.back, control.forward, control.seek]) button.disabled = !available || !(loop.duration > 0);
 			control.seek.max = Math.max(0, loop.duration - 1);
 			control.exact.hidden = !isFeatureAvailable('timeline');
+			control.options.hidden = control.exact.hidden && !control.loop.isConnected;
 			control.exact.disabled = !available || (!this.isLoopEstimateCurrent() && !this.previewFrameView?.exact && !this.previewFrameView?.done);
 			control.exact.setAttribute('aria-pressed', String(Boolean(this.previewFrameView?.exact)));
 			control.exact.setAttribute('aria-busy', String(Boolean(this.previewFrameView?.done && !this.previewFrameView?.exact)));
@@ -203,7 +229,7 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		for (const control of this.animationTransports) {
 			if (!control.visible) continue;
 			control.seek.value = ms; control.seek.setAttribute('aria-valuetext', formatSeconds(ms));
-			control.time.textContent = `${formatSeconds(ms)} / ${formatSeconds(Number(control.seek.max) + 1)}${this.previewFrameView?.exact ? ' · Preview export' : ''}`;
+			control.time.textContent = `${formatSeconds(ms)} / ${formatSeconds(Number(control.seek.max) + 1)}`;
 		}
 	},
 	openAnimationLoop() {
@@ -395,8 +421,7 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		if (frames) frames.hidden = !this.loopEstimate?.loopFit?.sources.length;
 		document.getElementById('animationLoopLengthSet').hidden = !fit?.sources.length;
 		document.getElementById('animationLoopActionSet').hidden = button.hidden && (!reset || reset.hidden) && (!frames || frames.hidden);
-		const layer = this.layerManager.getActiveLayer();
-		if (layer) { const prefix = this.animationPanel.prefixByType.get(layer.type); if (prefix) this.animationPanel.loadTimingStrip(prefix, layer); }
+		this.animationPanel.loadTimingSummary();
 	},
 	hasLoopTimingToRestore() {
 		return listTimingTargets(this).some(target => target.can.period && this.layerManager.getLayerById(target.layerId)?.loopOriginalPeriods?.[target.key] != null);

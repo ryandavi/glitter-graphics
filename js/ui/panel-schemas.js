@@ -294,7 +294,7 @@ function createAnimationPreviewCard(id, motion = false) {
 	return { id: id('PreviewCard'), title: 'Scene preview', sets: [{ rows: [
 		{ kind: 'host', id: id('Transport'), classes: 'animation-transport', rowClasses: 'is-control' },
 		...(motion ? [
-			{ kind: 'host', id: id('TimingStrip'), classes: 'animation-timing-strip', rowClasses: 'is-control' },
+			{ kind: 'note', id: id('TimingSummary') },
 			{ kind: 'note', id: id('TimingHint'), hidden: true },
 			{ kind: 'note', id: id('KeyStripNote'), feature: 'customMotion', hidden: true, text: 'Keys · one cycle of the selected motion' },
 			{ kind: 'host', id: id('KeyStrip'), feature: 'customMotion', hidden: true, classes: 'animation-key-strip', rowClasses: 'is-control' }

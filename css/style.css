@@ -3517,6 +3517,7 @@ body.is-resizing-panel canvas {
   color: var(--color-text-tertiary);
 }
 .layer-item.is-locked > .layer-drag-handle {
+  visibility: hidden;
   cursor: default;
 }
 .layer-item > .layer-visibility {
@@ -8537,33 +8538,25 @@ body.tool-text .text-hover-baselines {
 }
 
 .animation-transport-actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) repeat(3, var(--control-height));
   gap: var(--spacing-xs);
-  flex-wrap: wrap;
 }
 
-.animation-timing-strip {
-  padding: var(--spacing-xs);
+.animation-transport-options {
+  display: flex;
+  gap: var(--spacing-xs);
 }
-.animation-timing-strip .animation-timing-track {
-  position: relative;
-  height: 100%;
+.animation-transport-options > button {
+  flex: 1;
+  min-width: 0;
 }
-.animation-timing-strip {
-  height: var(--control-height);
-  background: var(--color-bg-tertiary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xs);
-}
-.animation-timing-strip .animation-timing-bar {
-  position: absolute;
-  inset-block: var(--spacing-xs);
-  background: repeating-linear-gradient(to right, var(--color-border) 0 1px, transparent 1px var(--cycle-share)) var(--color-accent-surface-strong);
-  border: 1px solid var(--color-accent);
-  border-radius: var(--radius-xs);
-}
-.animation-timing-strip .animation-timing-bar.is-seam {
-  border-color: var(--color-warning);
+
+.animation-transport-position {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-xs);
+  font-variant-numeric: tabular-nums;
 }
 
 .auto-glitter-settings-section .auto-glitter-palette-style {
@@ -9665,7 +9658,7 @@ body.tool-text .text-hover-baselines {
 .property-panel .property-card.is-off > .property-card-title > span:first-of-type {
   color: var(--color-text-tertiary);
 }
-.property-panel .property-card.is-off:is(:not(.is-collapsed), .is-flyout-open) > :not(.property-card-title) {
+.property-panel .property-card.is-off:not(.animation-module.is-empty):is(:not(.is-collapsed), .is-flyout-open) > :not(.property-card-title) {
   opacity: var(--opacity-disabled);
   pointer-events: none;
 }

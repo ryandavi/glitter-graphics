@@ -100,6 +100,7 @@ class KeyStrip {
 function buildEasingCurve(easing, steps) {
 	const fn = GlitterEasing.easingFn(easing, { steps });
 	const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+	svg.dataset.steps = steps;
 	svg.classList.add('icon'); svg.setAttribute('viewBox', '0 -10 100 120'); svg.setAttribute('aria-hidden', 'true');
 	const line = document.createElementNS(svg.namespaceURI, 'polyline');
 	line.setAttribute('points', Array.from({ length: CONFIG.ui.timeline.curveSamples + 1 }, (_, i) => {

@@ -5,7 +5,7 @@ const { openApp } = require('../lib/app');
 
 (async () => {
 	for (const viewport of [{ width: 1600, height: 900 }, { width: 390, height: 844 }]) {
-		const { browser, page, errors } = await openApp({ viewport, document: { width: 160, height: 120 } });
+		const { browser, page, errors } = await openApp({ viewport, touch: viewport.width < 500, document: { width: 160, height: 120 } });
 		try {
 			const checks = await page.evaluate(async () => {
 				const e = editor; e.historyManager.limit = 100; const layer = e.shapeGlitterManager.createLayer({ shapeId: 'square', width: 40, height: 40 });
@@ -101,29 +101,94 @@ const { openApp } = require('../lib/app');
 			assert(!await page.locator('#shapeAnimKeyStrip').isVisible(), 'Preset users see no key editor');
 			await page.locator('#shapeAnimAdvanced [data-advanced-toggle]').click();
 			await page.locator('#shapeAnimTrimEnd').waitFor({ state: 'visible' });
+			await page.locator('#shapeAnimEasing').focus();
+			assert(await page.evaluate(() => {
+				const control = document.getElementById('shapeAnimEasing'), previews = [...control.options].map(option => option.querySelector('svg'));
+				for (let index = 0; index < 10; index++) editor.animationPanel.load(editor.layerManager.getActiveLayer());
+				return document.activeElement === control && previews.every((node, index) => node === control.options[index].querySelector('svg'));
+			}), 'Refreshing the panel preserves focused easing choices and their previews');
+			await page.locator('#shapeAnimEasing').selectOption('steps');
+			const stepCurve = page.locator('#shapeAnimEasing option[value="steps"] polyline');
+			const beforeSteps = await stepCurve.getAttribute('points');
+			await page.locator('#shapeAnimSteps').fill('4'); await page.locator('#shapeAnimSteps').press('Tab');
+			assert.notEqual(await stepCurve.getAttribute('points'), beforeSteps, 'Changing Steps updates its curve');
+			await page.evaluate(() => editor.historyManager.undo());
+			assert.equal(await stepCurve.getAttribute('points'), beforeSteps, 'Undo restores the Steps curve');
 			await page.locator('#shapeAnimType').selectOption('custom');
 			await page.locator('#shapeAnimKeyStrip').waitFor({ state: 'visible' });
 			await page.locator('#shapeAnimPresetNext').click();
 			assert(await page.evaluate(() => !GlitterAnimation.MOTION_REGISTRY[editor.animationPanel.selectedMotion(editor.layerManager.getActiveLayer()).type].keyed), 'Preset arrows return to presets');
 			assert(!await page.locator('#shapeAnimKeyStrip').isVisible(), 'Leaving Custom hides its key editor');
+			await page.evaluate(() => {
+				const layer = editor.layerManager.getActiveLayer(), motion = editor.animationPanel.selectedMotion(layer);
+				editor.writeTiming(GlitterAnimation.sourceKey(layer.id, motion), { period: 1000, delayMs: 500, phase: 0.25, iterations: 1.5 });
+				editor.setDocumentLoop({ mode: 'set', durationMs: 1200 });
+				editor.animationPanel.load(layer);
+			});
+			assert.match(await page.locator('#shapeAnimTimingSummary').innerText(), /starts at 0.50 s; ends at 1.75 s/, 'The selected run is explained in document seconds, including its offset');
+			await page.locator('#shapeAnimIncludeInLoop').click();
+			assert(await page.evaluate(() => editor.documentLoop.durationMs >= 1750), 'Extending the scene loop includes the selected finite run');
+			await page.locator('#shapeAnimTimingHint').waitFor({ state: 'hidden' });
 			await page.evaluate(() => { editor.openAnimationLoop(); editor.setPlayback(false); });
 			const transport = page.locator('#animationTransport');
 			await transport.waitFor({ state: 'visible' });
 			assert(await page.locator('#animationLoopCandidate').isVisible(), 'Loop length stays available without Advanced');
 			assert(!await page.locator('#animationLoopSources').isVisible(), 'Source analysis starts under Advanced');
 			const historyIndex = await page.evaluate(() => editor.historyManager.historyIndex);
+			const playbackBoxes = () => transport.evaluate(host => {
+				const origin = host.getBoundingClientRect();
+				return [...host.querySelectorAll('.animation-transport-actions > button, input[type="range"]')].map(node => {
+					const rect = node.getBoundingClientRect();
+					return [rect.x - origin.x, rect.y - origin.y, rect.width, rect.height].map(value => Math.round(value * 100) / 100);
+				});
+			});
+			const pausedBoxes = await playbackBoxes();
 			await transport.getByRole('button', { name: 'Play', exact: true }).click();
 			assert(await page.evaluate(() => !editor.animationTicker.paused));
+			assert.deepEqual(await playbackBoxes(), pausedBoxes, 'Play/Pause never moves or resizes playback controls or the slider');
 			await transport.getByRole('button', { name: 'Pause', exact: true }).click();
 			await transport.getByRole('button', { name: 'Go to loop start', exact: true }).click();
 			assert.equal(await page.evaluate(() => editor.animationTicker.getPlayheadTime()), 0);
 			await transport.getByRole('button', { name: 'Next frame', exact: true }).click();
 			assert(await page.evaluate(() => editor.animationTicker.getPlayheadTime() > 0));
-			const seek = transport.getByRole('slider', { name: 'Document time' });
+			const seek = transport.getByRole('slider', { name: 'Scene time' });
 			await seek.evaluate(input => { input.value = 400; input.dispatchEvent(new Event('input', { bubbles: true })); });
 			assert.equal(await page.evaluate(() => editor.animationTicker.getPlayheadTime()), 400, JSON.stringify(await page.evaluate(() => ({ loop: editor.documentLoop, ticker: editor.animationTicker.loopMs, range: document.querySelector('#animationTransport input').outerHTML, state: editor.resolveAnimationLoop() }))));
 			await seek.focus(); await page.keyboard.press('ArrowRight');
 			assert(await page.evaluate(() => editor.animationTicker.getPlayheadTime() > 400));
+			for (const reason of ['Escape', 'blur', 'pointercancel']) {
+				await page.evaluate(() => { editor.setPlayback(false); editor.animationTicker.seek(250); });
+				await seek.scrollIntoViewIfNeeded();
+				await page.waitForTimeout(250);
+				const box = await seek.boundingBox();
+				await page.mouse.move(box.x + box.width * 0.75, box.y + box.height / 2); await page.mouse.down();
+				assert(await page.evaluate(() => editor.animationTicker.getPlayheadTime() !== 250));
+				if (reason === 'Escape') await page.keyboard.press('Escape');
+				else if (reason === 'blur') await page.evaluate(() => window.dispatchEvent(new Event('blur')));
+				else await seek.dispatchEvent('pointercancel');
+				assert.equal(await page.evaluate(() => editor.animationTicker.getPlayheadTime()), 250, `${reason} restores the previous held time`);
+				await page.mouse.up();
+				if (viewport.width < 500) assert(await page.evaluate(() => Boolean(editor.mobileManager.activeDrawer)), 'Cancelling a seek leaves the phone sheet open');
+			}
+			await page.evaluate(() => { editor.setPlayback(false); editor.animationTicker.setRestPreview(true); });
+			await seek.evaluate(input => { input.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); input.value = 900; input.dispatchEvent(new Event('input', { bubbles: true })); });
+			await seek.focus(); await page.keyboard.press('Escape');
+			assert(await page.evaluate(() => editor.animationTicker.paused && editor.animationTicker.restPreview), 'Seek cancellation restores the rest preview');
+			await page.evaluate(() => { editor.setPlayback(true); });
+			await seek.evaluate(input => { input.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); input.value = 900; input.dispatchEvent(new Event('input', { bubbles: true })); });
+			await page.keyboard.press('Escape');
+			assert(await page.evaluate(() => !editor.animationTicker.paused), 'Seek cancellation resumes previously running playback');
+			await page.evaluate(() => editor.setPlayback(false));
+			if (viewport.width < 500) {
+				await page.evaluate(() => editor.animationTicker.seek(250)); await seek.scrollIntoViewIfNeeded();
+				const box = await seek.boundingBox(), cdp = await page.context().newCDPSession(page);
+				await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: box.x + box.width * 0.25, y: box.y + box.height / 2 }] });
+				await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: box.x + box.width * 0.75, y: box.y + box.height / 2 }] });
+				assert(await page.evaluate(() => editor.animationTicker.paused && editor.animationTicker.getPlayheadTime() > 250), 'A touch scrub seeks the scene clock');
+				await cdp.send('Input.dispatchTouchEvent', { type: 'touchCancel', touchPoints: [] });
+				assert.equal(await page.evaluate(() => editor.animationTicker.getPlayheadTime()), 250, 'Cancelling a touch scrub restores its time');
+				await cdp.detach();
+			}
 			if (viewport.width > 500) {
 				await page.evaluate(() => editor.updateExportDuration());
 				await transport.getByRole('button', { name: 'Preview export', exact: true }).click();
@@ -132,6 +197,14 @@ const { openApp } = require('../lib/app');
 				assert(await page.evaluate(() => !editor.previewFrameView.exact && !editor.timelineDock));
 			}
 			assert.equal(await page.evaluate(() => editor.historyManager.historyIndex), historyIndex, 'Visible transport navigation creates no history');
+			await page.evaluate(() => setPanelCardCollapsed(document.getElementById('animationLoopSection'), true));
+			await page.waitForFunction(() => !editor.unsubscribeAnimationTransport);
+			await page.evaluate(() => setPanelCardCollapsed(document.getElementById('animationLoopSection'), false));
+			await seek.waitFor({ state: 'visible' });
+			await seek.evaluate(input => { input.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); input.value = 900; input.dispatchEvent(new Event('input', { bubbles: true })); });
+			await page.evaluate(() => editor.loadBlankImage(120, 100, '#ffffff'));
+			assert.equal(await page.evaluate(() => editor.animationTicker.getPlayheadTime()), 0, 'Replacing the document discards an unfinished seek');
+			await page.waitForFunction(() => !editor.unsubscribeAnimationTransport);
 			assert.deepEqual(errors, []);
 			console.log(`PASS animation operations and undo with dock unloaded at ${viewport.width}px`);
 		} finally { await browser.close(); }
