@@ -52,29 +52,77 @@ const EDITOR_ANIMATION_EDIT_METHODS = {
 		const actions = TimelineView.barActions(row, model, {
 			playhead: this.animationTicker.getPlayheadTime(), clipboard: this.timingClipboard,
 			write: (key, patch) => this.writeTiming(key, patch, { live: true }),
-			copy: () => this.copyTiming(key)
+			copy: () => this.copyTiming(key), paste: () => this.pasteTiming(key, { commit: false }), pasteInfo: this.planTimingGroup([key], 'paste')
 		});
-		return actions.map(action => ({ ...action, disabled: action.disabled || (action.id === 'fit' && !this.isLoopEstimateCurrent()), run: () => {
-			const revision = this.documentRevision, restored = action.id === 'reset' && this.restoreAnimationPeriod({ key });
-			action.run();
-			const changed = restored || revision !== this.documentRevision;
+		return actions.map(action => action.note !== undefined ? action : ({ ...action, disabled: action.disabled || (action.id === 'fit' && !this.isLoopEstimateCurrent()), run: () => {
+			const revision = this.documentRevision;
+			if (action.id === 'reset') this.applyTimingGroup([key], 'reset', { label: action.label, commit: false });
+			else action.run?.();
+			const changed = revision !== this.documentRevision;
 			if (!live && action.commits !== false && changed) this.commitAnimationTiming(action.label);
 			return changed;
 		} }));
 	},
 	copyTiming(key) {
 		const target = findTimingTarget(this, key);
-		if (target) this.timingClipboard = { cycle: target.period, phase: target.phase, direction: target.direction, run: target.run && { ...target.run } };
+		if (target) this.timingClipboard = { kind: target.kind, appear: target.appear && { ...target.appear }, cycle: target.period, phase: target.phase, direction: target.direction, run: target.run && { ...target.run } };
 	},
-	pasteTiming(key) {
-		const target = findTimingTarget(this, key), timing = this.timingClipboard;
-		if (!target || !timing) return false;
-		const patch = {};
-		if (target.can.period) patch.period = timing.cycle;
-		if (target.can.run && timing.run) patch.run = { ...timing.run };
-		if (target.can.phase && timing.phase != null) patch.phase = timing.phase;
-		if (target.can.direction && timing.direction) patch.direction = timing.direction;
-		return this.writeTiming(key, patch, { label: 'Paste timing' });
+	pasteTiming(key, options) { return this.applyTimingGroup([key], 'paste', { label: 'Paste timing', ...options }).changed; },
+	planTimingGroup(keys, operation) {
+		const reject = reason => ({ changes: [], reason, summary: reason });
+		if (!Array.isArray(keys) || !keys.length || new Set(keys).size !== keys.length) return reject('Select distinct timing bars first.');
+		if (!['fit', 'reset', 'paste'].includes(operation)) return reject('This timing action is unavailable.');
+		const targets = keys.map(key => findTimingTarget(this, key));
+		if (targets.some(target => !target || !Object.values(target.can).some(Boolean))) return reject('Every selected source must exist and be editable.');
+		const candidate = operation === 'fit' && this.isLoopEstimateCurrent() ? this.getLoopCandidate() : null;
+		if (operation === 'fit' && !candidate) return reject('Wait for current loop analysis before fitting selected cycles.');
+		const updates = [], descriptions = [], resetValues = new Set();
+		for (const target of targets) {
+			const layer = this.layerManager.getLayerById(target.layerId), patch = {};
+			let restoreOriginal = false;
+			if (operation === 'fit') {
+				if (!target.can.period) return reject('Every selected bar needs an editable cycle to Fit.');
+				if (target.animation && Number.isFinite(target.run.end)) return reject('Finite runs keep their authored speed. Select repeating cycles to Fit.');
+				const fit = candidate.fits.find(fit => fit.key === target.key && fit.fitted);
+				if (!fit) return reject('The current loop has no representable cycle fit for every selected bar.');
+				patch.period = fit.fittedPeriod;
+			} else if (operation === 'reset') {
+				if (target.can.appear) { patch.appear = null; resetValues.add('visibility windows'); }
+				else if (target.can.run) { patch.run = { start: 0, end: Infinity }; resetValues.add('starts/repeats'); }
+				if (target.can.phase) { patch.phase = 0; resetValues.add('start offsets'); }
+				if (target.can.direction) { patch.direction = 'normal'; resetValues.add('directions'); }
+				if (target.can.period && layer.loopOriginalPeriods?.[target.key] != null) { patch.period = layer.loopOriginalPeriods[target.key]; restoreOriginal = true; resetValues.add('saved cycles'); }
+			} else {
+				const paste = timingPastePatch(target, this.timingClipboard);
+				if (paste.reason) return reject(paste.reason);
+				Object.assign(patch, paste.patch); descriptions.push(paste.summary);
+			}
+			updates.push({ key: target.key, patch, restoreOriginal });
+		}
+		const plan = planTimingBatch(this, updates);
+		if (plan.reason) return { ...plan, summary: plan.reason };
+		if (operation === 'paste') {
+			for (const [index, change] of plan.changes.entries()) if (change.patch.period != null && Math.abs(change.next.period - change.patch.period) > 1e-6) descriptions[index] += ` Cycle accepted at ${formatSeconds(change.next.period)}.`;
+		}
+		const counts = new Map(); for (const text of descriptions) counts.set(text, (counts.get(text) || 0) + 1);
+		const summary = operation === 'fit' ? `Fit ${formatCount(keys.length, 'selected cycle')} to ${formatSeconds(candidate.duration)}.`
+			: operation === 'reset' ? `Reset ${[...resetValues].join(', ') || 'saved timing'} for ${formatCount(keys.length, 'selected bar')}.`
+				: keys.length === 1 ? descriptions[0] : [...counts].map(([text, count]) => `${formatCount(count, 'bar')}: ${text}`).join(' ');
+		return { ...plan, summary };
+	},
+	applyTimingGroup(keys, operation, { label, ...options } = {}) {
+		this.timelineDock?.cancelGroupMove();
+		const plan = this.planTimingGroup(keys, operation);
+		const result = this.applyTimingPlan(plan, { label: label || { fit: 'Fit selected cycles to loop', reset: 'Reset selected timing', paste: 'Paste timing to selected bars' }[operation], ...options });
+		if (result.reason) this.showError?.(result.reason);
+		else this.updateStatus?.(`${result.changed ? '' : 'Timing already matches. '}${plan.summary}`);
+		return result;
+	},
+	animationTimingGroupActions(keys) {
+		return [['fit', 'Fit selected cycles to loop'], ['reset', 'Reset selected timing'], ['paste', 'Paste timing to selected bars']].flatMap(([operation, label]) => {
+			const plan = this.planTimingGroup(keys, operation);
+			return [{ id: `group-${operation}`, group: 'Selected timing', label, disabled: Boolean(plan.reason), commits: false, run: () => this.applyTimingGroup(keys, operation) }, { id: `group-${operation}-note`, group: 'Selected timing', note: plan.summary }];
+		});
 	},
 	playOnce(key) { return this.runTimingAction(key, 'once'); },
 	repeatForever(key) { return this.runTimingAction(key, 'forever'); },
@@ -110,6 +158,7 @@ const EDITOR_ANIMATION_EDIT_METHODS = {
 		const index = layer.animations?.findIndex(animation => animation.id === motionId), animation = layer.animations?.[index];
 		const feature = GlitterAnimation.MOTION_REGISTRY[type]?.feature;
 		if (!animation || (feature && !isFeatureAvailable(feature))) return;
+		this.timelineDock?.cancelGroupMove();
 		const next = this.createMotion(layer, type);
 		for (const key of ['id', 'enabled', 'periodMs', 'delayMs', 'iterations', 'phase', 'direction', 'fillMode', 'snapMode']) next[key] = animation[key];
 		layer.animations[index] = GlitterAnimation.normalizeAnimation(next);
@@ -174,6 +223,7 @@ const EDITOR_ANIMATION_EDIT_METHODS = {
 	deleteAnimation(layer, index = this.selectedMotionIndex(layer)) {
 		if (typeof index === 'string') index = layer.animations?.findIndex(animation => animation.id === index);
 		if (!this.canEditLayer(layer) || !this.getAnimations(layer)[index]) return;
+		this.timelineDock?.cancelGroupMove();
 		this.animationRevisions?.delete(GlitterAnimation.sourceKey(layer.id, layer.animations[index]));
 		delete layer.loopOriginalPeriods?.[GlitterAnimation.sourceKey(layer.id, layer.animations[index])];
 

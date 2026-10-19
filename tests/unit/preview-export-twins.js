@@ -6,6 +6,7 @@ const vm = require('vm');
 
 const root = path.join(__dirname, '..', '..');
 const sources = {
+	GlitterAnimation: fs.readFileSync(path.join(root, 'js/effects/animation.js'), 'utf8'),
 	ClipPreview: fs.readFileSync(path.join(root, 'js/systems/ClipPreview.js'), 'utf8'),
 	patternSource: fs.readFileSync(path.join(root, 'js/paint/pattern-source.js'), 'utf8'),
 	FilterLayerManager: fs.readFileSync(path.join(root, 'js/layers/FilterLayerManager.js'), 'utf8'),
@@ -33,7 +34,9 @@ vm.runInNewContext(`${paritySource}\nglobalThis.twins = PREVIEW_EXPORT_TWINS;`, 
 function memberBody(className, methodName) {
 	const source = sources[className];
 	if (!source) return null;
-	const [starts, end] = className === 'patternSource' || className === 'transformMath' || className === 'paintSlots' || className === 'sparkles' || className === 'animationPreview'
+	const [starts, end] = className === 'GlitterAnimation'
+		? [[`\n\tfunction ${methodName}(`], '\n\t}\n']
+		: className === 'patternSource' || className === 'transformMath' || className === 'paintSlots' || className === 'sparkles' || className === 'animationPreview'
 		? [[`\nfunction ${methodName}(`], '\n}\n']
 		: [[`\n\t${methodName}(`, `\n\tasync ${methodName}(`], '\n\t}\n'];
 	const index = starts.map((start) => source.indexOf(start)).find((found) => found !== -1) ?? -1;

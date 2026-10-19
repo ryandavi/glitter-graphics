@@ -49,7 +49,8 @@ function openActionMenu({ root, trigger, actions, event, anchor }) {
 			group = action.group;
 		}
 		if (action.labelOnly) { panel.appendChild(buildMenuLabel(action.label)); continue; }
-		const item = buildMenuItem({ label: action.label, current: action.checked != null, run: action.run });
+		if (action.note !== undefined) { if (action.note) panel.appendChild(buildElement('property-note', action.note)); continue; }
+		const item = buildMenuItem({ label: action.label, title: action.title, current: action.checked != null, run: action.run });
 		item.disabled = Boolean(action.disabled);
 		if (action.checked != null) item.setAttribute('aria-current', String(action.checked));
 		panel.appendChild(item);
@@ -72,8 +73,13 @@ function setupMenuPopover({
 	if (!root || !trigger || !panel) return null;
 	const panelParent = panel.parentElement;
 	const panelNext = panel.nextSibling;
+	let openingRect;
 	const closeOnViewportChange = event => {
 		if (event.type === 'scroll' && !event.target.contains?.(trigger)) return;
+		if (event.type === 'scroll') {
+			const rect = trigger.getBoundingClientRect();
+			if (rect.left === openingRect.left && rect.top === openingRect.top) return;
+		}
 		close();
 	};
 	const isOpen = () => !panel.hidden;
@@ -118,9 +124,10 @@ function setupMenuPopover({
 		root.classList.add('is-open');
 		liftHost?.classList.add('has-open-menu');
 		trigger.setAttribute('aria-expanded', 'true');
+		openingRect = trigger.getBoundingClientRect();
 		document.addEventListener('keydown', onKeydown, true);
 		document.addEventListener('pointerdown', onPointerDown, true);
-		panel.querySelector(itemSelector)?.focus();
+		panel.querySelector(itemSelector)?.focus({ preventScroll: true });
 	};
 	function onPointerDown(event) {
 		if (!root.contains(event.target) && !panel.contains(event.target)) close();
@@ -131,7 +138,7 @@ function setupMenuPopover({
 			close({ focusTrigger: true });
 			return;
 		}
-		if (!['ArrowDown', 'ArrowUp'].includes(event.key)) return;
+		if (event.target.matches('input, textarea, select, [contenteditable]') || !['ArrowDown', 'ArrowUp'].includes(event.key)) return;
 		const items = Array.from(panel.querySelectorAll(itemSelector));
 		if (!items.length) return;
 		event.preventDefault();

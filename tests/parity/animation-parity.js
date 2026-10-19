@@ -322,10 +322,38 @@ assert(Animation.domTransformString(halfwayKey).includes(`rotate(${halfwayKey.ro
 	const fs = require('fs'), path = require('path'), vm = require('vm');
 	const context = { Math, Number, Infinity, navigator: { hardwareConcurrency: 4, userAgent: 'node' } };
 	vm.createContext(context);
-	for (const file of ['core/releases.js', 'core/fields.js', 'core/math.js', 'core/area.js', 'core/config.js', 'effects/easing.js', 'effects/animation.js']) {
+	for (const file of ['core/releases.js', 'core/fields.js', 'core/math.js', 'core/area.js', 'core/config.js', 'core/options.js', 'effects/easing.js', 'effects/animation.js']) {
 		vm.runInContext(fs.readFileSync(path.join(__dirname, '..', '..', 'js', file), 'utf8'), context);
 	}
 	const { Shipped, convert } = vm.runInContext('({ Shipped: GlitterAnimation, convert: CONFIG.tools.animation.convert })', context);
+	context.describeLayer = layer => ({ name: layer.id });
+	vm.runInContext(fs.readFileSync(path.join(__dirname, '../../js/export/SceneCompositor.js'), 'utf8'), context);
+	const createSources = vm.runInContext('SceneCompositor.prototype._createLayerAnimationTimelineSources', context);
+	const samplingContexts = [{}, bounds, { ...bounds, id: 'other', seed: 91, origin: [0.2, 0.8] }, { ...bounds, area: { width: 120, height: 90 }, restVisual: { left: -10, top: 4, right: 200, bottom: 130 } }];
+	const samplingVariants = [{}, { delayMs: 120, phase: 0.37, iterations: 1.83, direction: 'alternate-reverse', fillMode: 'both' }, { delayMs: 300, phase: 0.8, iterations: 0.4, direction: 'reverse', fillMode: 'none' }];
+	for (const type of Shipped.ANIMATION_TYPES) for (const variant of samplingVariants) {
+		const entry = { id: 'prepared', type, ...variant, ...(type === 'custom' ? { keys: keyed.keys } : {}) };
+		const layer = { id: 'prepared-layer', animations: [entry, { ...entry, id: 'disabled', enabled: false }] };
+		for (const options of samplingContexts) {
+			const sources = createSources.call({ editor: {}, _buildAnimationSamplingContext: () => options }, layer);
+			const active = Shipped.isActive(entry);
+			assert.strictEqual(sources.length, active ? 1 : 0, `${type}: prepared export excludes inactive entries`);
+			if (!active) continue;
+			const natural = Shipped.normalizeAnimation(entry).periodMs;
+			for (const period of [natural, natural * 0.7, natural * 1.3, natural]) for (const time of [-1, 0, 119.999, 120, 300, 537, 1000, 2000, 6000]) {
+				const expected = Shipped.sampleAt({ ...entry, periodMs: period }, time, options);
+				assert.deepStrictEqual(sources[0].sampleAt(time, period).sample, expected, `${type}: prepared export preserves every channel at ${time}/${period}`);
+				const prepared = Shipped.prepare([entry, { type: 'pulse', amount: 15 }, { ...entry, enabled: false }]);
+				const composed = Shipped.composeSamples([entry, { type: 'pulse', amount: 15 }].filter(value => Shipped.isActive(value)).map(value => Shipped.sampleAt(value, time, options)), options);
+				assert.deepStrictEqual(Shipped.samplePrepared(prepared, time, options), composed, `${type}: prepared composition matches independent samples`);
+			}
+			const previous = sources[0].sampleAt(537).sample;
+			entry.phase = (entry.phase || 0) + 0.1;
+			const replacement = createSources.call({ editor: {}, _buildAnimationSamplingContext: () => options }, layer)[0];
+			assert.deepStrictEqual(replacement.sampleAt(537).sample, Shipped.sampleAt(entry, 537, options), 'A new export observes changed motion data');
+			assert.deepStrictEqual(sources[0].sampleAt(537).sample, previous, 'Prepared data belongs to its source, not a global or layer cache');
+		}
+	}
 	const offered = Object.values(Shipped.MOTION_REGISTRY).filter(motion => motion.convertible).map(motion => motion.id);
 	assert.deepStrictEqual(offered, ['breath', 'float', 'sway', 'dim', 'pulse', 'move', 'rotate', 'zoom', 'rainbow']);
 	const angular = id => Shipped.POSE_CHANNELS[id].interpolation === 'angle';

@@ -141,10 +141,12 @@ const EDITOR_PANEL_METHODS = {
 			if (button && layer?.type === button.closest('[data-layer-appear-reset]').dataset.layerAppearReset) this.setLayerAppear(layer, null);
 		});
 		window.addEventListener('animationChanged', event => {
-			const layer = this.layerManager.getLayerById(event.detail?.layerId);
-			if (!layer) return;
-			this.syncLayerAppearControls(layer);
-			for (const row of document.querySelectorAll(`.layer-item[data-layer-id="${CSS.escape(layer.id)}"]`)) syncLayerRow(row, layer);
+			for (const id of event.detail?.layerIds || [event.detail?.layerId]) {
+				const layer = this.layerManager.getLayerById(id);
+				if (!layer) continue;
+				this.syncLayerAppearControls(layer);
+				for (const row of document.querySelectorAll(`.layer-item[data-layer-id="${CSS.escape(layer.id)}"]`)) syncLayerRow(row, layer);
+			}
 		});
 	},
 	syncLayerAppearControls(layer) {

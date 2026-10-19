@@ -521,15 +521,16 @@ const GlitterAnimation = (() => {
 	}
 
 	function samplePrepared(prepared, tMs, options = {}) {
-		return composeSamples(prepared.entries.map(data => {
-			const position = progressAt(data, tMs, true);
-			return position ? pose(data, position.progress, tMs, options, position.eased) : { ...IDENTITY, originX: options.origin?.[0] ?? 0.5, originY: options.origin?.[1] ?? 0.5 };
-		}), options);
+		return composeSamples(prepared.entries.map(data => sampleNormalized(data, tMs, options)), options);
 	}
 
 	function sampleAt(value, tMs, options = {}) {
 		if (Array.isArray(value)) return samplePrepared(prepare(value), tMs, options);
-		const data = normalizeAnimation(value);
+		return sampleNormalized(normalizeAnimation(value), tMs, options);
+	}
+
+	// Entries from prepare() retain channel indexes; period fitting changes only timing.
+	function sampleNormalized(data, tMs, options = {}) {
 		const position = progressAt(data, tMs, true);
 		return position && data.enabled !== false ? pose(data, position.progress, tMs, options, position.eased)
 			: { ...IDENTITY, originX: options.origin?.[0] ?? 0.5, originY: options.origin?.[1] ?? 0.5 };
@@ -701,7 +702,7 @@ const GlitterAnimation = (() => {
 	function getLayerAnimations(layer) { return layer?.animationsEnabled === false ? [] : layer?.animations || []; }
 
 	return {
-		prepare, samplePrepared, sourceKey, slotKey, getLayerAnimations, ANIMATION_TYPES, MOTION_REGISTRY, ANIMATION_CONTROLS, POSE_CHANNELS, POSE_PROPERTIES, keyRestSample, normalizeAnimation, normalizeAnimations, normalizeKeys, interpolateChannel, cycleProgress, timeAtProgress, convertToKeys, isActive, includesOffCanvas, summaryText, describe, loopDurationMs,
+		prepare, samplePrepared, sampleNormalized, sourceKey, slotKey, getLayerAnimations, ANIMATION_TYPES, MOTION_REGISTRY, ANIMATION_CONTROLS, POSE_CHANNELS, POSE_PROPERTIES, keyRestSample, normalizeAnimation, normalizeAnimations, normalizeKeys, interpolateChannel, cycleProgress, timeAtProgress, convertToKeys, isActive, includesOffCanvas, summaryText, describe, loopDurationMs,
 		isSeamlessLoop, runTiming, iterationsForRun, repeatsForRun, isReversedCycle, cycleAt, timeAtCycle, travelSpeed, sampleAt, composeSamples, seededRandom01, domTransformString, applyToContext, resolveOrigin,
 		hashString, mulberry32, createSamplingContext, splitSample, sampleMatrix, multiplyMatrices, wrap, reflect
 	};

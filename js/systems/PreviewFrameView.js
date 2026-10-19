@@ -27,6 +27,7 @@ class PreviewFrameView {
 	}
 
 	invalidate({ keepFrame = false } = {}) {
+		const hadExactPlayback = Boolean(this.exact || this.done);
 		this.unsubscribeClock?.(); this.unsubscribeClock = null;
 		if (this.exact) this.editor.animationTicker.setLoop(this.normalLoopMs);
 		this.generation++;
@@ -35,7 +36,7 @@ class PreviewFrameView {
 		this.params = null;
 		this.lastTime = null;
 		this.exact = null;
-		window.dispatchEvent(new CustomEvent('playbackChanged'));
+		if (hadExactPlayback) window.dispatchEvent(new CustomEvent('playbackChanged'));
 		this.frames.forEach(frame => frame.close());
 		this.frames = [];
 		this.done?.(); this.done = null;

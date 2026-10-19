@@ -221,10 +221,10 @@ class SceneCompositor {
 	}
 
 	_createLayerAnimationTimelineSources(layer) {
-		const animations = GlitterAnimation.normalizeAnimations(GlitterAnimation.getLayerAnimations(layer));
-		if (!animations.some((animation) => GlitterAnimation.isActive(animation))) return [];
+		const { entries: animations } = GlitterAnimation.prepare(GlitterAnimation.getLayerAnimations(layer));
+		if (!animations.length) return [];
 		const samplingContext = this._buildAnimationSamplingContext(layer);
-		return animations.filter(animation => GlitterAnimation.isActive(animation)).map(animation => ({
+		return animations.map(animation => ({
 				key: GlitterAnimation.sourceKey(layer.id, animation),
 				rowLabel: GlitterAnimation.summaryText(animation), direction: animation.direction,
 				cycleMarks: GlitterAnimation.MOTION_REGISTRY[animation.type].keyed ? animation.keys.map((key) => key.at).filter((at) => at > 0) : undefined,
@@ -240,7 +240,7 @@ class SceneCompositor {
 				phase: animation.phase,
 				preferredSamplingRate: CONFIG.tools.animation.exportFps,
 				sampleAt: (timestamp, period = animation.periodMs) => ({
-					sample: GlitterAnimation.sampleAt({ ...animation, periodMs: period }, timestamp, samplingContext)
+					sample: GlitterAnimation.sampleNormalized({ ...animation, periodMs: period }, timestamp, samplingContext)
 				})
 			}));
 	}

@@ -639,6 +639,61 @@ async function timelineStates(page, visit, viewport) {
 	await page.locator('#animationLoopSection [data-advanced-toggle]').click();
 	await wait(page);
 	await visit(`${viewport} timeline loop Advanced`, { shot: '#animationLoopSection', tall: true });
+	await page.evaluate(async () => {
+		const dock = editor.timelineDock;
+		const layers = editor.layers.filter(layer => layer.animations?.length);
+		for (const [index, layer] of layers.entries()) {
+			layer.visible = true; layer.locked = false; layer.animationsEnabled = true;
+			for (const animation of layer.animations) { animation.enabled = true; animation.delayMs = 300 + index * 300; animation.iterations = 2; }
+		}
+		layers[0].appear = { start: 200, end: 1800 };
+		if (PREFERENCES.get('timelineMinimized')) dock.toggleMinimized();
+		dock.collapsed.clear(); dock.setZoom('fit');
+		for (const layer of layers) getLayerManagerForType(editor, layer.type).renderLayer(layer);
+		editor.layerManager.renderLayersList(); editor.requestPreviewUpdate();
+		await editor.updateExportDuration();
+		dock.barSelectionExplicit = true;
+		dock.selectedBars = new Set([`__appear_${layers[0].id}`, ...layers.flatMap(layer => layer.animations.map(animation => GlitterAnimation.sourceKey(layer.id, animation)))]);
+		dock.syncSelection(); dock.body.scrollTop = 0;
+		window.coordinationVisualRow = [...dock.rowsByKey.values()].find(row => row.animation && row.source);
+		dock.activateTimingBar(coordinationVisualRow, {}, true);
+	});
+	await wait(page);
+	await visit(`${viewport} timeline coordinated selection`, { shot: '#timelineDock' });
+	await page.evaluate(() => {
+		const dock = editor.timelineDock, row = coordinationVisualRow, node = dock.rowNodesByKey.get(String(row.key));
+		dock.openBarMenu(row, node, node.querySelector('.timeline-bar'));
+	});
+	await wait(page);
+	await visit(`${viewport} timeline coordinated menu`);
+	await page.getByRole('menuitem', { name: 'Stagger selected bars…', exact: true }).click();
+	await page.getByRole('spinbutton', { name: 'Stagger interval in seconds' }).fill('0.15');
+	await visit(`${viewport} timeline coordinated stagger`);
+	await page.keyboard.press('Escape');
+	await page.evaluate(() => {
+		const dock = editor.timelineDock;
+		dock.openCoordinationEditor('move', dock.rowNodesByKey.get(String(coordinationVisualRow.key)).querySelector('.timeline-bar'));
+	});
+	await page.getByRole('spinbutton', { name: 'Move by in seconds' }).fill('-0.25');
+	await visit(`${viewport} timeline coordinated limits`);
+	await page.keyboard.press('Escape');
+	await page.evaluate(() => {
+		const dock = editor.timelineDock, row = coordinationVisualRow, node = dock.rowNodesByKey.get(String(row.key));
+		editor.copyTiming(row.key);
+		dock.openBarMenu(row, node, node.querySelector('.timeline-bar'));
+	});
+	await visit(`${viewport} timeline coordinated paste`);
+	await page.keyboard.press('Escape');
+	await page.evaluate(async () => {
+		const dock = editor.timelineDock;
+		for (const layer of editor.layers) for (const animation of layer.animations || []) animation.iterations = Infinity;
+		dock.selectedBars = new Set([...dock.selectedBars].filter(key => findTimingTarget(editor, key)?.can.period));
+		editor.documentRevision++; await editor.updateExportDuration(); dock.syncSelection();
+		const row = coordinationVisualRow, node = dock.rowNodesByKey.get(String(row.key));
+		dock.openBarMenu(row, node, node.querySelector('.timeline-bar'));
+	});
+	await visit(`${viewport} timeline coordinated fit`);
+	await page.keyboard.press('Escape');
 }
 
 async function visibilityStates(page, visit, viewport) {

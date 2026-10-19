@@ -311,6 +311,7 @@ class LayerManager {
 	setLayerLock(layerId, locked) {
 		const layer = this.getLayerById(layerId);
 		if (!layer || LAYER_UI_CONFIG[layer.type]?.protectedInStack || Boolean(layer.locked) === locked) return false;
+		this.editor.timelineDock?.cancelGroupMove();
 		layer.locked = locked;
 		this.editor.pathEdit?.revalidate();
 		if (isLayerFullyLocked(layer) && this.activeLayerId === layer.id) {

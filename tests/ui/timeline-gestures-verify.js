@@ -152,7 +152,7 @@ async function verifyTimelineGestures(browser) {
 		assert(await page.evaluate(() => editor.timelineDock.body.querySelector('.timeline-bar:not(.is-range)').classList.contains('is-movable')), 'A motion bar says its body moves');
 		await drag('body', 600, { delta: true });
 		let after = await state();
-		assert(after.delay > 500 && after.delay < 700 && after.repeats === Infinity && after.phase === before.phase, 'Dragging a full-length bar moves it and keeps it running to the loop end');
+		assert(after.delay > 500 && after.delay < 700 && after.repeats === Infinity && after.phase === before.phase, `Dragging a full-length bar moves it and keeps it running to the loop end: ${JSON.stringify({before,after,feedback})}`);
 		assert.equal(feedback.cursor, 'grabbing');
 		assert(/^Starts at 0\.\d\d s \(was 0\.00 s\)/.test(feedback.text), `A move says where it starts and where it was: ${feedback.text}`);
 		assert.equal(after.history, before.history + 1);
@@ -620,7 +620,7 @@ async function verifyTimelineGestures(browser) {
 		}), 'Zoom and a static paint commit reuse row nodes');
 		assert(await page.evaluate(async () => {
 			const dock = editor.timelineDock, layer = editor.layerManager.getLayerById(window.timelineFixtureId);
-			const groups = [...dock.body.querySelectorAll('.timeline-group')], nodes = [...dock.rowNodesByKey.values()];
+			const groups = [...dock.body.querySelectorAll('.timeline-group')], nodes = [...dock.rowNodesByKey.values()], ruler = dock.rulerTrack, ticks = dock.rulerTicks.canvas;
 			let sampled = 0; const curve = TimelineView.motionCurve;
 			TimelineView.motionCurve = (...args) => { sampled++; return curve.apply(TimelineView, args); };
 			try {
@@ -630,9 +630,9 @@ async function verifyTimelineGestures(browser) {
 				const renameKept = groups.every(node => node.isConnected) && nodes.every(node => node.isConnected) && sampled === 0
 					&& chevron.getAttribute('aria-label') === 'Toggle Renamed motion timeline rows';
 				editor.writeTiming(GlitterAnimation.sourceKey(layer.id, layer.animations[0]), { period: layer.animations[0].periodMs + 100 }); await editor.updateExportDuration();
-				return renameKept && groups.every(node => node.isConnected) && sampled === 1;
+				return renameKept && groups.every(node => node.isConnected) && sampled === 1 && dock.rulerTrack === ruler && dock.rulerTicks.canvas === ticks;
 			} finally { TimelineView.motionCurve = curve; }
-		}), 'Rename retains groups and rows without curve sampling; retime samples only its changed curve');
+		}), 'Rename and retime retain the ruler/rows; only the changed curve is sampled');
 
 		assert(await page.evaluate(() => {
 			const dock = editor.timelineDock, row = dock.model.groups.find(group => group.layerId === window.timelineFixtureId).rows[0], start = row.startMs;
@@ -726,8 +726,216 @@ async function verifyTimelineGestures(browser) {
 	} finally { await context.close(); }
 }
 
+async function verifyTimelineCoordination(browser) {
+	const { page, context, errors } = await openApp({ browser, viewport: { width: 1920, height: 1000 }, document: { width: 200, height: 160 } });
+	try {
+		await page.evaluate(async () => {
+			editor.setPlayback(false); PREFERENCES.set('timelineSnap', false);
+			window.coordinationLayers = [];
+			for (let index = 0; index < 4; index++) {
+				const layer = editor.shapeGlitterManager.createLayer({ shapeId: 'square', width: 30, height: 30 });
+				layer.name = `Coordinated ${index + 1}`; getLayerFillSlot(layer).mode = 'solid';
+				if (index < 3) layer.animations = [GlitterAnimation.normalizeAnimation({ id: editor.layerManager.generateLayerId(), type: 'pulse', periodMs: 1000 + index * 100, delayMs: 300 + index * 200, iterations: 1.75, phase: .25, direction: 'alternate' })];
+				else layer.appear = { start: 400, end: 1700 };
+				editor.layerManager.insertLayer(layer); coordinationLayers.push(layer.id);
+			}
+			editor.setDocumentLoop({ mode: 'set', durationMs: 4000 }, { commit: false });
+			editor.saveState('Coordinated fixture'); await editor.ensureTimelineDock(); PREFERENCES.set('timelineOpen', true); await editor.updateExportDuration();
+			window.coordinationKeys = coordinationLayers.map(id => { const layer = editor.layerManager.getLayerById(id); return layer.animations?.length ? GlitterAnimation.sourceKey(id, layer.animations[0]) : `__appear_${id}`; });
+		});
+		const ready = async () => { await page.evaluate(() => editor.updateExportDuration()); await page.waitForFunction(() => !editor.timelineDock.stale); };
+		await ready();
+		const keys = await page.evaluate(() => coordinationKeys);
+		const bar = key => page.locator(`.timeline-row[data-source-key="${key}"] .timeline-bar`).first();
+		const state = () => page.evaluate(() => ({ history: editor.historyManager.historyIndex, entries: coordinationKeys.map(key => { const target = findTimingTarget(editor, key); return { key, run: target.run, appear: target.appear, animation: target.animation }; }) }));
+		const select = async () => { for (const [index, key] of keys.entries()) await bar(key).click({ modifiers: index ? ['Control'] : [] }); };
+		const initial = await state(); await select();
+		assert.equal(await page.evaluate(() => editor.timelineDock.selectedBars.size), 4, 'Ctrl-click keeps four independent timing bars selected');
+		assert.equal((await state()).history, initial.history, 'Bar selection is navigation');
+		const range = await page.evaluate(key => { const dock = editor.timelineDock, keys = dock.visibleBarRows().map(row => String(row.key)), from = keys.indexOf(dock.barAnchor), to = keys.indexOf(key); return keys.slice(Math.min(from, to), Math.max(from, to) + 1).sort(); }, keys[0]);
+		await bar(keys[0]).click({ modifiers: ['Shift'] });
+		assert.deepEqual(await page.evaluate(() => [...editor.timelineDock.selectedBars].sort()), range, 'Shift selects the visible range from the bar anchor');
+		await bar(keys[0]).click(); await bar(keys[1]).click({ modifiers: ['Control'] }); await bar(keys[1]).click({ modifiers: ['Control'] });
+		assert.deepEqual(await page.evaluate(() => [...editor.timelineDock.selectedBars]), [keys[0]], 'Ctrl-click toggles an already selected bar off');
+		await select();
+		const drag = async cancel => {
+			await bar(keys[0]).scrollIntoViewIfNeeded(); const box = await bar(keys[0]).boundingBox();
+			const x = box.x + box.width / 4, y = box.y + box.height / 2;
+			await page.mouse.move(x, y); await page.mouse.down();
+			await page.evaluate(() => { window.groupOriginalList = listTimingTargets; window.groupCollections = 0; listTimingTargets = (...args) => { groupCollections++; return groupOriginalList(...args); }; });
+			await page.mouse.move(x + 48, y, { steps: 6 });
+			const collections = await page.evaluate(() => { listTimingTargets = groupOriginalList; return groupCollections; });
+			assert.equal(collections, 0, 'Live group moves never recollect whole-scene timing targets');
+			const live = await state(), deltas = live.entries.map((entry, index) => entry.run.start - initial.entries[index].run.start);
+			assert(deltas[0] > 0 && deltas.every(delta => Math.abs(delta - deltas[0]) < 1e-6), `Dragging one selected body moves every selected run live by the same delta: ${JSON.stringify({ deltas, drag: await page.evaluate(() => ({ kind: editor.timelineDock.drag?.kind, group: editor.timelineDock.drag?.groupKeys, selected: [...editor.timelineDock.selectedBars] })), errors })}`);
+			assert.equal(live.history, initial.history, 'Live group movement has no history entry yet');
+			if (cancel === 'blur') await page.evaluate(() => window.dispatchEvent(new Event('blur')));
+			else if (cancel === 'history') await page.evaluate(() => editor.historyManager.undo());
+			else if (cancel === 'second-touch') await page.evaluate(() => window.dispatchEvent(new PointerEvent('pointerdown', { pointerType: 'touch', pointerId: editor.timelineDock.drag.pointerId + 1 })));
+			else if (cancel) await page.keyboard.press('Escape');
+			await page.mouse.up(); await ready();
+		};
+		await drag(true); assert.deepEqual(await state(), initial, 'Escape restores all group timing and absence/metadata without history');
+		for (const interruption of ['blur', 'history', 'second-touch']) { await select(); await drag(interruption); assert.deepEqual(await state(), initial, `${interruption} cancels the full group without an extra history action`); }
+		await select(); await drag(false);
+		const moved = await state(); assert.equal(moved.history, initial.history + 1, 'A committed group move saves exactly once');
+		await page.evaluate(() => editor.historyManager.undo()); await ready(); assert.deepEqual(await state(), initial);
+		assert(await page.evaluate(() => editor.timelineDock.selectedBars.size <= 1), 'History restore invalidates the transient bar selection');
+		await page.evaluate(() => editor.historyManager.redo()); await ready(); assert.deepEqual(await state(), moved);
+		await page.evaluate(() => editor.historyManager.undo()); await ready();
+		for (const [label, edge] of [['Align starts', 'start'], ['Align ends', 'end']]) {
+			await select();
+			if (edge === 'end') { await bar(keys[0]).focus(); await page.keyboard.press('Shift+F10'); }
+			else await bar(keys[0]).click({ button: 'right' });
+			await page.evaluate(() => new Promise(requestAnimationFrame));
+			assert(await page.getByRole('menuitem', { name: label, exact: true }).isVisible(), 'A pending scroll event from reaching the bar does not close its menu');
+			await page.getByRole('menuitem', { name: label, exact: true }).click(); await ready();
+			const aligned = await state(); assert.equal(aligned.history, initial.history + 1);
+			assert(aligned.entries.every(entry => Math.abs(entry.run[edge] - aligned.entries[0].run[edge]) < 1e-6), `${label} coordinates every selected bar`);
+			assert(aligned.entries.every((entry, index) => Math.abs(entry.run.end - entry.run.start - (initial.entries[index].run.end - initial.entries[index].run.start)) < 1e-6), 'Alignment preserves played duration');
+			await page.evaluate(() => editor.historyManager.undo()); await ready(); assert.deepEqual(await state(), initial);
+		}
+		await select(); const ordered = await page.evaluate(() => editor.timelineDock.selectedBarKeys());
+		await bar(keys[0]).click({ button: 'right' }); await page.getByRole('menuitem', { name: 'Stagger selected bars…', exact: true }).click();
+		const input = page.getByRole('spinbutton', { name: 'Stagger interval in seconds' }); await input.fill('0.15');
+		assert.match(await page.getByRole('dialog', { name: 'Stagger selected timing bars' }).textContent(), /0.45 s/, 'Stagger previews ordering and accepted times before applying');
+		await input.press('Control+a'); assert.equal(await page.evaluate(() => editor.timelineDock.selectedBars.size), 4, 'Native field selection does not run Select all timing bars');
+		await input.press('Enter'); await ready();
+		const staggered = await state(); assert.equal(staggered.history, initial.history + 1);
+		const orderedStarts = ordered.map(key => staggered.entries.find(entry => entry.key === key).run.start);
+		assert(orderedStarts.every((start, index) => Math.abs(start - orderedStarts[0] - index * 150) < 1e-6), 'Stagger follows visible layer/motion order');
+		await page.evaluate(() => editor.historyManager.undo()); await ready(); assert.deepEqual(await state(), initial);
+		await select(); await bar(keys[0]).click({ button: 'right' }); await page.getByRole('menuitem', { name: 'Move selected bars…', exact: true }).click();
+		await page.getByRole('spinbutton', { name: 'Move by in seconds' }).fill('0.25'); await page.keyboard.press('Escape'); assert.deepEqual(await state(), initial, 'Cancelling the numeric alternative writes nothing');
+		await select(); await page.evaluate(() => { editor.layerManager.getLayerById(coordinationLayers[1]).locked = true; });
+		const locked = await state(); const reason = await page.evaluate(() => editor.timelineDock.coordinateBars('move', 100).reason);
+		assert.match(reason, /unlocked/); assert.deepEqual(await state(), locked, 'One locked member refuses the whole batch');
+		await page.evaluate(() => { editor.layerManager.getLayerById(coordinationLayers[1]).locked = false; });
+		await page.evaluate(() => editor.layerManager.moveLayers([coordinationLayers[0]], { targetId: coordinationLayers[2], place: 'above' })); await ready();
+		assert.deepEqual(await page.evaluate(() => [...editor.timelineDock.selectedBars].sort()), [...keys].sort(), 'Reordering layers retains stable-id bar selection');
+		await page.evaluate(() => editor.historyManager.undo()); await ready();
+		await bar(keys[0]).focus(); await page.keyboard.press('Control+a');
+		assert(await page.evaluate(() => editor.timelineDock.selectedBars.size >= 4), 'Select all is reachable from bar keyboard focus');
+		await page.keyboard.press('Escape'); assert.equal(await page.evaluate(() => editor.timelineDock.selectedBars.size), 0, 'Escape explicitly clears a group selection');
+		await select(); await page.evaluate(() => editor.timelineDock.coordinateBars('move', 125)); await ready();
+		const savedState = await state();
+		const roundtrip = await page.evaluate(async () => {
+			const project = JSON.parse(JSON.stringify(await editor.projectSerializer.serialize()));
+			editor.isSaved = true; await editor.projectSerializer.load(project);
+			return coordinationKeys.map(key => findTimingTarget(editor, key)?.run);
+		});
+		assert.deepEqual(roundtrip, savedState.entries.map(entry => entry.run), 'Committed coordinated timing survives project reload');
+		await ready();
+		assert(await page.evaluate(() => [...editor.timelineDock.body.querySelectorAll('.timeline-group')].every(group => group.querySelector('.timeline-group-label'))), 'Reloaded timeline groups retain usable layer headers');
+		assert(await page.evaluate(() => editor.timelineDock.coordinationRoot === null && editor.timelineDock.coordinationMenu === null), 'Document replacement releases the numeric popover and its old bar references');
+		const reloaded = await state();
+		for (const interruption of ['type', 'delete-motion', 'delete-layer', 'lock', 'timing']) {
+			await select();
+			await bar(keys[0]).scrollIntoViewIfNeeded(); const box = await bar(keys[0]).boundingBox();
+			const x = box.x + box.width / 4, y = box.y + box.height / 2;
+			await page.mouse.move(x, y); await page.mouse.down(); await page.mouse.move(x + 32, y, { steps: 3 });
+			assert(await page.evaluate(() => editor.timelineDock.drag?.groupDelta > 0), `${interruption} starts with a live group move`);
+			await page.evaluate(interruption => {
+				const layer = editor.layerManager.getLayerById(coordinationLayers[1]);
+				if (interruption === 'type') editor.setAnimationType(layer, layer.animations[0].id, layer.animations[0].type === 'spin' ? 'pulse' : 'spin');
+				else if (interruption === 'delete-motion') editor.deleteAnimation(layer, 0);
+				else if (interruption === 'delete-layer') editor.layerManager.deleteLayers([layer.id]);
+				else if (interruption === 'lock') editor.layerManager.toggleLayerLock(layer.id);
+				else editor.writeTiming(coordinationKeys[1], { phase: findTimingTarget(editor, coordinationKeys[1]).phase + 0.123 });
+			}, interruption);
+			await page.mouse.up(); await ready();
+			assert.equal(await page.evaluate(() => Boolean(editor.timelineDock.drag)), false, `${interruption} ends the group gesture`);
+			const retained = await page.evaluate(() => ({ history: editor.historyManager.historyIndex, runs: coordinationKeys.map(key => findTimingTarget(editor, key)?.run || null) }));
+			assert.equal(retained.history, reloaded.history + 1, `${interruption} saves only its own action`);
+			retained.runs.forEach((run, index) => { if (run) assert.deepEqual(run, reloaded.entries[index].run, `${interruption} excludes transient movement from surviving sources`); });
+			await page.evaluate(() => editor.historyManager.undo()); await ready(); assert.deepEqual(await state(), reloaded, `${interruption} Undo restores the committed document`);
+			await page.evaluate(() => editor.historyManager.redo()); await ready();
+			assert.deepEqual(await page.evaluate(() => coordinationKeys.map(key => findTimingTarget(editor, key)?.run || null)), retained.runs, `${interruption} Redo preserves authored timing`);
+			await page.evaluate(() => editor.historyManager.undo()); await ready();
+		}
+		assert.deepEqual(errors, []);
+		console.log('PASS coordinated timing: Ctrl selection, live group move, cancel, one-step history, align starts/ends, stagger, numeric cancellation, locks and project reload');
+	} finally { await context.close(); }
+}
+
+async function verifyTimingBatchActions(browser) {
+	const { page, context, errors } = await openApp({ browser, viewport: { width: 1600, height: 1000 }, document: { width: 160, height: 120 } });
+	try {
+		await page.evaluate(async () => {
+			editor.setPlayback(false);
+			window.batchLayerIds = [];
+			for (let index = 0; index < 2; index++) {
+				const layer = editor.shapeGlitterManager.createLayer({ shapeId: 'square', width: 30, height: 30 });
+				layer.name = `Timing ${index + 1}`; getLayerFillSlot(layer).mode = 'solid';
+				layer.animations = [GlitterAnimation.normalizeAnimation({ id: editor.layerManager.generateLayerId(), type: 'pulse', periodMs: 1300 + index * 400, delayMs: 200 + index * 300, phase: .1 + index * .1, direction: 'reverse' })];
+				editor.layerManager.insertLayer(layer); batchLayerIds.push(layer.id);
+			}
+			const buffer = new Uint8Array(1024), writer = new GifWriter(buffer, 2, 2, { loop: 0, palette: [0xff0000, 0x0000ff] });
+			writer.addFrame(0, 0, 2, 2, new Uint8Array(4), { delay: 50 }); writer.addFrame(0, 0, 2, 2, new Uint8Array([1, 1, 1, 1]), { delay: 50 });
+			const url = `data:image/gif;base64,${btoa(String.fromCharCode(...buffer.subarray(0, writer.end())))}`, sticker = editor.stickerManager.createLayer();
+			Object.assign(sticker.stickerData, { isEmpty: false, isAnimated: true, url, baseUrl: url, width: 2, height: 2, frameCount: 2 });
+			editor.layerManager.insertLayer(sticker); batchLayerIds.push(sticker.id);
+			const windowLayer = editor.shapeGlitterManager.createLayer({ shapeId: 'circle', width: 20, height: 20 });
+			getLayerFillSlot(windowLayer).mode = 'solid'; windowLayer.appear = { start: 300, end: 1900 }; editor.layerManager.insertLayer(windowLayer); batchLayerIds.push(windowLayer.id);
+			editor.setDocumentLoop({ mode: 'set', durationMs: 4000 }, { commit: false }); editor.saveState('Batch timing fixture');
+			await editor.ensureTimelineDock(); PREFERENCES.set('timelineOpen', true); await editor.updateExportDuration();
+			window.batchKeys = batchLayerIds.map((id, index) => index < 2 ? GlitterAnimation.sourceKey(id, editor.layerManager.getLayerById(id).animations[0]) : index === 2 ? id : `__appear_${id}`);
+		});
+		const keys = await page.evaluate(() => batchKeys);
+		const bar = key => page.locator(`.timeline-row[data-source-key="${key}"] .timeline-bar`).first();
+		const ready = async () => { await page.evaluate(() => editor.updateExportDuration()); await page.waitForFunction(() => !editor.timelineDock.stale); };
+		const state = () => page.evaluate(() => ({ history: editor.historyManager.historyIndex, entries: batchLayerIds.map(id => { const layer = editor.layerManager.getLayerById(id); return { animations: layer.animations, appear: layer.appear, originals: layer.loopOriginalPeriods, cycle: layer.stickerData?.gifCycleMs }; }) }));
+		const select = async selected => { for (const [index, key] of selected.entries()) await bar(key).click({ modifiers: index ? ['Control'] : [] }); };
+		const openMenu = async key => { await bar(key).focus(); await page.keyboard.press('Shift+F10'); };
+		await ready(); const initial = await state();
+		await select(keys.slice(0, 3));
+		const expectedFits = await page.evaluate(() => batchKeys.slice(0, 3).map(key => editor.getLoopCandidate().fits.find(fit => fit.key === key)?.fittedPeriod));
+		assert(expectedFits.every(period => period > 0), 'Mixed procedural/GIF fixture has current representable fits');
+		await openMenu(keys[0]); await page.getByRole('menuitem', { name: 'Fit selected cycles to loop', exact: true }).click(); await ready();
+		const fitted = await state(); assert.equal(fitted.history, initial.history + 1, 'Group Fit commits once');
+		assert.deepEqual(fitted.entries.slice(0, 2).map(entry => entry.animations[0].periodMs), expectedFits.slice(0, 2));
+		assert(fitted.entries.slice(0, 2).every((entry, index) => ['delayMs', 'phase', 'direction', 'iterations'].every(field => entry.animations[0][field] === initial.entries[index].animations[0][field])), 'Fit keeps authored starts, offsets, direction and repeats');
+		await page.evaluate(() => editor.historyManager.undo()); await ready(); assert.deepEqual(await state(), initial, 'Group Fit undoes all cycles and metadata together');
+		await page.evaluate(() => editor.historyManager.redo()); await ready(); assert.deepEqual(await state(), fitted);
+		await select(keys.slice(0, 3)); await openMenu(keys[0]);
+		await page.evaluate(() => { editor.layerManager.getLayerById(batchLayerIds[1]).locked = true; });
+		await page.getByRole('menuitem', { name: 'Fit selected cycles to loop', exact: true }).click();
+		assert.deepEqual(await state(), fitted, 'Fit revalidates a lock changed after opening its menu');
+		await page.evaluate(() => { editor.layerManager.getLayerById(batchLayerIds[1]).locked = false; editor.notifications.dismissError(); });
+		await select(keys); await openMenu(keys[0]);
+		assert(await page.getByRole('menuitem', { name: 'Fit selected cycles to loop', exact: true }).isDisabled(), 'A selected visibility window visibly refuses cycle Fit');
+		await page.getByRole('menuitem', { name: 'Reset selected timing', exact: true }).click(); await ready();
+		const reset = await state(); assert.equal(reset.history, fitted.history + 1, 'Group Reset saves one step');
+		assert(reset.entries.slice(0, 2).every((entry, index) => entry.animations[0].periodMs === initial.entries[index].animations[0].periodMs && entry.animations[0].phase === 0 && entry.animations[0].delayMs === 0 && entry.animations[0].direction === 'normal' && !entry.originals), 'Reset restores cycles, run defaults and metadata');
+		assert.equal(reset.entries[3].appear, undefined, 'Group Reset clears the visibility window');
+		await page.evaluate(() => editor.historyManager.undo()); await ready(); assert.deepEqual(await state(), fitted, 'Group Reset is wholly undoable');
+		await bar(keys[0]).click(); await openMenu(keys[0]); await page.getByRole('menuitem', { name: 'Copy timing', exact: true }).click();
+		await select(keys.slice(1)); await openMenu(keys[1]);
+		assert.match(await page.locator('.app-menu-panel.is-fixed-menu:visible').textContent(), /Not supported here/, 'Group Paste explains dimensions omitted on GIF/range destinations');
+		await page.getByRole('menuitem', { name: 'Paste timing to selected bars', exact: true }).click(); await ready();
+		const pasted = await state(); assert.equal(pasted.history, fitted.history + 1, 'Mixed-target Paste commits once');
+		assert.equal(pasted.entries[1].animations[0].periodMs, fitted.entries[0].animations[0].periodMs);
+		assert.equal(pasted.entries[1].animations[0].delayMs, fitted.entries[0].animations[0].delayMs);
+		assert(Math.abs(pasted.entries[1].animations[0].phase - fitted.entries[0].animations[0].phase) < 1e-12);
+		const quantum = await page.evaluate(() => CONFIG.export.timeline.renderClock.gifDelayQuantumMs);
+		assert.equal(pasted.entries[2].cycle, Math.round(fitted.entries[0].animations[0].periodMs / quantum) * quantum, 'GIF Paste uses the file timing quantum');
+		assert.deepEqual(pasted.entries[3].appear, { start: fitted.entries[0].animations[0].delayMs, end: null }, 'Window Paste receives only compatible run values');
+		await page.evaluate(() => editor.historyManager.undo()); await ready(); assert.deepEqual(await state(), fitted, 'Mixed Paste undoes every target and remembered cycle');
+		await bar(keys[3]).click(); await openMenu(keys[3]); await page.getByRole('menuitem', { name: 'Copy timing', exact: true }).click();
+		await page.evaluate(() => { PREFERENCES.set('timelineOpen', false); editor.animationTimingActions(batchKeys[1]).find(action => action.id === 'paste').run(); }); await ready();
+		const inspector = await state(); assert.equal(inspector.history, fitted.history + 1, 'Inspector Paste commits once with the dock closed');
+		assert.equal(inspector.entries[1].animations[0].periodMs, fitted.entries[1].animations[0].periodMs, 'A range copy leaves Cycle untouched');
+		assert.equal(inspector.entries[1].animations[0].delayMs, 300);
+		assert(Math.abs(await page.evaluate(() => findTimingTarget(editor, batchKeys[1]).run.end) - 1900) < 1e-6, 'Inspector Paste accepts the requested finite end');
+		await page.evaluate(() => editor.historyManager.undo()); await ready();
+		await page.evaluate(() => editor.pasteTiming(batchKeys[1])); await ready(); assert.deepEqual(await state(), inspector, 'API and Inspector Paste use identical combined patch ordering');
+		assert.deepEqual(errors, []);
+		console.log('PASS batch Fit/Reset/Paste: mixed GIF/procedural sources, visibility, late locks, quantization, capability notes, one-step undo/redo and dock-closed Inspector/API equivalence');
+	} finally { await context.close(); }
+}
+
 if (require.main === module) {
 	const { chromium } = require('playwright');
-	(async () => { const browser = await chromium.launch(); try { await verifyTimelineGestures(browser); } finally { await browser.close(); } })().catch(error => { console.error(error); process.exitCode = 1; });
+	(async () => { const browser = await chromium.launch(); try { await verifyTimelineGestures(browser); await verifyTimelineCoordination(browser); await verifyTimingBatchActions(browser); } finally { await browser.close(); } })().catch(error => { console.error(error); process.exitCode = 1; });
 }
-module.exports = { verifyTimelineGestures };
+module.exports = { verifyTimelineGestures, verifyTimelineCoordination, verifyTimingBatchActions };

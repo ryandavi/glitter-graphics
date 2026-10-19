@@ -87,6 +87,7 @@ const ESCAPE_HANDLERS = Object.freeze([
 	{ id: 'drag', handle: editor => {
 		if (editor.keyRecording?.drag) { editor.keyRecording.finish(true); return true; }
 		if (editor.timelineDock?.keyLane.drag) { editor.timelineDock.keyLane.finish(true); return true; }
+		if (editor.timelineDock?.drag) { editor.timelineDock.finishDrag(true); return true; }
 		if (editor.maskEditor.strokeActive) { editor.maskEditor._cancelStroke(); return true; }
 		if (editor.pathEdit.session?.drag) { editor.pathEdit.cancelDrag(); return true; }
 		if (editor.cropEdit.drag) { editor.cropEdit.cancelDrag(); return true; }

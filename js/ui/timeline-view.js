@@ -337,7 +337,7 @@ const TimelineView = {
 		if (row.kind === 'range') return [
 			{ id: 'start', label: 'Appears at playhead', group: 'Visibility', disabled: playhead > row.source.run.end, run: () => write({ run: { start: playhead, end: row.source.run.end } }) },
 			{ id: 'end', label: 'Disappears at playhead', group: 'Visibility', disabled: playhead < row.startMs, run: () => write({ run: { start: row.startMs, end: playhead } }) },
-			{ id: 'reset', label: 'Always visible', group: 'Visibility', run: () => write({ appear: null }) }
+			{ id: 'reset', label: 'Always visible', group: 'Visibility', run: () => write({ appear: null }) }, ...this.timingClipboardActions(row, context)
 		];
 		if (row.can.run) {
 			actions.push({ id: 'once', label: 'Play once', checked: Math.abs(this.repeats(row) - 1) < 1e-6, run: () => write({ run: { start: row.startMs, end: row.startMs + (1 - row.phase) * row.cycleMs } }) },
@@ -364,16 +364,14 @@ const TimelineView = {
 			if (row.can.direction) patch.direction = 'normal';
 			return Object.keys(patch).length ? write(patch) : false;
 		} });
-		if (context.copy) actions.push({ id: 'copy', label: 'Copy timing', commits: false, run: () => context.copy(row) }, { id: 'paste', label: 'Paste timing', disabled: !context.clipboard, changesPeriod: row.can.period, run: () => {
-			const timing = context.clipboard;
-			const patch = {};
-			if (row.can.period && Number.isFinite(timing.cycle)) patch.period = timing.cycle;
-			if (row.can.phase && timing.phase != null) patch.phase = timing.phase;
-			if (row.can.direction && timing.direction) patch.direction = timing.direction;
-			if (row.can.run && timing.run) patch.run = { ...timing.run };
-			return Object.keys(patch).length ? write(patch) : false;
-		} });
-		return actions.map(action => ({ ...action, group: ['once', 'forever', 'start', 'end'].includes(action.id) ? 'Run' : action.id.startsWith('direction-') ? 'Direction' : ['copy', 'paste'].includes(action.id) ? 'Timing clipboard' : 'Loop' }));
+		actions.push(...this.timingClipboardActions(row, context));
+		return actions.map(action => ({ ...action, group: action.group || (['once', 'forever', 'start', 'end'].includes(action.id) ? 'Run' : action.id.startsWith('direction-') ? 'Direction' : 'Loop') }));
+	},
+	timingClipboardActions(row, context) {
+		if (!context.copy) return [];
+		return [{ id: 'copy', group: 'Timing clipboard', label: 'Copy timing', commits: false, run: () => context.copy(row) },
+			{ id: 'paste', group: 'Timing clipboard', label: 'Paste timing', disabled: !context.paste || Boolean(context.pasteInfo?.reason), run: () => context.paste?.(row) },
+			...(context.pasteInfo?.summary ? [{ id: 'paste-note', group: 'Timing clipboard', note: context.pasteInfo.summary }] : [])];
 	},
 	cycleStarts(row, untilMs) {
 		const starts = [];

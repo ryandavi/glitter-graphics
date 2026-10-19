@@ -29,35 +29,67 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 	},
 	hasMotionForPlayback() { return Boolean(this.originalImage && listTimingTargets(this).some(target => target.active !== false && this.layerManager.getLayerById(target.layerId)?.visible !== false && (target.kind === 'appear' || target.kind === 'gifCycle' || target.period > 0))); },
 	setLayerAppear(layer, appear, options) { return this.writeTiming(`__appear_${layer.id}`, { appear }, { label: 'Change layer visibility timing', ...options }); },
-	writeTiming(key, patch, { label = 'Change animation timing', coalesceKey, commit = true, live = false } = {}) {
-		if (!patch || typeof patch !== 'object' || Array.isArray(patch)) return false;
+	writeTiming(key, patch, { label = 'Change animation timing', coalesceKey, commit = true, live = false, batch = null } = {}) {
+		if (!batch) this.timelineDock?.cancelGroupMove();
 		const target = findTimingTarget(this, key);
-		if (!target) return false;
-		const names = { period: 'period', run: 'run', appear: 'appear', delayMs: 'run', iterations: 'run', phase: 'phase', direction: 'direction' };
-		if (Object.keys(patch).some(name => !target.can[names[name]])) return false;
+		if (!isTimingPatchAllowed(target, patch)) return false;
 		const layer = this.layerManager.getLayerById(target.layerId);
-		if (['period', 'delayMs', 'phase'].some(name => Object.hasOwn(patch, name) && !Number.isFinite(patch[name]))) return false;
-		if (Object.hasOwn(patch, 'iterations') && patch.iterations !== Infinity && !Number.isFinite(patch.iterations)) return false;
-		if (Object.hasOwn(patch, 'run') && (!patch.run || !Number.isFinite(patch.run.start) || (patch.run.end !== Infinity && !Number.isFinite(patch.run.end)) || patch.run.end < patch.run.start)) return false;
-		if (Object.hasOwn(patch, 'appear') && (Object.hasOwn(patch, 'run') || patch.appear !== null && (!patch.appear || !Number.isFinite(patch.appear.start) || patch.appear.end !== null && (!Number.isFinite(patch.appear.end) || patch.appear.end < patch.appear.start)))) return false;
-		if (Object.hasOwn(patch, 'direction') && !ANIMATION_DIRECTION_OPTIONS.some(option => option.value === patch.direction)) return false;
-		if (this.previewFrameView?.exact || this.previewFrameView?.done) this.previewFrameView.invalidate();
+		if (!batch && (this.previewFrameView?.exact || this.previewFrameView?.done)) this.previewFrameView.invalidate();
 		ANIMATION_TIMING_KINDS[target.kind].write(this, layer, target, patch);
 		const next = ANIMATION_TIMING_KINDS[target.kind].collect(this, layer).find(entry => entry.key === key);
-		const values = entry => ({ period: entry.period, run: entry.run, appear: entry.appear, phase: entry.phase, direction: entry.direction });
-		if (!next || isSameData(values(target), values(next))) return false;
+		if (!next || isSameData(timingTargetValues(target), timingTargetValues(next))) return false;
 		if (target.period > 0 && Math.abs(next.period - target.period) > 0.01) {
 			layer.loopOriginalPeriods ||= {};
 			layer.loopOriginalPeriods[key] ??= target.period;
 		}
 		if (target.kind === 'motion') this.touchMotion?.(layer, next.animation);
 		this.documentRevision = (this.documentRevision || 0) + 1;
-		getLayerManagerForType(this, layer.type)?.renderLayer?.(layer);
-		this.previewFrameView?.invalidate({ keepFrame: Boolean(this.keyRecording?.active) });
-		this.requestPreviewUpdate();
-		window.dispatchEvent(new CustomEvent('animationChanged', { detail: { layerId: layer.id } }));
+		if (batch) { batch.add(layer); return true; }
+		publishTimingWrites(this, [layer]);
 		if (commit && !live) this.commitAnimationTiming(label, { coalesceKey });
 		return true;
+	},
+	moveTimingTargets(keys, operation, value, { commit = true, coalesceKey } = {}) {
+		if (commit) this.timelineDock?.cancelGroupMove();
+		const plan = planTimingMoves(this, keys, operation, value);
+		return this.applyTimingPlan(plan, { commit, coalesceKey, timingOnly: !plan.changes.some(change => change.activityChanged),
+			label: { move: 'Move selected timing bars', 'align-start': 'Align animation starts', 'align-end': 'Align animation ends', stagger: 'Stagger animations' }[operation] });
+	},
+	writeTimingBatch(updates, options) {
+		this.timelineDock?.cancelGroupMove();
+		return this.applyTimingPlan(planTimingBatch(this, updates), options);
+	},
+	applyTimingPlan(plan, { label = 'Change animation timing', commit = true, coalesceKey, timingOnly = false } = {}) {
+		if (plan.reason) return { ...plan, changed: false };
+		const layers = new Set();
+		for (const change of plan.changes) {
+			if (change.delta === 0 || change.changed === false) continue;
+			this.writeTiming(change.key, change.patch, { batch: layers });
+			if (change.restoreOriginal) {
+				const layer = this.layerManager.getLayerById(change.layerId);
+				delete layer.loopOriginalPeriods[change.key];
+				if (!Object.keys(layer.loopOriginalPeriods).length) delete layer.loopOriginalPeriods;
+				if (!layers.has(layer)) this.documentRevision = (this.documentRevision || 0) + 1;
+				layers.add(layer);
+			}
+		}
+		if (!layers.size) return { ...plan, changed: false };
+		publishTimingWrites(this, layers, { timingOnly });
+		if (commit) this.commitAnimationTiming(label, { coalesceKey });
+		return { ...plan, changed: true };
+	},
+	restoreTimingMoves(snapshot) {
+		if (snapshot.epoch !== this.animationRevisionEpoch) return;
+		const layers = new Set();
+		for (const entry of snapshot.entries) {
+			if (this.layerManager.getLayerById(entry.layer.id) !== entry.layer || entry.animation && !entry.layer.animations?.includes(entry.animation)) continue;
+			ANIMATION_TIMING_KINDS[entry.target.kind].write(this, entry.layer, entry.target, entry.patch);
+			if (entry.animation) this.touchMotion?.(entry.layer, entry.animation);
+			layers.add(entry.layer);
+		}
+		if (!layers.size) return;
+		this.documentRevision = (this.documentRevision || 0) + 1;
+		publishTimingWrites(this, layers);
 	},
 
 	setPlayback(playing) {
@@ -204,12 +236,13 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		window.addEventListener('blur', cancel);
 		window.addEventListener('resize', cancel);
 		document.addEventListener('visibilitychange', () => { if (document.hidden) cancel(); });
-		for (const event of ['playbackChanged', 'animationChanged', 'layerChanged', 'imageLoaded', 'imageRemoved']) window.addEventListener(event, () => this.syncAnimationTransports());
+		for (const event of ['playbackChanged', 'animationChanged', 'layerChanged', 'imageLoaded', 'imageRemoved']) window.addEventListener(event, change => this.syncAnimationTransports({ timingOnly: event === 'animationChanged' && change.detail?.timingOnly }));
 		this.syncAnimationTransports();
 	},
-	syncAnimationTransports() {
+	syncAnimationTransports({ timingOnly = false } = {}) {
 		if (!this.animationTransports) return;
-		const available = this.hasMotionForPlayback(), loop = this.resolveAnimationLoop();
+		const available = timingOnly && this.animationPlaybackAvailable !== undefined ? this.animationPlaybackAvailable : this.hasMotionForPlayback(), loop = this.resolveAnimationLoop();
+		this.animationPlaybackAvailable = available;
 		for (const control of this.animationTransports) {
 			if (control.gesture && control.gesture.layerId !== this.activeLayerId) control.cancel();
 			const label = this.animationTicker.paused ? 'Play' : 'Pause';
