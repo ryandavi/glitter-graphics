@@ -4,6 +4,7 @@
 // Members are Class.method, or paintSlots.functionName / sparkles.functionName
 // for the top-level functions of js/paint/paint-slots.js / js/paint/sparkles.js.
 const PREVIEW_EXPORT_TWINS = [
+	{ feature: 'layer visibility windows', shared: 'isLayerShownAt', preview: ['AnimationTicker._paint'], export: ['SceneCompositor._renderFrameToCanvas', 'HtmlSceneExporter.createScene'] },
 	{ feature: 'filter region pixels', shared: 'GlitterFilter.renderRegionToCanvas', preview: ['FilterLayerManager.renderSnapshot'], export: ['SceneCompositor._buildFilterExportPlan'] },
 	{ feature: 'clip base resolution', shared: 'getClipBase', preview: ['ClipPreview.reconcile'], export: ['SceneCompositor._renderFrameToCanvas'] },
 	{ feature: 'clip body mask', shared: 'getClipBodyCache', preview: ['ClipPreview.updateMask'], export: ['SceneCompositor._renderFrameToCanvas'] },

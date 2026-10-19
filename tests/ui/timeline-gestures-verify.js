@@ -20,10 +20,46 @@ async function verifyTimelineGestures(browser) {
 				hint: dock.ruler.textContent, disabled: dock.addAnimation.disabled, columns: getComputedStyle(dock.body.querySelector('.timeline-group-header')).gridTemplateColumns.split(' ').length,
 				chevron: dock.body.querySelector(`[data-layer-id="${emptyTimelineLayerId}"] .timeline-group-chevron`).getBoundingClientRect().toJSON() };
 		});
-		assert.equal(emptyBand.empty, 0, 'Empty timeline has no body empty state or group tracks');
-		assert.equal(emptyBand.columns, 1, 'Empty timeline is a single-column layer list');
+		assert.equal(emptyBand.empty, 1, 'A static layer has an editable visibility track without a body empty state');
+		assert.equal(emptyBand.columns, 3, 'A static layer retains the timeline columns for visibility authoring');
 		assert.equal(emptyBand.hint, "Nothing moves yet. Select a layer and press + to add an animation.");
 		assert.equal(emptyBand.disabled, false, 'Header Add animation is enabled for the active animatable layer');
+		await page.evaluate(async () => { editor.setDocumentLoop({ mode: 'set', durationMs: 1600 }, { commit: false }); PREFERENCES.set('timelineSnap', false); await editor.updateExportDuration(); });
+		const rangeReady = () => page.waitForFunction(() => !editor.timelineDock.stale && editor.timelineDock.model.loopMs === 1600);
+		await rangeReady();
+		const rangeState = () => page.evaluate(() => { const value = editor.layerManager.getLayerById(emptyTimelineLayerId).appear; return value ? { start: roundTo(value.start, 0.001), end: value.end === null ? null : roundTo(value.end, 0.001) } : null; });
+		const rangeDrag = async (kind, ms, cancel = false) => {
+			await rangeReady();
+			const point = await page.evaluate(({ kind, ms }) => {
+				const dock = editor.timelineDock, row = dock.body.querySelector(`[data-layer-id="${emptyTimelineLayerId}"] .timeline-group-window`);
+				const bar = row.querySelector(kind === 'body' ? '.timeline-bar' : `.timeline-bar-handle.is-${kind}`).getBoundingClientRect();
+				const track = row.querySelector('.timeline-track').getBoundingClientRect(), x = bar.x + bar.width / 2;
+				return { x, y: bar.y + bar.height / 2, end: kind === 'body' ? x + TimelineView.timeToX(ms, dock.scale) : track.x + TimelineView.timeToX(ms, dock.scale) };
+			}, { kind, ms });
+			await page.mouse.move(point.x, point.y); await page.mouse.down(); await page.mouse.move(point.end, point.y, { steps: 5 });
+			if (cancel) await page.keyboard.press('Escape');
+			await page.mouse.up(); await rangeReady();
+		};
+		await rangeDrag('right', 800, true);
+		assert.equal(await rangeState(), null, 'Cancelling the first visibility edit restores absence');
+		const rangeHistory = await page.evaluate(() => editor.historyManager.historyIndex);
+		await rangeDrag('right', 800);
+		assert.deepEqual(await rangeState(), { start: 0, end: 800 });
+		assert.equal(await page.evaluate(() => editor.historyManager.historyIndex), rangeHistory + 1, 'A visibility drag commits once');
+		await rangeDrag('left', 200);
+		assert.deepEqual(await rangeState(), { start: 200, end: 800 });
+		await rangeDrag('body', 100);
+		assert.deepEqual(await rangeState(), { start: 300, end: 900 }, 'Moving a finite visibility window preserves its length');
+		await page.evaluate(() => editor.historyManager.undo()); await rangeReady();
+		assert.deepEqual(await rangeState(), { start: 200, end: 800 });
+		await page.evaluate(() => editor.historyManager.redo()); await rangeReady();
+		assert.deepEqual(await rangeState(), { start: 300, end: 900 });
+		const rangeBar = page.locator('.timeline-group-window .timeline-bar').first();
+		await rangeBar.click({ button: 'right' });
+		assert.equal(await page.getByRole('menuitem', { name: 'Original cycle', exact: true }).count(), 0, 'Visibility has no cycle or phase actions');
+		await page.getByRole('menuitem', { name: 'Always visible', exact: true }).click(); await rangeReady();
+		assert.equal(await rangeState(), null);
+		assert(await page.evaluate(() => !editor.layerManager.getLayerById(emptyTimelineLayerId).animations?.length), 'Visibility edits never create a motion');
 		await page.locator('.timeline-dock .section-header-actions button[aria-label="Add animation"]').click();
 		await page.evaluate(async () => { await editor.updateExportDuration(); });
 		assert(await page.evaluate(() => editor.layerManager.getLayerById(emptyTimelineLayerId).animations.length === 1), 'Header Add animation adds a motion');
@@ -73,13 +109,13 @@ async function verifyTimelineGestures(browser) {
 			});
 			const points = await page.evaluate(({ kind, time, delta, grab }) => {
 				const dock = editor.timelineDock;
-				const node = dock.body.querySelector(`[data-layer-id="${window.timelineFixtureId}"] .timeline-row`);
+				const node = dock.body.querySelector(`[data-layer-id="${window.timelineFixtureId}"] .timeline-row:not(.timeline-group-window)`);
 				const track = (kind === 'loop' ? dock.rulerTrack : node.querySelector('.timeline-track')).getBoundingClientRect();
-				const target = (kind === 'loop' ? dock.rulerTrack.querySelector('.timeline-loop-end') : node.querySelector(kind === 'body' ? '.timeline-bar' : kind === 'period' ? '.timeline-period-notch' : `.timeline-bar-handle.is-${kind}`)).getBoundingClientRect();
+				const target = (kind === 'loop' ? dock.rulerTrack.querySelector('.timeline-loop-end') : node.querySelector(kind === 'body' ? '.timeline-bar:not(.is-range)' : kind === 'period' ? '.timeline-period-notch' : `.timeline-bar-handle.is-${kind}`)).getBoundingClientRect();
 				let x = target.left + target.width / 2;
 				if (kind === 'body' && !grab) {
 					const view = dock.body.getBoundingClientRect(), left = Math.max(target.left, view.left), right = Math.min(target.right, view.right);
-					const bar = node.querySelector('.timeline-bar'), y = target.top + target.height / 2;
+					const bar = node.querySelector('.timeline-bar:not(.is-range)'), y = target.top + target.height / 2;
 					x = [0.5, 0.75, 0.25].map(share => left + (right - left) * share).find(candidate => document.elementFromPoint(candidate, y)?.closest('[data-drag]') === bar);
 					if (x == null) throw new Error('No unobstructed timing-bar body for dragging');
 				}
@@ -113,7 +149,7 @@ async function verifyTimelineGestures(browser) {
 		await page.evaluate(() => { editor.animationPanel.setPaused(true); editor.animationTicker.seek(700); });
 		await page.waitForFunction(() => !editor.timelineDock.frameView.canvas.hidden);
 		let before = await state();
-		assert(await page.evaluate(() => editor.timelineDock.body.querySelector('.timeline-bar').classList.contains('is-movable')), 'A motion bar says its body moves');
+		assert(await page.evaluate(() => editor.timelineDock.body.querySelector('.timeline-bar:not(.is-range)').classList.contains('is-movable')), 'A motion bar says its body moves');
 		await drag('body', 600, { delta: true });
 		let after = await state();
 		assert(after.delay > 500 && after.delay < 700 && after.repeats === Infinity && after.phase === before.phase, 'Dragging a full-length bar moves it and keeps it running to the loop end');
@@ -192,13 +228,13 @@ async function verifyTimelineGestures(browser) {
 		assert.deepEqual(await state(), before, 'Pointer cancellation restores values without history');
 		await drag('body', 500, { delta: true, alt: true });
 		assert(Math.abs((await state()).phase - 0.5) < 0.0001, 'Alt-body drag slips by half a cycle');
-		await page.locator('#timelineDock .timeline-bar').first().click();
+		await page.locator('#timelineDock .timeline-group-rows .timeline-bar:not(.is-range)').first().click();
 		assert(await page.evaluate(() => editor.libraryWindow.flyoutCard?.id === 'shapeAnimationSection'), 'Clicking a motion opens its owning Animation section');
-		const bar = page.locator('#timelineDock .timeline-bar').first();
+		const bar = page.locator('#timelineDock .timeline-group-rows .timeline-bar:not(.is-range)').first();
 		await bar.focus();
 		before = await state();
 		assert(await bar.evaluate(button => {
-			const dock = editor.timelineDock, node = button.closest('.timeline-row'), row = dock.rowFor(node);
+			const dock = editor.timelineDock, node = button.closest('.timeline-row:not(.timeline-group-window)'), row = dock.rowFor(node);
 			const left = button.style.left;
 			button.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }));
 			return button.style.left !== left && Math.abs(parseFloat(button.style.left) - TimelineView.timeToX(row.startMs, dock.scale)) < 0.01;
@@ -235,11 +271,11 @@ async function verifyTimelineGestures(browser) {
 			editor.timelineDock.resync();
 		});
 		before = await state();
-		await page.locator('#timelineDock .timeline-bar').first().focus();
+		await page.locator('#timelineDock .timeline-group-rows .timeline-bar:not(.is-range)').first().focus();
 		await page.keyboard.press('ArrowRight');
 		assert.deepEqual(await state(), before, 'Locked bars reject keyboard editing');
 		assert(await page.evaluate(() => editor.timelineDock.body.querySelector(`[data-layer-id="${window.timelineFixtureId}"]`).classList.contains('is-locked')
-			&& getComputedStyle(editor.timelineDock.body.querySelector('.timeline-bar')).cursor === 'not-allowed'), 'A locked layer marks its bars');
+			&& getComputedStyle(editor.timelineDock.body.querySelector('.timeline-bar:not(.is-range)')).cursor === 'not-allowed'), 'A locked layer marks its bars');
 		await page.evaluate(() => { editor.notifications.errorText.textContent = ''; });
 		await drag('body', 400, { delta: true });
 		assert.deepEqual(await state(), before, 'Locked bars reject a drag');
@@ -261,7 +297,7 @@ async function verifyTimelineGestures(browser) {
 			await editor.updateExportDuration();
 		});
 		await ready();
-		const gifBar = page.locator('#timelineDock .timeline-group').filter({ has: page.locator('.timeline-bar.is-authored') }).locator('.timeline-bar');
+		const gifBar = page.locator('#timelineDock .timeline-group').filter({ has: page.locator('.timeline-bar:not(.is-range).is-authored') }).locator('.timeline-bar:not(.is-range)');
 		await page.evaluate(() => { editor.timelineDock.setZoom(300); editor.animationTicker.seek(0); editor.timelineDock.scrollToTimeX(0); });
 		const menuBar = await gifBar.boundingBox();
 		await gifBar.click({ button: 'right', position: { x: 30, y: menuBar.height / 2 } });
@@ -301,18 +337,22 @@ async function verifyTimelineGestures(browser) {
 		// Arrows walk the bars, across layers; Enter selects and Shift+F10 opens the menu.
 		const focusedLayer = () => page.evaluate(() => document.activeElement.closest('.timeline-group')?.dataset.layerId);
 		const fixtureId = await page.evaluate(() => window.timelineFixtureId);
-		await page.locator(`#timelineDock [data-layer-id="${fixtureId}"] .timeline-bar`).focus();
+		await page.locator(`#timelineDock [data-layer-id="${fixtureId}"] .timeline-bar:not(.is-range)`).focus();
 		assert.equal(await page.evaluate(() => editor.notifications.statusText.textContent), 'Drag to move · left edge changes start · right edge sets length · Shift-edge changes repeats · Alt-drag slips · Enter selects · right-click or Shift+F10 for more', 'A focused bar says what it can do');
 		await page.keyboard.press('Home');
 		assert.equal(await focusedLayer(), await page.evaluate(() => window.timelineGifId), 'Home reaches the first bar, in another layer');
 		await page.keyboard.press('End');
 		assert.equal(await focusedLayer(), fixtureId, 'End reaches the last bar');
 		await page.keyboard.press('ArrowUp');
+		assert.equal(await page.evaluate(() => document.activeElement.closest('.timeline-row')?.dataset.sourceKey), `__appear_${fixtureId}`, 'Up reaches the layer visibility bar above its motion');
+		await page.keyboard.press('ArrowUp');
 		assert.equal(await focusedLayer(), await page.evaluate(() => window.timelineGifId), 'Up moves to the bar above');
+		await page.keyboard.press('ArrowDown');
+		assert.equal(await page.evaluate(() => document.activeElement.closest('.timeline-row')?.dataset.sourceKey), `__appear_${fixtureId}`);
 		await page.keyboard.press('ArrowDown');
 		assert.equal(await focusedLayer(), fixtureId);
 		await page.keyboard.press('Enter');
-		assert.equal(await page.evaluate(() => editor.timelineDock.selectedKey), await page.locator(`#timelineDock [data-layer-id="${fixtureId}"] .timeline-row`).getAttribute('data-source-key'), 'Enter selects the focused bar');
+		assert.equal(await page.evaluate(() => editor.timelineDock.selectedKey), await page.locator(`#timelineDock [data-layer-id="${fixtureId}"] .timeline-row:not(.timeline-group-window)`).getAttribute('data-source-key'), 'Enter selects the focused bar');
 		await page.keyboard.press('Shift+F10');
 		assert(await page.getByRole('menuitem', { name: 'Reset timing', exact: true }).isVisible(), 'Shift+F10 opens the bar menu');
 		await page.keyboard.press('Escape');
@@ -325,7 +365,7 @@ async function verifyTimelineGestures(browser) {
 		});
 		await ready();
 		assert(await page.evaluate(() => {
-			const bar = editor.timelineDock.body.querySelector(`[data-layer-id="${window.timelineFixtureId}"] .timeline-bar`);
+			const bar = editor.timelineDock.body.querySelector(`[data-layer-id="${window.timelineFixtureId}"] .timeline-bar:not(.is-range)`);
 			return bar.classList.contains('has-outside-grips') && bar.getBoundingClientRect().width >= CONFIG.ui.timeline.barMinPx;
 		}), 'A short bar keeps a body and wears its grips outside');
 		before = await state();
@@ -399,7 +439,7 @@ async function verifyTimelineGestures(browser) {
 			assert.deepEqual(result, pageZoom, `Ctrl-wheel consumes browser zoom over ${selector} and leaves canvas zoom unchanged: ${JSON.stringify(result)}`);
 			assert(await page.evaluate(() => editor.timelineDock.scale) !== scale, `Ctrl-wheel zooms over ${selector}`);
 		};
-		for (const selector of ['#timelineDock .timeline-bar', '.timeline-row-label', '.timeline-ruler', '#timelineDock .section-header', '.timeline-body']) {
+		for (const selector of ['#timelineDock .timeline-bar:not(.is-range)', '.timeline-group-rows .timeline-row-label', '.timeline-ruler', '#timelineDock .section-header', '.timeline-body']) {
 			await page.evaluate(() => { editor.timelineDock.setZoom(300); editor.timelineDock.scrollToTimeX(0); });
 			const empty = selector === '.timeline-body' ? { x: bodyBox.width - 40, y: bodyBox.height - 25 } : null;
 			await ctrlWheel(selector, empty);
@@ -408,10 +448,10 @@ async function verifyTimelineGestures(browser) {
 		assert(await page.evaluate(() => {
 			const dock = editor.timelineDock;
 			dock.setZoom(dock.config.pxPerSecondStops.at(-1));
-			const row = dock.body.querySelector('.timeline-row'), ruler = dock.rulerTrack;
+			const row = dock.body.querySelector('.timeline-row:not(.timeline-group-window)'), ruler = dock.rulerTrack;
 			const scale = dock.scale;
 			const consumed = !dock.header.dispatchEvent(new WheelEvent('wheel', { bubbles: true, cancelable: true, ctrlKey: true, deltaY: -100 }));
-			return consumed && dock.scale === scale && row === dock.body.querySelector('.timeline-row') && ruler === dock.rulerTrack;
+			return consumed && dock.scale === scale && row === dock.body.querySelector('.timeline-row:not(.timeline-group-window)') && ruler === dock.rulerTrack;
 		}), 'Ctrl-wheel remains consumed at the timeline zoom limit');
 		await page.evaluate(() => { editor.timelineDock.setZoom(300); editor.timelineDock.scrollToTimeX(0); });
 		await page.mouse.move(bodyBox.x + bodyBox.width - 40, bodyBox.y + 30);
@@ -491,7 +531,7 @@ async function verifyTimelineGestures(browser) {
 			editor.animationTicker.seek(0); editor.timelineDock.scrollToTimeX(0);
 		}); await ready();
 		before = await state();
-		const moveBar = await page.locator(`[data-layer-id="${fixtureId}"] .timeline-bar`).boundingBox();
+		const moveBar = await page.locator(`[data-layer-id="${fixtureId}"] .timeline-bar:not(.is-range)`).boundingBox();
 		await page.mouse.move(moveBar.x + 30, moveBar.y + moveBar.height / 2); await page.mouse.down();
 		await page.mouse.move(bodyBox.x + bodyBox.width + 20, moveBar.y + moveBar.height / 2);
 		const barEdgeBefore = await body.evaluate(node => node.scrollLeft);
@@ -500,7 +540,7 @@ async function verifyTimelineGestures(browser) {
 		await page.keyboard.press('Escape'); await page.mouse.up(); await ready();
 		assert.deepEqual(await state(), before, 'Cancelling an edge-scrolling bar restores timing without history');
 		assert(await page.evaluate(() => {
-			const dock = editor.timelineDock, bar = dock.body.querySelector(`[data-layer-id="${window.timelineFixtureId}"] .timeline-bar`), box = bar.getBoundingClientRect();
+			const dock = editor.timelineDock, bar = dock.body.querySelector(`[data-layer-id="${window.timelineFixtureId}"] .timeline-bar:not(.is-range)`), box = bar.getBoundingClientRect();
 			bar.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerId: 81, clientX: box.left + 30, clientY: box.top + box.height / 2 }));
 			if (!dock.drag) return false;
 			const estimate = { ...editor.loopEstimate, renderClock: { ...editor.loopEstimate.renderClock, frameCount: 123 } };
@@ -562,7 +602,7 @@ async function verifyTimelineGestures(browser) {
 		}); await ready();
 		const openMotionMenu = () => page.evaluate(() => {
 			const dock = editor.timelineDock, row = dock.model.groups.find(group => group.layerId === window.timelineFixtureId).rows[0];
-			const node = dock.rowNodesByKey.get(String(row.key)); dock.openBarMenu(row, node, node.querySelector('.timeline-bar'));
+			const node = dock.rowNodesByKey.get(String(row.key)); dock.openBarMenu(row, node, node.querySelector('.timeline-bar:not(.is-range)'));
 		});
 		for (const [label, field, value] of [['Play once', 'repeats', 1], ['Repeat forever', 'repeats', Infinity], ['Start at playhead', 'delay', 1500], ['Trim end at playhead', 'repeats', 1.5], ['Reverse', 'direction', 'reverse'], ['Ping-pong', 'direction', 'alternate']]) {
 			const before = await state(); await openMotionMenu();
@@ -643,7 +683,7 @@ async function verifyTimelineGestures(browser) {
 			await editor.updateExportDuration();
 		});
 		await stackReady();
-		const motions = group(fillId).locator('.timeline-row[data-motion-index]');
+		const motions = group(fillId).locator('.timeline-row:not(.timeline-group-window)[data-motion-index]');
 		await page.evaluate(async () => {
 			const layer = editor.layerManager.getLayerById(stackFixture.fillId);
 			getLayerFillSlot(layer).mode = 'glitter';
@@ -651,12 +691,12 @@ async function verifyTimelineGestures(browser) {
 			await editor.updateExportDuration();
 		});
 		assert(await group(fillId).evaluate(node => {
-			const motion = node.querySelector('.timeline-row.has-motion .list-row-content');
-			const source = node.querySelector('.timeline-row:not(.has-motion) .list-row-content');
+			const motion = node.querySelector('.timeline-row:not(.timeline-group-window).has-motion .list-row-content');
+			const source = node.querySelector('.timeline-row:not(.timeline-group-window):not(.has-motion) .list-row-content');
 			return source && Math.abs(source.getBoundingClientRect().left - motion.getBoundingClientRect().left) < 0.1;
 		}), 'Animation and authored source names share the same left edge');
 		assert.equal(await motions.count(), 2, 'Every stack entry is listed');
-		assert.equal(await motions.nth(1).locator('.timeline-bar').count(), 0, 'Disabled motion has no bar');
+		assert.equal(await motions.nth(1).locator('.timeline-bar:not(.is-range)').count(), 0, 'Disabled motion has no bar');
 		assert.equal(await motions.nth(1).locator('.list-row-content').textContent(), 'Rotate', 'Disabled motion retains its registry name');
 		const motionStart = await motions.nth(0).locator('.list-row-content').boundingBox(), motionTarget = await motions.nth(1).boundingBox();
 		const motionHistory = await page.evaluate(() => editor.historyManager.historyIndex);
@@ -670,7 +710,7 @@ async function verifyTimelineGestures(browser) {
 		}, motionHistory), 'Motion row dragging reorders both timeline and inspector in one step');
 		await motions.nth(0).locator('.timeline-motion-enabled').click();
 		await page.waitForFunction(() => !editor.timelineDock.stale && editor.timelineDock.model.groups.find(group => group.layerId === stackFixture.fillId).rows.filter(row => row.animation)[0].source);
-		assert.equal(await motions.nth(0).locator('.timeline-bar').count(), 1, 'Timeline eye enables a disabled motion');
+		assert.equal(await motions.nth(0).locator('.timeline-bar:not(.is-range)').count(), 1, 'Timeline eye enables a disabled motion');
 		await group(fillId).locator('.timeline-group-label').focus();
 		await page.keyboard.press('Alt+ArrowDown');
 		await page.waitForFunction(() => !editor.timelineDock.stale && editor.timelineDock.model.groups[0].layerId === stackFixture.staticId);
@@ -680,7 +720,7 @@ async function verifyTimelineGestures(browser) {
 		assert.equal(await page.evaluate(() => editor.layerManager.getLayerById(stackFixture.fillId).animations[0].type), 'pulse', 'Motion row Alt+ArrowDown reorders its stack');
 		await page.evaluate(async () => { editor.layerManager.toggleLayerVisibility(stackFixture.fillId); await editor.updateExportDuration(); });
 		assert.equal(await motions.count(), 2, 'A hidden layer retains all stack entries');
-		assert.equal(await motions.locator('.timeline-bar').count(), 0, 'A hidden layer has no motion bars');
+		assert.equal(await motions.locator('.timeline-bar:not(.is-range)').count(), 0, 'A hidden layer has no motion bars');
 		assert.deepEqual(errors, []);
 		console.log('PASS timeline gestures: body move and slip, snap guide and readout, Alt, live trim, Undo, Escape, locked bars, nudge burst, arrow focus, menu, short bars, cycle and loop length');
 	} finally { await context.close(); }

@@ -132,6 +132,8 @@ class LayerManager {
 		});
 		serialized.opacity = layer.opacity;
 		serialized.clipped = Boolean(layer.clipped);
+		const appear = supportsLayerAppear(layer) && normalizeLayerAppear(layer.appear);
+		if (appear) serialized.appear = appear;
 		if (layer.animationsEnabled === false) serialized.animationsEnabled = false;
 		if (layer.loopOriginalPeriods) serialized.loopOriginalPeriods = structuredClone(layer.loopOriginalPeriods);
 		if (isTransformableLayerType(type)) serialized.transform = cloneTransform(getLayerTransform(layer));
@@ -192,6 +194,8 @@ class LayerManager {
 			restored.animations = GlitterAnimation.normalizeAnimations(layerData.animations).map(animation => ({ ...animation, id: typeof animation.id === 'string' && animation.id ? animation.id : this.generateLayerId() }));
 		}
 		restored.clipped = Boolean(layerData.clipped);
+		const appear = supportsLayerAppear(restored) && normalizeLayerAppear(layerData.appear);
+		if (appear) restored.appear = appear;
 		spec.normalize?.(this.editor, restored);
 		try {
 			await spec.hydrate?.(this.editor, restored);

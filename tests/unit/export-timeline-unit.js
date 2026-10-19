@@ -100,6 +100,7 @@ function createPlanner(renderClockOverrides = {}) {
 		preRenderBudgetMultiplier: 1.5,
 		renderClock: {
 			gifDelayQuantumMs: 10,
+			mp4TimeQuantumMs: 0.001,
 			gifMinimumDelayMs: 20,
 			gifMaximumDelayMs: 200,
 			mp4OutputFpsStops: [12, 15, 20, 24, 25, 30, 50, 60],
@@ -644,3 +645,32 @@ main().catch((error) => {
 	console.error(error.stack || String(error));
 	process.exit(1);
 });
+
+(() => {
+	const assert = (value, message) => { if (!value) throw new Error(message); };
+	const windowSource = (start, end) => ({ key: 'window', kind: 'boundary', end,
+		boundariesUntil: duration => [start, end].filter(time => time > 0 && time < duration),
+		sampleAt: timestamp => ({ shown: timestamp >= start && timestamp < end }) });
+	const options = { loopDurationMs: 1200, outputFormat: 'gif', fallbackDuration: 100, maxSamplingFps: 30,
+		manualFrameSkip: 10, maxLoopDurationMs: 12000, hardFrameLimit: 1000, preferredFrameBudget: 1 };
+	const planner = createPlanner();
+	const plan = planner.planSchedule({ ...options, timelines: [windowSource(200, 700)] });
+	assert(JSON.stringify(plan.entries.map(entry => entry.timestamp)) === '[0,200,700]', 'manual skip and pre-render budgets must keep visibility cuts');
+	assert(JSON.stringify(plan.frameDurations) === '[200,500,500]', 'static visibility keeps the full loop duration');
+	assert(plan.sourceAnalysis.length === 0 && plan.loopSeam.exact, 'intentional cuts have no period or seam claim');
+	assert(planLoopFit([windowSource(200, 700)], { config: vm.runInContext('CONFIG.export.timeline', context) }).sources.length === 0, 'windows never become loop-fit candidates');
+	const quantized = planner.planSchedule({ ...options, manualFrameSkip: 1, timelines: [windowSource(205, 225)] });
+	assert(quantized.entries.some(entry => entry.timestamp === 210 && entry.selection.get('window').shown), 'GIF cuts quantize to a representable frame after the boundary');
+	assert(quantized.entries.some(entry => entry.timestamp === 230 && !entry.selection.get('window').shown), 'GIF disappearance uses the same quantization');
+	const collision = planner.planSchedule({ ...options, manualFrameSkip: 1, timelines: [windowSource(205, 208)] });
+	assert(collision.frameDurations.every(delay => delay >= 20 && delay % 10 === 0), 'sub-quantum collisions never create illegal GIF delays');
+	const mixed = planner.planSchedule({ ...options, outputFormat: 'mp4', manualFrameSkip: 1, timelines: [procedural('motion', 1000), windowSource(205, 625)] });
+	assert(mixed.sourceAnalysis.length === 1 && mixed.sourceAnalysis[0].key === 'motion', 'mixed windows do not change periodic source analysis');
+	assert(mixed.entries.every(entry => entry.selection.get('window').shown === (entry.timestamp >= 205 && entry.timestamp < 625)), 'fixed MP4 cadence samples the same half-open predicate');
+	const durations = vm.runInContext(`(() => {
+		const compositor = Object.create(SceneCompositor.prototype); compositor.editor = { documentLoop: { mode: 'auto' } };
+		return [compositor._visibilityLoopDuration([{ kind: 'boundary', end: 700 }]), compositor._visibilityLoopDuration([{ kind: 'boundary', end: 900 }, { kind: 'procedural' }])];
+	})()`, context);
+	assert(durations[0] === 1200 && durations[1] === null, 'Automatic uses the last window edge plus hold only without real animation');
+	console.log('PASS visibility frame boundaries: static/mixed clocks, GIF quantization/collisions, MP4 membership, skip/budget protection and duration policy');
+})();

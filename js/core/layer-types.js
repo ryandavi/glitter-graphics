@@ -64,10 +64,23 @@ function registerLayerType(type, definition) {
 	if (!Object.values(LayerType).includes(type)) throw new Error(`Unknown layer type ${type}`);
 	if (LAYER_UI_CONFIG[type]) throw new Error(`Layer type ${type} is already registered`);
 	LAYER_UI_CONFIG[type] = {
+		visibilityWindow: true,
 		...definition,
 		paintSlots: Object.freeze((definition.paintSlots || []).map((slot) => normalizePaintSlotDefinition(slot, type))),
 		fields: Object.freeze((definition.fields || []).map((binding) => normalizeFieldBinding(binding, type)))
 	};
+}
+
+function supportsLayerAppear(layer) {
+	return Boolean(layer && !layer.isPreview && LAYER_UI_CONFIG[layer.type]?.visibilityWindow);
+}
+
+function normalizeLayerAppear(value) {
+	if (!value || !Number.isFinite(value.start) || (value.end !== null && !Number.isFinite(value.end))) return null;
+	const maximum = CONFIG.export.timeline.maxTimelineMs;
+	const start = clampNumber(value.start, 0, maximum);
+	const end = value.end === null ? null : clampNumber(value.end, start, maximum);
+	return start === 0 && end === null ? null : { start, end };
 }
 
 // Derived, single-source-of-truth lookups over LAYER_UI_CONFIG. Adding a new
@@ -196,6 +209,12 @@ function getQuickAddLayerEntries() {
 }
 
 const LAYER_BADGES = [
+	{
+		id: 'appear', icon: 'clock-history',
+		getState(layer) {
+			return supportsLayerAppear(layer) && layer.appear ? { title: `Visible from ${formatSeconds(layer.appear.start)} to ${layer.appear.end === null ? 'loop end' : formatSeconds(layer.appear.end)}` } : null;
+		}
+	},
 	{
 		id: 'paint',
 		icon: 'brush',

@@ -3537,7 +3537,7 @@ body.is-resizing-panel canvas {
   display: none;
 }
 
-.layer-name-input {
+input.layer-name-input {
   width: 100%;
   min-width: 0;
   height: var(--chip-height);
@@ -5366,6 +5366,9 @@ body.tool-select .preview-container.is-over-picked-layer {
 .timeline-dock .timeline-group-track {
   background: transparent;
 }
+.timeline-dock .timeline-group-window {
+  display: contents;
+}
 .timeline-dock .timeline-group-header.is-selected .timeline-group-track {
   background: color-mix(in srgb, var(--color-accent) 10%, transparent);
 }
@@ -5393,7 +5396,7 @@ body.tool-select .preview-container.is-over-picked-layer {
   color: var(--color-text-primary);
   font-weight: var(--font-weight-semibold);
 }
-.timeline-dock .timeline-group.is-collapsed .timeline-row {
+.timeline-dock .timeline-group.is-collapsed .timeline-group-rows > .timeline-row {
   display: none;
 }
 .timeline-dock .timeline-row {
@@ -5494,6 +5497,9 @@ body.tool-select .preview-container.is-over-picked-layer {
 .timeline-dock .timeline-bar.is-authored {
   --timeline-bar-hue: var(--timeline-hue-authored);
 }
+.timeline-dock .timeline-bar.is-range::before {
+  background: var(--color-border-hover);
+}
 .timeline-dock .timeline-bar.is-movable {
   cursor: grab;
 }
@@ -5503,6 +5509,17 @@ body.tool-select .preview-container.is-over-picked-layer {
 .timeline-dock .timeline-bar:focus-visible {
   outline: none;
   --timeline-bar-ring: inset var(--control-focus-ring);
+}
+.timeline-dock .timeline-bar-ghost.is-range::before {
+  background: var(--color-border);
+}
+.timeline-dock .timeline-window-dim {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: var(--opacity-disabled);
+  background: linear-gradient(to right, var(--color-bg-primary) var(--window-start), transparent var(--window-start), transparent var(--window-end), var(--color-bg-primary) var(--window-end));
 }
 .timeline-dock .timeline-group.is-locked .timeline-bar {
   cursor: not-allowed;
@@ -6762,6 +6779,10 @@ body.mask-editing .sticker-element {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.is-outside-appear {
+  visibility: hidden;
 }
 
 .sticker-element,

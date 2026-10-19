@@ -2,6 +2,10 @@
 
 // Layer preview elements on the canvas.
 
+.is-outside-appear {
+	visibility: hidden;
+}
+
 .sticker-element,
 .text-glitter-element,
 .shape-glitter-element {

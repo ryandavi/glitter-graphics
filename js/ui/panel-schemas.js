@@ -89,12 +89,19 @@ const ANCHOR_SELECT_OPTIONS = Object.freeze([
 // The Layer section of an Appearance group: the whole-layer rows (opacity,
 // and blend where the type has one). A section of their own, so no row floats
 // between two others.
-function createLayerSectionSpec(opacityId, blendId) {
+function createLayerSectionSpec(opacityId, blendId, type) {
 	const rows = [{ kind: 'slider', id: opacityId, slider: 'layerOpacity' }];
 	if (blendId) {
 		rows.push({ kind: 'select', id: blendId, label: 'Blend', ariaLabel: 'Layer blend mode', classes: 'layer-blend-mode', revert: true, options: LAYER_BLEND_MODE_OPTIONS });
 	}
-	return { kind: 'section', title: 'Layer', sets: [{ rows }] };
+	return { kind: 'section', title: 'Layer', sets: [{ rows }], get advanced() {
+		if (!LAYER_UI_CONFIG[type]?.visibilityWindow) return [];
+		return [{ label: 'Visibility', rows: [
+			{ kind: 'field', type: 'number', id: `${opacityId}Appears`, ...FIELDS.layerAppears, attrs: { 'data-layer-appear-field': 'start', 'data-layer-appear-owner': type } },
+			{ kind: 'field', type: 'number', id: `${opacityId}Disappears`, ...FIELDS.layerDisappears, placeholder: 'Loop end', attrs: { 'data-layer-appear-field': 'end', 'data-layer-appear-owner': type } },
+			{ kind: 'note', text: 'Leave Disappears empty to stay until the loop ends. At rest, all visible layers are shown for editing.' }
+		] }, { attrs: { 'data-layer-appear-reset': type }, actions: [{ id: `${opacityId}AlwaysVisible`, label: 'Always visible' }] }];
+	} };
 }
 
 // Option buttons for a registry option list. Call it from a getter: the frame
@@ -446,7 +453,8 @@ const PANEL_SCHEMAS = {
 						cards: [createAnimationPreviewCard(suffix => `animation${suffix}`)], sets: [{ rows: [
 						{ kind: 'host', id: 'animationLoopStatus', classes: 'property-result', rowClasses: 'is-control', text: 'No animation sources.', attrs: { 'aria-live': 'polite' } }
 					] }, { id: 'animationLoopLengthSet', hidden: true, rows: [
-						{ kind: 'select', id: 'animationLoopCandidate', label: 'Loop length', options: [] }
+						{ kind: 'select', id: 'animationLoopCandidate', label: 'Loop length', options: [] },
+						{ kind: 'field', type: 'number', id: 'animationLoopDuration', rowId: 'animationLoopDurationRow', hidden: true, ...FIELDS.documentLoopDuration }
 					] }, { actions: [
 						{ id: 'animationIncludeContent', label: 'Set loop to include content', hidden: true },
 						{ id: 'animationOpenTimeline', label: 'Open timeline', icon: 'timeline', feature: 'timeline' }
@@ -643,7 +651,7 @@ const PANEL_SCHEMAS = {
 				] }
 			] },
 			{ title: 'Appearance', sections: [
-				createLayerSectionSpec('filterLayerOpacity', 'filterLayerBlendMode')
+				createLayerSectionSpec('filterLayerOpacity', 'filterLayerBlendMode', LayerType.FILTER)
 			] },
 			{ title: 'Layout', sections: [{ kind: 'transform' }] }
 		]
@@ -686,7 +694,7 @@ const PANEL_SCHEMAS = {
 				], advanced: [createGifCycleSet('frame')] }
 			] },
 			{ title: 'Appearance', sections: [
-				createLayerSectionSpec('frameLayerOpacity', 'frameLayerBlendMode'),
+				createLayerSectionSpec('frameLayerOpacity', 'frameLayerBlendMode', LayerType.FRAME),
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'frameFill', title: 'Fill', presentation: 'flyout',
 					texturePosition: true,
 					activeMode: 'glitter',
@@ -705,7 +713,7 @@ const PANEL_SCHEMAS = {
 				createSparklesSectionSpec('layerSparkles', { toggle: false, presentation: null })
 			] },
 			{ title: 'Appearance', sections: [
-				createLayerSectionSpec('sparkleLayerOpacity', 'sparkleLayerBlendMode')
+				createLayerSectionSpec('sparkleLayerOpacity', 'sparkleLayerBlendMode', LayerType.SPARKLES)
 			] }
 		]
 	},
@@ -717,7 +725,7 @@ const PANEL_SCHEMAS = {
 			{ title: 'Appearance', sections: [
 				// The canvas layer is a single paint; its only opacity is the
 				// whole-layer opacity.
-				createLayerSectionSpec('baseBackgroundOpacity'),
+				createLayerSectionSpec('baseBackgroundOpacity', null, LayerType.BASE_IMAGE),
 				{ kind: 'paintSlot', slot: 'background', idPrefix: 'baseBackground', title: 'Background', presentation: 'flyout',
 					texturePosition: true, noSlotOpacity: true,
 					activeMode: 'image', color: '#ffffff',
@@ -814,7 +822,7 @@ const PANEL_SCHEMAS = {
 			{ title: 'Appearance', sections: [
 				// A Fill layer is a single masked paint, so its only opacity is the
 				// whole-layer opacity.
-				createLayerSectionSpec('opacity', 'glitterLayerBlendMode'),
+				createLayerSectionSpec('opacity', 'glitterLayerBlendMode', LayerType.GLITTER_FILL),
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'glitterFill', title: 'Fill', presentation: 'flyout',
 					texturePosition: true, noSlotOpacity: true,
 					activeMode: 'glitter', color: '#ff4fa3',
@@ -897,7 +905,7 @@ const PANEL_SCHEMAS = {
 			] },
 			{ title: 'Appearance', sections: [
 				createStylePresetSectionSpec('sticker'),
-				createLayerSectionSpec('stickerLayerOpacity', 'stickerLayerBlendMode')
+				createLayerSectionSpec('stickerLayerOpacity', 'stickerLayerBlendMode', LayerType.STICKER)
 			] },
 			{ title: 'Layout', sections: [{ kind: 'transform' }] }
 		],
@@ -989,7 +997,7 @@ const PANEL_SCHEMAS = {
 			] },
 			{ title: 'Appearance', sections: [
 				createStylePresetSectionSpec('text'),
-				createLayerSectionSpec('textLayerOpacity', 'textLayerBlendMode'),
+				createLayerSectionSpec('textLayerOpacity', 'textLayerBlendMode', LayerType.TEXT_GLITTER),
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'textFill', title: 'Fill', presentation: 'flyout',
 					texturePosition: true,
 					activeMode: 'glitter', color: '#000000',
@@ -1066,7 +1074,7 @@ const PANEL_SCHEMAS = {
 			] },
 			{ title: 'Appearance', sections: [
 				createStylePresetSectionSpec('shape'),
-				createLayerSectionSpec('shapeLayerOpacity', 'shapeLayerBlendMode'),
+				createLayerSectionSpec('shapeLayerOpacity', 'shapeLayerBlendMode', LayerType.SHAPE),
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'shapeFill', title: 'Fill', presentation: 'flyout',
 					texturePosition: true,
 					activeMode: 'solid',
@@ -1162,7 +1170,7 @@ const PANEL_SCHEMAS = {
 				] }
 			] },
 			{ title: 'Appearance', sections: [
-				createLayerSectionSpec('pathLayerOpacity', 'pathLayerBlendMode'),
+				createLayerSectionSpec('pathLayerOpacity', 'pathLayerBlendMode', LayerType.PATH),
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'pathFill', title: 'Fill', presentation: 'flyout',
 					texturePosition: true,
 					activeMode: 'none',

@@ -280,6 +280,7 @@
 	.timeline-group-label .lock { opacity: 0; }
 	.timeline-group-label:is(:hover, :focus-within, .is-locked) .lock { opacity: 1; }
 	.timeline-group-track { background: transparent; }
+	.timeline-group-window { display: contents; }
 	.timeline-group-header.is-selected .timeline-group-track { background: color-mix(in srgb, var(--color-accent) 10%, transparent); }
 	.timeline-group-span {
 		position: absolute;
@@ -302,7 +303,7 @@
 		color: var(--color-text-primary);
 		font-weight: var(--font-weight-semibold);
 	}
-	.timeline-group.is-collapsed .timeline-row { display: none; }
+	.timeline-group.is-collapsed .timeline-group-rows > .timeline-row { display: none; }
 
 	.timeline-row {
 		position: relative;
@@ -374,9 +375,19 @@
 		cursor: pointer;
 		touch-action: none;
 		&.is-authored { --timeline-bar-hue: var(--timeline-hue-authored); }
+		&.is-range::before { background: var(--color-border-hover); }
 		&.is-movable { cursor: grab; }
 		&.is-slippable { cursor: ew-resize; }
 		&:focus-visible { outline: none; --timeline-bar-ring: inset var(--control-focus-ring); }
+	}
+	.timeline-bar-ghost.is-range::before { background: var(--color-border); }
+	.timeline-window-dim {
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+		pointer-events: none;
+		opacity: var(--opacity-disabled);
+		background: linear-gradient(to right, var(--color-bg-primary) var(--window-start), transparent var(--window-start), transparent var(--window-end), var(--color-bg-primary) var(--window-end));
 	}
 	.timeline-group.is-locked .timeline-bar { cursor: not-allowed; }
 

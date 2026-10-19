@@ -109,3 +109,7 @@ Canvas-space measurements come from `getLayerCanvasBox(editor, layer, { visual }
 - `TOOLS[*].creationSize(box, editor)` supplies the same rounded/clamped dimensions (including the default text placeholder's body) to the creation badge and the tool's `onCanvasDrag` implementation.
 
 Filter regions declare `rotation: false` and `flip: false`: shared selection handles, touch transforms and group rotation respect these capabilities. Group movement commits optional manager `commitTransform(layer)` before history, just like single-layer movement.
+
+## Visibility windows
+
+Types support optional layer-level `appear: { start, end }` milliseconds by default; register `visibilityWindow: false` to exclude a type, as Canvas does. Preview layers are excluded. Normalize through `normalizeLayerAppear`; a null end follows the loop and absence is always visible. Shared serialization owns this field, so type serializers do not copy it. Layer Advanced fields and the dock header bar use the same `appear` timing target and writer. `isLayerShownAt` is the shared preview/export predicate, including a clip base's window. Do not reset source clocks when a window opens. Rest editing and intentional still export ignore windows.

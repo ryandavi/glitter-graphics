@@ -95,14 +95,15 @@ async function verifyTimelineDock() {
 			return { stickerId: sticker.id, textId: text.id, count: e.loopEstimate.loopFit.sources.filter(source => source.kind === 'procedural' || Number.isFinite(source.cycleDuration)).length };
 		});
 		assert.strictEqual(await page.locator('.timeline-group').count(), 3);
-		assert.strictEqual(await page.locator('.timeline-row').count(), sources.count);
+		assert.strictEqual(await page.locator('.timeline-row:not(.timeline-group-window)').count(), sources.count);
 		assert((await page.locator('.timeline-bar-seam').count()) > 0, 'A held non-rest pose must mark its seam');
 		assert((await page.locator('.timeline-bar-marks').count()) >= sources.count);
-		await page.locator('.timeline-bar').first().click();
+		await page.locator('.timeline-bar:not(.is-range)').first().click();
 		assert.strictEqual(await page.evaluate(() => editor.activeLayerId), sources.textId);
-		await page.evaluate(() => { window.collapseRow = editor.timelineDock.body.querySelector('.timeline-row'); });
+		await page.evaluate(() => { window.collapseRow = editor.timelineDock.body.querySelector('.timeline-row:not(.timeline-group-window)'); });
 		await page.locator('.timeline-group-header button[aria-expanded]').first().locator('..').press('ArrowLeft');
-		assert(await page.evaluate(() => collapseRow === editor.timelineDock.body.querySelector('.timeline-row')), 'Collapse preserves the existing row nodes');
+		assert(await page.locator('.timeline-group').first().locator('.timeline-group-window .timeline-bar').isVisible(), 'Folding motion rows leaves the layer visibility bar available');
+		assert(await page.evaluate(() => collapseRow === editor.timelineDock.body.querySelector('.timeline-row:not(.timeline-group-window)')), 'Collapse preserves the existing row nodes');
 		await page.evaluate(() => editor.updateExportDuration());
 		assert(await page.locator('.timeline-group').first().evaluate(node => node.classList.contains('is-collapsed')));
 		assert(await page.evaluate(() => !Object.hasOwn(PREFERENCES.schema, 'timelineCollapsed')), 'Collapse state is not a user preference');
@@ -194,17 +195,17 @@ async function verifyTimelineDock() {
 			const dock = editor.timelineDock;
 			return dock.scale === CONFIG.ui.timeline.minPxPerSecond && dock.body.scrollWidth > dock.body.clientWidth && Number(dock.zoom.value) === 0;
 		}), 'A long loop at fit keeps readable seconds and scrolls');
-		await page.evaluate(() => { window.timelineResizeRow = editor.timelineDock.body.querySelector('.timeline-row'); editor.timelineDock.applyHeight(240); });
+		await page.evaluate(() => { window.timelineResizeRow = editor.timelineDock.body.querySelector('.timeline-row:not(.timeline-group-window)'); editor.timelineDock.applyHeight(240); });
 		await page.waitForTimeout(100);
-		assert(await page.evaluate(() => window.timelineResizeRow === editor.timelineDock.body.querySelector('.timeline-row')), 'Height-only resizing keeps the row nodes');
+		assert(await page.evaluate(() => window.timelineResizeRow === editor.timelineDock.body.querySelector('.timeline-row:not(.timeline-group-window)')), 'Height-only resizing keeps the row nodes');
 		const minimized = await page.evaluate(() => {
-			const dock = editor.timelineDock, row = dock.body.querySelector('.timeline-row'), estimate = editor.loopEstimate;
+			const dock = editor.timelineDock, row = dock.body.querySelector('.timeline-row:not(.timeline-group-window)'), estimate = editor.loopEstimate;
 			dock.minimize.click();
 			dock.sync({ ...estimate, renderClock: { ...estimate.renderClock, frameCount: 83 } });
-			const result = { same: row === dock.body.querySelector('.timeline-row'), pending: dock.rowsPending,
+			const result = { same: row === dock.body.querySelector('.timeline-row:not(.timeline-group-window)'), pending: dock.rowsPending,
 				readout: dock.readout.textContent, ticks: editor.animationTicker.tickListeners.size };
 			dock.minimize.click();
-			result.expanded = !dock.rowsPending && row === dock.body.querySelector('.timeline-row');
+			result.expanded = !dock.rowsPending && row === dock.body.querySelector('.timeline-row:not(.timeline-group-window)');
 			dock.close(); result.closedTicks = editor.animationTicker.tickListeners.size;
 			dock.open();
 			return result;
@@ -287,7 +288,7 @@ async function verifyTimelineDock() {
 		await page.waitForTimeout(200);
 		assert.strictEqual(await page.locator('#previewContainer').evaluate(node => node.clientHeight), fullHeight);
 		assert.strictEqual(await page.evaluate(() => editor.viewport.lastViewportHeight), fullHeight, 'Closing must use the viewport resize path');
-		await page.evaluate(() => editor.loadBlankImage(32, 24, '#ffffff'));
+		await page.evaluate(() => { editor.isSaved = true; return editor.loadBlankImage(32, 24, '#ffffff'); });
 		assert.equal(await page.evaluate(() => editor.timelineDock.collapsed.size), 0, 'A replacement document clears collapse state');
 		assert.deepStrictEqual(errors, []);
 	} finally { await browser.close(); }

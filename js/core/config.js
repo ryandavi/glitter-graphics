@@ -1059,6 +1059,7 @@ const CONFIG = deepFreeze({
 			const maxTimelineMs = 20000;
 			return {
 				estimateDebounceMs: 150,
+				visibilityHoldMs: 500,
 				maxSamplingFps: 30,
 				proceduralPeriodTolerance: 0.10,
 				preRenderBudgetMultiplier: 1.5,
@@ -1082,6 +1083,7 @@ const CONFIG = deepFreeze({
 					// planned delay is only honoured unchanged on that grid. Viewers
 					// clamp anything under 2 cs, which is the floor here.
 					gifDelayQuantumMs: 10,
+					mp4TimeQuantumMs: 0.001,
 					gifMinimumDelayMs: 20,
 					gifMaximumDelayMs: 200,
 					mp4OutputFpsStops: [12, 15, 20, 24, 25, 30, 50, 60],

@@ -26,6 +26,7 @@ const TimelineView = {
 		const groups = new Map();
 		const sourceMap = new Map((estimate?.loopFit?.sources || []).map(source => [source.key, source]));
 		const targets = editor ? listTimingTargets(editor, layers) : [];
+		const windows = new Map(targets.filter(target => target.kind === 'appear').map(target => [target.layerId, target]));
 		const entries = editor ? targets.filter(target => target.active !== false && owners.get(target.layerId)?.visible !== false && target.period > 0).map(target => ({ target, source: sourceMap.get(target.key) })) : (estimate?.loopFit?.sources || []).map(source => ({ source }));
 		entries.forEach(({ source, target }) => {
 			const layerId = target?.layerId || source.ownerLayerId;
@@ -55,6 +56,7 @@ const TimelineView = {
 			frameCount: estimate?.renderClock?.frameCount || 0, outputFormat: estimate?.outputFormat,
 			groups: [...layers].reverse().filter(layer => !layer.isPreview).map(layer => {
 				const sourceRows = groups.get(layer.id) || [];
+				const window = windows.get(layer.id);
 				const motions = (layer.animations || []).map((animation) => {
 					const effectSlot = GlitterAnimation.slotKey(animation), description = GlitterAnimation.describe(animation);
 					const active = layer.animationsEnabled !== false && animation.enabled !== false && layer.visible !== false && sourceRows.find(row => row.effectSlot === effectSlot);
@@ -67,6 +69,8 @@ const TimelineView = {
 				});
 				return {
 					layerId: layer.id, name: describeLayer(layer, editor).name, visible: layer.visible !== false,
+					window: window ? { key: window.key, layerId: layer.id, label: 'Layer visibility', kind: 'range', target: window, can: window.can,
+						startMs: window.run.start, endMs: Math.min(window.run.end, loopMs), cycleMs: 0, phase: 0, cycleMarks: [], closes: true, source: { run: window.run } } : null,
 					locked: isLayerFullyLocked(layer) && !sourceRows.some(row => Object.values(row.can).some(Boolean)), stackLocked: Boolean(layer.locked),
 					rows: [...sourceRows.filter(row => this.motionId(row) == null), ...motions]
 				};
@@ -168,6 +172,7 @@ const TimelineView = {
 		return text;
 	},
 	handleTitle(row, side) {
+		if (row.kind === 'range') return `Drag to change when the layer ${side === 'left' ? 'appears' : 'disappears'}. Alt: no snapping`;
 		let text = '';
 			if (side === 'left') text = 'Drag to change when it starts.';
 			else {
@@ -182,6 +187,7 @@ const TimelineView = {
 		return text;
 	},
 	rowInfo(row) {
+		if (row.kind === 'range') return `Appears ${formatSeconds(row.source.run.start)}; disappears ${Number.isFinite(row.source.run.end) ? formatSeconds(row.source.run.end) : 'at loop end'}`;
 		if (!row.source && row.animation) return GlitterAnimation.describe(row.animation).detail;
 		if (row.kind === 'authored') return `${row.frameCount} frames · ${formatSeconds(row.cycleMs)}`;
 		return Number.isFinite(row.source.run?.end)
@@ -189,6 +195,7 @@ const TimelineView = {
 	},
 	// What a selected bar can do, for the status bar.
 	rowHint(row) {
+		if (row.kind === 'range') return 'Drag to move visibility; edges change Appears/Disappears. Enter opens Layer properties; right-click for visibility actions.';
 		const body = this.bodyDrag(row, false);
 		return [
 			body === 'move' ? 'Drag to move' : body === 'slip' ? 'Drag to slip' : null,
@@ -211,6 +218,11 @@ const TimelineView = {
 	// `value` and `initial` are the drag's own: a run for an edge or a move, a
 	// fraction for a slip or a key, milliseconds for a cycle or the loop.
 	dragReadout(kind, row, value, initial, target) {
+		if (row?.kind === 'range') {
+			const end = kind === 'right';
+			const time = end ? value.end : value.start;
+			return `${end ? 'Disappears' : 'Appears'} ${Number.isFinite(time) ? formatSeconds(time) : 'at loop end'}`;
+		}
 		const { label, text } = DRAG_KINDS[kind];
 		const now = text(row, value), before = text(row, initial);
 		const word = target && this.SNAP_WORDS[target.kind];
@@ -261,12 +273,16 @@ const TimelineView = {
 		}
 		const targets = [target(playheadMs, 'playhead')];
 		for (const group of model.groups) {
+			if (group.window?.target.active && group.window.key !== row.key) {
+				targets.push(target(group.window.startMs, 'edge'));
+				if (Number.isFinite(group.window.source.run.end)) targets.push(target(group.window.endMs, 'edge'));
+			}
 			if (view?.collapsed.get(group.layerId)) continue;
 			for (const other of group.rows) {
 				if (other.key !== row.key) targets.push(target(other.startMs, 'edge'), target(other.endMs, 'edge'));
 			}
 		}
-		if (kind === 'right') {
+		if (kind === 'right' && row.kind !== 'range') {
 			const drawing = { ...row, endMs: Infinity };
 			targets.push(...this.cycleStarts(drawing, model.loopMs).map(ms => target(ms, 'cycle')), target(model.loopMs, 'loop'));
 		} else {
@@ -292,17 +308,23 @@ const TimelineView = {
 		return { period, run: { start: row.startMs, end: row.startMs + remaining * period } };
 	},
 	runFromRightEdge(row, timeMs, loopMs) {
+		if (row.kind === 'range') return { start: row.startMs, end: timeMs >= loopMs ? Infinity : clampNumber(timeMs, row.startMs, CONFIG.export.timeline.maxTimelineMs) };
 		if (timeMs >= loopMs) return { start: row.startMs, end: Infinity };
 		const count = clampNumber(this.repeats(row, { start: row.startMs, end: timeMs }), Math.max(row.phase, FIELDS.animIterations.min), FIELDS.animIterations.max);
 		return { start: row.startMs, end: row.startMs + (count - row.phase) * row.cycleMs };
 	},
 	runFromLeftEdge(row, timeMs) {
+		if (row.kind === 'range') return { start: clampNumber(timeMs, 0, Math.min(row.source.run.end, CONFIG.export.timeline.maxTimelineMs)), end: row.source.run.end };
 		const end = row.source.run?.end ?? Infinity;
 		const min = Number.isFinite(end) ? Math.max(0, end - (FIELDS.animIterations.max - row.phase) * row.cycleMs) : 0;
 		const max = Number.isFinite(end) ? Math.max(min, end - Math.max(0, FIELDS.animIterations.min - row.phase) * row.cycleMs) : FIELDS.animDelay.max * 1000;
 		return { start: clampNumber(timeMs, min, Math.min(max, FIELDS.animDelay.max * 1000)), end };
 	},
 	runFromBodyMove(row, deltaMs) {
+		if (row.kind === 'range' && Number.isFinite(row.source.run.end)) {
+			const duration = row.source.run.end - row.startMs, start = clampNumber(row.startMs + deltaMs, 0, CONFIG.export.timeline.maxTimelineMs - duration);
+			return { start, end: start + duration };
+		}
 		const start = Math.max(0, row.startMs + deltaMs);
 		return { start, end: Number.isFinite(row.source.run?.end) ? row.source.run.end + start - row.startMs : Infinity };
 	},
@@ -312,6 +334,11 @@ const TimelineView = {
 		const actions = [];
 		const write = patch => context.write?.(row.key, patch);
 		const playhead = context.playhead ?? 0;
+		if (row.kind === 'range') return [
+			{ id: 'start', label: 'Appears at playhead', group: 'Visibility', disabled: playhead > row.source.run.end, run: () => write({ run: { start: playhead, end: row.source.run.end } }) },
+			{ id: 'end', label: 'Disappears at playhead', group: 'Visibility', disabled: playhead < row.startMs, run: () => write({ run: { start: row.startMs, end: playhead } }) },
+			{ id: 'reset', label: 'Always visible', group: 'Visibility', run: () => write({ appear: null }) }
+		];
 		if (row.can.run) {
 			actions.push({ id: 'once', label: 'Play once', checked: Math.abs(this.repeats(row) - 1) < 1e-6, run: () => write({ run: { start: row.startMs, end: row.startMs + (1 - row.phase) * row.cycleMs } }) },
 				{ id: 'forever', label: 'Repeat forever', checked: !Number.isFinite(row.source.run.end), run: () => write({ run: { start: row.startMs, end: Infinity } }) },

@@ -7,13 +7,14 @@ const path = require('path');
 const context = require('../fixtures/pattern-source-context')();
 Object.assign(context, {
 	getLayerManagerForType: () => null,
-	LayerType: { BASE_IMAGE: 'base' }, isLayerFullyLocked: layer => layer.locked === true,
+
 	getLayerPaintSlots: layer => layer.slots || [], getLayerSparkleEntries: layer => layer.sparkles || [],
 	getPaintSlotSourceKey: (layer, entry) => `${layer.id}_${entry.key}`, getSparkleSampleKey: (layer, entry) => `${layer.id}_${entry.key}`,
 	isFeatureEnabled: () => true, window: { dispatchEvent() {} }, CustomEvent: class {},
 	GlitterFilter: { isActive: () => false }, GlitterFilters: { get: () => ({}) }
 });
-for (const file of ['core/math.js', 'core/format.js', 'effects/easing.js', 'effects/animation.js', 'core/animation-timing.js', 'editor/animation-loop.js']) vm.runInContext(fs.readFileSync(path.join(__dirname, '../../js', file), 'utf8'), context);
+for (const file of ['core/math.js', 'core/format.js', 'core/layer-types.js', 'paint/clip-mask.js', 'effects/easing.js', 'effects/animation.js', 'core/animation-timing.js', 'editor/animation-loop.js']) vm.runInContext(fs.readFileSync(path.join(__dirname, '../../js', file), 'utf8'), context);
+vm.runInContext("LAYER_UI_CONFIG.shape = { visibilityWindow: true, clippable: true, clipBase: true }; LAYER_UI_CONFIG[LayerType.BASE_IMAGE] = { visibilityWindow: false };", context);
 const result = vm.runInContext(`(() => {
 	const animation = GlitterAnimation.normalizeAnimation({ id: 'first', type: 'pulse', periodMs: 1400 });
 	const layer = { id: 'one', animations: [animation], type: 'shape' };
@@ -29,7 +30,7 @@ const result = vm.runInContext(`(() => {
 	const follows = animation.periodMs === 900 && animation.delayMs === 400 && animation.iterations === Infinity;
 	layer.locked = true;
 	const locked = !editor.writeTiming(key, { period: 800 });
-	layer.type = 'base';
+	layer.type = LayerType.BASE_IMAGE;
 	const canvas = editor.writeTiming(key, { period: 800 }, { live: true });
 	const finite = GlitterAnimation.normalizeAnimation(JSON.parse(JSON.stringify({ type: 'tada', iterations: 3 }))).iterations === 3;
 	const infinite = GlitterAnimation.normalizeAnimation(JSON.parse(JSON.stringify({ type: 'tada', iterations: Infinity }))).iterations === Infinity;
@@ -88,7 +89,7 @@ vm.runInContext(`(() => {
 	const estimate = { duration: 2000, analysisContext: editor.loopAnalysisContext(), sourceAnalysis: [{ key, resolvedPeriod: 2000 }], loopFit: { sources: [] } };
 	editor.loopEstimate = estimate;
 	assert(editor.isLoopEstimateCurrent(), 'matching analysis context is current');
-	const timing = editor.resolveTimingTarget(listTimingTargets(editor)[0]);
+	const timing = editor.resolveTimingTarget(listTimingTargets(editor).find(target => target.kind === 'motion'));
 	assert(timing.period === 1000 && timing.exportPeriod === 2000, 'authored and export periods are separate');
 	assert(close(timing.exportRun.end, animation.delayMs + (animation.iterations - animation.phase) * 2000), 'effective endpoint uses effective period');
 	assert(timing.closes === null, 'missing source cannot claim seamless output');
@@ -100,7 +101,7 @@ vm.runInContext(`(() => {
 	editor.sceneCompositor.timingRevision = 0; editor.animationRevisionEpoch = 1;
 	assert(!editor.isLoopEstimateCurrent(), 'document identity invalidates analysis');
 	editor.animationRevisionEpoch = 0; editor.loopEstimatePending = true;
-	assert(!editor.isLoopEstimateCurrent() && editor.resolveTimingTarget(listTimingTargets(editor)[0]).exportPeriod == null, 'pending analysis supplies no effective period');
+	assert(!editor.isLoopEstimateCurrent() && editor.resolveTimingTarget(listTimingTargets(editor).find(target => target.kind === 'motion')).exportPeriod == null, 'pending analysis supplies no effective period');
 	editor.documentLoop = { mode: 'set', durationMs: 3500 };
 	assert(editor.resolveAnimationLoop().duration === 3500, 'Set loop stays available while analysis is pending');
 	const calls = new Map(), collect = ANIMATION_TIMING_KINDS.motion.collect;
@@ -121,3 +122,36 @@ vm.runInContext(`(() => {
 	} finally { ANIMATION_TIMING_KINDS.motion.collect = collect; }
 })()`, context);
 console.log('PASS timing targets, clamping, stable identity, original periods, locks, Canvas timing and JSON repeats');
+vm.runInContext(`(() => {
+	const assert = (condition, message) => { if (!condition) throw new Error(message); };
+	const layer = { id: 'window', type: 'shape', animations: [] }, child = { id: 'clipped', type: 'shape', clipped: true };
+	let commits = 0;
+	const editor = { layers: [layer, child], sceneCompositor: { describeAuthoredTiming: () => [] }, layerManager: { getLayerById: id => editor.layers.find(layer => layer.id === id) },
+		requestPreviewUpdate() {}, commitAnimationTiming() { commits++; }, writeTiming: EDITOR_ANIMATION_LOOP_METHODS.writeTiming, setLayerAppear: EDITOR_ANIMATION_LOOP_METHODS.setLayerAppear };
+	const target = listTimingTargets(editor).find(target => target.kind === 'appear' && target.layerId === layer.id);
+	assert(target && !target.can.period && target.can.run && !target.active, 'an absent window is a writable non-periodic range');
+	assert(editor.setLayerAppear(layer, { start: 200, end: 700 }) && commits === 1, 'window edit shares the timing commit');
+	for (const time of [199.999, 200, 699.999, 700]) {
+		const expected = time >= 200 && time < 700;
+		assert(isLayerShownAt(layer, time) === expected, 'half-open visibility edge ' + time);
+		assert(isLayerShownAt(child, time, { layers: editor.layers }) === expected, 'clipped child inherits visibility edge ' + time);
+		assert(isLayerShownAt(child, time, { layers: editor.layers, rest: true }), 'rest ignores both windows');
+	}
+	layer.visible = false;
+	assert(!isLayerShownAt(layer, 400, { rest: true }) && !isLayerShownAt(child, 400, { layers: editor.layers, rest: true }), 'hidden always wins, including clip bases at rest');
+	layer.visible = true;
+	const before = JSON.stringify({ layer, commits, revision: editor.documentRevision });
+	for (const patch of [{}, { period: 1000 }, { appear: { start: NaN, end: null } }, { appear: { start: 400, end: 300 } }, { appear: null, run: { start: 0, end: Infinity } }]) {
+		assert(!editor.writeTiming(target.key, patch), 'invalid/empty window patch rejected');
+		assert(JSON.stringify({ layer, commits, revision: editor.documentRevision }) === before, 'invalid window edit is atomic');
+	}
+	layer.locked = true; assert(!editor.setLayerAppear(layer, null), 'locked windows cannot clear'); layer.locked = false;
+	assert(editor.writeTiming(target.key, { run: { start: 500, end: Infinity } }), 'range edit supports loop end');
+	assert(layer.appear.end === null && isLayerShownAt(layer, 999, { loopEnd: 1000 }) && !isLayerShownAt(layer, 1000, { loopEnd: 1000 }), 'null end follows the document loop');
+	assert(editor.setLayerAppear(layer, null) && !Object.hasOwn(layer, 'appear'), 'Always visible restores field absence');
+	assert(!editor.setLayerAppear(layer, null), 'clearing absence is a no-op');
+	layer.type = LayerType.BASE_IMAGE;
+	assert(!editor.setLayerAppear(layer, { start: 100, end: 400 }), 'Canvas cannot have a window');
+	assert(normalizeLayerAppear({ start: -100, end: null }) === null, 'default normalization removes redundant window');
+})()`, context);
+console.log('PASS layer visibility ranges: boundary membership, clipping/rest, atomic writes, locks, clear and loop-end semantics');

@@ -129,7 +129,7 @@ async function verifyReorderControls(page) {
 		await page.mouse.up();
 		await name(1).dblclick();
 		const input = rows.nth(1).locator('.layer-name-input'), inputBox = await input.boundingBox();
-		await page.mouse.move(inputBox.x + 8, inputBox.y + inputBox.height / 2); await page.mouse.down();
+		await page.mouse.move(inputBox.x + inputBox.width / 2, inputBox.y + inputBox.height / 2); await page.mouse.down();
 		await page.mouse.move(controlTarget.x + 80, controlTarget.y + 1);
 		assert(!await container.evaluate(node => isReordering(node)), `${selector}: inputs cannot start row dragging`);
 		await page.mouse.up(); await page.keyboard.press('Escape');
@@ -199,7 +199,7 @@ async function verifyReorderControls(page) {
 	await page.keyboard.press('Alt+ArrowDown');
 	await drag(stack, motions, 2, 0, 'above');
 	await drag(stack, motions, 0, 3, 'below');
-	await page.evaluate(async () => { editor.pickers.closeActive(); await editor.updateExportDuration(); editor.timelineDock.resync(); const group = editor.timelineDock.body.querySelector(`[data-layer-id="${editor.layerManager.activeLayerId}"]`); editor.timelineDock.body.scrollTop = group.offsetTop; });
+	await page.evaluate(async () => { editor.pickers.closeActive(); await editor.updateExportDuration(); editor.timelineDock.resync(); const group = editor.timelineDock.body.querySelector(`[data-layer-id="${editor.layerManager.activeLayerId}"]`); editor.timelineDock.body.scrollTop += group.getBoundingClientRect().top - editor.timelineDock.body.getBoundingClientRect().top; });
 	await page.waitForTimeout(250);
 	const motionLayerId = await page.evaluate(() => editor.layerManager.activeLayerId);
 	const timelineStack = page.locator(`.timeline-group[data-layer-id="${motionLayerId}"] > .timeline-group-rows`);
@@ -210,6 +210,7 @@ async function verifyReorderControls(page) {
 	assert(await page.evaluate(() => editor.layerManager.getActiveLayer().animations[1].type === 'shake'), 'Timeline motion row Alt+ArrowUp reorders');
 	await page.evaluate(async () => { await editor.updateExportDuration(); });
 	await page.keyboard.press('Alt+ArrowDown');
+	await page.evaluate(async () => { await editor.updateExportDuration(); });
 	await drag(timelineStack, timelineMotions, 2, 0, 'above');
 	await drag(timelineStack, timelineMotions, 0, 3, 'below');
 	await page.setViewportSize({ width: 1600, height: 1100 }); await page.waitForTimeout(250);

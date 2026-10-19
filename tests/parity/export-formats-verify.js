@@ -13,9 +13,13 @@ async function captureExport(page, targetId, overrides = {}) {
 		let resolveResult;
 		const result = new Promise((resolve) => { resolveResult = resolve; });
 		const originalShow = editor.exportResultPresenter.show.bind(editor.exportResultPresenter);
-		editor.exportResultPresenter.show = (payload) => {
+		editor.exportResultPresenter.show = async (payload) => {
 			editor.exportResultPresenter.show = originalShow;
-			resolveResult({ type: payload.blob.type, size: payload.blob.size, name: payload.file.name, target: payload.target.id });
+			const image = await createImageBitmap(payload.blob), canvas = document.createElement('canvas');
+			canvas.width = image.width; canvas.height = image.height;
+			const context = canvas.getContext('2d'); context.drawImage(image, 0, 0); image.close();
+			const center = [...context.getImageData(Math.floor(canvas.width / 2), Math.floor(canvas.height / 2), 1, 1).data];
+			resolveResult({ type: payload.blob.type, size: payload.blob.size, name: payload.file.name, target: payload.target.id, center });
 		};
 		editor.exportCurrentTarget();
 		return Promise.race([result, new Promise((_, reject) => setTimeout(() => reject(new Error('Still export timed out')), 20000))]);
@@ -63,7 +67,13 @@ async function captureExport(page, targetId, overrides = {}) {
 	assert(await page.getAttribute('#exportGif', 'aria-label') === 'Export JPG', 'Modal target did not synchronize the main action');
 	assert(await page.locator('#exportJpegQualityRow:not([hidden])').count() === 1 && await page.locator('#exportSettingsGroups .settings-group:has-text("Playback"):not([hidden])').count() === 0, 'JPG capability visibility is incorrect');
 	await page.click('#closeExportSettingsModal');
+	await page.evaluate(() => {
+		const e = editor, layer = e.shapeGlitterManager.createLayer({ shapeId: 'square', width: 16, height: 16, position: { x: 24, y: 16 } });
+		Object.assign(getLayerFillSlot(layer), { mode: 'solid', color: '#ff0000' }); e.layerManager.insertLayer(layer);
+		e.setLayerAppear(layer, { start: 200, end: 700 }); e.animationTicker.seek(0);
+	});
 	const png = await captureExport(page, 'still:png', { transparency: true });
+	assert(png.center.join() === '255,0,0,255', 'Intentional PNG ignores layer visibility windows');
 	assert(png.type === 'image/png' && png.name.endsWith('.png') && png.size > 0, `PNG contract failed: ${JSON.stringify(png)}`);
 
 	await page.evaluate(() => {
@@ -79,6 +89,7 @@ async function captureExport(page, targetId, overrides = {}) {
 	assert(jpg.type === 'image/jpeg' && jpg.name.endsWith('.jpg') && jpegEncodes === 1, `JPG encoding failed: ${JSON.stringify({ jpg, jpegEncodes })}`);
 
 	const stillGif = await captureExport(page, 'still:gif', { transparency: false, ditherEnabled: false });
+	assert(stillGif.center.join() === '255,0,0,255', 'Intentional one-frame GIF ignores layer visibility windows');
 	assert(stillGif.type === 'image/gif' && stillGif.name.endsWith('.gif'), `Still GIF contract failed: ${JSON.stringify(stillGif)}`);
 	assert(await page.evaluate(() => !window.editor.exportInProgress), 'Export concurrency guard did not clear');
 	assert(errors.length === 0, `Browser errors: ${errors.join('; ')}`);

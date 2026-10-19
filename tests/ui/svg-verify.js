@@ -36,6 +36,10 @@ const { openApp } = require('../lib/app');
 			const layer=editor.layers.find(l=>l.type===LayerType.PATH); check(layer,'path imported');
 			check(editor.layers.filter(l=>l.type===LayerType.STICKER).length===0,'no raster sticker');
 			const exported=await editor.svgExporter.serialize([layer],100,100);
+			editor.setLayerAppear(layer, { start: 200, end: 700 }); editor.animationTicker.seek(0);
+			check(await editor.svgExporter.serialize([layer],100,100) === exported, 'Still SVG ignores a layer visibility window');
+			editor.setLayerAppear(layer, null);
+
 			let delivered; editor.svgExporter.setFileName('sample.svg');
 			await editor.svgExporter.process({ visibleLayers: [layer],canvasData: { width: 100,height: 100 },target: EXPORT_TARGETS['still:svg'],callbacks: { onStatus: () => {},onComplete: () => {},present: (result) => { delivered=result; } } });
 			check(delivered.file.name === 'sample.svg' && delivered.blob.type === 'image/svg+xml', 'SVG delivered through result contract');

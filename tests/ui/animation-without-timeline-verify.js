@@ -2,6 +2,7 @@
 
 const assert = require('assert/strict');
 const { openApp } = require('../lib/app');
+const { exportSnapshot, assertByteIdentity } = require('../parity/export-harness');
 
 (async () => {
 	for (const viewport of [{ width: 1600, height: 900 }, { width: 390, height: 844 }]) {
@@ -205,6 +206,118 @@ const { openApp } = require('../lib/app');
 			await page.evaluate(() => editor.loadBlankImage(120, 100, '#ffffff'));
 			assert.equal(await page.evaluate(() => editor.animationTicker.getPlayheadTime()), 0, 'Replacing the document discards an unfinished seek');
 			await page.waitForFunction(() => !editor.unsubscribeAnimationTransport);
+			const windows = await page.evaluate(async () => {
+				const e = editor, checks = [];
+				let base = e.shapeGlitterManager.createLayer({ shapeId: 'square', width: 40, height: 40, position: { x: 60, y: 50 } });
+				Object.assign(getLayerFillSlot(base), { mode: 'solid', color: '#ff0000' });
+				e.layerManager.insertLayer(base); e.saveState('Visibility fixture');
+				e.setLayerAppear(base, { start: 200, end: 700 });
+				await e.historyManager.undo(); base = e.layerManager.getLayerById(base.id); checks.push(!Object.hasOwn(base, 'appear'));
+				await e.historyManager.redo(); base = e.layerManager.getLayerById(base.id); checks.push(base.appear.start === 200 && base.appear.end === 700);
+				const child = e.shapeGlitterManager.createLayer({ shapeId: 'square', width: 40, height: 40, position: { x: 60, y: 50 } });
+				Object.assign(getLayerFillSlot(child), { mode: 'solid', color: '#0000ff' }); child.clipped = true;
+				e.layerManager.insertLayer(child); e.setLayerAppear(child, { start: 300, end: 600 });
+				e.setDocumentLoop({ mode: 'set', durationMs: 1000 }, { commit: false }); e.setPlayback(false);
+				e.requestPreviewUpdate(); await new Promise(requestAnimationFrame); await new Promise(requestAnimationFrame);
+				const element = e.shapeGlitterManager.layerElements.get(child.id);
+				const pixels = [];
+				const params = e.getSceneSnapshotParams(e.layers.filter(layer => layer.visible !== false));
+				for (const time of [199, 200, 300, 599, 600, 700]) {
+					e.animationTicker.seek(time);
+					checks.push(element.classList.contains('is-outside-appear') === !(time >= 300 && time < 600));
+					const result = await e.sceneCompositor.composeFrameAt({ ...params, timestamp: time, rest: false });
+					pixels.push([...result.imageData.data.slice((50 * result.width + 60) * 4, (50 * result.width + 60) * 4 + 4)]);
+				}
+				e.animationTicker.seek(100);
+				const chrome = e.shapeGlitterManager.layerTransforms.get(child.id).chrome.element;
+				checks.push(chrome.isConnected && getComputedStyle(chrome).visibility === 'visible');
+				e.animationTicker.setRestPreview(true);
+				checks.push(!element.classList.contains('is-outside-appear') && e.activeLayerId === child.id);
+				const rest = await e.sceneCompositor.composeFrameAt({ ...params, timestamp: 0, rest: true });
+				const restPixel = [...rest.imageData.data.slice((50 * rest.width + 60) * 4, (50 * rest.width + 60) * 4 + 4)];
+				const copy = e.layerManager.buildClonedLayer(child);
+				checks.push(copy.appear.start === 300 && copy.appear !== child.appear);
+				const project = await e.projectSerializer.serialize();
+				e.isSaved = true;
+				await e.projectSerializer.load(project);
+				const restored = e.layerManager.getLayerById(child.id);
+				checks.push(project.version === 6 && restored.appear.start === 300 && restored.appear.end === 600 && !e.timelineDock);
+				return { checks, pixels, restPixel };
+			});
+			assert(windows.checks.every(Boolean), JSON.stringify(windows));
+			assert.deepEqual(windows.pixels, [[255, 255, 255, 255], [255, 0, 0, 255], [0, 0, 255, 255], [0, 0, 255, 255], [255, 0, 0, 255], [255, 255, 255, 255]], 'Visibility and clipping share exact frame boundaries');
+			assert.deepEqual(windows.restPixel, [0, 0, 255, 255], 'Intentional still/rest output ignores windows');
+			await page.evaluate(() => {
+				const input = document.getElementById('shapeLayerOpacityAppears'), section = input.closest('.property-card');
+				setPanelCardCollapsed(section, false); setAdvancedDisclosureOpen(input.closest('.advanced-disclosure'), true);
+				if (editor.mobileManager.isMobile) {
+					const bar = editor.mobileManager.chipBar; bar.render(); bar.pressChip(bar.entries.find(entry => entry.element === section));
+				}
+			});
+			const appears = page.locator('#shapeLayerOpacityAppears'), disappears = page.locator('#shapeLayerOpacityDisappears');
+			await appears.waitFor({ state: 'visible' });
+			const visibilityHistory = await page.evaluate(() => editor.historyManager.historyIndex);
+			await appears.fill('0.4'); await appears.press('Tab');
+			assert.equal(await page.evaluate(() => editor.layerManager.getActiveLayer().appear.start), 400);
+			assert.equal(await page.evaluate(() => editor.historyManager.historyIndex), visibilityHistory + 1, 'A visibility field commits once');
+			await page.evaluate(() => editor.setLayerAppear(editor.layers.find(layer => layer.type === LayerType.SHAPE && layer.id !== editor.activeLayerId), { start: 100, end: 700 }));
+			assert.equal(await appears.inputValue(), '0.4', 'An edit on another layer cannot overwrite inspected visibility fields');
+			await disappears.fill(''); await disappears.press('Tab');
+			assert.equal(await page.evaluate(() => editor.layerManager.getActiveLayer().appear.end), null, 'Empty Disappears follows the loop end');
+			await disappears.fill('0.3'); await disappears.press('Tab');
+			assert.equal(await disappears.inputValue(), '', 'A reversed interval is rejected and the field restored');
+			await page.locator('#shapeLayerOpacityAlwaysVisible').click();
+			assert(await page.evaluate(() => !Object.hasOwn(editor.layerManager.getActiveLayer(), 'appear')));
+			await page.evaluate(() => editor.historyManager.undo());
+			assert.equal(await appears.inputValue(), '0.4', 'Undo restores visibility fields');
+			await page.evaluate(() => { editor.layerManager.getActiveLayer().locked = true; editor.refreshInspector(); });
+			assert(await appears.isDisabled() && await disappears.isDisabled(), 'Locked layer visibility fields are disabled');
+			await page.evaluate(async () => { editor.openAnimationLoop(); await editor.updateExportDuration(); });
+			assert.match(await page.locator('#animationLoopStatus').innerText(), /layer visibility/);
+			await page.locator('#animationLoopCandidate').selectOption('custom');
+			await page.locator('#animationLoopDuration').fill('1.6'); await page.locator('#animationLoopDuration').press('Tab');
+			assert.equal(await page.evaluate(() => editor.documentLoop.durationMs), 1600, 'Visibility-only scenes can set loop duration without the dock');
+			await page.locator('#animationLoopCandidate').selectOption('auto');
+			await page.evaluate(() => editor.updateExportDuration());
+			assert.equal(await page.evaluate(() => editor.resolveAnimationLoop().duration), 1200, 'Automatic uses the last edge plus the visibility hold');
+			if (viewport.width > 500) {
+				const html = await page.evaluate(async () => {
+					const e = editor, asset = e.stickerLibrary.content.find(item => !item.isAnimated);
+					await e.stickerLibrary.ensureAssetDetails(asset.id);
+					const sticker = e.stickerManager.createLayer(asset.id); e.layerManager.insertLayer(sticker);
+					e.setLayerAppear(sticker, { start: 200, end: 700 });
+					e.setDocumentLoop({ mode: 'set', durationMs: 1000 }, { commit: false });
+					const exporter = await e.ensureHtmlSceneExporter();
+					return exporter.createDocument([sticker], { ...CONFIG.experimental.htmlScene.defaults, embedAssets: true });
+				});
+				const output = await page.context().newPage();
+				try {
+					await output.setContent(html);
+					const states = await output.evaluate(() => {
+						const node = document.querySelector('.glitter-scene__timed'), animation = node.getAnimations()[0];
+						animation.pause();
+						return [0, 199, 200, 699, 700, 999, 1000, 1201].map(time => { animation.currentTime = time; return getComputedStyle(node).visibility; });
+					});
+					assert.deepEqual(states, ['hidden', 'hidden', 'visible', 'visible', 'hidden', 'hidden', 'hidden', 'visible'], `HTML uses the same half-open window on every loop: ${JSON.stringify(states)}`);
+					await output.emulateMedia({ reducedMotion: 'reduce' });
+					assert.equal(await output.locator('.glitter-scene__timed').evaluate(node => getComputedStyle(node).visibility), 'visible', 'Reduced motion shows the ordinarily visible HTML layer');
+				} finally { await output.close(); }
+				await page.evaluate(async () => {
+					const e = editor, asset = e.stickerLibrary.content.find(item => item.isAnimated);
+					await e.stickerLibrary.ensureAssetDetails(asset.id);
+					const layer = e.stickerManager.createLayer(asset.id); e.layerManager.insertLayer(layer);
+					e.setLayerAppear(layer, { start: 200, end: 700 }); window.visibilityExportLayerId = layer.id;
+					e.saveState('Windowed export fixture');
+				});
+				const settings = { transparency: false, maxFrames: 8, exportFrameSkip: 4 };
+				const first = await exportSnapshot(page, settings, { minLayers: 3 });
+				const second = await exportSnapshot(page, settings, { minLayers: 3 });
+				assertByteIdentity(first, second, 'Consecutive windowed animated exports');
+				await page.evaluate(async () => { editor.setLayerAppear(editor.layerManager.getLayerById(visibilityExportLayerId), { start: 400, end: 600 }); await editor.historyManager.undo(); });
+				const restored = await exportSnapshot(page, settings, { minLayers: 3 });
+				assertByteIdentity(first, restored, 'Visibility edit/Undo animated export');
+
+			}
 			assert.deepEqual(errors, []);
 			console.log(`PASS animation operations and undo with dock unloaded at ${viewport.width}px`);
 		} finally { await browser.close(); }

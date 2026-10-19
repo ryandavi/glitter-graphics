@@ -6,7 +6,7 @@ class FilterLayerManager {
 		this.documentSizes = new WeakMap();
 		this.grainTileCache = new Map();
 		this.snapshotInputs = new ByteBudgetCache({ id: 'filter-snapshot-inputs', label: 'Pixel filter inputs', measure: (value) => value?.imageData?.data?.byteLength || 0 });
-		this.snapshotOutputs = new ByteBudgetCache({ id: 'filter-snapshot-outputs', label: 'Pixel filter outputs', measure: (value) => (value?.frames || []).reduce((sum, frame) => sum + canvasBytes(frame), 0) });
+		this.snapshotOutputs = new ByteBudgetCache({ id: 'filter-snapshot-outputs', label: 'Pixel filter outputs', measure: (value) => [...(value?.frames || []), value?.restFrame].filter(Boolean).reduce((sum, frame) => sum + canvasBytes(frame), 0) });
 		this.snapshotTimers = new Map();
 		// Signature of the render each layer has queued, so repeated preview
 		// updates of an unchanged scene don't keep postponing it.
@@ -362,6 +362,7 @@ class FilterLayerManager {
 
 	renderContent(layersToShow) {
 		this.lastLayersToShow = layersToShow;
+		this.visibilitySnapshotPaint = null;
 		reconcileLayerElements(this.layerElements, layersToShow, LayerType.FILTER, (layer) => this.renderLayer(layer));
 		const level = PREFERENCES.get('filterPreviewLevel');
 		let updating = false;
@@ -377,7 +378,7 @@ class FilterLayerManager {
 	}
 
 	getFilterSignature(layer) {
-		return `${JSON.stringify(layer.filterData)}|${JSON.stringify(layer.transform?.position)}|${layer.opacity}|${GlitterBlendModes.forLayer(layer)}`;
+		return `${JSON.stringify(layer.appear)}|${JSON.stringify(this.editor.documentLoop)}|${JSON.stringify(layer.filterData)}|${JSON.stringify(layer.transform?.position)}|${layer.opacity}|${GlitterBlendModes.forLayer(layer)}`;
 	}
 
 	isAnimatedPreview(layer, level = PREFERENCES.get('filterPreviewLevel')) {
@@ -590,30 +591,37 @@ class FilterLayerManager {
 			}
 			if (superseded()) return;
 			if (!input || input.signature !== inputSignature) {
-				const params = this.buildSnapshotParams(layers);
+				const params = { ...this.buildSnapshotParams(layers), rest: true };
 				const preparedContext = await this.snapshotCompositor.prepareContext(params);
 				const composed = await this.snapshotCompositor.composeFrameAt({ ...params, preparedContext, timestamp: 0 });
 				input = { signature: inputSignature, imageData: composed.imageData, preparedContext, params };
 				this.snapshotInputs.set(layer.id, input);
 			}
 			const frames = [];
+			const windows = [...layers, layer].some(candidate => candidate.appear);
+			if (windows && !duration) { await this.editor.updateExportDuration(); duration = this.editor.resolveAnimationLoop().duration; }
+			const timestamps = windows ? [...new Set([0, ...Array.from({ length: frameCount }, (_, index) => duration * index / frameCount), ...[...layers, layer].flatMap(candidate => candidate.appear ? [candidate.appear.start, candidate.appear.end] : []).filter(time => Number.isFinite(time) && time >= 0 && time < duration)])].sort((a, b) => a - b) : Array.from({ length: frameCount }, (_, index) => duration * index / frameCount);
+			// A rest image keeps every ordinarily visible layer editable.
+			const samples = windows ? [null, ...timestamps] : timestamps;
+			if (samples.length * this.editor.originalCanvas.width * this.editor.originalCanvas.height * 4 > getMemoryBudget().previewCacheBytes) throw new Error('Filter preview exceeds the frame cache budget');
+			let restFrame = null;
 			let renderMs = 0;
 			const animation = GlitterFilter.animation(layer.filterData);
-			for (let index = 0; index < frameCount; index++) {
+			for (let index = 0; index < samples.length; index++) {
 				if (superseded()) return;
 				const frameStarted = performance.now();
-				const timestamp = duration * index / frameCount;
+				const rest = windows && samples[index] === null, timestamp = samples[index] || 0;
 				let source = input.imageData;
-				if (index > 0) source = (await this.snapshotCompositor.composeFrameAt({ ...input.params, preparedContext: input.preparedContext, timestamp })).imageData;
+				if (windows || index > 0) source = (await this.snapshotCompositor.composeFrameAt({ ...input.params, preparedContext: input.preparedContext, timestamp, rest: windows ? rest : !animated })).imageData;
 				const canvas = createAppCanvas(source.width, source.height, 'layers/FilterLayerManager');
 				const context = canvas.getContext('2d');
 				context.putImageData(source, 0, 0);
-				await GlitterFilter.renderRegionToCanvas(context, source.width, source.height, layer, {
+				if (!windows || isLayerShownAt(layer, timestamp, { layers: this.editor.layers, rest, loopEnd: duration })) await GlitterFilter.renderRegionToCanvas(context, source.width, source.height, layer, {
 					keepAlpha: true, alphaThreshold: CONFIG.tools.selection.transparency.alphaThreshold,
 					seed: layer.id, frameIndex: animation ? Math.floor(timestamp / animation.frameMs) % animation.frames : index, matteColor: this.editor.exportSettings.matteColor,
 					blendMode: GlitterBlendModes.forLayer(layer)
 				});
-				frames.push(canvas);
+				if (rest) restFrame = canvas; else frames.push(canvas);
 				renderMs += performance.now() - frameStarted;
 				if (animated) {
 					this.editor.updateStatus(`Rendering preview ${index + 1}/${frameCount}`);
@@ -625,7 +633,7 @@ class FilterLayerManager {
 			this.lastOutputMs.set(layer.id, renderMs / frameCount);
 			this.snapshotOutputs.set(layer.id, {
 				signature: `${inputSignature}|${filterSignature}|${animated}`, inputSignature, filterSignature,
-				frames, frameDuration: animated ? duration / frameCount : 0, startedAt: performance.now()
+				frames, restFrame, timestamps: windows ? timestamps : null, frameDuration: animated ? duration / frameCount : 0, startedAt: performance.now()
 			});
 			if (!superseded()) this.snapshotPending.delete(layer.id);
 			this.editor.requestPreviewUpdate();
@@ -645,12 +653,33 @@ class FilterLayerManager {
 		}
 	}
 
+	isVisibilitySnapshot(layer) { return Boolean(this.snapshotOutputs.get(layer.id)?.timestamps && !this.liveEditing); }
+
+	paintVisibilitySnapshots() {
+		const ticker = this.editor.animationTicker;
+		const samples = this.lastLayersToShow.filter(layer => this.isVisibilitySnapshot(layer)).map(layer => {
+			const output = this.snapshotOutputs.get(layer.id);
+			return { layer, output, rest: ticker.isRestPreview(), index: Math.max(0, output.timestamps.findLastIndex(time => time <= ticker.getCurrentTime())) };
+		});
+		if (!samples.length || this.visibilitySnapshotPaint?.length === samples.length && samples.every((sample, index) => {
+			const previous = this.visibilitySnapshotPaint[index];
+			return previous.layer === sample.layer && previous.output === sample.output && previous.rest === sample.rest && previous.index === sample.index;
+		})) return;
+		this.visibilitySnapshotPaint = samples;
+		for (const { layer } of samples) {
+			const element = this.layerElements.get(layer.id);
+			if (element) this.paintSnapshotElement(layer, element);
+		}
+		this.applySnapshotVisibility(this.lastLayersToShow);
+	}
+
 	paintSnapshotElement(layer, element) {
 		const output = this.snapshotOutputs.get(layer.id);
 		const canvas = element.querySelector('.filter-snapshot-canvas');
 		if (!output?.frames?.length || !canvas) return;
-		const index = !this.editor.animationTicker._isPreviewPaused() && output.frames.length > 1 ? Math.floor((performance.now() - output.startedAt) / output.frameDuration) % output.frames.length : 0;
-		const frame = output.frames[index];
+		const ticker = this.editor.animationTicker;
+		const index = output.timestamps ? Math.max(0, output.timestamps.findLastIndex(time => time <= ticker.getCurrentTime())) : !ticker._isPreviewPaused() && output.frames.length > 1 ? Math.floor((performance.now() - output.startedAt) / output.frameDuration) % output.frames.length : 0;
+		const frame = output.timestamps && ticker.isRestPreview() ? output.restFrame : output.frames[index];
 		if (canvas.width !== frame.width) canvas.width = frame.width;
 		if (canvas.height !== frame.height) canvas.height = frame.height;
 		const ctx = canvas.getContext('2d');
@@ -682,7 +711,7 @@ class FilterLayerManager {
 		this.editor.previewWrapper.querySelectorAll('[data-filter-snapshot-hidden]').forEach((node) => {
 			delete node.dataset.filterSnapshotHidden;
 		});
-		const tier3 = this.liveEditing ? [] : layersToShow.filter((layer) => layer.type === LayerType.FILTER && GlitterFilters.tier(layer.filterData) === 3 && this.snapshotOutputs.get(layer.id)?.frames?.length);
+		const tier3 = this.liveEditing ? [] : layersToShow.filter((layer) => layer.type === LayerType.FILTER && GlitterFilters.tier(layer.filterData) === 3 && this.snapshotOutputs.get(layer.id)?.frames?.length && (this.snapshotOutputs.get(layer.id).timestamps || isLayerShownAt(layer, this.editor.animationTicker.getCurrentTime(), { layers: this.editor.layers, rest: this.editor.animationTicker.isRestPreview(), loopEnd: this.editor.animationTicker.loopMs ?? Infinity })));
 		this.layerElements.forEach((element, id) => {
 			const canvas = element.querySelector('.filter-snapshot-canvas');
 			if (canvas) canvas.style.visibility = tier3.some((layer) => layer.id === id) ? '' : 'hidden';

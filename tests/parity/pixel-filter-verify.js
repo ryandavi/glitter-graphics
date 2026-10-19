@@ -103,6 +103,36 @@ const APP_URL = process.env.GLITTER_URL || 'http://localhost/glitter/';
 	assert.strictEqual(result.tier, 3, 'JPEG Crunch must derive Tier 3 from its pixel-only op');
 	assert(result.hasPreviewControl, 'Pixel filter preview preference is missing');
 	assert.strictEqual(result.hasLegacyExportSetting, false, 'jpegGenerations must be removed from export settings');
+	const windowPixels = await page.evaluate(async () => {
+		const e = editor, m = e.filterLayerManager;
+		await e.loadBlankImage(24, 16, '#7b3fd1');
+		PREFERENCES.set('filterPreviewLevel', 'still');
+		const shape = e.shapeGlitterManager.createLayer({ shapeId: 'square', width: 12, height: 12, position: { x: 12, y: 8 } });
+		Object.assign(getLayerFillSlot(shape), { mode: 'solid', color: '#ff0000' });
+		e.layerManager.insertLayer(shape); e.setLayerAppear(shape, { start: 300, end: 600 });
+		const filter = m.createLayer({ filterData: { type: 'rgb-split', offset: 3 } });
+		e.layerManager.insertLayer(filter); e.setLayerAppear(filter, { start: 200, end: 700 });
+		e.setDocumentLoop({ mode: 'set', durationMs: 1000 }, { commit: false });
+		e.setPlayback(false); clearTimeout(m.snapshotTimers.get(filter.id));
+		await m.renderSnapshot(filter, false);
+		m.renderContent(e.layers); e.clipPreview.reconcile(e.layers);
+		const output = m.snapshotOutputs.get(filter.id), element = m.layerElements.get(filter.id), checks = [];
+		const params = m.buildSnapshotParams(e.layers);
+		for (const timestamp of [0, 199, 200, 299, 300, 599, 600, 699, 700, 999]) {
+			e.animationTicker.seek(timestamp); m.paintSnapshotElement(filter, element);
+			const preview = element.querySelector('canvas').getContext('2d').getImageData(0, 0, 24, 16).data;
+			const composed = await e.sceneCompositor.composeFrameAt({ ...params, timestamp, rest: false });
+			checks.push(preview.every((value, index) => value === composed.imageData.data[index]));
+			checks.push(!element.classList.contains('is-outside-appear') && e.previewCanvas.style.visibility === 'hidden');
+		}
+		e.animationTicker.setRestPreview(true); m.paintSnapshotElement(filter, element);
+		const rest = element.querySelector('canvas').getContext('2d').getImageData(0, 0, 24, 16).data;
+		const composed = await e.sceneCompositor.composeFrameAt({ ...params, timestamp: 0, rest: true });
+		checks.push(rest.every((value, index) => value === composed.imageData.data[index]));
+		return { checks, timestamps: output.timestamps };
+	});
+	assert(windowPixels.checks.every(Boolean), `Windowed pixel-filter preview matches export at each boundary and rest: ${JSON.stringify(windowPixels)}`);
+	assert.deepStrictEqual(windowPixels.timestamps, [0, 200, 300, 600, 700]);
 	assert.strictEqual(errors.length, 0, `Browser errors: ${errors.join('; ')}`);
 	console.log('PASS pixel-filter registry, still/animated preview, export parity, JPEG generations, preview setting, and export-setting persistence');
 	await browser.close();

@@ -4,6 +4,7 @@ class AnimationTicker {
 	constructor(editor) {
 		this.editor = editor;
 		this.targets = new Map();
+		this.visibilityTargets = new Map();
 		this.tickListeners = new Set();
 		this.seekListeners = new Set();
 		this.frameRequest = null;
@@ -62,6 +63,7 @@ class AnimationTicker {
 	}
 
 	resetDocument() {
+		this.visibilityTargets.clear();
 		this.heldMs = 0; this.holding = false; this.restPreview = false;
 		this.loopMs = null; this.timelineStartedAt = null;
 		this.refresh();
@@ -138,7 +140,26 @@ class AnimationTicker {
 
 	// Display subscribers can need a clock without a procedural preview target.
 	_hasWork() {
-		return this.targets.size > 0 || this.tickListeners.size > 0;
+		return this.targets.size > 0 || this.visibilityTargets.size > 0 || this.tickListeners.size > 0;
+	}
+
+	reconcileVisibility(layers) {
+		const hadWindows = this.visibilityTargets.size > 0;
+		const retained = new Set();
+		for (const layer of layers) {
+			const base = getClipBase(this.editor.layers, layer);
+			if (!layer.appear && !base?.appear) continue;
+			const element = getLayerManagerForType(this.editor, layer.type)?.layerElements?.get(layer.id);
+			if (!element) continue;
+			retained.add(layer.id);
+			this.visibilityTargets.set(layer.id, { layer, element, layers: base ? [base, layer] : [] });
+		}
+		for (const [id, entry] of this.visibilityTargets) {
+			if (retained.has(id)) continue;
+			entry.element.classList.remove('is-outside-appear');
+			this.visibilityTargets.delete(id);
+		}
+		if (hadWindows || this.visibilityTargets.size) this.refresh();
 	}
 
 	_elapsedAt(now) {
@@ -193,6 +214,12 @@ class AnimationTicker {
 	_paint(now) {
 		const time = this._timeAt(now);
 		this.targets.forEach((entry, layerId) => this._paintEntry(layerId, entry, time));
+		for (const [id, entry] of this.visibilityTargets) {
+			if (!entry.element.isConnected) { this.visibilityTargets.delete(id); continue; }
+			const shown = isLayerShownAt(entry.layer, time, { layers: entry.layers, rest: this.isRestPreview(), loopEnd: this.loopMs ?? Infinity });
+			entry.element.classList.toggle('is-outside-appear', !shown && !this.editor.filterLayerManager?.isVisibilitySnapshot(entry.layer));
+		}
+		if (this.visibilityTargets.size) this.editor.filterLayerManager?.paintVisibilitySnapshots();
 		const playhead = this.getPlayheadTime(now);
 		this.editor.previewFrameView?.paint(playhead);
 		for (const listener of this.tickListeners) listener(playhead);

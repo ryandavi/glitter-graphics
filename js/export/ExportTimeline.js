@@ -561,7 +561,7 @@ class CompositeFrameReducer {
 		return samples ? Math.max(error / samples, peakError * 0.09) : 0;
 	}
 
-	reduce(input, { enabled, visualErrorThreshold, preferredFrameBudget, hardFrameLimit, maximumCadenceGap = Infinity, lockAuthoredFrames = false }) {
+	reduce(input, { enabled, visualErrorThreshold, preferredFrameBudget, hardFrameLimit, maximumCadenceGap = Infinity, lockAuthoredFrames = false, boundaryKeys = [] }) {
 		const frames = [...input.frames];
 		const frameDurations = [...input.frameDurations];
 		const selections = input.selections.map((selection) => new Map(selection));
@@ -611,6 +611,7 @@ class CompositeFrameReducer {
 						if (neighbour >= frames.length || frameDurations[index] + frameDurations[neighbour] > cadenceGap) continue;
 					}
 					if (locked && !sameAuthoredFrames(index, mergePrevious ? index - 1 : index + 1)) continue;
+					if (boundaryKeys.some(key => selections[index].get(key)?.shown !== selections[mergePrevious ? index - 1 : index + 1].get(key)?.shown)) continue;
 					if (!materialChange && score < threshold && (!best || score < best.score)) {
 						best = { index, score, mergePrevious };
 					}
@@ -947,16 +948,41 @@ class CompositeTimelinePlanner {
 		return sampled;
 	}
 
-	_applyManualSampling(entries, every) {
+	_applyManualSampling(entries, every, boundaryKeys = []) {
 		if (every <= 1 || entries.length <= 1) return entries;
 		const sampled = [];
-		for (let index = 0; index < entries.length; index += every) {
+		const indices = entries.map((entry, index) => index).filter(index => index % every === 0 || boundaryKeys.some(key => entries[index].selection.get(key)?.shown !== entries[index - 1]?.selection.get(key)?.shown));
+		for (const [position, index] of indices.entries()) {
 			const entry = { ...entries[index], selection: new Map(entries[index].selection) };
-			entry.duration = entries.slice(index, Math.min(index + every, entries.length))
+			entry.duration = entries.slice(index, indices[position + 1] ?? entries.length)
 				.reduce((sum, candidate) => sum + candidate.duration, 0);
 			sampled.push(entry);
 		}
 		return sampled;
+	}
+
+	_withBoundaryClock(clock, timelines, options) {
+		const windows = timelines.filter(source => source.kind === 'boundary');
+		if (!windows.length || clock.mode === 'mp4') return clock;
+		const config = this.config.renderClock;
+		const quantum = options.outputFormat === 'mp4' ? config.mp4TimeQuantumMs : config.gifDelayQuantumMs;
+		const minimum = options.outputFormat === 'mp4' ? quantum : config.gifMinimumDelayMs;
+		const candidates = new Set(clock.timestamps);
+		for (const window of windows) for (const boundary of window.boundariesUntil(clock.duration)) candidates.add(Math.ceil((boundary - 1e-8) / quantum) * quantum);
+		const timestamps = [0];
+		for (const time of [...candidates].sort((a, b) => a - b)) {
+			if (time - timestamps.at(-1) >= minimum - 1e-8 && clock.duration - time >= minimum - 1e-8) timestamps.push(time);
+		}
+		if (timestamps.length > options.hardFrameLimit) throw new Error('Visibility timing exceeds the frame limit. Simplify the visibility windows or shorten the loop.');
+		const delays = timestamps.map((time, index) => (timestamps[index + 1] ?? clock.duration) - time);
+		const minimumDelay = Math.min(...delays), maximumDelay = Math.max(...delays);
+		const cadenceShortfall = clock.procedural.fits.length ? Math.max(0, maximumDelay - clock.diagnostics.preferredInterval) : 0;
+		return { ...clock, timestamps, delays, frameCount: delays.length, diagnostics: { ...clock.diagnostics,
+			...RenderClock.authoredCoverage(timelines.filter(source => source.kind === 'authored'), timestamps, clock.duration),
+			maximumAuthoredBoundaryLateness: RenderClock.boundaryLateness(timelines.filter(source => source.kind === 'authored'), timestamps, clock.duration),
+			minimumDelay, maximumDelay, delaySpread: maximumDelay - minimumDelay, averageFps: delays.length * 1000 / clock.duration,
+			cadenceShortfall, cadenceShortfallBucket: Math.ceil(cadenceShortfall / clock.diagnostics.preferredInterval / config.cadenceShortfallTolerance)
+		} };
 	}
 
 	planSchedule(options) {
@@ -974,7 +1000,8 @@ class CompositeTimelinePlanner {
 		});
 		const timelines = timingResolution.timelines;
 		const loop = timingResolution.loop;
-		const clock = timingResolution.clock;
+		const clock = this._withBoundaryClock(timingResolution.clock, timelines, options);
+		const boundaryKeys = timelines.filter(source => source.kind === 'boundary').map(source => source.key);
 		const fittedChanges = timingResolution.fits.filter((fit) => fit.fitted && Math.abs(fit.requestedPeriod - fit.resolvedPeriod) >= 0.01);
 		if (fittedChanges.length) {
 			options.onStatus?.(`Fit ${formatCount(fittedChanges.length, 'procedural period')} to the composite loop.`);
@@ -991,7 +1018,7 @@ class CompositeTimelinePlanner {
 		const originalFrameCount = entries.length;
 		entries = this._collapseSelectionDuplicates(entries);
 		const selectionDuplicatesMerged = originalFrameCount - entries.length;
-		entries = this._applyManualSampling(entries, Math.max(1, options.manualFrameSkip || 1));
+		entries = this._applyManualSampling(entries, Math.max(1, options.manualFrameSkip || 1), boundaryKeys);
 		const manuallySampledFrameCount = entries.length;
 		const { preferredFrameBudget, preRenderBudget } = this._frameBudgets(loop.duration, options);
 		// Pre-render thinning re-buckets timestamps and reuses a neighbour's
@@ -999,7 +1026,7 @@ class CompositeTimelinePlanner {
 		// render clock owns displayed time it was already planned under this same
 		// budget, so the committed clock stays the only clock.
 		const clockOwnsCadence = clock.mode !== 'authored';
-		if (!clockOwnsCadence) entries = this._limitPreRenderCandidates(entries, preRenderBudget);
+		if (!clockOwnsCadence && !boundaryKeys.length) entries = this._limitPreRenderCandidates(entries, preRenderBudget);
 		const preRenderFramesSkipped = manuallySampledFrameCount - entries.length;
 		if (options.reverse) entries.reverse();
 		const totalDuration = entries.reduce((sum, entry) => sum + entry.duration, 0);
@@ -1109,7 +1136,8 @@ class CompositeTimelinePlanner {
 			preferredFrameBudget: this._frameBudgets(schedulePlan.loopSeam.duration, options).preferredFrameBudget,
 			hardFrameLimit: options.hardFrameLimit,
 			maximumCadenceGap,
-			lockAuthoredFrames: Boolean(this.config.renderClock.glitterLocked)
+			lockAuthoredFrames: Boolean(this.config.renderClock.glitterLocked),
+			boundaryKeys: (options.timelines || []).filter(source => source.kind === 'boundary').map(source => source.key)
 		});
 		const totalDuration = reduced.frameDurations.reduce((sum, duration) => sum + duration, 0);
 		const authoredKeys = schedulePlan.sourceAnalysis

@@ -47,7 +47,7 @@ const EDITOR_ANIMATION_EDIT_METHODS = {
 	},
 	animationTimingActions(key, { live = false } = {}) {
 		const model = TimelineView.buildModel(this.loopEstimate, this.layers, this);
-		const row = model.groups.flatMap(group => group.rows).find(row => row.key === key);
+		const row = model.groups.flatMap(group => [group.window, ...group.rows]).find(row => row?.key === key);
 		if (!row?.source) return [];
 		const actions = TimelineView.barActions(row, model, {
 			playhead: this.animationTicker.getPlayheadTime(), clipboard: this.timingClipboard,

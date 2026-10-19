@@ -79,6 +79,7 @@ class ClipPreview {
 			if (retained.has(id)) continue;
 			this.release(id, entry);
 		}
+		editor.animationTicker.reconcileVisibility(visibleLayers);
 	}
 
 	// The wrapper takes the box of the mask it shows, and the content undoes

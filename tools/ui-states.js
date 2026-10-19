@@ -641,4 +641,48 @@ async function timelineStates(page, visit, viewport) {
 	await visit(`${viewport} timeline loop Advanced`, { shot: '#animationLoopSection', tall: true });
 }
 
-module.exports = { routeSourceSnapshot, chromium, URL, VIEWPORTS, boot, wait, desktopStates, phoneStates, recolorStates, backgroundRemovalStates, animatedFilterStates, patternStates, creationStates, clippingStates, timelineStates };
+async function visibilityStates(page, visit, viewport) {
+	await page.evaluate(async () => {
+		await editor.loadBlankImage(200, 160, '#ffffff');
+		const layer = editor.shapeGlitterManager.createLayer({ shapeId: 'square', width: 80, height: 70, position: { x: 100, y: 80 } });
+		Object.assign(getLayerFillSlot(layer), { mode: 'solid', color: '#e74391' });
+		layer.name = 'Pink square';
+		layer.animations = [GlitterAnimation.normalizeAnimation({ id: editor.layerManager.generateLayerId(), type: 'pulse', periodMs: 1000 })];
+		editor.layerManager.insertLayer(layer); editor.layerManager.setActiveLayer(layer.id);
+		editor.setLayerAppear(layer, { start: 400, end: 1400 });
+		editor.setDocumentLoop({ mode: 'set', durationMs: 2000 }, { commit: false });
+		editor.setPlayback(false); editor.animationTicker.setRestPreview(true);
+		await editor.updateExportDuration();
+		const input = document.getElementById('shapeLayerOpacityAppears'), section = input.closest('.property-card');
+		setPanelCardCollapsed(section, false); setAdvancedDisclosureOpen(input.closest('.advanced-disclosure'), true);
+		if (editor.mobileManager.isMobile) {
+			const bar = editor.mobileManager.chipBar; bar.render(); bar.pressChip(bar.entries.find(entry => entry.element === section));
+		}
+	});
+	await wait(page);
+	await visit(`${viewport} visibility fields`);
+	await page.evaluate(() => { editor.layerManager.getActiveLayer().locked = true; editor.refreshInspector(); });
+	await wait(page);
+	await visit(`${viewport} visibility locked fields`);
+	await page.evaluate(async () => {
+		editor.layerManager.getActiveLayer().locked = false; editor.refreshInspector();
+		if (editor.mobileManager.isMobile) editor.pickers.closeActive();
+		await editor.ensureTimelineDock(); PREFERENCES.set('timelineOpen', true); await editor.updateExportDuration();
+	});
+	if (await page.evaluate(() => editor.timelineDock.available)) {
+		await wait(page);
+		await visit(`${viewport} visibility timeline`, { shot: '#timelineDock' });
+		await page.locator('.timeline-group-window .timeline-bar').first().click({ button: 'right' });
+		await wait(page);
+		await visit(`${viewport} visibility actions`);
+		await page.keyboard.press('Escape');
+	}
+	await page.evaluate(() => { editor.openAnimationLoop(); editor.animationTicker.seek(200); });
+	await wait(page);
+	await visit(`${viewport} visibility outside window`);
+	await page.evaluate(() => editor.animationTicker.seek(800));
+	await wait(page);
+	await visit(`${viewport} visibility inside window`);
+}
+
+module.exports = { routeSourceSnapshot, chromium, URL, VIEWPORTS, boot, wait, desktopStates, phoneStates, recolorStates, backgroundRemovalStates, animatedFilterStates, patternStates, creationStates, clippingStates, timelineStates, visibilityStates };

@@ -1365,6 +1365,7 @@ class SceneCompositor {
 		const basePipeline = this._prepareBasePipeline(visibleLayers, canvasData, settingsSnapshot);
 		return {
 			visibleLayers,
+			loopEnd: this._loopDurationMs() ?? Infinity,
 			library: glitterGifs,
 			canvasData,
 			exportSettings: settingsSnapshot,
@@ -1476,7 +1477,7 @@ class SceneCompositor {
 			Number.isFinite(requestedFidelity) ? requestedFidelity : CONFIG.export.defaults.exportFidelity
 		));
 		const preset = timelineConfig.fidelityStops[fidelityIndex];
-		const sourceTimelines = [...authoredTimelines, ...this._createProceduralTimelines(proceduralSources)];
+		const sourceTimelines = [...authoredTimelines, ...this._createProceduralTimelines(proceduralSources), ...this._createVisibilityTimelines(context.visibleLayers)];
 
 		callbacks.onStatus('Planning animation timing...');
 		reportExportProgress(callbacks, 'planning', 0.5, '');
@@ -1490,7 +1491,7 @@ class SceneCompositor {
 			outputFormat,
 			fallbackDuration: exportSettings.frameDelay,
 			maxLoopDurationMs: timelineConfig.maxLoopDurationMs,
-			loopDurationMs: this._loopDurationMs(),
+			loopDurationMs: this._visibilityLoopDuration(sourceTimelines),
 			maxSamplingFps: exportSettings.maxSamplingFps === 'auto' ? preset.maxSamplingFps : (exportSettings.maxSamplingFps || preset.maxSamplingFps),
 			manualFrameSkip: exportSettings.exportFrameSkip,
 			reverse: exportSettings.exportReverse,
@@ -1586,6 +1587,7 @@ class SceneCompositor {
 		const imageData = await this._renderFrame({
 			outputFrameIndex: 0,
 			timestamp,
+			rest: Boolean(params.rest),
 			context,
 			transparency: { enabled: preserveAlpha },
 			sourceSelectionMap,
@@ -1601,7 +1603,7 @@ class SceneCompositor {
 
 	// --- HELPER METHODS ---
 
-	async _renderFrameToCanvas({ outputFrameIndex: frameIndex, timestamp = 0, context, transparency, sourceSelectionMap = null, resolvedFramesBySource = null }) {
+	async _renderFrameToCanvas({ outputFrameIndex: frameIndex, timestamp = 0, context, transparency, sourceSelectionMap = null, resolvedFramesBySource = null, rest = false }) {
 		const { canvasData, visibleLayers: layers, exportSettings, watermark, watermarkCanvas, layerPlans, masks } = context;
 		const { enabled: preserveAlpha } = transparency;
 		const maskCanvases = masks.glitter;
@@ -1648,7 +1650,7 @@ class SceneCompositor {
 
 		// 5. Composite Glitter and Sticker Layers (in correct z-order)
 		for (const { layer, plan } of layerPlans) {
-			if (layer.visible === false) continue;
+			if (!isLayerShownAt(layer, timestamp, { layers, rest, loopEnd: context.loopEnd })) continue;
 			const storedBase = getClipBase(this.editor.layers, layer);
 			const clipBase = storedBase && (context.visibleLayers.find(entry => entry.id === storedBase.id) || storedBase);
 			if (clipBase?.visible === false) continue;
@@ -1768,6 +1770,24 @@ class SceneCompositor {
 		return this.editor.documentLoop?.mode === 'set' ? this.editor.documentLoop.durationMs : null;
 	}
 
+	_createVisibilityTimelines(layers) {
+		return layers.filter(layer => layer.visible !== false && supportsLayerAppear(layer) && layer.appear).map(layer => ({
+			key: `__appear_${layer.id}`, kind: 'boundary', ownerLayerId: layer.id, end: layer.appear.end ?? layer.appear.start,
+			boundariesUntil: duration => [layer.appear.start, layer.appear.end].filter(time => Number.isFinite(time) && time > 0 && time < duration),
+			sampleAt: timestamp => ({ shown: isLayerShownAt(layer, timestamp, { layers }) })
+		}));
+	}
+
+	_visibilityLoopDuration(timelines) {
+		const set = this._loopDurationMs();
+		if (set !== null) return set;
+		if (timelines.some(source => source.kind === 'procedural' || Number.isFinite(source.cycleDuration))) return null;
+		const windows = timelines.filter(source => source.kind === 'boundary');
+		if (!windows.length) return null;
+		const config = CONFIG.export.timeline;
+		return clampNumber(Math.ceil((Math.max(...windows.map(source => source.end)) + config.visibilityHoldMs) / config.renderClock.gifDelayQuantumMs) * config.renderClock.gifDelayQuantumMs, config.setLoopRange.min, config.setLoopRange.max);
+	}
+
 	async estimateLoopDuration({
 		layers,
 		library,
@@ -1795,7 +1815,8 @@ class SceneCompositor {
 		}
 		const timelines = [
 			...descriptors.map((descriptor) => this._createAuthoredTimingSource(descriptor, fallbackDuration)),
-			...this._createProceduralTimelines(this._collectProceduralSources(renderLayers, { includeBaseImage: baseImage }))
+			...this._createProceduralTimelines(this._collectProceduralSources(renderLayers, { includeBaseImage: baseImage })),
+			...this._createVisibilityTimelines(renderLayers)
 		];
 		const timelineConfig = CONFIG.export.timeline;
 		const requestedFidelity = Number(exportFidelity);
@@ -1811,7 +1832,7 @@ class SceneCompositor {
 			outputFormat,
 			fallbackDuration,
 			maxLoopDurationMs: timelineConfig.maxLoopDurationMs,
-			loopDurationMs: this._loopDurationMs(),
+			loopDurationMs: this._visibilityLoopDuration(sources),
 			maxSamplingFps: maxSamplingFps === 'auto' ? fidelity.maxSamplingFps : maxSamplingFps,
 			manualFrameSkip,
 			reverse: false,
@@ -1850,6 +1871,7 @@ class SceneCompositor {
 		});
 		return {
 			...plan.loopSeam,
+			windowCount: timelines.filter(source => source.kind === 'boundary').length,
 			sourceAnalysis: plan.sourceAnalysis,
 			loopFit,
 			computeFrameOptions, frameOptions: includeFrameOptions ? await computeFrameOptions() : null,

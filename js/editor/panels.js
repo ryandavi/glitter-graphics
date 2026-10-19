@@ -122,6 +122,42 @@ const EDITOR_PANEL_METHODS = {
 	setupLayerSettingsListeners() {
 		this.syncCheckboxes('contiguous', 'contextContiguous');
 		this.syncCheckboxes('multiSelect', 'contextMultiSelect');
+		document.addEventListener('change', event => {
+			const input = event.target.closest?.('[data-layer-appear-field]');
+			const layer = this.layerManager.getInspectedLayer();
+			if (!input || !layer || input.dataset.layerAppearOwner !== layer.type) return;
+			const appear = { start: layer.appear?.start || 0, end: layer.appear?.end ?? null };
+			const end = input.dataset.layerAppearField === 'end';
+			const value = end && input.value === '' ? null : input.valueAsNumber * 1000;
+			if (value === null || Number.isFinite(value)) {
+				appear[end ? 'end' : 'start'] = value;
+				if (appear.end !== null && appear.end < appear.start) this.updateStatus('Appears must be no later than Disappears.');
+				else this.setLayerAppear(layer, appear);
+			}
+			this.syncLayerAppearControls(layer);
+		});
+		document.addEventListener('click', event => {
+			const button = event.target.closest?.('[data-layer-appear-reset] button'), layer = this.layerManager.getInspectedLayer();
+			if (button && layer?.type === button.closest('[data-layer-appear-reset]').dataset.layerAppearReset) this.setLayerAppear(layer, null);
+		});
+		window.addEventListener('animationChanged', event => {
+			const layer = this.layerManager.getLayerById(event.detail?.layerId);
+			if (!layer) return;
+			this.syncLayerAppearControls(layer);
+			for (const row of document.querySelectorAll(`.layer-item[data-layer-id="${CSS.escape(layer.id)}"]`)) syncLayerRow(row, layer);
+		});
+	},
+	syncLayerAppearControls(layer) {
+		if (!supportsLayerAppear(layer) || this.layerManager.getInspectedLayer()?.id !== layer.id) return;
+		for (const input of document.querySelectorAll('[data-layer-appear-field]')) {
+			if (input.dataset.layerAppearOwner !== layer.type) continue;
+			const value = input.dataset.layerAppearField === 'start' ? layer.appear?.start || 0 : layer.appear?.end;
+			input.value = value == null ? '' : value / 1000;
+			input.disabled = !this.canEditLayer(layer);
+		}
+		for (const set of document.querySelectorAll('[data-layer-appear-reset]')) {
+			if (set.dataset.layerAppearReset === layer.type) set.querySelector('button').disabled = !layer.appear || !this.canEditLayer(layer);
+		}
 	},
 
 
@@ -541,6 +577,7 @@ isLayerContentLocked(layer) {
 		const layer = this.layerManager.getInspectedLayer();
 		if (!layer) return;
 		this.animationPanel?.load(layer);
+		this.syncLayerAppearControls(layer);
 
 		getLayerManagerForType(this, layer.type)?.loadLayerSettings(layer);
 		queueMicrotask(() => syncPropertyReverts());

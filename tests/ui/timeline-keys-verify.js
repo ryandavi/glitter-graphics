@@ -36,7 +36,7 @@ const { openApp } = require('../lib/app');
 		}, { id, value });
 		await ready();
 		await page.evaluate(() => { editor.timelineDock.selectedKey = null; editor.timelineDock.syncSelection(); });
-		await page.locator('#timelineDock .timeline-bar').first().focus(); await page.keyboard.press('Enter'); await ready();
+		await page.locator('#timelineDock .timeline-group-rows .timeline-bar').first().focus(); await page.keyboard.press('Enter'); await ready();
 		assert(await page.locator('.timeline-row-lane:not([hidden])').isVisible(), 'Enter selects a Custom bar and opens its key lane');
 		assert(await page.evaluate(() => {
 			const dock = editor.timelineDock, lane = dock.keyLane, buttons = [...lane.buttons];

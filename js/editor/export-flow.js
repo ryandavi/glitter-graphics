@@ -48,6 +48,7 @@ const EDITOR_EXPORT_FLOW_METHODS = {
 			exportSettings: this.getSceneSnapshotSettings({ baseImage: true }),
 			target: EXPORT_TARGETS['still:png'],
 			timestamp: this.animationTicker.getCurrentTime(),
+			rest: this.animationTicker.isRestPreview(),
 			callbacks: {
 				onStatus: () => {}, onProgress: () => {}, onLayerLoaded: () => {}, isCancelled: () => false,
 				createMask: layer => this.maskCompositor.getMaskData(layer),

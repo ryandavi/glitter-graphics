@@ -186,7 +186,7 @@ class SparkleLayerManager {
 		const count = Math.max(1, Math.min(CONFIG.tools.sparkles.sceneSampleFrames, estimate.estimatedFrameCount || 1));
 		const frames = [];
 		for (let index = 0; index < count; index++) {
-			const { imageData } = await this.sceneCompositor.composeFrameAt({ ...params, preparedContext, timestamp: (estimate.duration || 0) * index / count });
+			const { imageData } = await this.sceneCompositor.composeFrameAt({ ...params, preparedContext, rest: false, timestamp: (estimate.duration || 0) * index / count });
 			frames.push(readSparkleAnalysisPixels(imageData, size.width, size.height));
 		}
 		return frames.length > 1 ? GlitterHighlightDetect.meanFrames(frames) : frames[0];

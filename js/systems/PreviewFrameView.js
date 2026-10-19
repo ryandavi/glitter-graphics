@@ -101,7 +101,7 @@ class PreviewFrameView {
 					if (generation !== this.generation) continue;
 					this.params = params; this.prepared = prepared;
 				}
-				const frame = await this.compositor.composeFrameAt({ ...this.params, preparedContext: this.prepared, timestamp: ms });
+				const frame = await this.compositor.composeFrameAt({ ...this.params, preparedContext: this.prepared, timestamp: ms, rest: false });
 				const ticker = this.editor.animationTicker;
 				if (generation !== this.generation || this.pending || !Boolean(this.editor.originalImage) || !ticker.paused || !ticker.holding || ticker.restPreview || ticker.getCurrentTime() !== ms || this.blocked) continue;
 				this.resize(frame.width, frame.height);

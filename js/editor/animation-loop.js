@@ -27,22 +27,24 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		return { period: target.period, run: target.run, exportPeriod, exportRun,
 			closes: target.active === false || !source || !(exportPeriod > 0) ? null : sourceSeamError(source, this.resolveAnimationLoop(estimate).duration, exportPeriod) < 1e-8 };
 	},
-	hasMotionForPlayback() { return Boolean(this.originalImage && listTimingTargets(this).some(target => target.active !== false && this.layerManager.getLayerById(target.layerId)?.visible !== false && (target.kind === 'gifCycle' || target.period > 0))); },
+	hasMotionForPlayback() { return Boolean(this.originalImage && listTimingTargets(this).some(target => target.active !== false && this.layerManager.getLayerById(target.layerId)?.visible !== false && (target.kind === 'appear' || target.kind === 'gifCycle' || target.period > 0))); },
+	setLayerAppear(layer, appear, options) { return this.writeTiming(`__appear_${layer.id}`, { appear }, { label: 'Change layer visibility timing', ...options }); },
 	writeTiming(key, patch, { label = 'Change animation timing', coalesceKey, commit = true, live = false } = {}) {
 		if (!patch || typeof patch !== 'object' || Array.isArray(patch)) return false;
 		const target = findTimingTarget(this, key);
 		if (!target) return false;
-		const names = { period: 'period', run: 'run', delayMs: 'run', iterations: 'run', phase: 'phase', direction: 'direction' };
+		const names = { period: 'period', run: 'run', appear: 'appear', delayMs: 'run', iterations: 'run', phase: 'phase', direction: 'direction' };
 		if (Object.keys(patch).some(name => !target.can[names[name]])) return false;
 		const layer = this.layerManager.getLayerById(target.layerId);
 		if (['period', 'delayMs', 'phase'].some(name => Object.hasOwn(patch, name) && !Number.isFinite(patch[name]))) return false;
 		if (Object.hasOwn(patch, 'iterations') && patch.iterations !== Infinity && !Number.isFinite(patch.iterations)) return false;
 		if (Object.hasOwn(patch, 'run') && (!patch.run || !Number.isFinite(patch.run.start) || (patch.run.end !== Infinity && !Number.isFinite(patch.run.end)) || patch.run.end < patch.run.start)) return false;
+		if (Object.hasOwn(patch, 'appear') && (Object.hasOwn(patch, 'run') || patch.appear !== null && (!patch.appear || !Number.isFinite(patch.appear.start) || patch.appear.end !== null && (!Number.isFinite(patch.appear.end) || patch.appear.end < patch.appear.start)))) return false;
 		if (Object.hasOwn(patch, 'direction') && !ANIMATION_DIRECTION_OPTIONS.some(option => option.value === patch.direction)) return false;
 		if (this.previewFrameView?.exact || this.previewFrameView?.done) this.previewFrameView.invalidate();
 		ANIMATION_TIMING_KINDS[target.kind].write(this, layer, target, patch);
 		const next = ANIMATION_TIMING_KINDS[target.kind].collect(this, layer).find(entry => entry.key === key);
-		const values = entry => ({ period: entry.period, run: entry.run, phase: entry.phase, direction: entry.direction });
+		const values = entry => ({ period: entry.period, run: entry.run, appear: entry.appear, phase: entry.phase, direction: entry.direction });
 		if (!next || isSameData(values(target), values(next))) return false;
 		if (target.period > 0 && Math.abs(next.period - target.period) > 0.01) {
 			layer.loopOriginalPeriods ||= {};
@@ -111,7 +113,11 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 			select.setAttribute('aria-label', 'Loop length');
 		}
 		select?.addEventListener('change', () => {
-			this.setDocumentLoop(select.value === 'auto' ? CONFIG.project.loop : { mode: 'set', durationMs: Number(select.value) });
+			this.setDocumentLoop(select.value === 'auto' ? CONFIG.project.loop : { mode: 'set', durationMs: select.value === 'custom' ? this.resolveAnimationLoop().duration : Number(select.value) });
+			this.syncLoopCandidate();
+		});
+		document.getElementById('animationLoopDuration')?.addEventListener('change', event => {
+			if (Number.isFinite(event.target.valueAsNumber)) this.setDocumentLoop({ mode: 'set', durationMs: event.target.valueAsNumber * 1000 });
 			this.syncLoopCandidate();
 		});
 		document.getElementById('fitAnimationsToLoop')?.addEventListener('click', () => this.fitAnimationsToLoop());
@@ -126,7 +132,7 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 	},
 	animationContentEnd() {
 		return Math.max(0, ...listTimingTargets(this).filter(target => target.active !== false && this.layerManager.getLayerById(target.layerId)?.visible !== false)
-			.map(target => Number.isFinite(target.run?.end) ? target.run.end : (target.run?.start || 0) + (target.period || 0)));
+			.map(target => Number.isFinite(target.run?.end) ? target.run.end : (target.run?.start || 0) + (target.kind === 'appear' ? CONFIG.export.timeline.visibilityHoldMs : target.period || 0)));
 	},
 	includeAnimationsInLoop() {
 		const end = this.animationContentEnd(), current = this.resolveAnimationLoop().duration;
@@ -324,6 +330,7 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		['animationLoopSourceSet', 'animationLoopLengthSet', 'animationLoopActionSet'].forEach((id) => {
 			document.getElementById(id).hidden = !fit?.sources.length;
 		});
+		document.getElementById('animationLoopLengthSet').hidden = !fit?.sources.length && !estimate?.windowCount;
 		status.replaceChildren();
 		if (fit?.sources.length) {
 			const clean = estimate.exact;
@@ -332,7 +339,7 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 			badge.textContent = clean ? 'Seamless' : 'Visible seam';
 			badge.title = clean ? 'The loop closes cleanly.' : TimelineView.SEAM_TEXT;
 			status.append(value, badge);
-		} else status.textContent = message;
+		} else status.textContent = estimate?.windowCount ? `${formatSeconds(estimate.duration)} loop · layer visibility` : message;
 		const section = document.getElementById('animationLoopSection');
 		if (section?.classList.contains('is-collapsed') || !section?.getClientRects().length) return;
 		const analyses = new Map((estimate?.sourceAnalysis || []).map((entry) => [entry.key, entry]));
@@ -375,7 +382,8 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		{
 			const automatic = document.createElement('option'); automatic.value = 'auto'; automatic.textContent = 'Automatic';
 			select.prepend(automatic);
-			select.value = this.documentLoop.mode === 'set' ? String(this.documentLoop.durationMs) : 'auto';
+			const custom = document.createElement('option'); custom.value = 'custom'; custom.textContent = 'Custom length'; select.append(custom);
+			select.value = this.documentLoop.mode === 'set' ? ([...select.options].some(option => option.value === String(this.documentLoop.durationMs)) ? String(this.documentLoop.durationMs) : 'custom') : 'auto';
 		}
 		select.disabled = !select.options.length;
 		sources.hidden = !fit?.sources.length;
@@ -419,7 +427,10 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		// frame count opens the same menu.
 		const frames = document.getElementById('animationFrameOptions')?.closest('.app-menu-popover');
 		if (frames) frames.hidden = !this.loopEstimate?.loopFit?.sources.length;
-		document.getElementById('animationLoopLengthSet').hidden = !fit?.sources.length;
+		document.getElementById('animationLoopLengthSet').hidden = !fit?.sources.length && !this.loopEstimate?.windowCount;
+		const duration = document.getElementById('animationLoopDuration');
+		duration.value = this.documentLoop.mode === 'set' ? this.documentLoop.durationMs / 1000 : '';
+		document.getElementById('animationLoopDurationRow').hidden = this.documentLoop.mode !== 'set';
 		document.getElementById('animationLoopActionSet').hidden = button.hidden && (!reset || reset.hidden) && (!frames || frames.hidden);
 		this.animationPanel.loadTimingSummary();
 	},

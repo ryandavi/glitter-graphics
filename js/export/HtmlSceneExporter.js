@@ -202,14 +202,22 @@ class HtmlSceneExporter {
 	async createScene(layers, options) {
 		const width = this.editor.originalCanvas.width;
 		const height = this.editor.originalCanvas.height;
-		const items = await Promise.all(layers.map(async (layer) => {
+		if (layers.some(layer => layer.appear || getClipBase(this.editor.layers, layer)?.appear)) await this.editor.updateExportDuration();
+		const loopMs = this.editor.resolveAnimationLoop().duration;
+		const items = await Promise.all(layers.filter(layer => isLayerShownAt(layer, 0, { layers: this.editor.layers, rest: true })).map(async (layer) => {
 			const transform = getLayerTransform(layer);
 			const animationOrigin = getLayerAnimationOrigin(this.editor, layer, layer.stickerData);
 			const numberOr = (value, fallback) => Number.isFinite(Number(value)) ? Number(value) : fallback;
 			// Same pixel-grid-snapped center the editor preview and raster export use.
 			const placed = computeLayerTransform(transform, layer.stickerData);
 			const metadata = layer.stickerData.htmlExport || this.config.defaults.stickerMetadata;
+			const base = getClipBase(this.editor.layers, layer);
+			const appear = layer.appear || base?.appear ? {
+				start: Math.max(layer.appear?.start || 0, base?.appear?.start || 0),
+				end: Math.min(layer.appear?.end ?? loopMs, base?.appear?.end ?? loopMs)
+			} : null;
 			return {
+				appear,
 				name: layer.name || layer.stickerData.name || 'Sticker',
 				alt: String(metadata.alt || '').trim() || layer.name || layer.stickerData.name || 'Sticker',
 				title: String(metadata.title || '').trim(),
@@ -239,7 +247,7 @@ class HtmlSceneExporter {
 			? this.editor.originalCanvas.toDataURL('image/png')
 			: null;
 		const title = this.editor.projectName.trim() || 'Sticker Scene';
-		return { width, height, items, background, baseImage, title, options };
+		return { width, height, items, background, baseImage, title, options, loopMs };
 	}
 
 	refreshStickerMetadata() {
@@ -403,6 +411,12 @@ ${this.getSceneMarkup(scene)}
 
 	getSceneStyles(scene) {
 		const { width, height, options } = scene;
+		const windows = scene.items.flatMap((item, index) => {
+			if (!item.appear || !(scene.loopMs > 0) || item.appear.end <= item.appear.start || item.appear.start >= scene.loopMs) return [];
+			const start = Math.max(0, item.appear.start / scene.loopMs * 100), end = Math.min(100, item.appear.end / scene.loopMs * 100);
+			const states = new Map([[0, 'hidden'], [start, 'visible'], [end, 'hidden'], [100, 'hidden']]);
+			return `@keyframes glitter-scene-appear-${index} { ${[...states].sort((a, b) => a[0] - b[0]).map(([time, state]) => `${this.formatNumber(time)}% { visibility: ${state}; }`).join(' ')} }`;
+		}).join('\n');
 		const responsiveWidth = `min(100%, ${options.maxWidth}px)`;
 		const cover = options.responsive && options.fit === 'cover' && options.minHeight > 0;
 		const coverWidth = Math.ceil(options.minHeight * width / height);
@@ -451,6 +465,10 @@ ${this.getSceneMarkup(scene)}
 			translate: -50% -50%;
 			transform-origin: center;
 		}
+		${windows}
+		@media (prefers-reduced-motion: reduce) {
+			.glitter-scene__timed { animation: none !important; visibility: visible !important; }
+		}
 		.glitter-scene__sticker {
 			display: block;
 			width: 100%;
@@ -463,7 +481,7 @@ ${this.getSceneMarkup(scene)}
 	getSceneMarkup(scene) {
 		const { width, height, items, background, baseImage, title, options } = scene;
 		const useScaledStickers = options.responsive && options.stickerSizing === 'scale';
-		const itemMarkup = items.map((item) => {
+		const itemMarkup = items.map((item, index) => {
 			const itemWidth = useScaledStickers ? `${this.formatNumber(item.width / width * 100)}%` : `${this.formatNumber(item.width)}px`;
 			const itemHeight = useScaledStickers ? `${this.formatNumber(item.height / height * 100)}%` : `${this.formatNumber(item.height)}px`;
 			const declarations = [
@@ -478,7 +496,11 @@ ${this.getSceneMarkup(scene)}
 			if (item.opacity !== 1) declarations.push(`opacity:${this.formatNumber(item.opacity)}`);
 			if (item.filter) declarations.push(`filter:${item.filter}`);
 			if (item.blendMode !== 'normal') declarations.push(`mix-blend-mode:${item.blendMode}`);
-			const customClasses = item.classes ? ` ${item.classes}` : '';
+			if (item.appear) {
+				declarations.push('visibility:hidden');
+				if (scene.loopMs > 0 && item.appear.end > item.appear.start && item.appear.start < scene.loopMs) declarations.push(`animation:glitter-scene-appear-${index} ${this.formatNumber(scene.loopMs / 1000)}s steps(1,end) infinite`);
+			}
+			const customClasses = `${item.classes ? ` ${item.classes}` : ''}${item.appear ? ' glitter-scene__timed' : ''}`;
 			const titleAttribute = item.title ? ` title="${this.escapeHtml(item.title)}"` : '';
 			// The scene stylesheet carries the document-wide choice; only stickers
 			// whose own flag disagrees with it need an inline override.

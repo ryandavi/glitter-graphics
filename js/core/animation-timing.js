@@ -3,6 +3,20 @@
 const TIMING_TARGET_OWNERS = new WeakMap();
 
 const ANIMATION_TIMING_KINDS = {
+	appear: {
+		collect(editor, layer) {
+			return supportsLayerAppear(layer) ? [{ key: `__appear_${layer.id}`, label: 'Layer visibility',
+				appear: layer.appear || null, run: { start: layer.appear?.start || 0, end: layer.appear?.end ?? Infinity },
+				active: Boolean(layer.appear), can: { run: true, appear: true } }] : [];
+		},
+		write(editor, layer, target, patch) {
+			if (!Object.hasOwn(patch, 'appear') && !patch.run) return;
+			const value = Object.hasOwn(patch, 'appear') ? patch.appear : patch.run && { start: patch.run.start, end: patch.run.end === Infinity ? null : patch.run.end };
+			const appear = normalizeLayerAppear(value);
+			if (appear) layer.appear = appear;
+			else delete layer.appear;
+		}
+	},
 	motion: {
 		collect(editor, layer) {
 			return (layer.animations || []).map(animation => ({

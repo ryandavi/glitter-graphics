@@ -12,7 +12,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { chromium, VIEWPORTS, boot, wait, desktopStates, phoneStates, recolorStates, backgroundRemovalStates, animatedFilterStates, patternStates, creationStates, clippingStates, timelineStates } = require('./ui-states');
+const { chromium, VIEWPORTS, boot, wait, desktopStates, phoneStates, recolorStates, backgroundRemovalStates, animatedFilterStates, patternStates, creationStates, clippingStates, timelineStates, visibilityStates } = require('./ui-states');
 
 const args = process.argv.slice(2);
 const option = (name) => (args.includes(name) ? args[args.indexOf(name) + 1] : null);
@@ -79,7 +79,8 @@ async function capture(dir) {
 		await boot(page, css);
 		if (theme) await page.evaluate((name) => { document.documentElement.dataset.theme = name; }, theme);
 		const visit = shooter(page, viewport, theme);
-		if (only === 'timeline') await timelineStates(page, visit, viewportName);
+		if (only === 'visibility') await visibilityStates(page, visit, viewportName);
+		else if (only === 'timeline') await timelineStates(page, visit, viewportName);
 		else if (only === 'clipping') await clippingStates(page, visit, viewportName);
 		else if (only === 'creation') await creationStates(page, visit, viewportName);
 		else if (only === 'patterns') await patternStates(page, visit, viewportName);

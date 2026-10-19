@@ -1,5 +1,14 @@
 'use strict';
 
+function isLayerShownAt(layer, timestamp, { layers = [], rest = false, loopEnd = Infinity } = {}) {
+	if (!layer || layer.visible === false) return false;
+	if (!rest && supportsLayerAppear(layer) && layer.appear) {
+		if (timestamp < layer.appear.start || timestamp >= (layer.appear.end ?? loopEnd)) return false;
+	}
+	const base = getClipBase(layers, layer);
+	return !base || isLayerShownAt(base, timestamp, { rest, loopEnd });
+}
+
 function getClipBase(layers, layer, { requireClipped = true } = {}) {
 	if (!layer || (requireClipped && !layer.clipped) || layer.isPreview || !LAYER_UI_CONFIG[layer.type]?.clippable) return null;
 	const ownIndex = layers.indexOf(layer);
@@ -90,6 +99,7 @@ function getClipPreviewSpace(editor, base) {
 function getClipContentKey(editor, base) {
 	const serialized = editor.layerManager.serializeLayer(base);
 	delete serialized.animations;
+	delete serialized.appear;
 	delete serialized.opacity;
 	delete serialized.visible;
 	delete serialized.blendMode;

@@ -5,7 +5,7 @@ class StillImageExportEncoder {
 	async process(params) {
 		params = { ...params, callbacks: { ...params.callbacks, progressFormat: 'still' } };
 		const { target, callbacks, exportSettings } = params;
-		const composed = await this.frameComposer.composeFrameAt(params);
+		const composed = await this.frameComposer.composeFrameAt({ ...params, rest: true });
 		const canvas = createAppCanvas(0, 0, 'export/StillImageExportEncoder'); canvas.width = composed.width; canvas.height = composed.height;
 		const ctx = canvas.getContext('2d', { alpha: target.supportsTransparency });
 		if (!target.supportsTransparency || !exportSettings.transparency) { ctx.fillStyle = exportSettings.matteColor; ctx.fillRect(0, 0, canvas.width, canvas.height); }

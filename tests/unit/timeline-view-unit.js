@@ -244,3 +244,16 @@ assert.deepEqual(json(view.wheelZoom(-90, -220, 100)), { steps: -3, remainder: -
 assert(view.handleTitle({ can: { run: true, period: true } }, 'right').includes('keeping its repeat count'));
 assert(view.barTitle({ label: 'Rotate', cycleMs: 1200, exportCycleMs: 1000, closes: true, can: { run: true }, source: { run: { start: 0, end: Infinity } } }, 4800).includes('Export uses 1.00 s.'));
 console.log('PASS timeline grouping, metadata, seams, geometry, cycle and key conversions, playhead, gesture math and drag words');
+
+const windowRow = { kind: 'range', key: '__appear_top', startMs: 200, endMs: 800, can: { run: true, appear: true }, source: { run: { start: 200, end: 800 } } };
+assert.deepStrictEqual(json(view.runFromBodyMove(windowRow, -400)), { start: 0, end: 600 });
+assert.deepStrictEqual(json(view.runFromBodyMove(windowRow, 19900)), { start: 19400, end: 20000 });
+assert.deepStrictEqual(json(view.runFromLeftEdge(windowRow, 900)), { start: 800, end: 800 });
+assert.strictEqual(view.runFromRightEdge(windowRow, 1600, 1600).end, Infinity);
+assert.deepStrictEqual(json(view.runFromRightEdge(windowRow, 50, 1600)), { start: 200, end: 200 });
+const windowPatches = [];
+const windowActions = view.barActions(windowRow, { loopMs: 1600 }, { playhead: 500, write: (key, patch) => windowPatches.push({ key, patch }) });
+assert.deepStrictEqual(json(windowActions.map(action => action.label)), ['Appears at playhead', 'Disappears at playhead', 'Always visible']);
+windowActions.forEach(action => action.run());
+assert.deepStrictEqual(json(windowPatches.map(entry => entry.patch)), [{ run: { start: 500, end: 800 } }, { run: { start: 200, end: 500 } }, { appear: null }]);
+console.log('PASS layer visibility timeline geometry and actions');
