@@ -38,6 +38,7 @@ Paths below are relative to `tests/`. Related pure-logic contracts live in `unit
 | `parity/clipping-region-verify.js`, `parity/clipping-edge-verify.js`, `parity/regional-look-verify.js`, `ui/clipping-preview-verify.js` | Clipping pixel parity, inherited motion, undo, empty/soft bodies, filter regions, animated GIF/MP4 and Chrome/WebKit mask continuity | Clipping, filter geometry or their shared compositor paths |
 | `ui/touch-smoke.js`, `ui/touch-handle-verify.js` | Pointer routing, pan/pinch/twist, selection, drawer detents, numeric scrubbing and individual/group handles | Touch, viewport, selection, mobile or transform interaction |
 | `ui/panel-resize-verify.js`, `ui/inspector-library-verify.js` | Responsive panel hosts, drawer handoff, fit and retained pan/zoom | Panel resizing, breakpoint or inspector ownership |
+| `ui/dock-overlay-verify.js` | Compact-desktop left-dock overlay across a 1041-1400 resize sweep: switch point, stable canvas and timeline, Esc, outside press, pin | Dock layout, `--canvas-min-width` or the overlay rules |
 | `ui/panel-parity.js` | Computed styles against the tracked baseline | Panel markup or invisible styling changes |
 | `ui/ux-polish-verify.js`, `ui/modal-settings-verify.js` | Settings, reset, keyboard, theme, scroll and phone controls | Settings and editor chrome |
 | `ui/modal-stack-verify.js` | Stacking, inert/focus state, dismissals, guards, confirmations, browser Back and Forward | Modal policy or lifecycle |

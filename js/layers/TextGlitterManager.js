@@ -695,7 +695,7 @@ class TextGlitterManager {
 	createTextData(options, text, align) {
 		return {
 			text,
-			fontId: CONFIG.tools.text.defaultFontId,
+			fontId: options.fontId || CONFIG.tools.text.defaultFontId,
 			fontWeight: CONFIG.tools.text.defaultFontWeight,
 			fontStyle: CONFIG.tools.text.defaultFontStyle,
 			textCase: CONFIG.tools.text.defaultTextCase,

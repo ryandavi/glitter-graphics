@@ -27,7 +27,7 @@ class TimelineDock {
 		this.summary = buildElement('timeline-summary');
 		this.summary.append(this.buildFrameReadout());
 		const actions = buildElement('section-header-actions');
-		const action = 'section-header-action btn-icon-simple icon-wrapper sm visible';
+		const action = 'section-header-action btn-icon icon-wrapper visible';
 		// Shows the same state as the view menu's Pause motion.
 		this.play = this.button(action, 'Pause motion', 'motion-pause', () => editor.setPlayback(editor.animationTicker.paused));
 		this.time = buildElement('timeline-time', undefined, 'span');
@@ -46,11 +46,15 @@ class TimelineDock {
 			this.setZoom(value === 0 ? 'fit' : Math.exp(Math.log(this.fitScale) + value * Math.log(Math.max(this.fitScale, max) / this.fitScale)));
 		});
 		this.zoom.addEventListener('dblclick', () => this.setZoom('fit'));
-		const windowActions = buildElement('timeline-window-actions');
-		windowActions.append(this.minimize, this.button(action, 'Close timeline', 'x-mark', () => editor.toggleTimeline()));
+		const close = this.button(action, 'Close timeline', 'x-mark', () => editor.toggleTimeline());
 		this.addAnimation = this.button(action, 'Add animation', 'plus', () => editor.addAnimation(editor.layerManager.getActiveLayer()));
-		actions.append(this.addAnimation, this.zoom, this.buildOptionsMenu(), windowActions);
+		actions.append(this.addAnimation, this.zoom, this.buildOptionsMenu(), this.minimize, close);
 		this.header.append(this.title, transport, this.summary, actions);
+		// A press on the bar itself folds the dock, like the chevron; its controls keep their own clicks.
+		this.header.addEventListener('click', (event) => {
+			if (event.target.closest('button, input, select, a, [role="button"], [tabindex], .app-menu')) return;
+			this.toggleMinimized();
+		});
 		// The ruler stays above the scrolling rows and follows their sideways
 		// scroll; the playhead is one line over both.
 		this.ruler = buildElement('timeline-ruler');
@@ -64,7 +68,7 @@ class TimelineDock {
 		// Where a drag snapped, drawn like the playhead.
 		this.snapGuide = buildElement('timeline-snap-guide'); this.snapGuide.hidden = true;
 		this.stage.append(this.ruler, this.body, this.playhead, this.hoverGuide, this.snapGuide, this.labelHandle);
-		const section = buildElement('timeline-section section');
+		const section = buildElement('timeline-section section dock-section');
 		section.append(this.header, this.stage);
 		host.replaceChildren(this.resizeHandle, section);
 		this.frameView = editor.previewFrameView;
@@ -175,7 +179,7 @@ class TimelineDock {
 	// rows draw. The view choices are stored together as `timelineShow`.
 	buildOptionsMenu() {
 		const root = buildElement('section-header-action app-menu visible');
-		const trigger = this.button('btn-icon-simple app-menu-trigger icon-wrapper sm', 'Timeline options', 'ellipsis-vertical', () => {});
+		const trigger = this.button('section-header-action btn-icon app-menu-trigger icon-wrapper', 'Timeline options', 'ellipsis-vertical', () => {});
 		trigger.setAttribute('aria-haspopup', 'true');
 		trigger.setAttribute('aria-expanded', 'false');
 		const panel = buildMenuPanel();

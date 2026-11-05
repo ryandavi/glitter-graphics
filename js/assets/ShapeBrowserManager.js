@@ -56,6 +56,13 @@ class ShapeBrowserManager extends ContentManager {
 		if (icon) card.querySelector('.category-card-image').replaceChildren(icon);
 	}
 
+	get libraryPlacement() {
+		return {
+			canReplace: (layer) => layer.type === LayerType.SHAPE,
+			insert: (item) => this.editor.layerManager.addLayer(LayerType.SHAPE, { shapeLayer: { shapeId: item.id } })
+		};
+	}
+
 	handleItemClick(item) {
 		this.editor.shapeGlitterManager.pickLibraryShape(item.id);
 	}

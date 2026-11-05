@@ -33,7 +33,7 @@ assert(!fixture({ stage: 'off', local: true, debug: true, search: '?features=tim
 const app = fixture({ local: true });
 assert.throws(() => app.run("isFeatureEnabled('missing')"), /Unknown feature/);
 assert.throws(() => app.run("isFeatureEnabled('toString')"), /Unknown feature/);
-assert.strictEqual(app.run('Object.keys(FEATURES).join()'), 'customMotion,timeline,loopLength,gifCycle,history,personalWeb,htmlScene,stylePresetCopy,memoryOverlay,welcomeOnStartup');
+assert.strictEqual(app.run('Object.keys(FEATURES).join()'), 'customMotion,timeline,docks,loopLength,gifCycle,history,personalWeb,htmlScene,stylePresetCopy,memoryOverlay,welcomeOnStartup');
 for (const id of ['customMotion', 'history', 'personalWeb', 'htmlScene']) {
 	assert(app.run(`isFeatureEnabled('${id}')`));
 	assert(!fixture().run(`isFeatureEnabled('${id}')`));

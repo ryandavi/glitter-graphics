@@ -8,6 +8,7 @@
 		"Add item": "plus",
 		"Import or upload": "upload",
 		"Reveal source, go to layer": "locate",
+		"Keep a floating panel open": "pin",
 		"Reset one control (not history undo)": "reset",
 		"Undo history": "undo",
 		"Redo history": "redo",

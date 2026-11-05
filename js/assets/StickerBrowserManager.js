@@ -63,6 +63,15 @@ class StickerBrowserManager extends ContentManager {
 		if (item.isPixelated !== false) element.classList.add('pixelated');
 	}
 
+	get libraryPlacement() {
+		return {
+			canReplace: (layer) => layer.type === LayerType.STICKER,
+			insert: async (item) => {
+				if (await this.editor.stickerManager.createStickerLayer(item.id)) this.editor.updateStatus(LAYER_UI_CONFIG[LayerType.STICKER].addedStatusMessage);
+			}
+		};
+	}
+
 	async handleItemClick(item) {
 		await this.editor.stickerManager.pickLibrarySticker(item.id);
 

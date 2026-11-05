@@ -350,7 +350,7 @@ async function capture(browser) {
 				if (image?.classList.contains('is-open') || image?.querySelector(':scope > .section-content')?.classList.contains('visible')) {
 					throw new Error('Image section did not use the shared collapsed state');
 				}
-				if (!layers?.classList.contains('is-open')) throw new Error('Collapsing Image also collapsed independent Layers section');
+				if (!layers || layers.querySelector('#layersPanelToggle') || getComputedStyle(layers.querySelector(':scope > .layers-list')).display === 'none') throw new Error('Layers dock must stay open and have no collapse toggle');
 				document.getElementById('imagePanelHeader')?.click();
 			});
 			snapshot.structure = await captureStructure(page);

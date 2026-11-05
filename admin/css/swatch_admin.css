@@ -306,12 +306,18 @@
   /* a glyph that stands alone on a surface (notices, banners) */
   --icon-size-xs: 20px;
   /* PANELS */
+  /* The least room the canvas keeps before the left dock floats over it (panel-resize.js reads it) */
+  --canvas-min-width: 480px;
   --layer-panel-default-width: 400px;
   --layer-panel-width: var(--layer-panel-default-width);
   /* Independent starting widths; panel-resize.js applies optional sidebar balance. */
-  --glitter-panel-width: calc(var(--layer-panel-default-width) + var(--toolbar-compact-width) + var(--spacing-base));
+  --glitter-panel-width: calc(var(--layer-panel-default-width) + var(--toolbar-compact-width));
   /* The Library window is as wide as the Inspector until it is resized. */
   --library-window-width: var(--glitter-panel-width);
+  /* The pointer area of a dock divider; its 1px line sits at the centre. */
+  --panel-handle-hit: var(--spacing-md);
+  /* A dock's header row: shorter than the bar a floating window wears. */
+  --dock-header-height: calc(var(--row-height) + var(--spacing-xs) * 2);
   --color-filter-chip-size: var(--row-height);
   /* MOBILE */
   --mobile-menu-height: 60px;

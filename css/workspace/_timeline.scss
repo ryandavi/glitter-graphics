@@ -23,12 +23,12 @@
 	--timeline-key-size: var(--size-timeline-key);
 	container: timeline / inline-size;
 	position: relative;
+	z-index: var(--z-panel-elevated);
 	flex: 0 0 auto;
 	height: var(--timeline-height);
-	// Sits in the canvas column with a panel's margin below it; the resize
-	// strip is the gap above. The box, bar and handle are the panels' own.
-	margin-inline: var(--canvas-inset-left, 0) var(--canvas-inset-right, 0);
-	padding-bottom: var(--spacing-base);
+	// A flush dock under the canvas, between the side docks. Its top border is
+	// the divider, and the resize handle lies over that line.
+	border-top: 1px solid var(--color-border);
 	display: flex;
 	flex-direction: column;
 	min-width: 0;
@@ -52,16 +52,14 @@
 	}
 
 	// Name, transport, what the export would write, then the view actions.
-	// Only the chevron folds the dock; transport stays clear of the toggle.
+	// The bar folds the dock (TimelineDock); its controls keep their own clicks.
 	> .timeline-section > .section-header {
 		gap: var(--spacing-md);
-		cursor: default;
+		cursor: pointer;
 
 		> .section-header-title { flex: 0 0 auto; }
-		> .section-header-actions { gap: var(--spacing-2xs); }
 	}
 	.timeline-zoom { width: calc(4 * var(--control-height)); min-width: var(--control-height); }
-	.timeline-window-actions { display: flex; gap: var(--spacing-2xs); margin-left: var(--spacing-base); }
 	.timeline-summary {
 		display: flex;
 		align-items: center;

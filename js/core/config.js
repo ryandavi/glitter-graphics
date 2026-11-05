@@ -764,7 +764,7 @@ const CONFIG = deepFreeze({
 			// A Space press released this soon, with no pan, plays and pauses.
 			spaceTapMs: 250
 		},
-		canvasAlignment: { desktop: 'workspace', mobile: 'page' },
+		canvasAlignment: { mobile: 'page' },
 		// Live canvas updates while a control changes (js/ui/slider.js). A field's
 		// FIELDS `cost` picks its tier; these are the tiers' budgets.
 		numericScrub: { thresholdPx: 3 },
@@ -780,7 +780,6 @@ const CONFIG = deepFreeze({
 		// Arrow-key layer nudges within this window share one history entry.
 		history: { coalesceMs: 150, textPauseMs: 750 },
 		scrollbar: { hideDelayMs: 800, pageFraction: 0.875, pageRepeatDelayMs: 400, pageRepeatMs: 60 },
-		independentCollapsibleSections: ['layersPanel', 'inspector', 'flyout', 'designGallery'],
 		// The Library's Recent strip, per asset kind.
 		library: {
 			recentCount: 12,
@@ -851,7 +850,6 @@ const CONFIG = deepFreeze({
 				velocityWindowMs: 90
 			}
 		},
-		librarySplit: { defaultShare: 50, minShare: 20, maxShare: 80, keyStep: 2, fastKeyStep: 10 },
 		// Column widths in px (js/ui/panel-resize.js). Snap points are the
 		// widths where a panel's own layout changes: the layer list's thumbnail
 		// grid steps at 300 and 400; 300 is the Library's 2-column floor, 350
@@ -862,15 +860,12 @@ const CONFIG = deepFreeze({
 			centerTolerance: 0.05,
 			// How close to a snap point a drag has to land before it sticks.
 			snapTolerance: 10,
-			// The canvas is the point of the app; columns never squeeze it below this.
-			minCanvas: 360,
 			keyStep: 8,
 			fastKeyStep: 40,
 			panels: {
 				toolbar: { max: 240, namesWidth: 100, snaps: [200, 240] },
 				layers: { min: 240, max: 620, snaps: [260, 300, 360, 400, 480] },
-				inspector: { min: 300, max: 720, snaps: [300, 350, 420, 520, 620] },
-				library: { min: 300, max: 720, snaps: [300, 350, 420, 520, 620] }
+				inspector: { min: 300, max: 720, snaps: [300, 350, 420, 520, 620] }
 			}
 		},
 		hints: {

@@ -7,7 +7,7 @@
 	<meta name="viewport"
 		content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 	<!-- shell:head-scripts:start -->
-	<script src="js/core/storage.js?v=ffc9d33b"></script>
+	<script src="js/core/storage.js?v=a5946ead"></script>
 	<!-- shell:head-scripts:end -->
 	<script>
 		try {
@@ -49,7 +49,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=e42d3780">
+	<link rel="stylesheet" href="css/style.css?v=add52e1a">
 	<!-- shell:boot:start -->
 	<style>:root { --boot-indicator-delay: 400ms; --boot-indicator-min-visible: 300ms; }</style>
 	<!-- shell:boot:end -->
@@ -248,6 +248,11 @@
 					</button>
 				</div>
 				<div class="toolbar-group toolbar-utility-group" aria-label="Application tools">
+					<!-- Shown only while the left dock is an overlay (panel-resize.js); the Show Layers command. -->
+					<button class="btn-icon icon-wrapper" id="toolbarLayersBtn" type="button" data-layout="desktop" title="Layers &amp; Library" aria-pressed="false" hidden>
+						<svg class="icon"><use href="#icon-layers"></use></svg>
+						<span class="name">Layers &amp; Library</span>
+					</button>
 					<button class="btn-icon icon-wrapper" id="toolbarShortcutsBtn" type="button" title="Commands &amp; Shortcuts">
 						<svg class="icon"><use href="#icon-keyboard"></use></svg>
 						<span class="name">Commands &amp; Shortcuts</span>
@@ -267,8 +272,10 @@
 						<span></span>
 					</div>
 					<!-- Layers Section (list only) -->
-					<div class="layers-section section collapsible-section is-open" id="layersPanelSection">
-						<div class="section-header section-header-with-action" id="layersPanelHeader">
+					<div class="layers-section section dock-section" id="layersPanelSection">
+						<!-- On the desktop the dock's tabs (tpl-dock-tabs, LibraryWindow) are this
+						     header's title; the phone keeps the title. -->
+						<div class="section-header section-header-with-action dock-tabs-header" id="layersPanelHeader">
 							<h3 class="section-header-title">
 								<span class="section-header-title-icon icon-wrapper sm">
 									<svg class="icon">
@@ -286,12 +293,6 @@
 										<use href="#icon-plus"></use>
 									</svg>
 									<span class="name">New Layer</span>
-								</button>
-								<button class="section-header-action btn-icon icon-wrapper mobile-hidden-section-toggle visible" id="layersPanelToggle" title="Collapse section">
-									<svg class="icon">
-										<use href="#icon-chevron-down"></use>
-									</svg>
-									<span class="name">Collapse</span>
 								</button>
 							</div>
 						</div>
@@ -344,6 +345,104 @@
 						</div>
 					</div>
 
+
+					<!-- The window: the Library, a tab of the left dock (LibraryWindow). It
+					     carries the Inspector's classes so both are styled by the same
+					     rules. At phone width the same window is the sheet, and the
+					     flyout section moves in ahead of the Library. -->
+					<div class="design-panel library-window property-panel" id="libraryWindow">
+						<div class="mobile-sheet-handle ui-ignore-gestures" data-mobile-drawer-handle="window" role="slider" tabindex="0" aria-label="Resize the sheet" aria-orientation="vertical" aria-valuemin="12" aria-valuemax="85" aria-valuenow="50">
+							<span></span>
+						</div>
+						<!-- Each panel's flyout sections are rendered into #flyoutBody at
+						     boot (mountFlyoutSection). -->
+						<div class="section main-section dock-section design-gallery-section visible" id="designGallerySection">
+							<div class="section-header section-header-with-action dock-tabs-header" id="designGalleryHeader">
+								<!-- In the phone's sheet the Library opens over the section it
+								     picks for; this returns to the section. -->
+								<button type="button" class="section-header-action btn-icon icon-wrapper library-back-action visible" id="libraryBack" data-no-accordion-toggle="true" title="Back" aria-label="Back to the section"><svg class="icon"><use href="#icon-chevron-left"></use></svg><span class="name">Back</span></button>
+								<h3 class="section-header-title">
+									<span class="section-header-title-icon icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-palette"></use>
+										</svg>
+										<span class="name">Library</span>
+									</span>
+									<span class="section-header-title-text" id="designGalleryTitleText">Library</span>
+								</h3>
+								<div class="section-header-actions">
+									<button type="button" class="section-header-action btn-icon icon-wrapper" id="recolorGlitterBtn" data-no-accordion-toggle="true" title="Recolor a glitter" aria-label="Recolor a glitter" aria-pressed="false" hidden><svg class="icon"><use href="#icon-recolor"></use></svg><span class="name">Recolor a glitter</span></button>
+									<button type="button" class="section-header-action btn-icon library-upload-action" id="uploadStickerBtn" data-no-accordion-toggle="true" title="Upload sticker" aria-label="Upload sticker">
+										<span class="icon-wrapper">
+											<svg class="icon">
+												<use href="#icon-upload"></use>
+											</svg>
+											<span class="name">Upload sticker</span>
+										</span>
+									</button>
+									<!-- Home view, tile size and the Quick picks row.
+									     setupLibraryViewMenu. -->
+									<div class="section-header-action app-menu library-view-action" id="libraryViewMenu" data-no-accordion-toggle="true">
+										<button type="button" class="section-header-action btn-icon app-menu-trigger icon-wrapper" id="libraryViewMenuBtn" title="View options" aria-label="View options" aria-haspopup="true" aria-expanded="false" aria-controls="libraryViewMenuPanel">
+											<svg class="icon"><use href="#icon-sliders"></use></svg>
+											<span class="name">View options</span>
+										</button>
+										<div class="app-menu-panel" id="libraryViewMenuPanel" role="menu" hidden>
+											<div class="app-menu-group-label">Home shows</div>
+											<button class="app-menu-item" type="button" role="menuitem" data-home-view="categories"><span class="app-menu-item-label">Categories</span><span class="app-menu-item-current" aria-hidden="true"><svg class="icon"><use href="#icon-check"></use></svg></span></button>
+											<button class="app-menu-item" type="button" role="menuitem" data-home-view="everything"><span class="app-menu-item-label">Everything</span><span class="app-menu-item-current" aria-hidden="true"><svg class="icon"><use href="#icon-check"></use></svg></span></button>
+											<div class="app-menu-separator" role="separator"></div>
+											<div class="app-menu-group-label">Tile size</div>
+											<button class="app-menu-item" type="button" role="menuitem" data-tile-size="s"><span class="app-menu-item-label">Small</span><span class="app-menu-item-current" aria-hidden="true"><svg class="icon"><use href="#icon-check"></use></svg></span></button>
+											<button class="app-menu-item" type="button" role="menuitem" data-tile-size="m"><span class="app-menu-item-label">Medium</span><span class="app-menu-item-current" aria-hidden="true"><svg class="icon"><use href="#icon-check"></use></svg></span></button>
+											<button class="app-menu-item" type="button" role="menuitem" data-tile-size="l"><span class="app-menu-item-label">Large</span><span class="app-menu-item-current" aria-hidden="true"><svg class="icon"><use href="#icon-check"></use></svg></span></button>
+											<div class="app-menu-separator" role="separator"></div>
+											<button class="app-menu-item" type="button" role="menuitem" data-quick-picks><span class="app-menu-item-label">Quick picks</span><span class="app-menu-item-current" aria-hidden="true"><svg class="icon"><use href="#icon-check"></use></svg></span></button>
+										</div>
+									</div>
+									<!-- Every screen: the search row stays folded until asked for;
+									     folded, active filters show as chips and a dot. setupLibrarySearchToggle. -->
+									<button type="button" class="section-header-action btn-icon library-search-action" id="librarySearchToggle" data-no-accordion-toggle="true" aria-expanded="false" title="Search">
+										<span class="icon-wrapper">
+											<svg class="icon">
+												<use href="#icon-magnifying-glass"></use>
+											</svg>
+											<span class="name">Search</span>
+										</span>
+									</button>
+									<button type="button" class="section-header-action btn-icon icon-wrapper library-close-action visible" id="libraryWindowClose" data-no-accordion-toggle="true" title="Close (Esc)" aria-label="Close the Library"><svg class="icon"><use href="#icon-x-mark"></use></svg><span class="name">Close</span></button>
+								</div>
+
+							</div>
+
+							<!-- Desktop: the kind browsed by hand, or what the armed pick changes.
+							     Under the header so the tabs never move. -->
+							<div class="library-kind-bar" id="libraryKindBar">
+								<select id="libraryBrowseKind" aria-label="Library kind"></select>
+								<span class="library-kind-target" id="libraryKindTarget" hidden></span>
+							</div>
+
+							<div class="section-content design-gallery-content visible" id="designGalleryContent">
+								<div class="property-empty visible boot-library-loading" role="status">Loading Library…</div>
+
+								<!-- The Library: one search/filter block + browser pair per asset kind
+								     (ASSET_BROWSERS in js/ui/asset-browser-markup.js), rendered from
+								     tpl-asset-search / tpl-asset-browser. syncLibraryView shows one kind.
+								     Each search host sits directly before its browser host. -->
+								<div class="section-content gallery-search-section" id="glitterSearchSection" data-gallery-search="glitter"></div>
+								<div class="asset-options" id="glitterOptions" data-gallery-content="glitter"></div>
+								<div class="section-content gallery-search-section" id="stickersSearchSection" data-gallery-search="stickers"></div>
+								<div class="asset-options" id="stickersOptions" data-gallery-content="stickers"></div>
+								<div class="section-content gallery-search-section" id="brushTipSearchSection" data-gallery-search="brush-tips"></div>
+								<div class="asset-options" id="brushTipOptions" data-gallery-content="brush-tips"></div>
+								<div class="section-content gallery-search-section" id="shapesSearchSection" data-gallery-search="shapes"></div>
+								<div class="asset-options" id="shapesOptions" data-gallery-content="shapes"></div>
+								<div class="section-content gallery-search-section" id="fontsSearchSection" data-gallery-search="fonts"></div>
+								<div class="asset-options" id="fontsOptions" data-gallery-content="fonts"></div>
+							</div>
+
+						</div>
+					</div>
 				</div>
 
 				<!-- DesignColumn -->
@@ -354,7 +453,7 @@
 					<!-- The Inspector: one bar that names the selection, one scroll. Of
 					     the panels showing together (a tool's settings beside the layer's
 					     properties) the switch shows one (syncInspectorHeader). -->
-					<div class="section inspector-section visible is-open" id="inspectorSection">
+					<div class="section inspector-section dock-section visible" id="inspectorSection">
 						<div class="section-header section-header-with-action" id="inspectorHeader">
 							<h3 class="section-header-title">
 								<span class="section-header-title-icon icon-wrapper sm"><svg class="icon">
@@ -365,17 +464,10 @@
 								<span class="inspector-title-badge" id="inspectorTitleBadge"></span>
 								<span class="locked-layer-badge" id="inspectorLockedBadge" hidden>Locked</span>
 							</h3>
-							<!-- The Inspector as the phone's sheet closes like the window. In
-							     the column it collapses to its bar like the Layers panel. -->
+							<!-- The Inspector as the phone's sheet closes like the window. -->
 							<div class="section-header-actions">
 								<button type="button" class="section-header-action btn-icon icon-wrapper visible" id="inspectorReset" data-no-accordion-toggle="true" hidden><svg class="icon"><use href="#icon-reset"></use></svg></button>
 								<button type="button" class="section-header-action btn-icon icon-wrapper sheet-close-action" id="inspectorClose" title="Close" aria-label="Close" data-no-accordion-toggle="true"><svg class="icon"><use href="#icon-x-mark"></use></svg><span class="name">Close</span></button>
-								<button type="button" class="section-header-action btn-icon icon-wrapper mobile-hidden-section-toggle visible" id="inspectorToggle" title="Collapse section">
-									<svg class="icon">
-										<use href="#icon-chevron-down"></use>
-									</svg>
-									<span class="name">Collapse</span>
-								</button>
 							</div>
 						</div>
 						<div class="inspector-switch" id="inspectorSwitch" hidden></div>
@@ -404,18 +496,11 @@
 
 				</div>
 
-				<!-- The window: one column over the canvas, beside the Inspector. It
-				     shows the flyout section whose line was pressed, and the Library
-				     while a picker is armed (LibraryWindow). It carries the
-				     Inspector's classes so both are styled by the same rules. At
-				     phone width the same window is a sheet. -->
-				<div class="design-panel library-window property-panel" id="libraryWindow">
-					<div class="mobile-sheet-handle ui-ignore-gestures" data-mobile-drawer-handle="window" role="slider" tabindex="0" aria-label="Resize the sheet" aria-orientation="vertical" aria-valuemin="12" aria-valuemax="85" aria-valuenow="50">
-						<span></span>
-					</div>
-					<!-- Each panel's flyout sections are rendered into #flyoutBody at
-					     boot (mountFlyoutSection). -->
-					<div class="section property-section flyout-section" id="flyoutSection">
+				<!-- The flyout: on the desktop a floating panel over the canvas, placed
+				     by LibraryWindow beside the Inspector at the row that opened it. On the
+				     phone #flyoutSection moves into the sheet below. -->
+				<div class="flyout-window property-panel ui-ignore-gestures" id="flyoutWindow">
+					<div class="section property-section flyout-section is-open" id="flyoutSection">
 						<div class="section-header section-header-with-action" id="flyoutHeader">
 							<h3 class="section-header-title">
 								<span class="section-header-title-icon icon-wrapper sm"><svg class="icon">
@@ -426,91 +511,10 @@
 							<div class="section-header-actions">
 								<span class="flyout-switch" id="flyoutSwitch" data-no-accordion-toggle="true"></span>
 								<button type="button" class="section-header-action btn-icon icon-wrapper visible" id="flyoutReset" data-no-accordion-toggle="true" hidden><svg class="icon"><use href="#icon-reset"></use></svg></button>
-								<button type="button" class="section-header-action btn-icon icon-wrapper mobile-hidden-section-toggle visible" id="flyoutToggle" title="Collapse section"><svg class="icon"><use href="#icon-chevron-down"></use></svg><span class="name">Collapse</span></button>
 								<button type="button" class="section-header-action btn-icon icon-wrapper visible" id="flyoutClose" data-no-accordion-toggle="true" title="Close (Esc)" aria-label="Close"><svg class="icon"><use href="#icon-x-mark"></use></svg><span class="name">Close</span></button>
 							</div>
 						</div>
-						<div class="section-content" id="flyoutBody"></div>
-					</div>
-					<div class="section main-section collapsible-section design-gallery-section visible" id="designGallerySection">
-						<div class="section-header section-header-with-action" id="designGalleryHeader">
-							<!-- In the phone's sheet the Library opens over the section it
-							     picks for; this returns to the section. -->
-							<button type="button" class="section-header-action btn-icon icon-wrapper library-back-action visible" id="libraryBack" data-no-accordion-toggle="true" title="Back" aria-label="Back to the section"><svg class="icon"><use href="#icon-chevron-left"></use></svg><span class="name">Back</span></button>
-							<h3 class="section-header-title">
-								<span class="section-header-title-icon icon-wrapper sm">
-									<svg class="icon">
-										<use href="#icon-palette"></use>
-									</svg>
-									<span class="name">Library</span>
-								</span>
-								<span class="section-header-title-text" id="designGalleryTitleText">Library</span>
-							</h3>
-							<div class="section-header-actions">
-								<button type="button" class="section-header-action btn-icon icon-wrapper" id="recolorGlitterBtn" data-no-accordion-toggle="true" title="Recolor a glitter" aria-label="Recolor a glitter" aria-pressed="false" hidden><svg class="icon"><use href="#icon-recolor"></use></svg><span class="name">Recolor a glitter</span></button>
-								<button type="button" class="section-header-action btn-icon library-upload-action" id="uploadStickerBtn" data-no-accordion-toggle="true" title="Upload sticker" aria-label="Upload sticker">
-									<span class="icon-wrapper">
-										<svg class="icon">
-											<use href="#icon-upload"></use>
-										</svg>
-										<span class="name">Upload sticker</span>
-									</span>
-								</button>
-								<!-- Home view, tile size and the Quick picks row.
-								     setupLibraryViewMenu. -->
-								<div class="section-header-action app-menu library-view-action" id="libraryViewMenu" data-no-accordion-toggle="true">
-									<button type="button" class="section-header-action btn-icon app-menu-trigger icon-wrapper" id="libraryViewMenuBtn" title="View options" aria-label="View options" aria-haspopup="true" aria-expanded="false" aria-controls="libraryViewMenuPanel">
-										<svg class="icon"><use href="#icon-sliders"></use></svg>
-										<span class="name">View options</span>
-									</button>
-									<div class="app-menu-panel" id="libraryViewMenuPanel" role="menu" hidden>
-										<div class="app-menu-group-label">Home shows</div>
-										<button class="app-menu-item" type="button" role="menuitem" data-home-view="categories"><span class="app-menu-item-label">Categories</span><span class="app-menu-item-current" aria-hidden="true"><svg class="icon"><use href="#icon-check"></use></svg></span></button>
-										<button class="app-menu-item" type="button" role="menuitem" data-home-view="everything"><span class="app-menu-item-label">Everything</span><span class="app-menu-item-current" aria-hidden="true"><svg class="icon"><use href="#icon-check"></use></svg></span></button>
-										<div class="app-menu-separator" role="separator"></div>
-										<div class="app-menu-group-label">Tile size</div>
-										<button class="app-menu-item" type="button" role="menuitem" data-tile-size="s"><span class="app-menu-item-label">Small</span><span class="app-menu-item-current" aria-hidden="true"><svg class="icon"><use href="#icon-check"></use></svg></span></button>
-										<button class="app-menu-item" type="button" role="menuitem" data-tile-size="m"><span class="app-menu-item-label">Medium</span><span class="app-menu-item-current" aria-hidden="true"><svg class="icon"><use href="#icon-check"></use></svg></span></button>
-										<button class="app-menu-item" type="button" role="menuitem" data-tile-size="l"><span class="app-menu-item-label">Large</span><span class="app-menu-item-current" aria-hidden="true"><svg class="icon"><use href="#icon-check"></use></svg></span></button>
-										<div class="app-menu-separator" role="separator"></div>
-										<button class="app-menu-item" type="button" role="menuitem" data-quick-picks><span class="app-menu-item-label">Quick picks</span><span class="app-menu-item-current" aria-hidden="true"><svg class="icon"><use href="#icon-check"></use></svg></span></button>
-									</div>
-								</div>
-								<!-- Every screen: the search row stays folded until asked for;
-								     folded, active filters show as chips and a dot. setupLibrarySearchToggle. -->
-								<button type="button" class="section-header-action btn-icon library-search-action" id="librarySearchToggle" data-no-accordion-toggle="true" aria-expanded="false" title="Search">
-									<span class="icon-wrapper">
-										<svg class="icon">
-											<use href="#icon-magnifying-glass"></use>
-										</svg>
-										<span class="name">Search</span>
-									</span>
-								</button>
-								<button type="button" class="section-header-action btn-icon icon-wrapper mobile-hidden-section-toggle visible" id="designGalleryToggle" title="Collapse section"><svg class="icon"><use href="#icon-chevron-down"></use></svg><span class="name">Collapse</span></button>
-								<button type="button" class="section-header-action btn-icon icon-wrapper library-close-action visible" id="libraryWindowClose" data-no-accordion-toggle="true" title="Close (Esc)" aria-label="Close the Library"><svg class="icon"><use href="#icon-x-mark"></use></svg><span class="name">Close</span></button>
-							</div>
-
-						</div>
-
-						<div class="section-content design-gallery-content" id="designGalleryContent">
-							<div class="property-empty visible boot-library-loading" role="status">Loading Library…</div>
-
-							<!-- The Library: one search/filter block + browser pair per asset kind
-							     (ASSET_BROWSERS in js/ui/asset-browser-markup.js), rendered from
-							     tpl-asset-search / tpl-asset-browser. syncLibraryView shows one kind.
-							     Each search host sits directly before its browser host. -->
-							<div class="section-content gallery-search-section" id="glitterSearchSection" data-gallery-search="glitter"></div>
-							<div class="asset-options" id="glitterOptions" data-gallery-content="glitter"></div>
-							<div class="section-content gallery-search-section" id="stickersSearchSection" data-gallery-search="stickers"></div>
-							<div class="asset-options" id="stickersOptions" data-gallery-content="stickers"></div>
-							<div class="section-content gallery-search-section" id="brushTipSearchSection" data-gallery-search="brush-tips"></div>
-							<div class="asset-options" id="brushTipOptions" data-gallery-content="brush-tips"></div>
-							<div class="section-content gallery-search-section" id="shapesSearchSection" data-gallery-search="shapes"></div>
-							<div class="asset-options" id="shapesOptions" data-gallery-content="shapes"></div>
-							<div class="section-content gallery-search-section" id="fontsSearchSection" data-gallery-search="fonts"></div>
-							<div class="asset-options" id="fontsOptions" data-gallery-content="fonts"></div>
-						</div>
-
+						<div class="section-content visible" id="flyoutBody"></div>
 					</div>
 				</div>
 
@@ -892,6 +896,17 @@
 			</div>
 		</div>
 	</div>
+
+	<template id="tpl-dock-tabs">
+		<div class="segmented-control dock-tabs ui-ignore-gestures" role="group" aria-label="Left dock">
+			<button type="button" class="segmented-option" data-dock-tab="layers" aria-pressed="false">Layers</button>
+			<button type="button" class="segmented-option" data-dock-tab="library" aria-pressed="false">Library</button>
+		</div>
+	</template>
+
+	<template id="tpl-dock-pin">
+		<button type="button" class="section-header-action btn-icon icon-wrapper dock-pin visible" title="Keep open" aria-pressed="false" hidden><svg class="icon"><use href="#icon-pin"></use></svg><span class="name">Keep open</span></button>
+	</template>
 
 	<template id="tpl-export-limit">
 		<li class="export-limit"><span class="export-limit-service"></span><span class="badge is-warning export-limit-value"></span><span class="export-limit-note"></span><button type="button" class="btn-flat export-limit-fit">Fit</button></li>
@@ -1540,6 +1555,7 @@
 			<symbol id="icon-arrows-left-right" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8h12M5 5 2 8l3 3M11 5l3 3-3 3" /></symbol>
 			<symbol id="icon-maximize" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h4v4M12.5 3.5 8.5 7.5M7 13H3V9M3.5 12.5 7.5 8.5" /></symbol>
 			<symbol id="icon-sticker" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 2.5H4A1.5 1.5 0 0 0 2.5 4v8A1.5 1.5 0 0 0 4 13.5h4l5.5-5.5V4A1.5 1.5 0 0 0 12 2.5Z" /><path d="M13.4 8H10a2 2 0 0 0-2 2v3.4" /></symbol>
+			<symbol id="icon-pin" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m10 2 4 4-1.5.5-2.5 2.5.3 2.2-1.3 1.3-6-6 1.3-1.3L7 5.5 9.5 3.5 10 2Z" /><path d="m5.5 10.5-3 3" /></symbol>
 			<symbol id="icon-lock" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.25" y="7" width="9.5" height="6.75" rx="1.25" /><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" /></symbol>
 			<symbol id="icon-unlock" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.25" y="7" width="9.5" height="6.75" rx="1.25" /><path d="M5.5 7V5a2.5 2.5 0 0 1 4.8-1" /></symbol>
 			<symbol id="icon-hand-pointer" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8V3.4a1.1 1.1 0 0 1 2.2 0v3.3" /><path d="M8.2 6.4a1.1 1.1 0 0 1 2.2 0V8" /><path d="M10.4 7.1a1.1 1.1 0 0 1 2.1 0v3.4A3.6 3.6 0 0 1 8.9 14h-.7a3.6 3.6 0 0 1-2.85-1.4L3 9.4s-.55-.95.25-1.55 1.7.2 1.7.2L6 9.6" /></symbol>
@@ -1825,12 +1841,12 @@
 	<!-- External Libs (self-hosted; gif.js pairs with js/workers/gif.worker.js) -->
 	<!-- shell:scripts:start -->
 	<script>
-		const SCRIPT_GROUP_URLS = {"head":["js/core/storage.js?v=ffc9d33b"],"boot":["js/vendor/omggif.js?v=5014f913","js/core/releases.js?v=eb2c369d","js/core/fields.js?v=56852795","js/core/color.js?v=ebbbb501","js/core/math.js?v=f539913a","js/core/recents.js?v=b07c4f6a","js/core/area.js?v=bc664c06","js/core/config.js?v=e540f3ce","js/core/features.js?v=23c2dbe1","js/core/boot.js?v=a211c97b","js/core/tools.js?v=c3464fae","js/core/sessions.js?v=c74bd81e","js/core/layer-types.js?v=411518e5","js/core/text-content.js?v=7f7b8fa3","js/core/options.js?v=3141c874","js/effects/animation.js?v=243aa716","js/systems/CanvasBounds.js?v=37bef5ad","js/ui/panel-schemas.js?v=fd722a1a","js/paint/paint-slots.js?v=494cb47e","js/paint/clip-mask.js?v=97ecc132","js/layers/types/base-image.js?v=6f51b524","js/layers/types/filter.js?v=b7c46d36","js/layers/types/glitter-fill.js?v=8da9dfbe","js/layers/types/sticker.js?v=6d567880","js/layers/types/text.js?v=75a18166","js/layers/types/frame.js?v=d1961df5","js/layers/types/sparkles.js?v=aa73d5bb","js/layers/types/shape.js?v=c635ad68","js/layers/types/path.js?v=e17da173","js/systems/MemoryLedger.js?v=f5dd2030","js/core/canvas.js?v=360f46b6","js/core/gif-decode.js?v=0b4ff15f","js/core/export-target.js?v=8ec86296","js/core/key-labels.js?v=80b61ded","js/core/preferences.js?v=8614debe","js/core/viewport-input.js?v=8ceed558","js/core/commands.js?v=1b092256","js/core/dom.js?v=3531b1f4","js/core/document-scaler.js?v=3225809e","js/transforms/transform-math.js?v=61c617f2","js/transforms/movable-layer.js?v=98aa9235","js/core/format.js?v=972ba370","js/core/attribution.js?v=3ed3fc2d","js/core/sticker-variants.js?v=b11a1da3","js/core/layer-elements.js?v=32584e3b","js/ui/slider.js?v=602c303b","js/ui/tooltip.js?v=716dc213","js/ui/doc-modal.js?v=e9de5272","js/ui/about-timeline.js?v=8fa2875b","js/ui/gallery.js?v=0179cb8f","js/ui/preset-library.js?v=fcd22542","js/ui/template-library.js?v=d8395a7a","js/effects/color-adjust.js?v=7bd60e2a","js/paint/mask-raster.js?v=b97cd63f","js/transforms/pose-geometry.js?v=8a241607","js/paint/mask-surface.js?v=37e85b70","js/paint/mask-geometry.js?v=dcb2dfd0","js/paint/bevel.js?v=05766329","js/effects/palette-analysis.js?v=5de64065","js/effects/glitter-recolor.js?v=94118312","js/effects/pixel-effects.js?v=9a7f20e6","js/effects/blend-modes.js?v=57e7ac8f","js/effects/tone-adjust.js?v=e9fc9d15","js/effects/grain.js?v=f371508f","js/effects/blur.js?v=98b130a6","js/effects/filter-presets.js?v=8554f8b5","js/effects/filter-ops.js?v=f8ae0285","js/effects/filter-looks.js?v=b6e5ad5c","js/effects/filter-render.js?v=4d656e1d","js/ui/filter-thumbnail.js?v=e5334b55","js/paint/effect-source.js?v=9cf0a037","js/paint/pattern-source.js?v=de3e9c23","js/paint/pattern-presets.js?v=cd0db287","js/paint/gradient-presets.js?v=a93312e0","js/effects/easing.js?v=dcce1ce7","js/effects/highlight-detect.js?v=8393431a","js/paint/slot-effects.js?v=1df8181a","js/paint/sparkles.js?v=df7821b8","js/paint/nine-slice.js?v=e6df48e5","js/paint/frames.js?v=ec6c4f15","js/paint/text-layout.js?v=42c7138c","js/paint/text-warp.js?v=b4c82e81","js/paint/path-geometry.js?v=343a3836","js/paint/svg-import.js?v=291e5a7a","js/core/file-handlers.js?v=ed36f8c3","js/paint/stroke-mask.js?v=a7652230","js/paint/style-presets.js?v=d5fd17d8","js/ui/paint-slot-controls.js?v=cc262b09","js/ui/style-preset-thumbnails.js?v=81099837","js/ui/gradient-editor.js?v=a2f58930","js/ui/pattern-editor.js?v=2cfaad21","js/ui/color-eyedropper.js?v=38f15467","js/paint/text-background-geometry.js?v=dd1ecfa1","js/ui/asset-browser-markup.js?v=1db2c27e","js/ui/scroll-regions.js?v=eb82c192","js/ui/panel-renderer.js?v=d3827c6c","js/ui/transform-panel-renderer.js?v=2fe36fa9","js/ui/settings-renderer.js?v=0da2d1ee","js/ui/settings-store.js?v=27d206c5","js/ui/menu-popover.js?v=fdfbce8a","js/core/animation-timing.js?v=c5ea1e46","js/ui/timeline-view.js?v=55b1969d","js/ui/key-strip.js?v=b8426add","js/ui/keyboard.js?v=97b4dd3e","js/ui/clipboard.js?v=a04a3d0e","js/editor/document-io.js?v=2599d9d4","js/editor/export-flow.js?v=19d6b9c9","js/editor/keyboard.js?v=af7215cb","js/editor/settings.js?v=878c628a","js/editor/animation-loop.js?v=da34ceb3","js/editor/animation-edit.js?v=2f6fcecf","js/editor/timeline.js?v=2a25a186","js/editor/panels.js?v=f8362709","js/editor/asset-info.js?v=51616a69","js/editor/fill-tool.js?v=e19ac3ac","js/editor/disclosures.js?v=476bcb73","js/ui/panel-resize.js?v=399d173f","js/ui/list-reorder.js?v=874d5f24","js/editor/transform-panel.js?v=d954633e","js/editor/transform-interaction.js?v=b7467da3","js/editor/document-start.js?v=4d49aa88","js/ui/glitter-recolor-tool.js?v=73bc74bc","js/editor/modals-wiring.js?v=fefa2a45","js/editor/layer-panel.js?v=90b09e00","js/editor/canvas-gestures.js?v=39b61589","js/editor/canvas-size.js?v=3a66adce","js/editor/canvas-resize.js?v=4f2d8d68","js/ui/hints.js?v=2426f0e4","js/ui/library-window.js?v=e2621ad1","js/ui/picker-session.js?v=2775d8d8","js/ui/context-toolbar-renderer.js?v=1baaab2c","js/ui/modal-filter.js?v=b22a26a4","js/ui/notify.js?v=16141ee4","js/core/debug.js?v=f9b6fed4","js/systems/GestureManager.js?v=96d741f6","js/systems/ModalManager.js?v=588a6036","js/export/ExportTimeline.js?v=241cb419","js/export/GifPalette.js?v=ac210d6f","js/export/AuthoredFrameResolver.js?v=3139d2c3","js/export/DeferredExporter.js?v=dc35c583","js/export/GifEncodingPipeline.js?v=c3934e84","js/systems/AnimationTicker.js?v=af53f1d9","js/systems/ClipPreview.js?v=f61c2bcb","js/systems/MotionSelection.js?v=a9d45294","js/systems/PreviewImageResolver.js?v=a1998a9b","js/systems/AnimationPanelController.js?v=3fff4a81","js/ui/task-progress-presenter.js?v=c31306fb","js/export/ExportProgressPresenter.js?v=f01d571f","js/export/export-fit.js?v=6f1ecdec","js/export/export-report.js?v=458f3649","js/export/ExportResultPresenter.js?v=3180a4f7","js/export/SceneCompositor.js?v=4c287b81","js/export/GifExporter.js?v=232b970a","js/export/SvgExporter.js?v=12e7ffcf","js/export/StillImageExporter.js?v=420333bd","js/export/Mp4Exporter.js?v=2f7ac9d7","js/systems/PixelGridOverlay.js?v=7e307abe","js/transforms/selection-overlay.js?v=8c1d1d71","js/transforms/transform-gestures.js?v=8e167cf4","js/transforms/selection-chrome.js?v=aed1ec5a","js/transforms/path-chrome.js?v=80576595","js/transforms/area-chrome.js?v=d0a9fd35","js/systems/ViewportManager.js?v=b3594d48","js/systems/HistoryManager.js?v=42d0d3ef","js/export/ProjectSerializer.js?v=a47b3779","js/paint/PaintMaskStore.js?v=6f5352df","js/paint/ImageFillStore.js?v=9d0cddd1","js/systems/AreaSelection.js?v=034ae779","js/paint/MaskCompositor.js?v=ee7d6aba","js/assets/ShapeLibrary.js?v=ae2f4d81","js/assets/BrushLibrary.js?v=b235de96","js/assets/FontLibrary.js?v=aecfec86","js/paint/brush-stamp.js?v=a343d53e","js/systems/MaskEditor.js?v=7bec6520","js/layers/layer-row.js?v=728e3ce8","js/layers/LayerManager.js?v=023863cc","js/paint/color-selection.js?v=eaa4af2c","js/assets/LibraryCatalog.js?v=f010f3ee","js/assets/AssetBrowserRail.js?v=7ac2a22b","js/assets/AssetSetHeader.js?v=6b9687c1","js/assets/AssetBrowser.js?v=c13cfc33","js/assets/ContentManager.js?v=b6817a41","js/assets/GlitterBrowserManager.js?v=0d5bb930","js/assets/StickerBrowserManager.js?v=8e1d38a8","js/assets/BrushTipManager.js?v=c7db04a4","js/assets/ShapeBrowserManager.js?v=488a1dfd","js/generated/font-preview-icons.js?v=22f95f8c","js/assets/FontBrowserManager.js?v=bf9a545b","js/transforms/LayerTransform.js?v=019ca35e","js/layers/movable-layer-methods.js?v=55908f90","js/layers/layer-element-methods.js?v=32e0fa0a","js/layers/GlitterManager.js?v=675b90ac","js/layers/BaseBackgroundManager.js?v=9d866f58","js/systems/preview-layer-session.js?v=441d6d7b","js/systems/AutoGlitterManager.js?v=c7a51da4","js/systems/TemplateManager.js?v=db662a23","js/ui/text-actions.js?v=40198f05","js/ui/text-edit.js?v=7381a2c4","js/ui/crop-edit.js?v=65c0ddfa","js/ui/area-select.js?v=f23052af","js/ui/path-edit.js?v=44cb2799","js/layers/TextGlitterManager.js?v=1d532548","js/layers/ShapeGlitterManager.js?v=5607bc53","js/layers/StickerManager.js?v=fe7424bb","js/layers/FilterLayerManager.js?v=b35a5375","js/layers/FrameLayerManager.js?v=5cad686e","js/layers/SparkleLayerManager.js?v=95167dc2","js/layers/PathLayerManager.js?v=4902e8a2","js/transforms/GroupTransformManager.js?v=6951a526","js/ui/phone-chip-bar.js?v=4557a33b","js/ui/sheet-drag.js?v=4d40fe41","js/systems/MobileManager.js?v=59fbf1a3","js/app.js?v=ffcc5143"],"key-recording":["js/ui/key-recording.js?v=a5e1c17b"],"preview-frames":["js/systems/PreviewFrameView.js?v=7f32cd29"],"timeline":["js/ui/timeline-key-lane.js?v=88ba9d01","js/ui/timeline-dock.js?v=61f2f28b","js/ui/timeline-group.js?v=e6ac840e"],"export":["js/export/GifExportEncoder.js?v=d4db880b","js/export/SvgExportEncoder.js?v=ad69fb88","js/export/StillImageExportEncoder.js?v=d67ada61","js/export/Mp4ExportEncoder.js?v=e88aeef4","js/export/export-group.js?v=3828bba3"],"html":["js/export/HtmlSceneExporter.js?v=49e1ff4f","js/export/html-group.js?v=2b14135e"],"entities":["js/generated/entities-data.js?v=b8b7d1f7","js/core/entities-group.js?v=b984c1dd"],"preservation":["js/ui/about-timeline-data.js?v=c875b6a5","js/core/preservation-group.js?v=6f1c5130"],"background-removal":["js/systems/BackgroundRemover.js?v=d2ed8cbf","js/core/background-removal-group.js?v=e9fa8841"],"mp4-codec":["js/vendor/mp4-muxer.js?v=e2a7db11","js/core/mp4-codec-group.js?v=3d3da5dd"],"gif-codec":["js/vendor/gif.js?v=d3648ca8","js/export/GifFrameEncoder.js?v=36c23336","js/core/gif-codec-group.js?v=d09cd3d7"]};
+		const SCRIPT_GROUP_URLS = {"head":["js/core/storage.js?v=a5946ead"],"boot":["js/vendor/omggif.js?v=5014f913","js/core/releases.js?v=49941b30","js/core/fields.js?v=56852795","js/core/color.js?v=ebbbb501","js/core/math.js?v=f539913a","js/core/recents.js?v=b07c4f6a","js/core/area.js?v=bc664c06","js/core/config.js?v=2f315b53","js/core/features.js?v=48b9c493","js/core/boot.js?v=a211c97b","js/core/tools.js?v=c3464fae","js/core/sessions.js?v=16fa06c1","js/core/layer-types.js?v=411518e5","js/core/text-content.js?v=7f7b8fa3","js/core/options.js?v=3141c874","js/effects/animation.js?v=243aa716","js/systems/CanvasBounds.js?v=37bef5ad","js/ui/panel-schemas.js?v=fd722a1a","js/paint/paint-slots.js?v=494cb47e","js/paint/clip-mask.js?v=97ecc132","js/layers/types/base-image.js?v=6f51b524","js/layers/types/filter.js?v=b7c46d36","js/layers/types/glitter-fill.js?v=8da9dfbe","js/layers/types/sticker.js?v=6d567880","js/layers/types/text.js?v=75a18166","js/layers/types/frame.js?v=d1961df5","js/layers/types/sparkles.js?v=aa73d5bb","js/layers/types/shape.js?v=c635ad68","js/layers/types/path.js?v=e17da173","js/systems/MemoryLedger.js?v=f5dd2030","js/core/canvas.js?v=360f46b6","js/core/gif-decode.js?v=0b4ff15f","js/core/export-target.js?v=8ec86296","js/core/key-labels.js?v=80b61ded","js/core/preferences.js?v=8614debe","js/core/viewport-input.js?v=8ceed558","js/core/commands.js?v=c3784a4b","js/core/dom.js?v=3531b1f4","js/core/document-scaler.js?v=3225809e","js/transforms/transform-math.js?v=61c617f2","js/transforms/movable-layer.js?v=98aa9235","js/core/format.js?v=972ba370","js/core/attribution.js?v=3ed3fc2d","js/core/sticker-variants.js?v=b11a1da3","js/core/layer-elements.js?v=32584e3b","js/ui/slider.js?v=602c303b","js/ui/tooltip.js?v=716dc213","js/ui/doc-modal.js?v=e9de5272","js/ui/about-timeline.js?v=8fa2875b","js/ui/gallery.js?v=12c0b5ef","js/ui/preset-library.js?v=fcd22542","js/ui/template-library.js?v=d8395a7a","js/effects/color-adjust.js?v=7bd60e2a","js/paint/mask-raster.js?v=b97cd63f","js/transforms/pose-geometry.js?v=8a241607","js/paint/mask-surface.js?v=37e85b70","js/paint/mask-geometry.js?v=dcb2dfd0","js/paint/bevel.js?v=05766329","js/effects/palette-analysis.js?v=5de64065","js/effects/glitter-recolor.js?v=94118312","js/effects/pixel-effects.js?v=9a7f20e6","js/effects/blend-modes.js?v=57e7ac8f","js/effects/tone-adjust.js?v=e9fc9d15","js/effects/grain.js?v=f371508f","js/effects/blur.js?v=98b130a6","js/effects/filter-presets.js?v=8554f8b5","js/effects/filter-ops.js?v=f8ae0285","js/effects/filter-looks.js?v=b6e5ad5c","js/effects/filter-render.js?v=4d656e1d","js/ui/filter-thumbnail.js?v=e5334b55","js/paint/effect-source.js?v=9cf0a037","js/paint/pattern-source.js?v=de3e9c23","js/paint/pattern-presets.js?v=cd0db287","js/paint/gradient-presets.js?v=a93312e0","js/effects/easing.js?v=dcce1ce7","js/effects/highlight-detect.js?v=8393431a","js/paint/slot-effects.js?v=1df8181a","js/paint/sparkles.js?v=df7821b8","js/paint/nine-slice.js?v=e6df48e5","js/paint/frames.js?v=ec6c4f15","js/paint/text-layout.js?v=42c7138c","js/paint/text-warp.js?v=b4c82e81","js/paint/path-geometry.js?v=343a3836","js/paint/svg-import.js?v=291e5a7a","js/core/file-handlers.js?v=ed36f8c3","js/paint/stroke-mask.js?v=a7652230","js/paint/style-presets.js?v=d5fd17d8","js/ui/paint-slot-controls.js?v=cc262b09","js/ui/style-preset-thumbnails.js?v=81099837","js/ui/gradient-editor.js?v=a2f58930","js/ui/pattern-editor.js?v=2cfaad21","js/ui/color-eyedropper.js?v=38f15467","js/paint/text-background-geometry.js?v=dd1ecfa1","js/ui/asset-browser-markup.js?v=1db2c27e","js/ui/scroll-regions.js?v=eb82c192","js/ui/panel-renderer.js?v=d3827c6c","js/ui/transform-panel-renderer.js?v=2fe36fa9","js/ui/settings-renderer.js?v=0da2d1ee","js/ui/settings-store.js?v=27d206c5","js/ui/menu-popover.js?v=fdfbce8a","js/core/animation-timing.js?v=c5ea1e46","js/ui/timeline-view.js?v=55b1969d","js/ui/key-strip.js?v=b8426add","js/ui/keyboard.js?v=97b4dd3e","js/ui/clipboard.js?v=a04a3d0e","js/editor/document-io.js?v=2599d9d4","js/editor/export-flow.js?v=19d6b9c9","js/editor/keyboard.js?v=af7215cb","js/editor/settings.js?v=878c628a","js/editor/animation-loop.js?v=da34ceb3","js/editor/animation-edit.js?v=2f6fcecf","js/editor/timeline.js?v=2a25a186","js/editor/panels.js?v=f8362709","js/editor/asset-info.js?v=51616a69","js/editor/fill-tool.js?v=e19ac3ac","js/editor/disclosures.js?v=d30f8eb4","js/ui/panel-resize.js?v=0568159f","js/ui/list-reorder.js?v=874d5f24","js/editor/transform-panel.js?v=d954633e","js/editor/transform-interaction.js?v=b7467da3","js/editor/document-start.js?v=4d49aa88","js/ui/glitter-recolor-tool.js?v=73bc74bc","js/editor/modals-wiring.js?v=2f48cb6d","js/editor/layer-panel.js?v=90b09e00","js/editor/canvas-gestures.js?v=39b61589","js/editor/canvas-size.js?v=3a66adce","js/editor/canvas-resize.js?v=4f2d8d68","js/ui/hints.js?v=2426f0e4","js/ui/library-window.js?v=c99daab7","js/ui/picker-session.js?v=2775d8d8","js/ui/context-toolbar-renderer.js?v=1baaab2c","js/ui/modal-filter.js?v=b22a26a4","js/ui/notify.js?v=16141ee4","js/core/debug.js?v=f9b6fed4","js/systems/GestureManager.js?v=96d741f6","js/systems/ModalManager.js?v=588a6036","js/export/ExportTimeline.js?v=241cb419","js/export/GifPalette.js?v=ac210d6f","js/export/AuthoredFrameResolver.js?v=3139d2c3","js/export/DeferredExporter.js?v=dc35c583","js/export/GifEncodingPipeline.js?v=c3934e84","js/systems/AnimationTicker.js?v=af53f1d9","js/systems/ClipPreview.js?v=f61c2bcb","js/systems/MotionSelection.js?v=a9d45294","js/systems/PreviewImageResolver.js?v=a1998a9b","js/systems/AnimationPanelController.js?v=3fff4a81","js/ui/task-progress-presenter.js?v=c31306fb","js/export/ExportProgressPresenter.js?v=f01d571f","js/export/export-fit.js?v=6f1ecdec","js/export/export-report.js?v=458f3649","js/export/ExportResultPresenter.js?v=3180a4f7","js/export/SceneCompositor.js?v=4c287b81","js/export/GifExporter.js?v=232b970a","js/export/SvgExporter.js?v=12e7ffcf","js/export/StillImageExporter.js?v=420333bd","js/export/Mp4Exporter.js?v=2f7ac9d7","js/systems/PixelGridOverlay.js?v=7e307abe","js/transforms/selection-overlay.js?v=8c1d1d71","js/transforms/transform-gestures.js?v=8e167cf4","js/transforms/selection-chrome.js?v=aed1ec5a","js/transforms/path-chrome.js?v=80576595","js/transforms/area-chrome.js?v=d0a9fd35","js/systems/ViewportManager.js?v=94f035dc","js/systems/HistoryManager.js?v=42d0d3ef","js/export/ProjectSerializer.js?v=a47b3779","js/paint/PaintMaskStore.js?v=6f5352df","js/paint/ImageFillStore.js?v=9d0cddd1","js/systems/AreaSelection.js?v=034ae779","js/paint/MaskCompositor.js?v=ee7d6aba","js/assets/ShapeLibrary.js?v=ae2f4d81","js/assets/BrushLibrary.js?v=b235de96","js/assets/FontLibrary.js?v=aecfec86","js/paint/brush-stamp.js?v=a343d53e","js/systems/MaskEditor.js?v=7bec6520","js/layers/layer-row.js?v=728e3ce8","js/layers/LayerManager.js?v=023863cc","js/paint/color-selection.js?v=eaa4af2c","js/assets/LibraryCatalog.js?v=f010f3ee","js/assets/AssetBrowserRail.js?v=7ac2a22b","js/assets/AssetSetHeader.js?v=6b9687c1","js/assets/AssetBrowser.js?v=c13cfc33","js/assets/ContentManager.js?v=c0cf36ef","js/assets/GlitterBrowserManager.js?v=b2fe5f02","js/assets/StickerBrowserManager.js?v=dab778a1","js/assets/BrushTipManager.js?v=c7db04a4","js/assets/ShapeBrowserManager.js?v=c42cda9c","js/generated/font-preview-icons.js?v=22f95f8c","js/assets/FontBrowserManager.js?v=4740ac4e","js/transforms/LayerTransform.js?v=019ca35e","js/layers/movable-layer-methods.js?v=55908f90","js/layers/layer-element-methods.js?v=32e0fa0a","js/layers/GlitterManager.js?v=675b90ac","js/layers/BaseBackgroundManager.js?v=9d866f58","js/systems/preview-layer-session.js?v=441d6d7b","js/systems/AutoGlitterManager.js?v=c7a51da4","js/systems/TemplateManager.js?v=db662a23","js/ui/text-actions.js?v=40198f05","js/ui/text-edit.js?v=7381a2c4","js/ui/crop-edit.js?v=65c0ddfa","js/ui/area-select.js?v=f23052af","js/ui/path-edit.js?v=44cb2799","js/layers/TextGlitterManager.js?v=7366c4ef","js/layers/ShapeGlitterManager.js?v=5607bc53","js/layers/StickerManager.js?v=fe7424bb","js/layers/FilterLayerManager.js?v=b35a5375","js/layers/FrameLayerManager.js?v=5cad686e","js/layers/SparkleLayerManager.js?v=95167dc2","js/layers/PathLayerManager.js?v=4902e8a2","js/transforms/GroupTransformManager.js?v=6951a526","js/ui/phone-chip-bar.js?v=4557a33b","js/ui/sheet-drag.js?v=4d40fe41","js/systems/MobileManager.js?v=59fbf1a3","js/app.js?v=ffcc5143"],"key-recording":["js/ui/key-recording.js?v=a5e1c17b"],"preview-frames":["js/systems/PreviewFrameView.js?v=7f32cd29"],"timeline":["js/ui/timeline-key-lane.js?v=88ba9d01","js/ui/timeline-dock.js?v=fd425eac","js/ui/timeline-group.js?v=e6ac840e"],"export":["js/export/GifExportEncoder.js?v=d4db880b","js/export/SvgExportEncoder.js?v=ad69fb88","js/export/StillImageExportEncoder.js?v=d67ada61","js/export/Mp4ExportEncoder.js?v=e88aeef4","js/export/export-group.js?v=3828bba3"],"html":["js/export/HtmlSceneExporter.js?v=49e1ff4f","js/export/html-group.js?v=2b14135e"],"entities":["js/generated/entities-data.js?v=b8b7d1f7","js/core/entities-group.js?v=b984c1dd"],"preservation":["js/ui/about-timeline-data.js?v=c875b6a5","js/core/preservation-group.js?v=6f1c5130"],"background-removal":["js/systems/BackgroundRemover.js?v=d2ed8cbf","js/core/background-removal-group.js?v=e9fa8841"],"mp4-codec":["js/vendor/mp4-muxer.js?v=e2a7db11","js/core/mp4-codec-group.js?v=3d3da5dd"],"gif-codec":["js/vendor/gif.js?v=d3648ca8","js/export/GifFrameEncoder.js?v=36c23336","js/core/gif-codec-group.js?v=d09cd3d7"]};
 		(() => {
 			const params = new URLSearchParams(location.search);
 			const useSources = params.get("bundle") !== '1'
 				&& (document.documentElement.classList.contains('is-localhost') || params.get("src") === '1');
-			const sources = useSources ? SCRIPT_GROUP_URLS.boot : ["js/dist/boot.js?v=4a23f630"];
+			const sources = useSources ? SCRIPT_GROUP_URLS.boot : ["js/dist/boot.js?v=5fe73625"];
 			const stylesheet = document.querySelector('link[rel="stylesheet"]');
 			let started = false;
 			const start = () => {

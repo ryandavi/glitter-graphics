@@ -27,10 +27,6 @@
 		justify-content: space-between;
 		align-items: center;
 
-		@media (min-width: ($mobile-breakpoint + 1px)) {
-			@include windows7-bar();
-		}
-
 		>.section-header-title {
 
 			display: flex;
@@ -148,82 +144,62 @@
 		opacity: var(--opacity-disabled);
 		cursor: not-allowed;
 	}
-
-	/* Collapsible Section */
-	&.collapsible-section {
-		border-top: 1px solid var(--color-border);
-
-		background: var(--panel-bg);
-		-webkit-backdrop-filter: var(--panel-backdrop);
-		backdrop-filter: var(--panel-backdrop);
-		flex-shrink: 0;
-
-
-
-		>.section-header {
-
-			border-bottom: unset;
-
-			>h3.section-header-title {
-				+.section-header-action {
-					background-color: unset;
-
-
-					&:hover {
-						background-color: unset;
-					}
-
-					&.collapsed .icon {
-						transform: rotate(-90deg);
-					}
-				}
-			}
-
-			>.section-header-actions>.section-header-action {
-				background-color: unset;
-
-				&:hover {
-					background-color: unset;
-				}
-
-				&.collapsed .icon {
-					transform: rotate(-90deg);
-				}
-			}
-		}
-
-		>.section-content {
-
-			display: none;
-			padding: var(--spacing-md);
-			border-top: 1px solid var(--color-border);
-
-			&.visible {
-				display: block;
-			}
-		}
-
-		// The bar is the toggle.
-		>.section-header { cursor: pointer; }
-
-		// The Library's bar holds its view menu, which a hover filter on the
-		// bar would tint along with it.
-		@media (min-width: ($mobile-breakpoint + 1px)) {
-			&:not(.design-gallery-section) { @include windows7-bar(true); }
-		}
-	}
 }
 
 
+// Every desktop section bar is chrome; a dock's bar also keeps one fixed
+// height. The phone's sheets draw their own bar (css/_mobile.scss).
+@media (min-width: ($mobile-breakpoint + 1px)) {
+	.section > .section-header { @include windows7-bar(); }
+	.section.dock-section > .section-header { @include dock-header; }
+}
+
+// The side docks are flush columns: opaque (the sections' themed surfaces sit
+// on it), no gutter, and one border line on the edge they share with the
+// canvas (set with each panel's width). Floating UI keeps the blurred glass.
 .design-panel,
 .layers-panel {
 	position: relative;
 	z-index: var(--z-panel);
-	pointer-events: none;
-	background: unset;
-	padding: var(--spacing-base);
-	gap: var(--spacing-base);
-	border: unset;
+	background: var(--color-bg-primary);
+	padding: 0;
+	gap: 0;
+}
+
+// View > Show Layers / Show Inspector hides a dock outright, so the canvas
+// takes its room. The phone's sheets are not docks and ignore it. A picker
+// armed while the left dock is hidden shows it for the pick (is-dock-peeking).
+@media (min-width: ($mobile-breakpoint + 1px)) {
+	.layers-panel.is-dock-hidden:not(.is-dock-peeking),
+	.inspector-panel.is-dock-hidden { display: none; }
+
+	// Compact desktop (js/ui/panel-resize.js): the left dock floats over the
+	// canvas from the rail's edge, with a floating window's chrome, instead of
+	// taking a column. It slides out from behind the rail and is out of the
+	// layout, so the canvas and timeline never move when it opens.
+	.layers-panel.is-dock-overlay {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		height: auto;
+		z-index: calc(var(--z-panel-elevated) - 1);
+		background: var(--panel-bg);
+		-webkit-backdrop-filter: var(--panel-backdrop);
+		backdrop-filter: var(--panel-backdrop);
+		border: 1px solid var(--color-window-border);
+		border-left: 0;
+		border-radius: 0 var(--radius-panel) var(--radius-panel) 0;
+		box-shadow: 0 2px 5px var(--color-shadow-strong);
+		transform: translateX(-100%);
+		visibility: hidden;
+		transition: transform var(--transition-fast), visibility var(--transition-fast);
+
+		&.is-dock-overlay-open {
+			transform: none;
+			visibility: visible;
+		}
+	}
 }
 
 // The tool rail's box, layout and overflow/mask-fade treatment live together in
@@ -232,11 +208,7 @@
 .layers-panel > .section,
 .design-panel > .section,
 .timeline-dock > .section {
-	pointer-events: auto;
-	border: 1px solid var(--color-window-border);
-	border-radius: var(--radius-panel);
 	overflow: hidden;
-	box-shadow: 0 2px 5px var(--color-shadow-strong);
 }
 
 .design-panel {
@@ -288,40 +260,9 @@
 		flex: 1 1 auto;
 		min-height: 0;
 		background: var(--panel-bg);
-		-webkit-backdrop-filter: var(--panel-backdrop);
-		backdrop-filter: var(--panel-backdrop);
-
-		// As tall as a collapsible section's bar, which has no line of its own.
-		> .section-header { border-bottom: unset; }
 
 		// The sheet's Close button takes no room in the column.
 		> .section-header .sheet-close-action:not(.visible) { display: none; }
-
-		> .section-header > .section-header-actions > .section-header-action {
-			background-color: unset;
-
-			&:hover { background-color: unset; }
-			&.collapsed .icon { transform: rotate(-90deg); }
-		}
-
-		// In the column the bar is the toggle and the section collapses to it,
-		// like the Layers panel. The phone's sheet opens and closes instead.
-		@media (min-width: ($mobile-breakpoint + 1px)) {
-			> .section-header {
-				cursor: pointer;
-				@include hover-states(true);
-			}
-
-			&:not(.is-open) {
-				flex: 0 0 auto;
-
-				> #inspectorSwitch .panel-sticky-header,
-				> .inspector-body { display: none; }
-			}
-
-			// The visible panel switch supplies its own divider.
-			> #inspectorSwitch[hidden] + .inspector-body { border-top: 1px solid var(--color-border); }
-		}
 
 		// The kind of layer always shows whole; the layer's name gives way.
 		> .section-header > .section-header-title > .section-header-title-text { flex-shrink: 0; }

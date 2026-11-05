@@ -1,12 +1,11 @@
 @use '../mixins' as *;
 
 /* ===== RIGHT COLUMNS ===== */
-// Two columns share this shell: the Inspector (.inspector-panel) and the
-// Library window (.library-window, panels/_library-window.scss). Each sets its
-// own width and place in the row.
+// The Inspector (.inspector-panel) and the Library window (.library-window,
+// panels/_library-window.scss) share this shell. The Inspector sets its own
+// width and edge; the Library sits in the left dock.
 .design-panel {
 	background: var(--color-bg-primary);
-	border-left: 1px solid var(--color-border);
 	display: flex;
 	flex-direction: column;
 	min-height: 0;
@@ -88,4 +87,5 @@
 	width: var(--glitter-panel-width);
 	flex: 0 0 var(--glitter-panel-width);
 	order: 3;
+	border-left: 1px solid var(--color-border);
 }

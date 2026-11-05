@@ -672,7 +672,7 @@ class ContentManager {
 		const select = async () => {
 			const done = this.editor.beginActivity('library-pick', 'Loading asset');
 			try {
-				await (onSelect ? onSelect(item) : this.handleItemClick(item));
+				await (onSelect ? onSelect(item) : this.selectItem(item));
 				this.recordRecent(item.id);
 				if (this.activeFilters.search) this.recordSearch();
 			} finally { done(); }
@@ -921,6 +921,32 @@ class ContentManager {
 		toggle.setAttribute('aria-pressed', String(favorite));
 		toggle.setAttribute('aria-label', label);
 		toggle.title = label;
+	}
+
+	// A press on a Library asset. An armed session applies it (handleItemClick).
+	// Browsing by hand, it replaces the asset of the active layer when that
+	// layer holds this kind, and otherwise adds a layer with it, so a press
+	// always does something. A kind with no `libraryPlacement` always applies.
+	async selectItem(item) {
+		const placement = this.libraryPlacement;
+		const editor = this.editor;
+		if (!placement || !editor.originalImage || editor.pickers.active || this.hasForeignSession()) return this.handleItemClick(item);
+		const layer = editor.layerManager.getActiveLayer();
+		if (layer && placement.canReplace(layer)) return this.handleItemClick(item);
+		if (!editor.layerManager.requireLayerCapacity()) return null;
+		await placement.insert(item);
+		editor.updateHelpfulMessage();
+		return null;
+	}
+
+	// A flow outside the picker registry that owns the next press.
+	hasForeignSession() {
+		return false;
+	}
+
+	// { canReplace(layer), insert(item) } for a kind that can add its own layer.
+	get libraryPlacement() {
+		return null;
 	}
 
 	handleItemClick(item) {

@@ -29,44 +29,8 @@ initializeCollapsibleSections() {
 		};
 
 		this.syncCollapsibleSections();
-		this.initializeIndependentCollapsibles();
 
 		this.syncPanelEmptyStates();
-	},
-
-	// Each column's sections collapse independently (both can stay open).
-	initializeIndependentCollapsibles() {
-		const setters = new Map();
-		this.setIndependentSectionOpen = (name, isOpen) => setters.get(name)?.(isOpen);
-		CONFIG.ui.independentCollapsibleSections.forEach((name) => {
-			const section = document.getElementById(`${name}Section`);
-				const header = document.getElementById(`${name}Header`);
-				const toggle = document.getElementById(`${name}Toggle`);
-				const content = section?.querySelector(':scope > .section-content');
-				if (!section || !header || !toggle || !content) return;
-
-				const setOpen = (isOpen) => {
-					setCollapsibleSectionState(section, content, toggle, isOpen);
-					// A column that stops short of its handle hides the grip. The
-					// window works that out itself: it knows which panes show, and
-					// splits its room only between two open ones.
-					const column = section.parentElement;
-					if (column === this.libraryWindow.element) this.libraryWindow.sync();
-					else column.classList.toggle('has-collapsed-section', !column.querySelector(':scope > .section.is-open'));
-				};
-			setters.set(name, setOpen);
-			setOpen(true);
-
-			header.addEventListener('click', (event) => {
-				if (event.target.closest('[data-no-accordion-toggle]')) return;
-				// On mobile these sections live in drawers with their own header
-				// behavior — mirror the design gallery's guard.
-				if (this.mobileManager?.isMobile) return;
-				const isOpen = !section.classList.contains('is-open');
-				setOpen(isOpen);
-				if (isOpen) requestAnimationFrame(() => header.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
-			});
-		});
 	},
 
 	// Reusable "Advanced" disclosure. One delegated click handler drives

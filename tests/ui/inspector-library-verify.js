@@ -223,20 +223,141 @@ async function main() {
 		await verifyCanvasCentering(page);
 		console.log('PASS Hand centering keeps zoom and the other axis on phone and desktop, including oversized canvases');
 		await page.evaluate((id) => { window.editor.setTool(ToolType.SELECT); window.editor.layerManager.setActiveLayer(id); window.editor.viewport.zoomToFill(); }, textId);
-		const before = await page.evaluate(() => ({ rect: window.editor.previewContainer.getBoundingClientRect().toJSON(), view: window.editor.viewport.captureViewState(), usable: window.editor.viewport.getUsableRect() }));
+		// The flyout floats: opening, closing and switching it moves no dock.
+		await page.evaluate(async () => { await editor.ensureTimelineDock(); PREFERENCES.set('timelineOpen', true); await editor.updateExportDuration(); });
+		await wait(page);
+		const layout = () => page.evaluate(() => ({
+			rect: window.editor.previewContainer.getBoundingClientRect().toJSON(),
+			timeline: document.getElementById('timelineDock').getBoundingClientRect().toJSON(),
+			usable: window.editor.viewport.getUsableRect(),
+			flyout: window.editor.libraryWindow.flyoutOpen
+		}));
+		const closed = await layout();
+		assert(closed.timeline.width > 0, 'The timeline dock is showing for the layout check');
+		assert.equal(await page.locator('#flyoutToggle').count(), 0, 'The flyout has no collapse chevron');
+		await page.evaluate(() => window.editor.pickers.toggleFlyout('Style'));
+		await wait(page);
+		const floating = await layout();
+		assert(floating.flyout, 'Pressing a line opens the floating flyout');
+		assert.deepEqual(floating.rect, closed.rect, 'Opening the flyout must not resize the canvas area');
+		assert.deepEqual(floating.timeline, closed.timeline, 'Opening the flyout must not resize the timeline dock');
+		assert.deepEqual(floating.usable, closed.usable, 'Opening the flyout leaves the usable rect alone');
+		const placed = await page.evaluate(() => {
+			const box = document.getElementById('flyoutWindow').getBoundingClientRect();
+			const inspector = document.getElementById('designPanel').getBoundingClientRect();
+			const canvas = document.getElementById('previewContainer').getBoundingClientRect();
+			const line = document.querySelector('.property-line.is-flyout-open').getBoundingClientRect();
+			return { position: getComputedStyle(document.getElementById('flyoutWindow')).position, box: box.toJSON(), inspectorLeft: inspector.left, canvas: canvas.toJSON(), lineTop: line.top };
+		});
+		if (css) {
+			assert.equal(placed.position, 'absolute', 'The flyout floats out of the layout');
+			assert(placed.box.right <= placed.inspectorLeft + 0.5 && placed.inspectorLeft - placed.box.right < 40, 'The flyout sits against the Inspector edge');
+			assert(placed.box.top >= placed.canvas.top - 0.5 && placed.box.bottom <= placed.canvas.bottom + 0.5, 'The flyout stays inside the canvas area');
+			assert(placed.box.top <= placed.lineTop + 0.5 || placed.box.bottom >= placed.canvas.bottom - 40, 'The flyout lines up with the row that opened it unless clamped');
+			assert.notEqual(await page.locator('#flyoutWindow').evaluate((node) => getComputedStyle(node).boxShadow), 'none', 'The floating flyout has window chrome');
+		}
+		await page.keyboard.press('Escape');
+		await wait(page);
+		const escaped = await layout();
+		assert(!escaped.flyout && !await page.locator('#flyoutWindow').isVisible(), 'Escape closes the flyout');
+		assert.deepEqual([escaped.rect, escaped.timeline], [closed.rect, closed.timeline], 'Closing the flyout leaves the canvas and timeline alone');
+		await page.evaluate(() => window.editor.pickers.toggleFlyout('Style'));
+		await wait(page);
+		await page.locator('#flyoutHeader').click({ position: { x: 4, y: 4 } });
+		assert(await page.evaluate(() => window.editor.libraryWindow.flyoutOpen), 'A press inside the flyout keeps it open');
+		const stage = await page.locator('#previewContainer').boundingBox();
+		await page.mouse.move(stage.x + 30, stage.y + 30);
+		await page.mouse.down();
+		await page.mouse.up();
+		await wait(page);
+		assert(!await page.evaluate(() => window.editor.libraryWindow.flyoutOpen), 'A press outside closes the flyout');
+		await page.evaluate((id) => { window.editor.setTool(ToolType.SELECT); window.editor.layerManager.setActiveLayer(id); window.editor.pickers.toggleFlyout('Style'); }, textId);
+		await wait(page);
+		await page.locator('#flyoutClose').click();
+		await wait(page);
+		const afterClose = await layout();
+		assert(!afterClose.flyout, 'Close closes the flyout');
+		assert.deepEqual([afterClose.rect, afterClose.timeline], [closed.rect, closed.timeline], 'Open and close leave the canvas and timeline where they were');
+		console.log('PASS the desktop flyout floats beside the Inspector without moving the canvas or timeline; Esc, outside press and Close dismiss it');
+		// A fill arms the Library in the left dock: nothing on the right reflows.
+		const before = await layout();
+		const dockLayout = () => page.evaluate(() => ({
+			library: window.editor.libraryWindow.isOpen,
+			libraryShowing: document.getElementById('libraryWindow').getBoundingClientRect().height > 0,
+			layersShowing: document.getElementById('layersList').getBoundingClientRect().height > 0,
+			activeTab: document.querySelector('#layersPanel [data-dock-tab].active')?.dataset.dockTab,
+			dockRight: document.getElementById('layersPanel').getBoundingClientRect().right,
+			inspectorLeft: document.getElementById('designPanel').getBoundingClientRect().left,
+			flyoutRight: document.getElementById('flyoutWindow').getBoundingClientRect().right
+		}));
+		assert.equal((await dockLayout()).activeTab, 'layers', 'Layers is the left dock default');
 		await page.evaluate(() => window.editor.pickers.toggleFlyout('fill'));
 		await wait(page);
-		const after = await page.evaluate(() => ({ rect: window.editor.previewContainer.getBoundingClientRect().toJSON(), view: window.editor.viewport.captureViewState(), usable: window.editor.viewport.getUsableRect() }));
-		assert.deepEqual(after.rect, before.rect, 'Desktop Library must not resize the workspace');
-		assert.equal(after.view.zoom, before.view.zoom, 'Opening the Library keeps the zoom');
-		assert(Math.abs(after.view.focusX - before.view.focusX) < 1 && Math.abs(after.view.focusY - before.view.focusY) < 1, 'Opening the Library keeps the artwork centred in the room left');
-		const windowWidth = await page.locator('#libraryWindow').evaluate((node) => node.getBoundingClientRect().width);
-		assert(Math.abs(before.usable.width - after.usable.width - windowWidth) < 1, 'The open Library takes its width from the usable area');
-		assert.equal(before.rect.width, await page.locator('.main-content').evaluate((node) => node.clientWidth));
-		assert(await page.locator('#layersPanel').isVisible(), 'Library must retain Layers');
+		const after = await layout();
+		assert.deepEqual(after.rect, before.rect, 'Arming a glitter picker must not resize the canvas area');
+		assert.deepEqual(after.timeline, before.timeline, 'Arming a glitter picker must not resize the timeline');
+		assert.deepEqual(after.usable, before.usable, 'Arming a glitter picker leaves the usable rect alone');
+		const armed = await dockLayout();
+		assert(armed.library && armed.libraryShowing && !armed.layersShowing && armed.activeTab === 'library', 'An armed picker shows the Library tab in the left dock');
+		assert(armed.flyoutRight <= armed.inspectorLeft + 0.5 && armed.inspectorLeft - armed.flyoutRight < 40, 'The flyout stays against the Inspector edge while the Library is armed');
+		assert(await page.locator('#layersPanel #libraryWindow').count() === 1, 'The Library lives in the left dock');
+		assert(await page.locator('#layersPanel').isVisible(), 'The left dock stays');
 		await page.screenshot({ path: path.join(output, 'desktop-overlay.png') });
+		// Ending the pick restores Layers; a hidden left dock shows for the pick only.
+		await page.evaluate(() => { window.editor.pickers.flyout = null; window.editor.pickers.closeAll(); });
+		await wait(page);
+		assert.equal((await dockLayout()).activeTab, 'layers', 'Ending the pick restores the Layers tab');
+		assert.deepEqual((await layout()).rect, before.rect, 'Ending the pick leaves the canvas area alone');
+		await page.evaluate(() => setDockVisible('layers', false));
+		await wait(page);
+		assert(!await page.locator('#layersPanel').isVisible(), 'View hides the left dock');
+		await page.evaluate(() => window.editor.pickers.toggleFlyout('fill'));
+		await wait(page);
+		assert((await dockLayout()).libraryShowing && await page.locator('#layersPanel').isVisible(), 'A picker armed with the left dock hidden shows it for the pick');
+		await page.evaluate(() => { window.editor.pickers.flyout = null; window.editor.pickers.closeAll(); });
+		await wait(page);
+		assert(!await page.locator('#layersPanel').isVisible() && await page.evaluate(() => isDockVisible('layers')) === false, 'The dock hides again and the temporary show is not stored');
+		await page.evaluate(() => setDockVisible('layers', true));
+		// Browsing by hand: the Library tab with a kind chooser, no picker armed.
+		const tabsRect = () => page.evaluate(() => {
+			const shown = Array.from(document.querySelectorAll('#layersPanel .dock-tabs')).filter((node) => node.getBoundingClientRect().width > 0);
+			const r = shown[0].getBoundingClientRect();
+			return { count: shown.length, x: r.x, y: r.y, width: r.width, height: r.height };
+		});
+		const tabsBefore = await tabsRect();
+		assert.equal(tabsBefore.count, 1, 'One copy of the dock tabs shows');
+		await page.locator('#layersPanel .dock-tabs [data-dock-tab="library"]:visible').click();
+		await wait(page);
+		assert.deepEqual(await tabsRect(), tabsBefore, 'Switching to the Library leaves the tabs where they were');
+		const browsing = await dockLayout();
+		assert(browsing.libraryShowing && !browsing.layersShowing && browsing.library && !await page.evaluate(() => Boolean(window.editor.pickers.active)), 'The Library tab opens by hand without arming a picker');
+		await page.selectOption('#libraryBrowseKind', 'sticker');
+		await wait(page);
+		assert.equal(await page.evaluate(() => document.getElementById('designGallerySection').dataset.library), 'sticker', 'The kind chooser picks the browsed Library');
+		assert.deepEqual(await tabsRect(), tabsBefore, 'Switching the kind leaves the tabs where they were');
+		assert.deepEqual((await layout()).rect, before.rect, 'Browsing the Library leaves the canvas area alone');
+		// Free browsing: a press replaces on a sticker layer, and adds a sticker layer otherwise.
+		const freePress = (kind) => page.evaluate(async (which) => {
+			const library = which === 'sticker' ? editor.stickerLibrary : editor.glitterLibrary;
+			await library.selectItem(library.getAllContent()[0]);
+			return { count: editor.layerManager.layers.length, type: editor.layerManager.getActiveLayer()?.type };
+		}, kind);
+		await page.evaluate((id) => editor.layerManager.setActiveLayer(id), textId);
+		const layerCount = await page.evaluate(() => editor.layerManager.layers.length);
+		const added = await freePress('sticker');
+		assert(added.count === layerCount + 1 && added.type === 'sticker', 'A free-browse sticker press with a text layer selected adds a sticker layer');
+		const replaced = await freePress('sticker');
+		assert(replaced.count === added.count && replaced.type === 'sticker', 'With a sticker layer selected it replaces');
+		await page.evaluate((id) => editor.layerManager.setActiveLayer(id), textId);
+		const filled = await freePress('glitter');
+		assert(filled.count === replaced.count && filled.type === 'text-glitter', 'A free-browse glitter press on a text layer replaces its fill');
+		await page.locator('#layersPanel .dock-tabs [data-dock-tab="layers"]:visible').click();
+		await wait(page);
+		assert.deepEqual(await tabsRect(), tabsBefore, 'Returning to Layers leaves the tabs where they were');
+		assert.equal((await dockLayout()).activeTab, 'layers', 'The Layers tab returns by hand');
+		await page.evaluate(() => window.editor.pickers.toggleFlyout('fill'));
+		await wait(page);
 		if (css) {
-			const divider = page.locator('.library-split-handle');
 			assert(await page.evaluate(() => {
 				const rect = document.getElementById('viewMenu').getBoundingClientRect();
 				const workspace = document.getElementById('previewContainer').getBoundingClientRect();
@@ -246,30 +367,15 @@ async function main() {
 				return Math.abs(rect.x + rect.width / 2 - workspace.x - area.left - area.width / 2) < 1
 					&& getComputedStyle(viewButton).height === getComputedStyle(contextButton).height;
 			}), 'View menu shares the workspace center and context button scale');
-			assert(await divider.isVisible(), 'Both panes expose the divider');
-			const startHeight = await page.locator('#flyoutSection').evaluate((node) => node.getBoundingClientRect().height);
-			const bounds = await divider.boundingBox();
-			await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
-			await page.mouse.down();
-			await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + 80);
-			await page.mouse.up();
-			assert(await page.locator('#flyoutSection').evaluate((node) => node.getBoundingClientRect().height) > startHeight + 40, 'Dragging redistributes pane height');
-			await divider.focus();
-			await page.keyboard.press('Home');
-			assert.equal(await divider.getAttribute('aria-valuenow'), '50');
-			await page.keyboard.press('ArrowDown');
-			await page.locator('#textFillGradient').click();
+			await page.evaluate(() => document.getElementById('textFillGradient').click());
 			await wait(page);
-			assert.equal(await divider.getAttribute('aria-valuenow'), '52', 'Single pane retains the chosen split');
-			assert(await page.locator('#flyoutSection').evaluate((node) => node.getBoundingClientRect().height > node.parentElement.clientHeight * 0.9), 'A lone flyout fills the window');
-			assert(!await divider.isVisible(), 'Single pane hides its divider');
 			const presets = page.locator('[data-gradient-editor="textFill"][data-gradient-part="presets"]');
 			assert(await presets.evaluate((node) => node.classList.contains('is-collapsed')));
 			assert((await presets.boundingBox()).height < 50, 'Closed presets reserve only their title');
 			await presets.locator('[data-set-toggle]').click();
 			assert.equal(await presets.locator('.property-scrollbox').evaluate((node) => getComputedStyle(node).height), '232px', 'Gradient presets keep their fixed height');
 			await page.screenshot({ path: path.join(output, 'desktop-gradient-presets.png') });
-			console.log('PASS shared sheet shadow, pane scrolling, collapsible preset sizing and pointer/keyboard split resizing');
+			console.log('PASS shared sheet shadow, pane scrolling and collapsible preset sizing');
 		}
 		// Undo keeps the Library armed for the open section: the session is not
 		// ended and re-armed, so the Library is not revealed a second time.

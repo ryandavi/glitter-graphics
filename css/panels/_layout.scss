@@ -1,12 +1,5 @@
 @use '../mixins' as *;
 
-// The Layers column's sections collapse independently.
-.layers-panel > .section.collapsible-section:not(.is-open) {
-	flex: 0 0 auto;
-
-	> .layers-section-bottom-bar { display: none; }
-}
-
 .property-group .property-group-label { min-width: 0; }
 
 /* ===== APP STRUCTURE ===== */
@@ -288,24 +281,12 @@ body.no-document .app-header {
 	width: var(--toolbar-width);
 	min-width: var(--toolbar-compact-width);
 	background: var(--panel-bg);
-	-webkit-backdrop-filter: var(--panel-backdrop);
-	backdrop-filter: var(--panel-backdrop);
 	display: flex;
 	flex-direction: column;
 	padding: var(--spacing-sm);
 	gap: var(--spacing-sm);
 	flex-shrink: 0;
-	position: absolute;
-	top: 0;
-	bottom: 0;
-	left: 0;
 	z-index: var(--z-panel-elevated);
-
-	margin: var(--spacing-base);
-	margin-right: 0;
-	border: 1px solid var(--color-window-border);
-	border-radius: var(--radius-panel);
-	box-shadow: 0 2px 5px var(--color-shadow-strong);
 
 	// Short/split windows can make the rail taller than the viewport; scroll it
 	// rather than clipping the last tools (this replaces the shared
@@ -396,7 +377,12 @@ body.no-document .app-header {
 		}
 	}
 
-	.main-content > .layers-panel { margin-left: calc(var(--toolbar-width) + var(--spacing-base)); }
+	// The rail is the first dock of the row: flush, with one line on the edge
+	// it shares with the Layers dock. The phone's rail is a floating control.
+	.toolbar {
+		position: relative;
+		border-right: 1px solid var(--color-border);
+	}
 }
 
 /* ===== MAIN CONTENT ===== */
@@ -404,15 +390,14 @@ body.no-document .app-header {
 	display: flex;
 	flex: 1;
 	min-height: 0;
+	min-width: 0;
 	overflow: visible;
-	// Panels overlay the canvas; the toolbar still occupies its own rail.
 	position: relative;
 }
 
 // ===== Sidebar resize handles ==============================================
 
 .panel-resize-handle,
-.library-split-handle,
 .timeline-resize-handle,
 .timeline-label-handle {
 	pointer-events: auto;
@@ -459,46 +444,47 @@ body.no-document .app-header {
 	}
 }
 
-// A handle between two stacked regions: its own strip, with the grip and the
-// line lying along it.
-.library-split-handle,
+// A dock divider is its own handle: an invisible hit area centred on the 1px
+// border it shares with its neighbour, with an accent line while it is in use.
+.panel-resize-handle,
 .timeline-resize-handle {
-	--split-grip-width: var(--spacing-xl);
-	--split-grip-height: var(--spacing-2xs);
-	--split-line-width: 100%;
-	--split-line-height: var(--spacing-2xs);
-	position: relative;
-	flex: 0 0 var(--spacing-base);
-	cursor: row-resize;
+	--divider-offset: calc(var(--panel-handle-hit) / -2 - 0.5px);
+	position: absolute;
+	z-index: var(--z-panel-elevated);
+	opacity: 1;
+
+	&::before { display: none; }
 }
 
 .panel-resize-handle {
-	position: absolute;
-	// Stops at the margin around every panel, so the line is as tall as the
-	// panels beside it.
-	top: var(--spacing-base);
-	bottom: var(--spacing-base);
-	// The space between two panels is the panel's own padding on that side,
-	// so the handle covers exactly that and its line is centred in it.
-	width: var(--spacing-base);
-	z-index: var(--z-panel-elevated);
+	--split-line-width: var(--spacing-2xs);
+	--split-line-height: 100%;
+	top: 0;
+	bottom: 0;
+	width: var(--panel-handle-hit);
 	cursor: col-resize;
 
-	&.panel-resize-handle-start { left: 0; }
-	&.panel-resize-handle-end { right: 0; }
+	&.panel-resize-handle-start { left: var(--divider-offset); }
+	&.panel-resize-handle-end { right: var(--divider-offset); }
 
 	@include mobile { display: none; }
 }
 
-// The rail scrolls; its edge handle stays fixed beside it.
-.main-area > .panel-resize-handle {
-	left: calc(var(--toolbar-width) + var(--spacing-base));
-	right: auto;
+.timeline-resize-handle {
+	--split-line-width: 100%;
+	--split-line-height: var(--spacing-2xs);
+	top: var(--divider-offset);
+	left: 0;
+	right: 0;
+	height: var(--panel-handle-hit);
+	cursor: row-resize;
 }
 
-// With a section collapsed the column stops short of its handle, so the grip
-// would hang over the canvas. The handle itself still resizes the column.
-.has-collapsed-section > .panel-resize-handle::before { display: none; }
+// The rail scrolls; its edge handle stays fixed beside it.
+.main-area > .panel-resize-handle {
+	left: calc(var(--toolbar-width) + var(--divider-offset));
+	right: auto;
+}
 
 body.is-resizing-panel {
 	cursor: col-resize !important;

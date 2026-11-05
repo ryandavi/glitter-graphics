@@ -9,7 +9,6 @@
 	width: var(--layer-panel-width);
 	flex: 0 0 var(--layer-panel-width);
 	order: 0;
-	background: var(--color-bg-primary);
 	border-right: 1px solid var(--color-border);
 	display: flex;
 	flex-direction: column;
@@ -17,6 +16,25 @@
 	min-height: 0;
 	position: relative;
 	z-index: var(--z-panel-elevated);
+}
+
+// The left dock's tabs: Layers or the Library. Each dock header carries a copy
+// as its title (LibraryWindow), in the same place, so the control never moves
+// or resizes with the tab. The phone's sheets keep their titles and no tabs.
+.segmented-control.dock-tabs {
+	display: none;
+
+	// Sized by the words, not shared out: the base option rule splits the width.
+	> .segmented-option {
+		flex: 0 0 auto;
+		padding-inline: var(--spacing-md);
+	}
+}
+
+@media (min-width: ($mobile-breakpoint + 1px)) {
+	.segmented-control.dock-tabs { display: flex; flex: 0 0 auto; width: auto; }
+
+	.dock-tabs-header > .section-header-title > :is(.section-header-title-icon, .section-header-title-text) { display: none; }
 }
 
 .layers-section {
@@ -28,8 +46,6 @@
 	flex-direction: column;
 	overflow: hidden;
 	background: var(--panel-bg);
-	-webkit-backdrop-filter: var(--panel-backdrop);
-	backdrop-filter: var(--panel-backdrop);
 
 	> .section-header {
 		flex-shrink: 0;
@@ -47,12 +63,7 @@
 		overflow-y: auto;
 	}
 
-	&.collapsible-section > .section-content.layers-list { padding: 0; }
-
-	> .collapsible-section {
-		position: relative;
-		z-index: 100;
-	}
+	> .section-content.layers-list { padding: 0; }
 }
 
 .layer-item {
@@ -182,6 +193,8 @@ input.layer-name-input {
 	align-items: center;
 	justify-content: space-between;
 	gap: var(--spacing-base);
+	box-sizing: border-box;
+	height: var(--dock-header-height);
 	padding: var(--spacing-xs) var(--spacing-base);
 	border-top: 1px solid var(--color-border);
 

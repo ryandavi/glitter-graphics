@@ -1,7 +1,7 @@
 'use strict';
 
 // Desktop rail and sidebar resizing. Widths are driven by --toolbar-width,
-// --layer-panel-width, --glitter-panel-width and --library-window-width;
+// --layer-panel-width and --glitter-panel-width;
 // dragging a handle writes those properties on :root and persists the result.
 //
 // Only a user-chosen width is ever written. Untouched panels keep falling
@@ -21,13 +21,15 @@ const PANEL_RESIZE_STORAGE_KEY = STORAGE_KEYS.panelWidths.key;
 const PANEL_RESIZE_TARGETS = Object.freeze(Object.fromEntries(Object.entries({
 	toolbar: { variable: '--toolbar-width', selector: '.toolbar', handleHost: '.main-area', edge: 'end', label: 'Resize toolbar' },
 	layers: { variable: '--layer-panel-width', selector: '.layers-panel', edge: 'end', label: 'Resize Layers panel' },
-	inspector: { variable: '--glitter-panel-width', selector: '.inspector-panel', edge: 'start', label: 'Resize Inspector' },
-	library: { variable: '--library-window-width', selector: '.library-window', edge: 'start', label: 'Resize Library window' }
+	inspector: { variable: '--glitter-panel-width', selector: '.inspector-panel', edge: 'start', label: 'Resize Inspector' }
 }).map(([key, target]) => [key, { ...target, ...CONFIG.ui.panelResize.panels[key] }])));
 
-// The same store holds the Library window's section share under this key.
-const PANEL_SPLIT_STORAGE_FIELD = 'librarySplit';
 
+// The canvas keeps at least this much room (--canvas-min-width): panel drags stop
+// there, and the left dock floats over the canvas once the columns need more.
+function getCanvasMinWidth() {
+	return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--canvas-min-width')) || 0;
+}
 
 function readPanelWidths() {
 	return readStored(PANEL_RESIZE_STORAGE_KEY, {});
@@ -38,6 +40,7 @@ function writePanelWidths(widths) {
 }
 
 // A column's live width, or 0 while it is hidden or floats over the canvas.
+// The rail counts: it is the first column of the row.
 function getPanelFlowWidth(key) {
 	const panel = document.querySelector(PANEL_RESIZE_TARGETS[key].selector);
 	if (!panel) return 0;
@@ -52,24 +55,20 @@ function getPanelResizeMax(key) {
 	const otherWidth = Object.keys(PANEL_RESIZE_TARGETS)
 		.filter((name) => name !== key)
 		.reduce((total, name) => total + getPanelFlowWidth(name), 0);
-	const toolbar = document.querySelector('.toolbar');
-	const toolbarWidth = toolbar && key !== 'toolbar' ? toolbar.getBoundingClientRect().width : 0;
-	let available = window.innerWidth - otherWidth - toolbarWidth - CONFIG.ui.panelResize.minCanvas;
+	let available = window.innerWidth - otherWidth - getCanvasMinWidth();
 	if ((key === 'toolbar' || key === 'layers') && PREFERENCES.get('balanceSidebars')) {
-		const libraryWidth = getPanelFlowWidth('library');
-		const libraryFollows = libraryWidth > 0 && !document.documentElement.style.getPropertyValue(PANEL_RESIZE_TARGETS.library.variable);
-		const matchingColumns = Number(getPanelFlowWidth('inspector') > 0) + Number(libraryFollows);
-		const fixedWidth = libraryFollows ? 0 : libraryWidth;
+		const matchingColumns = Number(getPanelFlowWidth('inspector') > 0);
 		const leftLimit = Math.min(PANEL_RESIZE_TARGETS.inspector.max,
-			(window.innerWidth - fixedWidth - CONFIG.ui.panelResize.minCanvas) / (1 + matchingColumns));
+			(window.innerWidth - getCanvasMinWidth()) / (1 + matchingColumns));
 		available = leftLimit - (getSidebarLeftWidth() - getPanelWidth(key));
 	}
 	return Math.max(getPanelResizeMin(key), Math.min(config.max, Math.round(available)));
 }
 
+// A dock shown only for a pick (setDockPeek) is not part of the balance.
 function getSidebarLeftWidth() {
-	return getPanelWidth('toolbar') + getPanelWidth('layers')
-		+ parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--spacing-base'));
+	const peeking = document.querySelector(PANEL_RESIZE_TARGETS.layers.selector)?.classList.contains('is-dock-peeking');
+	return getPanelWidth('toolbar') + (peeking ? 0 : getPanelWidth('layers'));
 }
 
 function syncSidebarBalance() {
@@ -131,20 +130,6 @@ function resetPanelWidth(key) {
 	clearPanelWidth(key);
 	const widths = readPanelWidths();
 	delete widths[key];
-	writePanelWidths(widths);
-}
-
-// The share of the Library window its open section holds, or null while the
-// section fits its content.
-function readLibrarySplit() {
-	const share = readPanelWidths()[PANEL_SPLIT_STORAGE_FIELD];
-	return typeof share === 'number' ? share : null;
-}
-
-function writeLibrarySplit(share) {
-	const widths = readPanelWidths();
-	if (share === null) delete widths[PANEL_SPLIT_STORAGE_FIELD];
-	else widths[PANEL_SPLIT_STORAGE_FIELD] = share;
 	writePanelWidths(widths);
 }
 
@@ -307,6 +292,7 @@ function buildPanelResizeHandle(key) {
 
 function initializePanelResize(editor) {
 	if (document.querySelector('[data-panel-resize]')) return;
+	initializeDockVisibility();
 	const stored = readPanelWidths();
 	// Preserve an existing manually sized Inspector when introducing the preference.
 	if (typeof stored.inspector === 'number' && !Object.prototype.hasOwnProperty.call(PREFERENCES.values, 'balanceSidebars')) {
@@ -373,6 +359,7 @@ function initializePanelResize(editor) {
 		const panel = document.querySelector(PANEL_RESIZE_TARGETS[key].selector);
 		if (panel) balanceObserver.observe(panel);
 	});
+	initializeLeftDockOverlay(editor);
 
 	window.addEventListener('resize', () => {
 		if (window.innerWidth <= CONFIG.ui.mobile.breakpoint) return;
@@ -384,4 +371,176 @@ function initializePanelResize(editor) {
 		});
 		syncSidebarBalance();
 	});
+}
+
+// ===== Dock visibility =====
+// A dock hides rather than collapses: its room goes back to the canvas, which
+// is a flex child. Hidden Layers and Inspector docks persist next to the
+// widths; the Timeline keeps its own open state (`timelineOpen`). On the phone
+// the sheets own these surfaces and the stylesheet ignores the hidden class.
+const DOCK_TARGETS = Object.freeze({
+	layers: { selector: '#layersPanel', button: 'viewLayersToggle' },
+	inspector: { selector: '#designPanel', button: 'viewInspectorToggle' }
+});
+
+// What "hide all" took away, so the same command can put it back.
+let docksHiddenTogether = null;
+
+function isDockVisible(key) {
+	return readStored(STORAGE_KEYS.dockVisibility.key, {})[key] !== false;
+}
+
+// What the View toggle shows: in overlay mode the left dock is shown by the
+// overlay, not by the stored preference.
+function isDockShown(key) {
+	return key === 'layers' && leftDockOverlay.active ? isLeftDockOverlayShown() : isDockVisible(key);
+}
+
+function applyDockVisibility(key) {
+	const visible = isDockShown(key);
+	const overlay = key === 'layers' && leftDockOverlay.active;
+	document.querySelector(DOCK_TARGETS[key].selector)?.classList.toggle('is-dock-hidden', !overlay && !isDockVisible(key));
+	const button = document.getElementById(DOCK_TARGETS[key].button);
+	if (button) {
+		button.classList.toggle('active', visible);
+		button.setAttribute('aria-pressed', String(visible));
+	}
+}
+
+function setDockVisible(key, visible) {
+	const stored = readStored(STORAGE_KEYS.dockVisibility.key, {});
+	if (visible) delete stored[key];
+	else stored[key] = false;
+	writeStored(STORAGE_KEYS.dockVisibility.key, stored);
+	applyDockVisibility(key);
+	syncSidebarBalance();
+}
+
+// A dock hidden by View shows while a picker needs it, without storing that.
+function setDockPeek(key, peek) {
+	document.querySelector(DOCK_TARGETS[key].selector)?.classList.toggle('is-dock-peeking', peek);
+	if (key === 'layers') {
+		leftDockOverlay.peek = peek;
+		applyLeftDockOverlay();
+	}
+}
+
+function toggleDock(key) {
+	if (key === 'layers' && leftDockOverlay.active) setLeftDockOverlayOpen(!(leftDockOverlay.open || leftDockOverlay.pinned));
+	else setDockVisible(key, !isDockVisible(key));
+}
+
+function toggleAllDocks(editor) {
+	const timelineAvailable = isFeatureAvailable('timeline') && Boolean(editor.originalImage);
+	// The overlay is not a stored preference: hiding everything just closes it.
+	const keys = Object.keys(DOCK_TARGETS).filter((key) => !(key === 'layers' && leftDockOverlay.active));
+	if (docksHiddenTogether) {
+		const prior = docksHiddenTogether;
+		docksHiddenTogether = null;
+		Object.keys(DOCK_TARGETS).filter((key) => key in prior).forEach((key) => setDockVisible(key, prior[key]));
+		if (timelineAvailable && prior.timeline) PREFERENCES.set('timelineOpen', true);
+		return;
+	}
+	const prior = {
+		...Object.fromEntries(keys.map((key) => [key, isDockVisible(key)])),
+		timeline: timelineAvailable && PREFERENCES.get('timelineOpen')
+	};
+	if (!Object.values(prior).some(Boolean)) return;
+	docksHiddenTogether = prior;
+	keys.forEach((key) => setDockVisible(key, false));
+	setLeftDockOverlayOpen(false);
+	if (prior.timeline) PREFERENCES.set('timelineOpen', false);
+}
+
+function resetDockVisibility() {
+	docksHiddenTogether = null;
+	removeStored(STORAGE_KEYS.dockVisibility.key);
+	Object.keys(DOCK_TARGETS).forEach(applyDockVisibility);
+	syncSidebarBalance();
+}
+
+function initializeDockVisibility() {
+	Object.keys(DOCK_TARGETS).forEach(applyDockVisibility);
+}
+
+// ===== Compact-desktop overlay =====
+// Above the phone breakpoint, when the rail, the left dock and the Inspector
+// would leave the canvas under --canvas-min-width, the left dock floats over
+// the canvas from the rail's edge instead of taking a column, so the canvas and
+// the timeline keep one width. It is closed until the rail button opens it
+// (the Show Layers command); Esc or a press outside closes it unless pinned.
+// This state lives here for the session and never touches the stored Show
+// Layers preference, which applies again whenever the window is wide enough.
+// The mode is judged from the dock's configured width, not its position, so
+// opening it or switching modes cannot change the answer.
+const LEFT_DOCK_OVERLAY_KEEP_OPEN = '#layersPanel, #libraryWindow, #flyoutWindow, #toolbarLayersBtn, #viewLayersToggle, .app-menu-popover, .is-fixed-menu, .scroll-region-track, .modal, .tooltip';
+const leftDockOverlay = { active: false, open: false, pinned: false, peek: false };
+
+function isLeftDockOverlayShown() {
+	return leftDockOverlay.active && (leftDockOverlay.open || leftDockOverlay.pinned || leftDockOverlay.peek);
+}
+
+function wantsLeftDockOverlay() {
+	const dock = document.querySelector(DOCK_TARGETS.layers.selector);
+	const area = document.querySelector('.main-area');
+	if (!dock || !area || window.innerWidth <= CONFIG.ui.mobile.breakpoint) return false;
+	const columns = getPanelFlowWidth('toolbar') + getPanelFlowWidth('inspector') + parseFloat(getComputedStyle(dock).width);
+	return area.clientWidth - columns < getCanvasMinWidth();
+}
+
+function applyLeftDockOverlay() {
+	const dock = document.querySelector(DOCK_TARGETS.layers.selector);
+	if (!dock) return;
+	const { active, pinned } = leftDockOverlay;
+	const shown = isLeftDockOverlayShown();
+	dock.classList.toggle('is-dock-overlay', active);
+	dock.classList.toggle('is-dock-overlay-open', shown);
+	const rail = document.getElementById('toolbarLayersBtn');
+	if (rail) {
+		rail.hidden = !active;
+		rail.classList.toggle('active', shown);
+		rail.setAttribute('aria-pressed', String(shown));
+	}
+	document.querySelectorAll('.dock-pin').forEach((pin) => {
+		pin.hidden = !active;
+		pin.classList.toggle('active', pinned);
+		pin.setAttribute('aria-pressed', String(pinned));
+	});
+	applyDockVisibility('layers');
+}
+
+function syncLeftDockOverlay() {
+	leftDockOverlay.active = wantsLeftDockOverlay();
+	applyLeftDockOverlay();
+}
+
+function setLeftDockOverlayOpen(open) {
+	leftDockOverlay.open = open;
+	if (!open) leftDockOverlay.pinned = false;
+	applyLeftDockOverlay();
+}
+
+// Esc and outside presses: a pinned overlay, or one a picker is showing, stays.
+function closeLeftDockOverlay() {
+	const { active, open, pinned, peek } = leftDockOverlay;
+	if (!active || !open || pinned || peek) return false;
+	setLeftDockOverlayOpen(false);
+	return true;
+}
+
+function initializeLeftDockOverlay(editor) {
+	document.getElementById('toolbarLayersBtn')?.addEventListener('click', () => COMMANDS.layersToggle.run(editor));
+	document.getElementById('layersPanel')?.addEventListener('click', (event) => {
+		if (!event.target.closest('.dock-pin')) return;
+		leftDockOverlay.pinned = !leftDockOverlay.pinned;
+		if (leftDockOverlay.pinned) leftDockOverlay.open = true;
+		applyLeftDockOverlay();
+	});
+	document.addEventListener('pointerdown', (event) => {
+		if (event.target instanceof Element && !event.target.closest(LEFT_DOCK_OVERLAY_KEEP_OPEN)) closeLeftDockOverlay();
+	}, true);
+	const observer = new ResizeObserver(syncLeftDockOverlay);
+	['.main-area', '.toolbar', DOCK_TARGETS.layers.selector, DOCK_TARGETS.inspector.selector]
+		.forEach((selector) => { const node = document.querySelector(selector); if (node) observer.observe(node); });
+	syncLeftDockOverlay();
 }

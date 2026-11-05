@@ -1,6 +1,7 @@
 {
 	"liveSassCompile.settings.autoprefix": false,
 	"liveSassCompile.settings.generateMap": false,
+	"liveSassCompile.settings.excludeList": ["/**/node_modules/**", "/.vscode/**", "/.tmp/**"],
 	"highlight.regexes": {
 		"(\\{@[a-z0-9-]+(?:\\|[^{}\\r\\n]*)?\\}|\\{\\?[^{}\\r\\n]*\\}|\\{usenet:[^{}\\r\\n]*\\})": {
 			"filterFileRegex": "content[\\\\/]src[\\\\/].*\\.src\\.html$",

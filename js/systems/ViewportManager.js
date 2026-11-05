@@ -139,37 +139,26 @@ class ViewportManager {
 	}
 
 	// All view framing uses this policy; pointer coordinates remain relative to the physical preview.
+	// On the desktop the preview container is already the room the docks leave, so
+	// it is the rect; floating UI over it (flyouts, the compact-width dock overlay)
+	// never counts. The phone trims the bottom nav, sheet and keyboard instead.
 	getUsableRect() {
 		const rect = this.previewContainer.getBoundingClientRect();
 		let left = 0;
-		let right = rect.width;
 		let height = rect.height;
-		const mobile = this.editor?.mobileManager;
-		const isMobile = window.innerWidth <= CONFIG.ui.mobile.breakpoint;
-		const alignment = CONFIG.ui.canvasAlignment[isMobile ? 'mobile' : 'desktop'];
-		if (isMobile) {
+		if (window.innerWidth <= CONFIG.ui.mobile.breakpoint) {
+			const mobile = this.editor?.mobileManager;
 			const root = getComputedStyle(document.documentElement);
 			height -= document.querySelector('.mobile-bottom-nav')?.getBoundingClientRect().height || 0;
 			const inset = parseFloat(root.getPropertyValue('--spacing-sm')) || 0;
 			if (mobile?.activeDrawer) height -= window.innerHeight * mobile.sheetHeight / 100 + inset;
 			if (window.visualViewport) height = Math.min(height, window.visualViewport.offsetTop + window.visualViewport.height - rect.top);
-			if (alignment === 'workspace') {
+			if (CONFIG.ui.canvasAlignment.mobile === 'workspace') {
 				const rail = document.querySelector('.toolbar')?.getBoundingClientRect();
 				if (rail?.width) left = Math.max(0, rail.right - rect.left) + inset;
 			}
-		} else if (alignment === 'workspace') {
-			const layers = document.getElementById('layersPanel');
-			const inspector = document.getElementById('designPanel');
-			if (layers?.getClientRects().length) left = layers.getBoundingClientRect().right - rect.left;
-			if (inspector?.getClientRects().length) right = inspector.getBoundingClientRect().left - rect.left;
-			// The open Library window is a column like the other two (as the bar
-			// layout's sheet it is the drawer above instead).
-			const library = mobile?.isMobile ? null : document.getElementById('libraryWindow');
-			if (library?.classList?.contains('is-open') && library.getClientRects().length) right = Math.min(right, library.getBoundingClientRect().left - rect.left);
 		}
-		this.previewContainer.parentElement.style.setProperty('--canvas-inset-left', `${left}px`);
-		this.previewContainer.parentElement.style.setProperty('--canvas-inset-right', `${rect.width - right}px`);
-		return { left, top: 0, width: Math.max(1, right - left), height: Math.max(1, height) };
+		return { left, top: 0, width: Math.max(1, rect.width - left), height: Math.max(1, height) };
 	}
 
 	getOverlayRect() {

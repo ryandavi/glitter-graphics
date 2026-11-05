@@ -199,6 +199,13 @@ class FontBrowserManager extends ContentManager {
 		});
 	}
 
+	get libraryPlacement() {
+		return {
+			canReplace: (layer) => layer.type === LayerType.TEXT_GLITTER,
+			insert: (item) => createTextAt(this.editor, { fontId: item.id })
+		};
+	}
+
 	async handleItemClick(item) {
 		const layer = this.getTargetLayer();
 		if (!layer) {

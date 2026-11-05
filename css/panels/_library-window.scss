@@ -1,78 +1,79 @@
 @use '../mixins' as *;
 
-// The window: the column over the canvas, beside the Inspector, that shows
-// the open flyout section, and the Library while a picker is armed
-// (js/ui/library-window.js). It shares the Inspector's shell (.design-panel),
-// so both are styled by the same rules as in a panel. At phone width the
-// same window becomes a sheet.
-.library-window {
-	width: var(--library-window-width);
-	flex: 0 0 var(--library-window-width);
-	order: 2;
-}
+// Two windows share the flyout section (js/ui/library-window.js).
+//  - .flyout-window: on the desktop a floating panel over the canvas, placed
+//    by the script beside the Inspector at the row that opened it. It is out
+//    of the layout, so opening it never moves the canvas or the timeline.
+//  - .library-window: the Library. On the desktop it is the left dock's second
+//    tab, filling the dock in place of the layers; it shares the Inspector's
+//    shell (.design-panel). At phone width the flyout section moves into it
+//    and it becomes the sheet.
+@media (min-width: ($mobile-breakpoint + 1px)) {
+	.layers-panel > .library-window {
+		flex: 1 1 0;
+		border-left: 0;
+	}
 
-// The Inspector's own padding is the space between the two, so it matches
-// the space around every panel.
-.design-panel.inspector-panel { margin-left: auto; }
-.design-panel.library-window { padding-right: 0; }
+	.layers-panel.is-library-tab > .layers-section,
+	.layers-panel:not(.is-library-tab) > .library-window { display: none; }
+}
 
 .flyout-switch {
 	display: flex;
 	align-items: center;
 }
 
-// Closed, the column is gone. As the bar layout's sheet it stays in the
-// layout, out of sight, so it can slide in when it opens.
-body:not(.phone-bar) .main-content > .design-panel.library-window:not(.is-open) { display: none; }
+// ===== Flyout mode: the floating panel =====
 
-// The open flyout section takes its own height and scrolls past the column's.
-.library-window {
-	> .flyout-section {
+.flyout-window {
+	display: none;
+	flex-direction: column;
+	position: absolute;
+	top: var(--flyout-top, 0);
+	right: var(--flyout-right, 0);
+	width: var(--library-window-width);
+	max-height: var(--flyout-max-height, 100%);
+	margin: var(--spacing-md);
+	z-index: calc(var(--z-panel-elevated) + 1);
+	background: var(--panel-bg);
+	-webkit-backdrop-filter: var(--panel-backdrop);
+	backdrop-filter: var(--panel-backdrop);
+	border: 1px solid var(--color-window-border);
+	border-radius: var(--radius-panel);
+	box-shadow: 0 2px 5px var(--color-shadow-strong);
+	overflow: hidden;
+
+	&.is-open { display: flex; }
+
+	// The phone's flyout is the sheet's section, not this window.
+	@include mobile { display: none; }
+}
+
+// ===== The flyout section, in either window =====
+
+// The open flyout section takes its own height and scrolls past its window's.
+:is(.flyout-window, .library-window) > .flyout-section {
+	display: flex;
+	flex-direction: column;
+	flex: 0 1 auto;
+	min-height: 0;
+	background: var(--panel-bg);
+
+	> .section-header { border-bottom: unset; }
+
+	> .section-content {
 		display: flex;
 		flex-direction: column;
-		flex: 0 1 auto;
+		flex: 1 1 auto;
 		min-height: 0;
-		background: var(--panel-bg);
-		-webkit-backdrop-filter: var(--panel-backdrop);
-		backdrop-filter: var(--panel-backdrop);
-
-		> .section-header { border-bottom: unset; }
-
-		> .section-content {
-			flex: 1 1 auto;
-			min-height: 0;
-			overflow-y: auto;
-			overscroll-behavior: contain;
-		}
+		padding: 0;
+		overflow-y: auto;
+		overscroll-behavior: contain;
 	}
-
-	// Both panes open (.is-split, LibraryWindow.apply): the section takes its
-	// own height, short of the room the Library always keeps, and the Library
-	// takes the rest. Moving the divider (.has-chosen-split) holds the section
-	// at the share instead.
-	&.is-split > .flyout-section { max-height: var(--library-flyout-max, 80%); }
-	&.is-split.has-chosen-split > .flyout-section { flex: 0 0 var(--library-flyout-share, 50%); }
-	// Named as the open main section it is (panels/_panel-shell.scss), whose
-	// content-sized basis would grow with the grid and squeeze the section.
-	&.is-split > .section.main-section.design-gallery-section.is-open { flex: 1 1 0; }
-
-	// A pane collapses to its bar like the Inspector, and the other pane comes
-	// up to it.
-	> .flyout-section:not(.is-open) { flex: 0 0 auto; }
 
 	// Named as the bare property section it is, whose content rule
 	// (property/_sections.scss) would otherwise keep it showing.
-	> .section.property-section.flyout-section:not(.is-open) > .section-content { display: none; }
-
-	> .flyout-section > .section-header > .section-header-actions > .section-header-action.collapsed .icon { transform: rotate(-90deg); }
-}
-
-// Only sections whose primary content is a preset picker use the full pane.
-// Their tiles scroll with the pane, preserving the shared horizontal gutter.
-.library-window:not(.has-library) > .flyout-section.is-open { flex: 1 1 0; }
-
-.library-window > .flyout-section {
-	> .section-content { display: flex; flex-direction: column; }
+	&:not(.is-open) > .section-content { display: none; }
 
 	.flyout-host.has-flyout-open.has-preset-content,
 	.is-flyout-open.is-preset-content,
@@ -83,6 +84,8 @@ body:not(.phone-bar) .main-content > .design-panel.library-window:not(.is-open) 
 		flex-direction: column;
 	}
 
+	// Only sections whose primary content is a preset picker use the full pane.
+	// Their tiles scroll with the pane, preserving the shared horizontal gutter.
 	.is-flyout-open.is-preset-content > .property-card-body > .has-scrollbox > .property-scrollbox {
 		flex: 1 0 auto;
 		height: auto;
@@ -95,30 +98,23 @@ body:not(.phone-bar) .main-content > .design-panel.library-window:not(.is-open) 
 	}
 }
 
+// The glass is the window's; the section sits clear on it.
+.flyout-window > .flyout-section { background: none; }
+
+// The sheet's pane fills it when the Library isn't showing.
+.library-window:not(.has-library) > .flyout-section.is-open { flex: 1 1 0; }
+
 // The line under the section's bar, as under every panel's. The phone's sheet
 // draws it on the bar itself.
 @media (min-width: ($mobile-breakpoint + 1px)) {
-	.library-window > .flyout-section > .section-content { border-top: 1px solid var(--color-border); }
+	.flyout-window > .flyout-section > .section-content { border-top: 1px solid var(--color-border); }
 }
 
-.library-split-handle { display: none; }
-
-@media (min-width: ($mobile-breakpoint + 1px)) {
-	.library-window.is-split {
-		gap: 0;
-		> .library-split-handle { display: block; }
-	}
-
-	// The bar is the toggle.
-	.library-window > .flyout-section > .section-header {
-		cursor: pointer;
-		@include hover-states(true);
-	}
-}
+// ===== Library mode =====
 
 .library-back-action { display: none; }
 
-// Beside a section, the section's bar names the target and closes the window.
+// Beside a flyout section, the section's bar names the target and closes the pick.
 @media (min-width: ($mobile-breakpoint + 1px)) {
 	.library-window.has-flyout > .design-gallery-section .library-close-action { display: none; }
 }
@@ -131,16 +127,27 @@ body:not(.phone-bar) .main-content > .design-panel.library-window:not(.is-open) 
 	.library-window.has-back .library-back-action { display: inline-flex; }
 }
 
-// The Library's Close ends its armed pick.
-.design-gallery-section:not([data-picker-library]) .library-close-action { display: none; }
+// The kind bar names what the Library shows by hand, or what the armed pick
+// changes; the phone's sheet names it in its own bar.
+.library-kind-bar {
+	display: none;
+	align-items: center;
+	gap: var(--spacing-sm);
+	padding: var(--spacing-xs) var(--spacing-sm);
+	border-bottom: 1px solid var(--color-border);
 
-// Desktop Library sits beside the Inspector over the workspace; the view pans
-// to stay centred in the room left (LibraryWindow.apply).
-@media (min-width: ($mobile-breakpoint + 1px)) {
-	.main-content > .library-window {
-		position: absolute;
-		top: 0;
-		bottom: 0;
-		right: var(--glitter-panel-width);
+	@media (min-width: ($mobile-breakpoint + 1px)) { display: flex; }
+
+	> select { flex: 1 1 0; min-width: 0; }
+
+	> .library-kind-target {
+		@include truncate;
+		@include text-sm;
+		flex: 1 1 0;
+		min-width: 0;
+		color: var(--color-text-secondary);
 	}
 }
+
+// The Library's Close ends its armed pick.
+.design-gallery-section:not([data-picker-library]) .library-close-action { display: none; }

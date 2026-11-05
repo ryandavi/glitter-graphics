@@ -84,6 +84,7 @@ const ESCAPE_HANDLERS = Object.freeze([
 		return true;
 	} },
 	{ id: 'picker', handle: editor => editor.pickers.closeActive() },
+	{ id: 'dockOverlay', handle: () => closeLeftDockOverlay() },
 	{ id: 'drag', handle: editor => {
 		if (editor.keyRecording?.drag) { editor.keyRecording.finish(true); return true; }
 		if (editor.timelineDock?.keyLane.drag) { editor.timelineDock.keyLane.finish(true); return true; }

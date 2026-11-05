@@ -3,6 +3,7 @@
 const FEATURES = Object.freeze({
 	customMotion: Object.freeze({ stage: 'local' }),
 	timeline: Object.freeze({ stage: 'local', layouts: Object.freeze(['desktop']) }),
+	docks: Object.freeze({ stage: 'on', layouts: Object.freeze(['desktop']) }),
 	loopLength: Object.freeze({ stage: 'on' }),
 	gifCycle: Object.freeze({ stage: 'on' }),
 	history: Object.freeze({ stage: 'local' }),

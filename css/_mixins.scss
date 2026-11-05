@@ -401,19 +401,16 @@ $modal-compact-breakpoint: 600px;
 		@include hover-states($hover);
 
 	}
+}
 
-	&.collapsible-section {
-		>.section-header {
-			@include bar-base;
-
-			>.section-header-title {
-				color: var(--bar-title-color);
-			}
-
-			@include hover-states($hover);
-
-		}
-	}
+// A dock's header geometry, on top of its `windows7-bar` chrome: one fixed
+// height whether or not it holds actions, with a hairline beneath.
+@mixin dock-header {
+	box-sizing: border-box;
+	min-height: 0;
+	height: var(--dock-header-height);
+	padding: 0 var(--spacing-sm);
+	border-bottom: 1px solid var(--color-border);
 }
 
 // The dropdown surface of an `.app-menu`: anchored under its trigger, growing

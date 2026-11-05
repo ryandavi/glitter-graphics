@@ -28,7 +28,7 @@ const context = {
 	console,
 	CONFIG: {
 		ui: {
-			canvasAlignment: { desktop: 'workspace', mobile: 'page' },
+			canvasAlignment: { mobile: 'page' },
 			mobile: { breakpoint: 1040 },
 			zoom: { levels: [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16], pixelGridMinZoom: 6 },
 			gestures: { inertia: { enabled: false, decay: 0.92 } }
@@ -126,16 +126,17 @@ assert.strictEqual(viewport.currentZoom, 1.5, 'Atomic gesture transform did not 
 viewport.panBy(100000, 100000);
 assert(viewport.panX < 100000 && viewport.panY < 100000, 'Pan bounds allowed the canvas to disappear');
 
-// Unequal panel widths must not shift centering back to the full page.
-context.document.getElementById = id => ({
-	layersPanel: { getClientRects: () => [1], getBoundingClientRect: () => ({ right: 250 }) },
-	designPanel: { getClientRects: () => [1], getBoundingClientRect: () => ({ left: 850 }) }
-}[id] || null);
+// On the desktop the preview container is the room the docks leave, and the
+// usable rect is its own box: an offset, narrower container centers locally.
+const fullContainerRect = container.getBoundingClientRect;
+container.getBoundingClientRect = () => ({ left: 250, top: 0, width: 600, height: 800 });
+assert.strictEqual(viewport.getUsableRect().left, 0, 'Desktop usable area starts at the container edge');
+assert.strictEqual(viewport.getUsableRect().width, 600, 'Desktop usable area is the container width');
 for (const zoom of [0.5, 1, 4]) {
 	viewport.setZoom(zoom);
 	viewport.panY = 123;
 	viewport.centerHorizontal();
-	assert.strictEqual(viewport.panX + 400 * zoom / 2, 550, 'Horizontal center ignored the panel offset');
+	assert.strictEqual(viewport.panX + 400 * zoom / 2, 300, 'Horizontal center ignored the container width');
 	assert.strictEqual(viewport.panY, 123, 'Horizontal centering changed vertical pan');
 	const panX = viewport.panX;
 	viewport.centerVertical();
@@ -145,7 +146,7 @@ for (const zoom of [0.5, 1, 4]) {
 }
 for (const method of ['resetZoom', 'resetViewport', 'zoomToFit', 'zoomToFill']) {
 	viewport[method]();
-	assert.strictEqual(viewport.panX + 400 * viewport.currentZoom / 2, 550, `${method} ignored the panel offset`);
+	assert.strictEqual(viewport.panX + 400 * viewport.currentZoom / 2, 300, `${method} ignored the container width`);
 }
 viewport.setCanvasDimensions(700, 300);
 viewport.resetZoomSmart();
@@ -153,21 +154,18 @@ assert(viewport.currentZoom < 1, 'Smart reset used space hidden behind the panel
 viewport.setCanvasDimensions(400, 300);
 viewport.resetViewport();
 viewport.zoomIn();
-const buttonZoomCenter = canvasAt(550, 400);
+const buttonZoomCenter = canvasAt(300, 400);
 assert.strictEqual(buttonZoomCenter.x, 200, 'Button zoom anchored to the full preview instead of the usable center');
 assert.strictEqual(buttonZoomCenter.y, 150, 'Button zoom moved the center on Y');
 viewport.setZoom(2);
 viewport.panBy(100000, 100000);
-assert.strictEqual(viewport.panX, 730, 'Pan limit allowed the artwork to disappear behind the Inspector');
+assert.strictEqual(viewport.panX, 480, 'Pan limit allowed the artwork to leave the right edge');
 viewport.panBy(-100000, -100000);
-assert.strictEqual(viewport.panX, -430, 'Pan limit ignored the Layers edge');
-context.CONFIG.ui.canvasAlignment.desktop = 'page';
+assert.strictEqual(viewport.panX, -680, 'Pan limit ignored the left edge');
 viewport.resetViewport();
-assert.strictEqual(viewport.panX + 200, 500, 'Changing the shared policy did not change canvas centering');
-const pageOverlay = viewport.getOverlayRect();
-assert.strictEqual(pageOverlay.left + pageOverlay.width / 2, 500, 'Changing the shared policy did not change overlay centering');
-context.CONFIG.ui.canvasAlignment.desktop = 'workspace';
-context.document.getElementById = () => null;
+const deskOverlay = viewport.getOverlayRect();
+assert.strictEqual(deskOverlay.left + deskOverlay.width / 2, 300, 'Desktop overlays center on the container');
+container.getBoundingClientRect = fullContainerRect;
 
 const physicalRect = container.getBoundingClientRect;
 container.getBoundingClientRect = () => ({ left: 0, top: 50, width: 390, height: 794 });

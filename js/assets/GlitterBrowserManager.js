@@ -259,6 +259,27 @@ class GlitterBrowserManager extends ContentManager {
 		return true;
 	}
 
+	// Replace when the active layer has a glitter paint to take it, otherwise a
+	// new fill layer takes it in the same history step.
+	get libraryPlacement() {
+		return {
+			canReplace: (layer) => {
+				const picker = getLayerManagerForType(this.editor, layer.type)?.slotPicker;
+				return Boolean(picker?.getTarget(layer));
+			},
+			insert: async (item) => {
+				if (!this.editor.layerManager.addLayer(LayerType.GLITTER_FILL, { skipHistory: true })) return;
+				await this.selectGlitter(item.id);
+			}
+		};
+	}
+
+	// The recolor and Auto Glitter flows take the press themselves.
+	hasForeignSession() {
+		const auto = this.editor.autoGlitterManager;
+		return Boolean(this.editor.glitterRecolor?.pickerSession || auto?.hasActivePickerSession() || auto?.isSessionActive());
+	}
+
 	handleItemClick(item) {
 		return this.selectGlitter(item.id);
 	}

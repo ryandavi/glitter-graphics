@@ -1,5 +1,8 @@
 const COMMANDS = {
-	timelineToggle: { label: 'Timeline', group: 'View', feature: 'timeline', when: editor => Boolean(editor.originalImage), run: editor => editor.toggleTimeline() },
+	layersToggle: { label: 'Show Layers', group: 'View', feature: 'docks', run: () => toggleDock('layers') },
+	inspectorToggle: { label: 'Show Inspector', group: 'View', feature: 'docks', run: () => toggleDock('inspector') },
+	docksToggle: { label: 'Show or Hide All Panels', group: 'View', feature: 'docks', keys: ['mod+\\'], displayKey: 'Ctrl/Cmd + \\', run: editor => toggleAllDocks(editor) },
+	timelineToggle: { label: 'Show Timeline', group: 'View', feature: 'timeline', when: editor => Boolean(editor.originalImage), run: editor => editor.toggleTimeline() },
 	playbackToggle: { label: 'Play / Pause Motion', group: 'Animation', displayKey: 'Space (tap)', when: editor => editor.hasMotionForPlayback(), run: editor => editor.setPlayback(editor.animationTicker.paused) },
 	playheadStepBack: { label: 'Previous Frame', group: 'Animation', keys: [','], displayKey: ',', when: editor => editor.hasMotionForPlayback(), run: editor => editor.animationTicker.step(-1) },
 	playheadStepForward: { label: 'Next Frame', group: 'Animation', keys: ['.'], displayKey: '.', when: editor => editor.hasMotionForPlayback(), run: editor => editor.animationTicker.step(1) },

@@ -33,13 +33,23 @@ function syncLibraryTitle() {
 	const schema = getAssetBrowserSchema(document.getElementById('designGallerySection')?.dataset.library);
 	const title = document.getElementById('designGalleryTitleText');
 	if (schema && title) title.textContent = describePickerTarget(window.editor) || schema.title;
+	// The desktop's kind bar: the session's target (fixed by it) or the chooser.
+	const target = document.getElementById('libraryKindTarget');
+	const picking = Boolean(document.getElementById('designGallerySection')?.dataset.pickerLibrary);
+	if (target) {
+		target.textContent = (schema && title?.textContent) || '';
+		target.hidden = !picking;
+	}
+	const kind = document.getElementById('libraryBrowseKind');
+	if (kind) kind.hidden = picking;
 }
 
-// The armed session is the sole source for the Library kind.
+// The armed session is the Library's kind; browsing it by hand, the kind
+// chosen in the Library's kind bar (LibraryWindow.browseKind).
 function syncLibraryView() {
 	const section = document.getElementById('designGallerySection');
 	if (!section) return null;
-	const kind = section.dataset.pickerLibrary;
+	const kind = section.dataset.pickerLibrary || APP_BOOT.editor?.libraryWindow?.browseKind;
 	const schema = kind ? getAssetBrowserSchema(kind) : null;
 	if (schema) section.dataset.library = schema.prefix;
 	else delete section.dataset.library;

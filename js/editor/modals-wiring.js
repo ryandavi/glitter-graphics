@@ -223,12 +223,22 @@ updateOrientationButtons(width, height) {
 		const root = document.getElementById('viewMenu');
 		const trigger = document.getElementById('viewMenuBtn');
 		const panel = document.getElementById('viewMenuPanel');
-		if (isFeatureEnabled('timeline')) {
-			const timeline = buildIconButton({ className: 'btn-icon icon-wrapper', label: 'Timeline', icon: 'timeline', onClick: () => COMMANDS.timelineToggle.run(this) });
-			timeline.id = 'viewTimelineToggle'; timeline.dataset.feature = 'timeline'; timeline.dataset.layout = featureLayout('timeline');
-			timeline.setAttribute('aria-pressed', String(PREFERENCES.get('timelineOpen')));
-			timeline.append(buildElement('name', 'Timeline', 'span')); panel.append(timeline);
-		}
+		// The docks hide from here rather than collapse. Each toggle is its
+		// command's button; the Layers and Inspector pair keep their state with the
+		// dock (applyDockVisibility), the Timeline with its open preference.
+		[
+			{ id: 'viewLayersToggle', command: 'layersToggle', icon: 'layers', feature: 'docks', pressed: () => isDockVisible('layers') },
+			{ id: 'viewInspectorToggle', command: 'inspectorToggle', icon: 'sliders', feature: 'docks', pressed: () => isDockVisible('inspector') },
+			{ id: 'viewTimelineToggle', command: 'timelineToggle', icon: 'timeline', feature: 'timeline', pressed: () => PREFERENCES.get('timelineOpen') }
+		].filter(({ feature }) => isFeatureEnabled(feature)).forEach(({ id, command, icon, feature, pressed }) => {
+			const { label } = COMMANDS[command];
+			const button = buildIconButton({ className: 'btn-icon icon-wrapper', label, icon, onClick: () => COMMANDS[command].run(this) });
+			button.id = id; button.dataset.feature = feature; button.dataset.layout = featureLayout(feature);
+			button.setAttribute('aria-pressed', String(pressed()));
+			button.classList.toggle('active', pressed());
+			button.append(buildElement('name', label, 'span')); panel.append(button);
+		});
+		initializeDockVisibility();
 		const popover = setupMenuPopover({
 			root, trigger, panel,
 			liftHost: root?.closest('.preview-controls'),
