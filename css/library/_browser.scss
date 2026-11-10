@@ -202,14 +202,16 @@ body:not(.boot-library) #designGalleryContent > :not(.boot-library-loading) { di
 	}
 }
 
-// The picker row can stand taller than one control (its thumbnail), so the up
-// button takes the row's height and stays square.
-.asset-browser-rail-up {
-	flex: 0 0 auto;
-	align-self: stretch;
-	height: auto;
-	width: auto;
-	aspect-ratio: 1;
+// Up is the standard square icon button beside its field.
+.asset-browser-rail-up { flex: 0 0 auto; }
+
+// A select whose rows carry a thumbnail is exactly one control tall, with or
+// without one, so the bar never changes height as the choice changes.
+.asset-browser-rail > select,
+.preview-select {
+	height: var(--control-height);
+	padding-block: 0;
+	padding-left: var(--spacing-sm);
 }
 
 // Where the browser has the customizable select, each row is thumbnail, name

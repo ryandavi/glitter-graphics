@@ -80,10 +80,15 @@ class TimelineDock {
 		this.hoverGuide = buildElement('timeline-hover-guide'); this.hoverGuide.hidden = true;
 		this.hoverTime = buildElement('timeline-playhead-time badge'); this.hoverGuide.appendChild(this.hoverTime);
 		this.labelHandle = buildElement('timeline-label-handle');
+		// The loop's end, a full-height divider like the label column's: it
+		// drags the loop length wherever no bar sits under it.
+		this.loopLine = buildElement('timeline-loop-line'); this.loopLine.hidden = true;
+		this.loopLine.dataset.drag = 'loop';
+		this.loopLine.title = 'Drag to set loop length; double-click for Automatic';
 		this.stage = buildElement('timeline-stage');
 		// Where a drag snapped, drawn like the playhead.
 		this.snapGuide = buildElement('timeline-snap-guide'); this.snapGuide.hidden = true;
-		this.stage.append(this.ruler, this.body, this.playhead, this.hoverGuide, this.snapGuide, this.labelHandle);
+		this.stage.append(this.ruler, this.body, this.playhead, this.hoverGuide, this.snapGuide, this.labelHandle, this.loopLine);
 		const section = buildElement('timeline-section section dock-section');
 		section.append(this.header, this.stage);
 		host.replaceChildren(this.resizeHandle, section);
@@ -382,8 +387,17 @@ class TimelineDock {
 	syncScroll(paintPlayhead = true) {
 		if (!this.rulerTrack) return;
 		this.rulerTrack.style.transform = `translateX(${-this.body.scrollLeft}px)`;
+		this.syncLoopLine();
 		this.paintRuler();
 		if (paintPlayhead) this.paintPlayhead(this.editor.animationTicker.getPlayheadTime());
+	}
+
+	// Follows the rows' sideways scroll; shown only over the track column.
+	syncLoopLine(loopX = this.loopX) {
+		const x = loopX - this.body.scrollLeft;
+		const timed = this.model?.loopMs > 0 && this.hasRows && this.hasTimedRows;
+		this.loopLine.hidden = !timed || !this.rulerTrack?.isConnected || this.ruler.hidden || !(x >= 0 && x <= this.viewWidth);
+		this.stage.style.setProperty('--timeline-loop-view-x', `${x}px`);
 	}
 
 	scrollToTimeX(left) {
@@ -677,6 +691,7 @@ class TimelineDock {
 		this.playhead.hidden = true;
 		this.snapGuide.hidden = true;
 		this.labelHandle.hidden = true;
+		this.loopLine.hidden = true;
 		this.frameIndex = null;
 		this.time.textContent = ''; this.displayTime = null;
 		this.rowNodesByKey.clear();
@@ -1303,8 +1318,14 @@ class TimelineDock {
 			threshold: this.config.dragThresholdPx, axis: 'x', clickHost: this.host,
 			start: event => {
 				if (!this.available || this.drag) return false;
-				const target = event.target.closest('[data-drag]');
+				let target = event.target.closest('[data-drag]');
 				if (!target) return false;
+				// A bar under the loop line keeps its own grips and body.
+				if (target === this.loopLine) {
+					const under = document.elementsFromPoint(event.clientX, event.clientY)
+						.find(node => node !== target && node.closest('.timeline-bar'));
+					if (under) target = under.closest('[data-drag]') ?? target;
+				}
 				this.keyRecording.end();
 				const node = target.closest('.timeline-row');
 				const row = this.rowFor(node);
@@ -1363,7 +1384,7 @@ class TimelineDock {
 			event.preventDefault(); event.stopPropagation(); this.frameView.invalidate();
 		};
 		this.stage.addEventListener('dblclick', event => {
-			if (event.target.closest('.timeline-loop-end') && this.available) this.editor.setDocumentLoop(CONFIG.project.loop);
+			if (event.target.closest('.timeline-loop-end, .timeline-loop-line') && this.available) this.editor.setDocumentLoop(CONFIG.project.loop);
 		});
 	}
 
@@ -1488,7 +1509,9 @@ class TimelineDock {
 		}
 		if (kind === 'loop') {
 			edge = this.editor.documentLoop.durationMs;
-			this.stage.style.setProperty('--timeline-loop-x', `${TimelineView.timeToX(edge, this.scale)}px`);
+			const loopX = TimelineView.timeToX(edge, this.scale);
+			this.stage.style.setProperty('--timeline-loop-x', `${loopX}px`);
+			this.syncLoopLine(loopX);
 			anchor = this.ruler;
 		} else {
 			const row = { ...drag.row };
@@ -1734,7 +1757,8 @@ class TimelineDock {
 		this.scale = zoom === 'fit' ? this.fitScale : Math.max(this.fitScale, zoom);
 		this.trackWidth = TimelineView.timeToX(loopMs * (1 + this.nextLoopShare), this.scale) + gutter;
 		this.stage.style.setProperty('--timeline-track-width', `${this.trackWidth}px`);
-		this.stage.style.setProperty('--timeline-loop-x', `${TimelineView.timeToX(loopMs, this.scale)}px`);
+		this.loopX = TimelineView.timeToX(loopMs, this.scale);
+		this.stage.style.setProperty('--timeline-loop-x', `${this.loopX}px`);
 	}
 
 	layoutRow(node, row, { drawing = row } = {}) {

@@ -47,9 +47,8 @@
 	flex-direction: column;
 	min-width: 0;
 
-	// One hairline for every row, quieter than a panel's border. A bar takes
-	// its hue from what it is: a file's own frames, or something computed.
-	--timeline-line: color-mix(in srgb, var(--color-border) 60%, transparent);
+	// A bar takes its hue from what it is: a file's own frames, or something
+	// computed.
 	--timeline-row-bg: color-mix(in srgb, var(--color-bg-secondary) 40%, var(--color-bg-primary));
 	--timeline-bar-inset: var(--spacing-xs);
 	--timeline-hue-authored: var(--color-timeline-authored);
@@ -216,6 +215,19 @@
 		cursor: col-resize;
 	}
 
+	// The loop's end: the same divider as the label column's, full height,
+	// following the rows' sideways scroll (--timeline-loop-view-x). A bar
+	// under it keeps its own grips (TimelineDock.bindGestures).
+	.timeline-loop-line {
+		position: absolute;
+		inset: 0 auto 0 calc(var(--timeline-label-column) + var(--timeline-loop-view-x, 0px) - var(--panel-handle-hit) / 2);
+		z-index: var(--timeline-z-handle);
+		width: var(--panel-handle-hit);
+		cursor: ew-resize;
+		// The resting line, matching the label column's.
+		background: linear-gradient(var(--color-border), var(--color-border)) no-repeat center / 1px 100%;
+	}
+
 	.timeline-row, .timeline-group-header {
 		display: grid;
 		grid-template-columns: var(--timeline-columns);
@@ -248,7 +260,6 @@
 		display: flex;
 		align-items: center;
 		gap: var(--spacing-xs);
-		border-left: 1px solid var(--color-text-tertiary);
 		padding-left: var(--spacing-sm);
 		font-size: var(--font-size-xs);
 		font-variant-numeric: tabular-nums;
@@ -257,7 +268,7 @@
 		cursor: ew-resize;
 		touch-action: none;
 
-		&:hover { border-left-color: var(--color-accent); color: var(--color-text-primary); }
+		&:hover { color: var(--color-text-primary); }
 	}
 
 	// A temporary preview range: a band under the ticks with an edge grip at
@@ -403,12 +414,12 @@
 		height: var(--timeline-row-height);
 		&.timeline-group-track { height: auto; align-self: stretch; }
 		overflow: hidden;
-		// Past the loop's end: the line, and the next pass set back behind it.
+		// Past the loop's end: the next pass set back. The line itself is
+		// .timeline-loop-line, one divider over the whole stage.
 		&::after {
 			content: '';
 			position: absolute;
 			inset: 0 0 0 var(--timeline-loop-x);
-			border-left: 1px solid var(--timeline-line);
 			background: color-mix(in srgb, var(--color-bg-primary) 60%, transparent);
 			pointer-events: none;
 		}

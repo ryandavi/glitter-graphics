@@ -88,4 +88,8 @@
 	flex: 0 0 var(--glitter-panel-width);
 	order: 3;
 	border-left: 1px solid var(--color-border);
+
+	// Its resize handle hangs half outside its edge, so the column must not
+	// clip; its sections (overflow: hidden) carry the clipping instead.
+	@include desktop { overflow: visible; }
 }

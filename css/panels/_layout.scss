@@ -397,19 +397,25 @@ body.no-document .app-header {
 
 // ===== Sidebar resize handles ==============================================
 
+// Every divider looks and behaves the same: a hit area wider than the line it
+// sits on, a quiet grip at rest (a rounded bar a little wider than the line),
+// and on hover, focus or drag the accent line along its full length with the
+// grip in accent over it. The drag itself is bindSizeHandle (js/ui/panel-resize.js).
+// A vertical divider is the default; a horizontal one swaps the sizes.
 .panel-resize-handle,
 .timeline-resize-handle,
-.timeline-label-handle {
+.timeline-label-handle,
+.timeline-loop-line {
+	--split-line-width: var(--spacing-2xs);
+	--split-line-height: 100%;
+	--split-grip-width: var(--spacing-xs);
+	--split-grip-height: var(--spacing-xl);
 	pointer-events: auto;
 	touch-action: none;
 	background: transparent;
 	outline: none;
-	// Quiet until it is being dragged.
-	opacity: 0.5;
-	transition: opacity var(--transition-fast);
 
-	&.is-dragging { opacity: 1; }
-
+	// The line, then the grip over it.
 	&::before,
 	&::after {
 		content: '';
@@ -417,48 +423,43 @@ body.no-document .app-header {
 		top: 50%;
 		left: 50%;
 		transform: translate(-50%, -50%);
-		border-radius: var(--radius-xs);
+		border-radius: var(--radius-pill);
 		pointer-events: none;
 		transition: opacity var(--transition-fast), background-color var(--transition-fast);
 	}
 
 	&::before {
-		width: var(--split-grip-width, var(--spacing-2xs));
-		height: var(--split-grip-height, var(--spacing-xl));
-		background: var(--color-text-tertiary);
-		opacity: 0.55;
+		width: var(--split-line-width);
+		height: var(--split-line-height);
+		background: var(--color-accent);
+		opacity: 0;
 	}
 
 	&::after {
-		width: var(--split-line-width, var(--spacing-2xs));
-		height: var(--split-line-height, 100%);
-		background: var(--color-accent);
-		opacity: 0;
+		width: var(--split-grip-width);
+		height: var(--split-grip-height);
+		background: var(--color-text-tertiary);
+		opacity: var(--opacity-muted);
 	}
 
 	&:hover,
 	&:focus-visible,
 	&.is-dragging {
-		&::before { background: var(--color-accent); opacity: 1; }
-		&::after { opacity: 0.7; }
+		&::before { opacity: 1; }
+		&::after { background: var(--color-accent); opacity: 1; }
 	}
 }
 
-// A dock divider is its own handle: an invisible hit area centred on the 1px
-// border it shares with its neighbour, with an accent line while it is in use.
+// A dock divider centres its hit area on the 1px border it shares with its
+// neighbour.
 .panel-resize-handle,
 .timeline-resize-handle {
 	--divider-offset: calc(var(--panel-handle-hit) / -2 - 0.5px);
 	position: absolute;
 	z-index: var(--z-panel-elevated);
-	opacity: 1;
-
-	&::before { display: none; }
 }
 
 .panel-resize-handle {
-	--split-line-width: var(--spacing-2xs);
-	--split-line-height: 100%;
 	top: 0;
 	bottom: 0;
 	width: var(--panel-handle-hit);
@@ -473,6 +474,8 @@ body.no-document .app-header {
 .timeline-resize-handle {
 	--split-line-width: 100%;
 	--split-line-height: var(--spacing-2xs);
+	--split-grip-width: var(--spacing-xl);
+	--split-grip-height: var(--spacing-xs);
 	top: var(--divider-offset);
 	left: 0;
 	right: 0;
