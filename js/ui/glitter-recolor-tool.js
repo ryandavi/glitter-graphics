@@ -159,6 +159,13 @@ class GlitterRecolorController {
 		const button = document.getElementById('recolorGlitterBtn');
 		button.addEventListener('click', () => COMMANDS.recolorGlitter.run(this.editor));
 		this.libraryButton = button;
+		// The pick ends from its own button or a press outside the Library.
+		document.addEventListener('pointerdown', (event) => {
+			if (!this.pickerSession) return;
+			const target = event.target;
+			if (!(target instanceof Element) || target.closest('#libraryWindow')) return;
+			this.closePickerSession();
+		}, true);
 		const header = this.library.browser.setHeader;
 		const render = header.render.bind(header);
 		header.render = (category, items) => {
@@ -191,7 +198,7 @@ class GlitterRecolorController {
 					: null;
 				this.editor.pickers.closeAll();
 				this.previousPicker = previousPicker;
-				pickerOpenSession(this, { kind: 'asset', label: 'Pick a glitter to recolor' });
+				pickerOpenSession(this, { kind: 'asset', label: 'Pick a glitter to recolor', ownExit: true });
 				this.libraryButton.setAttribute('aria-pressed', 'true');
 				this.libraryButton.classList.add('active');
 				this.library.updateRecolorAvailability();

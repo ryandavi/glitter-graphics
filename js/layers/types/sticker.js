@@ -141,6 +141,7 @@ registerLayerType(LayerType.STICKER, {
 		icon: 'sticker',
 		group: 'layers',
 		order: 1,
+		keywords: 'image picture gif graphic upload',
 		description: 'Place an image or animated graphic',
 		quickAddId: 'quickActionAddSticker',
 		quickAddOrder: 1

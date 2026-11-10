@@ -1,78 +1,133 @@
 const LAYER_PANEL_METHODS = {
 setupLayerTypePickerListeners() {
-		const optionsContainer = document.querySelector('#layerTypePickerModal .layer-type-options');
-		if (!optionsContainer) return;
+		const modal = document.getElementById('layerTypePickerModal');
+		const container = modal?.querySelector('.layer-type-options');
+		if (!container) return;
 
-		this.renderAddMenu(optionsContainer);
-
-		optionsContainer.addEventListener('click', async (event) => {
+		this.renderAddMenu(container);
+		GlitterPresetLibrary.bindPickerNavigation(container, '.layer-type-option');
+		container.addEventListener('click', (event) => {
 			const button = event.target.closest('.layer-type-option');
-			if (!button) return;
-
+			if (!button || button.disabled) return;
 			this.modalManager.close('layerTypePickerModal');
-			if (button.dataset.addKind === 'command') {
-				const command = ADD_MENU_COMMANDS.find((entry) => entry.id === button.dataset.addId);
-				requestAnimationFrame(() => command?.run(this));
-				return;
-			}
-			if (button.dataset.addKind === 'template') {
-				requestAnimationFrame(() => this.templateManager?.previewOverlay(button.dataset.addId));
-				return;
-			}
-			requestAnimationFrame(() => {
-				this.createLayerByType(button.dataset.layerType, button._createOptions);
-			});
+			// After the modal has handed focus back.
+			requestAnimationFrame(() => this.runAddEntry(button));
+		});
+
+		// The search field leads into the cards: Down moves to the first match,
+		// Enter adds it.
+		const search = document.getElementById('addMenuSearch');
+		search?.addEventListener('keydown', (event) => {
+			if (event.key !== 'ArrowDown' && event.key !== 'Enter') return;
+			const first = [...container.querySelectorAll('.layer-type-option')]
+				.find((option) => option.getClientRects().length && !option.disabled);
+			if (!first) return;
+			event.preventDefault();
+			if (event.key === 'ArrowDown') first.focus();
+			else if (search.value.trim()) first.click();
 		});
 	},
 
-	createAddMenuButton(entry) {
+	// What the Add menu opens to: availability from the current document, the
+	// spot new layers go, and an empty search.
+	syncAddMenu() {
+		const modal = document.getElementById('layerTypePickerModal');
+		if (!modal) return;
+		modal.querySelectorAll('.layer-type-option[data-add-kind="command"]').forEach((button) => {
+			const command = ADD_MENU_COMMANDS.find((entry) => entry.id === button.dataset.addId);
+			this.syncAddEntryAvailability(button, command?.availability?.(this));
+		});
+		const note = document.getElementById('addMenuPlacement');
+		if (note) {
+			const gate = this.layerManager.canAddLayers();
+			const active = this.layerManager.getLayerById(this.activeLayerId);
+			note.textContent = !gate.ok ? gate.reason
+				: active ? `New layers go above ${describeLayer(active, this).name}.`
+				: 'New layers go on top.';
+			note.classList.toggle('is-warning', !gate.ok);
+		}
+		this.addMenuFilter?.reset();
+	},
+
+	syncAddEntryAvailability(button, availability) {
+		const available = availability?.available !== false;
+		const detail = button.querySelector('.layer-type-description');
+		button.disabled = !available;
+		button.title = available ? '' : availability.message;
+		if (detail) detail.textContent = available ? button.dataset.description : availability.message;
+	},
+
+	// One card for an Add entry (getAddMenuEntries), used by the Add menu and
+	// by Quick add. `layout` is the group's card form (ADD_MENU_GROUPS).
+	createAddEntryButton(entry, { layout = 'tiles', id = null, iconSizeClass = 'xl' } = {}) {
 		const button = tplClone('tpl-layer-type-option');
-		if (!ADD_MENU_GROUPS.find((group) => group.id === entry.group)?.primary) button.classList.add('is-horizontal');
+		if (id) button.id = id;
+		if (layout === 'list') button.classList.add('is-horizontal');
 		button.dataset.addKind = entry.kind;
 		button.dataset.addId = entry.id;
+		button.dataset.description = entry.description || '';
+		button.dataset.searchAliases = entry.keywords || '';
 		if (entry.type) button.dataset.layerType = entry.type;
-		button.querySelector('.layer-type-icon').classList.add('xl');
-		button.querySelector('use').setAttribute('href', `#icon-${entry.icon}`);
-		button.querySelector('.layer-type-name').textContent = entry.label;
-		button.querySelector('.layer-type-description').textContent = entry.description;
+		if (entry.phoneChip === false) button.dataset.phoneChip = 'false';
 		button._createOptions = entry.createOptions || null;
+
+		const media = button.querySelector('.layer-type-icon');
+		if (layout === 'previews' && entry.sample) {
+			media.replaceWith(buildAddEntrySample(entry.sample));
+		} else {
+			if (iconSizeClass) media.classList.add(iconSizeClass);
+			button.querySelector('use').setAttribute('href', `#icon-${entry.icon}`);
+		}
+		button.querySelector('.layer-type-name').textContent = entry.label;
+		button.querySelector('.layer-type-description').textContent = entry.description || '';
 		return button;
 	},
 
-	async renderAddMenu(container) {
-		const staticEntries = getAddMenuEntries();
-		let templateEntries = [];
-		try {
-			templateEntries = (await TemplateLibrary.list('overlay')).map((template, index) => ({
-				kind: 'template',
-				id: template.id,
-				group: template.group,
-				order: 10 + index,
-				label: template.label,
-				icon: template.icon || 'image',
-				description: template.description
-			}));
-		} catch (error) {
-			console.warn('Templates unavailable:', error);
+	// What a card does, wherever it is shown.
+	runAddEntry(button) {
+		const kind = button.dataset.addKind;
+		if (kind === 'command') {
+			ADD_MENU_COMMANDS.find((entry) => entry.id === button.dataset.addId)?.run(this);
+		} else if (kind === 'template') {
+			this.templateManager?.previewOverlay(button.dataset.addId);
+		} else {
+			this.createLayerByType(button.dataset.layerType, button._createOptions);
 		}
-		const entries = [...staticEntries, ...templateEntries];
+	},
+
+	async renderAddMenu(container) {
+		const entries = await listAddMenuEntries();
 		container.replaceChildren();
 		container.classList.add('add-menu-groups');
 		ADD_MENU_GROUPS.forEach((group) => {
 			const groupEntries = entries.filter((entry) => entry.group === group.id);
 			if (!groupEntries.length) return;
 			const section = document.createElement('section');
-			section.className = 'add-menu-group';
+			section.className = `add-menu-group is-${group.layout}`;
 			section.dataset.addGroup = group.id;
 			const title = document.createElement('h3');
 			title.className = 'add-menu-group-title';
 			title.textContent = group.label;
 			const grid = document.createElement('div');
 			grid.className = 'layer-type-options';
-			groupEntries.forEach((entry) => grid.appendChild(this.createAddMenuButton(entry)));
+			groupEntries.forEach((entry) => grid.appendChild(this.createAddEntryButton(entry, { layout: group.layout })));
 			section.append(title, grid);
 			container.appendChild(section);
 		});
+		this.addMenuFilter ??= createModalFilter({
+			root: '#layerTypePickerModal',
+			inputSelector: '#addMenuSearch',
+			clearSelector: '[data-modal-filter-clear]',
+			statusSelector: '#addMenuSearchStatus',
+			emptySelector: '#addMenuSearchEmpty',
+			itemSelector: '.layer-type-option',
+			groupSelector: '.add-menu-group',
+			groupTitleSelector: '.add-menu-group-title',
+			singularLabel: 'result',
+			pluralLabel: 'results'
+		});
+		this.addMenuFilter?.refresh();
+		if (document.getElementById('layerTypePickerModal')?.classList.contains('visible')) this.syncAddMenu();
 	},
 
 	createLayerByType(layerType, createOptions = null) {
@@ -91,46 +146,6 @@ setupLayerTypePickerListeners() {
 			// After the creation flow has settled on its tool and panel.
 			requestAnimationFrame(() => this.openCreateTarget(layer));
 		}
-	},
-
-	createLayerTypeOptionButton(type, { iconSizeClass = 'xl', id = null, entry = null } = {}) {
-		const modalConfig = LAYER_UI_CONFIG[type]?.addableViaModal;
-		if (!modalConfig) return null;
-
-		const button = tplClone('tpl-layer-type-option');
-		button.dataset.layerType = type;
-		if (id) {
-			button.id = id;
-		}
-		button.querySelector('.layer-type-icon').classList.add(iconSizeClass);
-		button.querySelector('use').setAttribute('href', `#icon-${entry?.icon || modalConfig.icon}`);
-		button.querySelector('.layer-type-name').textContent = entry?.label || modalConfig.label;
-		button.querySelector('.layer-type-description').textContent = entry?.description || modalConfig.description;
-		button._createOptions = entry?.createOptions || null;
-		if (entry?.phoneChip === false) button.dataset.phoneChip = 'false';
-		return button;
-	},
-
-	renderLayerTypePickerOptions(container, options = {}) {
-		container.innerHTML = '';
-		const iconSizeClass = options.iconSizeClass || 'xl';
-		if (options.entries) {
-			options.entries.forEach((entry) => {
-				const button = this.createLayerTypeOptionButton(entry.type, { iconSizeClass, id: entry.id, entry });
-				if (button) container.appendChild(button);
-			});
-			return;
-		}
-		const idMap = options.idMap || {};
-		const layerTypes = options.layerTypes || getAddableLayerTypes();
-
-		layerTypes.forEach((type) => {
-			const id = idMap[type] || null;
-			const button = this.createLayerTypeOptionButton(type, { iconSizeClass, id });
-			if (button) {
-				container.appendChild(button);
-			}
-		});
 	},
 
 	setupStickerUploadModalListeners() {
@@ -289,16 +304,12 @@ setupLayerTypePickerListeners() {
 
 		const quickAddOptions = document.getElementById('quickAddOptions');
 		if (quickAddOptions) {
-			const quickAddEntries = getQuickAddLayerEntries();
-			this.renderLayerTypePickerOptions(quickAddOptions, {
-				iconSizeClass: '',
-				entries: quickAddEntries
-			});
+			quickAddOptions.replaceChildren(...getQuickAddLayerEntries()
+				.map((entry) => this.createAddEntryButton(entry, { id: entry.quickAddId, iconSizeClass: '' })));
 
 			quickAddOptions.addEventListener('click', (event) => {
 				const button = event.target.closest('.layer-type-option');
-				if (!button) return;
-				this.createLayerByType(button.dataset.layerType, button._createOptions);
+				if (button) this.runAddEntry(button);
 			});
 		}
 

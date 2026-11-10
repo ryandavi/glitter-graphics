@@ -216,7 +216,8 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 		label: 'Text',
 		icon: 'text',
 		group: 'layers',
-		order: 4,
+		order: 3,
+		keywords: 'type words font caption',
 		description: 'Add editable text with glitter, color, or a gradient',
 		quickAddId: 'quickActionAddText',
 		quickAddOrder: 4

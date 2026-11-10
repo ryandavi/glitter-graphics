@@ -24,13 +24,29 @@ async function main() {
 			groups: [...document.querySelectorAll('#layerTypePickerModal .add-menu-group-title')].map((node) => node.textContent),
 			autoGlitter: Boolean(document.querySelector('[data-add-id="auto-glitter"]')),
 			overlay: Boolean(document.querySelector('[data-add-id="impact-meme"]')),
-			photoShape: Boolean(document.querySelector('[data-add-id="quickActionAddPhotoShape"]'))
+			photoShape: Boolean(document.querySelector('[data-add-id="add-photo-shape"]')),
+			autoGlitterDisabled: document.querySelector('[data-add-id="auto-glitter"]')?.disabled,
+			samples: document.querySelectorAll('[data-add-group="text-styles"] .add-entry-sample').length,
+			placement: document.getElementById('addMenuPlacement')?.textContent,
+			focused: document.activeElement?.id
 		}));
-		assert(menu.groups.join('|') === 'Layers|Basics|Decorate|Effects|Generate', 'Add menu groups are incomplete or out of order');
+		assert(menu.groups.join('|') === 'Layers|Overlays|Text Styles|Effects', 'Add menu groups are incomplete or out of order');
 		const primary = overlay.page.locator('[data-add-group="layers"] .layer-type-option');
-		assert((await primary.locator('.layer-type-name').allTextContents()).join('|') === 'Sticker|Fill Layer|Shape|Text', 'Main layers have their own ordered group');
-		assert(await primary.count() === 4 && await primary.evaluateAll((nodes) => nodes.every((node) => !node.classList.contains('is-horizontal'))), 'Only the main layers use prominent tiles');
+		assert((await primary.locator('.layer-type-name').allTextContents()).join('|') === 'Sticker|Fill Layer|Text|Shape|Line|Photo in Shape', 'Layers are ordered with the shape family together');
+		assert(await primary.evaluateAll((nodes) => nodes.every((node) => !node.classList.contains('is-horizontal'))), 'Layers use prominent tiles');
 		assert(menu.autoGlitter && menu.overlay && menu.photoShape, 'Add menu is missing a generator or creation variant');
+		assert(menu.autoGlitterDisabled === true, 'Auto Glitter must be disabled, with its reason, on a blank canvas');
+		assert(menu.samples === 4, 'Every text style shows a sample');
+		assert(menu.placement === 'New layers go on top.', 'Add menu must say where new layers go');
+		assert(menu.focused === 'addMenuSearch', 'Add menu opens on its search field');
+
+		await overlay.page.keyboard.type('stamp');
+		assert(await overlay.page.evaluate(() => [...document.querySelectorAll('#layerTypePickerModal .layer-type-option')]
+			.filter((node) => node.getClientRects().length).map((node) => node.dataset.addId).join('|')) === 'caption-date-stamp',
+			'Search narrows the menu by name and keywords');
+		await overlay.page.keyboard.press('Escape');
+		assert(await overlay.page.evaluate(() => document.getElementById('addMenuSearch').value === ''
+			&& document.getElementById('layerTypePickerModal').classList.contains('visible')), 'Escape clears the search before closing');
 
 		await overlay.page.click('[data-add-id="impact-meme"]');
 		await overlay.page.waitForSelector('#confirmationModal.visible');
@@ -66,7 +82,7 @@ async function main() {
 			await caption.page.waitForFunction(() => editor.originalImage);
 			await caption.page.click('#addLayerBtn');
 			await caption.page.waitForSelector(`[data-add-id="${id}"]`);
-			assert(await caption.page.locator(`[data-add-group="decorate"] [data-add-id="${id}"]`).count() === 1, 'Caption must be grouped in Decorate');
+			assert(await caption.page.locator(`[data-add-group="text-styles"] [data-add-id="${id}"]`).count() === 1, 'Caption must be grouped in Text Styles');
 			const before = await caption.page.evaluate(() => editor.historyManager.history.length);
 			await caption.page.click(`[data-add-id="${id}"]`);
 			await caption.page.waitForSelector('#confirmationModal.visible');

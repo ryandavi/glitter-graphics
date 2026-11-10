@@ -140,26 +140,38 @@ function getAddableLayerTypes() {
 	return Object.values(LayerType).filter((type) => Boolean(LAYER_UI_CONFIG[type]?.addableViaModal));
 }
 
+// The Add menu's groups, in order. `layout` picks the card form:
+//   tiles     prominent cards, media above the text (the everyday layers)
+//   previews  a sample of the result above the name (text styles)
+//   list      compact cards, media beside the text
 const ADD_MENU_GROUPS = Object.freeze([
-	{ id: 'layers', label: 'Layers', order: 0, primary: true },
-	{ id: 'basics', label: 'Basics', order: 1 },
-	{ id: 'decorate', label: 'Decorate', order: 2 },
-	{ id: 'effects', label: 'Effects', order: 3 },
-	{ id: 'generate', label: 'Generate', order: 4 }
+	{ id: 'layers', label: 'Layers', layout: 'tiles' },
+	{ id: 'overlays', label: 'Overlays', layout: 'list' },
+	{ id: 'text-styles', label: 'Text Styles', layout: 'previews' },
+	{ id: 'effects', label: 'Effects', layout: 'list' }
 ]);
 
+// Add menu entries that run a command instead of adding one layer.
+// `availability` returns { available, message }; the message explains a
+// disabled entry in place of its description.
 const ADD_MENU_COMMANDS = Object.freeze([
 	{
 		id: 'auto-glitter',
-		group: 'generate',
-		order: 1,
+		group: 'effects',
+		order: 2,
 		label: 'Auto Glitter',
 		icon: 'magic-wand',
 		description: 'Turn the base image into editable glitter layers',
+		keywords: 'generate convert magic colors palette',
+		availability: (editor) => editor.baseBackgroundManager?.getAutoGlitterAvailability(),
 		run: (editor) => editor.autoGlitterManager?.open()
 	}
 ]);
 
+// Every way to add something: each addable layer type, its variants, and the
+// commands. The Add menu shows all of them; Quick add and the phone chip bar
+// show the ones with a `quickAddId`. Overlay templates join in the menu
+// (listAddMenuEntries).
 function getAddMenuEntries() {
 	const layerEntries = getAddableLayerTypes().flatMap((type) => {
 		const config = LAYER_UI_CONFIG[type].addableViaModal;
@@ -167,45 +179,60 @@ function getAddMenuEntries() {
 			kind: 'layer',
 			type,
 			id: `add-${type}`,
-			group: config.group || 'basics',
+			group: config.group || 'layers',
 			order: config.order ?? 100,
 			label: config.label,
 			icon: config.icon,
 			description: config.description,
+			keywords: config.keywords || '',
+			quickAddId: config.quickAddId || null,
+			quickAddOrder: config.quickAddOrder ?? null,
+			phoneChip: config.phoneChip,
 			createOptions: config.createOptions || null
 		};
 		return [base, ...(config.quickAddVariants || []).map((variant) => ({
 			...base,
+			phoneChip: undefined,
 			...variant,
-			id: variant.id,
 			createOptions: variant.createOptions || null
 		}))];
 	});
-	return [...layerEntries, ...ADD_MENU_COMMANDS.map((entry) => ({ kind: 'command', ...entry }))]
-		.sort((a, b) => {
-			const groupOrder = (id) => ADD_MENU_GROUPS.find((group) => group.id === id)?.order ?? 100;
-			return groupOrder(a.group) - groupOrder(b.group) || a.order - b.order;
-		});
+	return sortAddMenuEntries([...layerEntries, ...ADD_MENU_COMMANDS.map((entry) => ({ kind: 'command', ...entry }))]);
+}
+
+function sortAddMenuEntries(entries) {
+	const groupOrder = (id) => {
+		const index = ADD_MENU_GROUPS.findIndex((group) => group.id === id);
+		return index === -1 ? ADD_MENU_GROUPS.length : index;
+	};
+	return entries.sort((a, b) => groupOrder(a.group) - groupOrder(b.group) || a.order - b.order);
+}
+
+// The menu's full list: the static entries plus the overlay templates.
+async function listAddMenuEntries() {
+	let templates = [];
+	try {
+		templates = (await TemplateLibrary.list('overlay')).map((template, index) => ({
+			kind: 'template',
+			id: template.id,
+			group: template.group,
+			order: 10 + index,
+			label: template.label,
+			icon: template.icon || 'image',
+			description: template.description,
+			keywords: template.keywords || '',
+			sample: template.sample || null
+		}));
+	} catch (error) {
+		console.warn('Templates unavailable:', error);
+	}
+	return sortAddMenuEntries([...getAddMenuEntries(), ...templates]);
 }
 
 function getQuickAddLayerEntries() {
-	return getAddableLayerTypes().flatMap((type) => {
-		const config = LAYER_UI_CONFIG[type].addableViaModal;
-		const entries = config.quickAddId ? [{
-			type,
-			id: config.quickAddId,
-			order: config.quickAddOrder,
-			phoneChip: config.phoneChip,
-			label: config.label,
-			icon: config.icon,
-			description: config.description,
-			createOptions: config.createOptions || null
-		}] : [];
-		return entries.concat((config.quickAddVariants || []).map((variant) => ({
-			type,
-			...variant
-		})));
-	}).sort((a, b) => a.order - b.order);
+	return getAddMenuEntries()
+		.filter((entry) => entry.quickAddId)
+		.sort((a, b) => a.quickAddOrder - b.quickAddOrder);
 }
 
 const LAYER_BADGES = [

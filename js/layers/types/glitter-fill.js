@@ -111,6 +111,7 @@ registerLayerType(LayerType.GLITTER_FILL, {
 		icon: 'glitter',
 		group: 'layers',
 		order: 2,
+		keywords: 'glitter background color gradient paint',
 		description: 'Paint glitter, color, or a gradient onto the canvas',
 		quickAddId: 'quickActionAddGlitter',
 		quickAddOrder: 2

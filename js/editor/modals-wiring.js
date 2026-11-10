@@ -107,9 +107,12 @@ updateOrientationButtons(width, height) {
 		this.registerDocumentModal('guideModal', { url: 'modals/guide.html', onLoaded: (body) => localizeKeyLabels(body) });
 
 		// Layer type picker modal (no open button - opened programmatically)
+		// Coarse pointers start on the title so the keyboard stays closed.
 		this.modalManager.register('layerTypePickerModal', {
 			closeBtnId: 'closeLayerTypePickerModal',
-			resetScrollOnOpen: false
+			resetScrollOnOpen: true,
+			initialFocusSelector: window.matchMedia('(pointer: coarse)').matches ? '.modal-title-text' : '#addMenuSearch',
+			onOpen: () => this.syncAddMenu()
 		});
 
 		// Stickers and fills share the image upload dialog.

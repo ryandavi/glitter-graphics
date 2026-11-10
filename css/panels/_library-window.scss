@@ -177,4 +177,5 @@
 }
 
 // The Library's Close ends its armed pick.
-.design-gallery-section:not([data-picker-library]) .library-close-action { display: none; }
+.design-gallery-section:not([data-picker-library]) .library-close-action,
+.design-gallery-section.picker-has-own-exit .library-close-action { display: none; }

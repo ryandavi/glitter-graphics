@@ -175,6 +175,8 @@ function syncPickerTarget(editor) {
 	const session = editor?.pickers?.active?.pickerSession;
 	if (session) section.dataset.pickerLibrary = session.library || 'glitter';
 	else delete section.dataset.pickerLibrary;
+	// A session with its own exit (Recolor's toggle) takes no Close.
+	section.classList.toggle('picker-has-own-exit', Boolean(session?.ownExit));
 	syncLibraryView();
 }
 

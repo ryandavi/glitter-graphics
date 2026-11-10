@@ -21,7 +21,7 @@ const TemplateLibrary = (() => {
 						if (!entry.src || !entry.label) throw new Error(`Template ${entry.id} is incomplete.`);
 						ids.add(entry.id);
 					});
-					return Object.freeze(entries.map((entry) => Object.freeze({ ...entry, group: entry.group || 'generate' })));
+					return Object.freeze(entries.map((entry) => Object.freeze({ ...entry, group: entry.group || null })));
 				});
 		}
 		return manifestPromise;

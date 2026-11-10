@@ -136,8 +136,9 @@ registerLayerType(LayerType.PATH, {
 	addableViaModal: {
 		label: 'Line',
 		icon: 'line',
-		group: 'basics',
-		order: 4,
+		group: 'layers',
+		order: 5,
+		keywords: 'arrow path stroke pen',
 		description: 'Add a line or an arrow, in glitter or a color'
 	},
 	elementClass: 'path-layer-element',

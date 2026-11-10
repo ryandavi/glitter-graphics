@@ -29,7 +29,21 @@
 			"description": "Add large editable Impact captions to this image",
 			"src": "data/templates/impact-meme.glitter.json",
 			"icon": "text",
-			"group": "decorate"
+			"group": "text-styles",
+			"keywords": "meme impact top bottom",
+			"sample": {
+				"place": "split",
+				"text": [
+					"TOP TEXT",
+					"BOTTOM TEXT"
+				],
+				"style": {
+					"font": "Impact, 'Arial Black', sans-serif",
+					"color": "#ffffff",
+					"outline": "#000000",
+					"size": "15px"
+				}
+			}
 		},
 		{
 			"id": "caption-subtitle",
@@ -38,7 +52,22 @@
 			"description": "Add an editable yellow subtitle at the bottom",
 			"src": "data/templates/caption-subtitle.glitter.json",
 			"icon": "text",
-			"group": "decorate"
+			"group": "text-styles",
+			"keywords": "subtitle movie yellow",
+			"sample": {
+				"place": "bottom",
+				"text": [
+					"Your subtitle here"
+				],
+				"style": {
+					"font": "Arial, sans-serif",
+					"weight": "700",
+					"italic": "italic",
+					"color": "#ffe21f",
+					"outline": "#000000",
+					"size": "11px"
+				}
+			}
 		},
 		{
 			"id": "caption-bar",
@@ -47,7 +76,20 @@
 			"description": "Add editable white text on a translucent black bar",
 			"src": "data/templates/caption-bar.glitter.json",
 			"icon": "text",
-			"group": "decorate"
+			"group": "text-styles",
+			"keywords": "caption bar banner news",
+			"sample": {
+				"place": "band",
+				"text": [
+					"Your caption here"
+				],
+				"style": {
+					"font": "Arial, sans-serif",
+					"color": "#ffffff",
+					"bar": "rgb(0 0 0 / 60%)",
+					"size": "11px"
+				}
+			}
 		},
 		{
 			"id": "caption-date-stamp",
@@ -57,7 +99,20 @@
 			"description": "Add an editable orange camera date stamp",
 			"src": "data/templates/caption-date-stamp.glitter.json",
 			"icon": "text",
-			"group": "decorate"
+			"group": "text-styles",
+			"keywords": "date stamp camera timestamp retro",
+			"sample": {
+				"place": "corner",
+				"text": [
+					"'98 12 25"
+				],
+				"style": {
+					"font": "Silkscreen, 'Courier New', monospace",
+					"color": "#ff8a3d",
+					"glow": "#ff3d00",
+					"size": "10px"
+				}
+			}
 		},
 		{
 			"id": "demotivational-poster",

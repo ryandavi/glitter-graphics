@@ -16,6 +16,7 @@ registerLayerType(LayerType.FILTER, {
 		icon: 'sliders',
 		group: 'effects',
 		order: 1,
+		keywords: 'adjust color blur sharpen posterize dither look',
 		description: 'Adjust the appearance of every layer below'
 	},
 	elementClass: 'filter-layer-overlay',

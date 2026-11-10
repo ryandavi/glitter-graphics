@@ -15,11 +15,13 @@
 	gap: var(--spacing-base);
 }
 
+// The Add menu: one section per ADD_MENU_GROUPS entry, its card form named by
+// the group's layout (.is-tiles, .is-list, .is-previews).
 .layer-type-options.add-menu-groups {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr);
 	align-items: start;
-	gap: var(--spacing-lg);
+	gap: var(--spacing-md);
 
 	.add-menu-group-title {
 		margin: 0 0 var(--spacing-sm);
@@ -30,8 +32,28 @@
 		text-transform: uppercase;
 	}
 
-	.add-menu-group:not([data-add-group="layers"]) > .layer-type-options {
-		display: grid;
+	// The everyday layers: three across, so all six show in two rows.
+	.add-menu-group.is-tiles > .layer-type-options {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: var(--spacing-sm);
+
+		> .layer-type-option {
+			justify-content: flex-start;
+			padding: var(--spacing-sm);
+			gap: var(--spacing-xs);
+
+			.icon-wrapper {
+				width: 28px;
+				height: 28px;
+
+				> svg.icon { font-size: 28px; }
+			}
+
+			.layer-type-description { max-width: 26ch; }
+		}
+	}
+
+	.add-menu-group.is-list > .layer-type-options {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 		gap: var(--spacing-xs);
 
@@ -48,23 +70,90 @@
 		}
 	}
 
-	.add-menu-group[data-add-group="layers"] > .layer-type-options {
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: var(--spacing-base);
+	// Text styles show what they add; the name says the rest.
+	.add-menu-group.is-previews > .layer-type-options {
+		grid-template-columns: repeat(auto-fill, minmax(min(140px, 100%), 1fr));
+		gap: var(--spacing-sm);
 
 		> .layer-type-option {
-			justify-content: center;
-			min-height: calc(var(--control-height) * 2 + var(--spacing-2xl));
-			padding: var(--spacing-lg) var(--spacing-md);
-			gap: var(--spacing-sm);
+			align-items: stretch;
+			padding: var(--spacing-xs);
+			gap: var(--spacing-xs);
 
-			.layer-type-name { font-size: var(--font-size-base); }
-			.layer-type-description { max-width: 26ch; }
+			> .layer-type-description { display: none; }
 		}
 	}
 
 	@include mobile {
-		.add-menu-group:not([data-add-group="layers"]) > .layer-type-options { grid-template-columns: 1fr; }
+		.add-menu-group.is-tiles > .layer-type-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+		.add-menu-group.is-list > .layer-type-options { grid-template-columns: 1fr; }
+	}
+}
+
+// A text style's sample, set on a stand-in photo. The look comes from the
+// template manifest's `sample.style` as --sample-* properties.
+.add-entry-sample {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	align-items: center;
+	aspect-ratio: 2 / 1;
+	padding: 6%;
+	overflow: hidden;
+	border-radius: var(--radius-sm);
+	// Illustration, not chrome: the same dusky scene in either theme.
+	background:
+		radial-gradient(circle at 80% 42%, #f6c58a 0 8%, transparent 9%),
+		linear-gradient(180deg, #6d84a8 0%, #b7a2a8 52%, #4c5a4a 53%, #2f3a2e 100%);
+
+	> .add-entry-sample-text {
+		max-width: 100%;
+		@include truncate;
+		color: var(--sample-color, #fff);
+		font-family: var(--sample-font, inherit);
+		font-size: var(--sample-size, 11px);
+		font-style: var(--sample-italic, normal);
+		font-weight: var(--sample-weight, 400);
+		line-height: 1.1;
+		-webkit-text-stroke: var(--sample-stroke-width, 0) var(--sample-outline, transparent);
+		paint-order: stroke fill;
+		text-shadow: 0 0 3px var(--sample-glow, transparent);
+	}
+
+	// Outlined styles draw a stroke wide enough to read at this size.
+	&.has-outline > .add-entry-sample-text { --sample-stroke-width: 1.5px; }
+
+	&[data-place="split"] { justify-content: space-between; }
+
+	&[data-place="band"] {
+		justify-content: center;
+		padding-inline: 0;
+
+		> .add-entry-sample-text {
+			width: 100%;
+			padding: 4% 6%;
+			background: var(--sample-bar, transparent);
+			text-align: center;
+		}
+	}
+
+	&[data-place="corner"] { align-items: flex-end; }
+}
+
+.add-menu > .modal-footer.add-menu-footer {
+	justify-content: space-between;
+	flex-wrap: wrap;
+	row-gap: var(--spacing-2xs);
+	padding-block: var(--spacing-sm);
+
+	> .add-menu-note {
+		margin: 0;
+		color: var(--color-text-tertiary);
+		font-size: var(--font-size-xs);
+
+		&.is-warning { color: var(--color-warning-text); }
+		&:empty { display: none; }
 	}
 }
 

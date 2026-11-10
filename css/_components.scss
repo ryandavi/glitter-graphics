@@ -230,6 +230,20 @@ textarea {
 
 	&:active { transform: scale(0.98); }
 
+	// Unavailable: its detail says why (the Add menu's command entries), so
+	// the detail stays readable while the rest dims.
+	&:disabled {
+		cursor: not-allowed;
+
+		> :not(.action-card-detail) { opacity: var(--opacity-disabled); }
+		transform: none;
+
+		&:hover {
+			border-color: var(--color-border);
+			background: var(--color-bg-secondary);
+		}
+	}
+
 	&.active {
 		border-color: var(--color-accent);
 		background: var(--color-bg-tertiary);

@@ -76,8 +76,9 @@ registerLayerType(LayerType.FRAME, {
 	addableViaModal: {
 		label: 'Frame',
 		icon: 'frame',
-		group: 'decorate',
+		group: 'overlays',
 		order: 1,
+		keywords: 'border edge ornate',
 		description: 'Put a border or an ornate frame around the picture'
 	},
 	elementClass: 'frame-layer-element',

@@ -29,6 +29,23 @@ function buildActionCard({ className, dataset, ariaLabel, pressed, media, title,
 	return button;
 }
 
+// A text style's card media: its sample lines set on a stand-in photo, from
+// the template manifest's `sample` ({ place, text: [], style: { font, size,
+// weight, italic, color, outline, glow, bar } }). `place` is split (top and
+// bottom), bottom, band or corner.
+function buildAddEntrySample(sample) {
+	const media = buildElement('action-card-media add-entry-sample', undefined, 'span');
+	media.dataset.place = sample.place || 'bottom';
+	media.classList.toggle('has-outline', Boolean(sample.style?.outline));
+	media.setAttribute('aria-hidden', 'true');
+	Object.entries(sample.style || {}).forEach(([key, value]) => media.style.setProperty(`--sample-${key}`, value));
+	(sample.text || []).forEach((line) => {
+		const text = buildElement('add-entry-sample-text', line, 'span');
+		media.appendChild(text);
+	});
+	return media;
+}
+
 function buildCanvasPresetGroup(label, grid) {
 	const group = buildElement('new-canvas-preset-group');
 	const heading = buildElement('property-group-label');
