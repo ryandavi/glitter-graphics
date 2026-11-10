@@ -38,8 +38,10 @@ async function verifyTimelineGestures(browser) {
 			const point = await page.evaluate(({ kind, ms }) => {
 				const dock = editor.timelineDock, row = dock.body.querySelector(`[data-layer-id="${emptyTimelineLayerId}"] .timeline-group-window`);
 				const bar = row.querySelector(kind === 'body' ? '.timeline-bar' : `.timeline-bar-handle.is-${kind}`).getBoundingClientRect();
-				const track = row.querySelector('.timeline-track').getBoundingClientRect(), x = bar.x + bar.width / 2;
-				return { x, y: bar.y + bar.height / 2, end: kind === 'body' ? x + TimelineView.timeToX(ms, dock.scale) : track.x + TimelineView.timeToX(ms, dock.scale) };
+				const x = bar.x + bar.width / 2, model = dock.rowFor(row);
+				// An edge keeps its offset from the grabbed grip.
+				const fromMs = kind === 'body' ? 0 : kind === 'left' ? model.startMs : model.endMs;
+				return { x, y: bar.y + bar.height / 2, end: x + TimelineView.timeToX(ms - fromMs, dock.scale) };
 			}, { kind, ms });
 			await page.mouse.move(point.x, point.y); await page.mouse.down(); await page.mouse.move(point.end, point.y, { steps: 5 });
 			if (cancel) await page.keyboard.press('Escape');
@@ -65,9 +67,9 @@ async function verifyTimelineGestures(browser) {
 		await page.getByRole('menuitem', { name: 'Always visible', exact: true }).click(); await rangeReady();
 		assert.equal(await rangeState(), null);
 		assert(await page.evaluate(() => !editor.layerManager.getLayerById(emptyTimelineLayerId).animations?.length), 'Visibility edits never create a motion');
-		await page.locator('.timeline-dock .section-header-actions button[aria-label="Add animation"]').click();
+		await page.locator(`.timeline-group[data-layer-id="${await page.evaluate(() => emptyTimelineLayerId)}"] .timeline-add-animation`).click();
 		await page.evaluate(async () => { await editor.updateExportDuration(); });
-		assert(await page.evaluate(() => editor.layerManager.getLayerById(emptyTimelineLayerId).animations.length === 1), 'Header Add animation adds a motion');
+		assert(await page.evaluate(() => editor.layerManager.getLayerById(emptyTimelineLayerId).animations.length === 1), 'The row Add animation adds a motion');
 		assert.equal(await page.evaluate(() => editor.timelineDock.ruler.getBoundingClientRect().height), emptyBand.height, 'First animation preserves ruler band height');
 		const chevron = page.locator(`.timeline-group[data-layer-id="${await page.evaluate(() => emptyTimelineLayerId)}"] .timeline-group-chevron`);
 		const enabledBox = await chevron.evaluate(node => node.getBoundingClientRect().toJSON());
@@ -124,7 +126,13 @@ async function verifyTimelineGestures(browser) {
 					x = [0.5, 0.75, 0.25].map(share => left + (right - left) * share).find(candidate => document.elementFromPoint(candidate, y)?.closest('[data-drag]') === bar);
 					if (x == null) throw new Error('No unobstructed timing-bar body for dragging');
 				}
-				return { x, y: target.top + target.height / 2, to: (delta ? x : track.left) + TimelineView.timeToX(time, dock.scale) };
+				// An edge keeps its offset from the grabbed grip, so aim the grip.
+				const row = kind === 'left' || kind === 'right' || kind === 'period' ? dock.rowFor(node) : null;
+				const notch = kind === 'period' && Number(node.querySelector('.timeline-period-notch').dataset.notchIndex);
+				const edgeMs = !row ? null : kind === 'left' ? row.startMs : kind === 'right' ? row.endMs : row.startMs + (notch - row.phase) * row.cycleMs;
+				const to = delta ? x + TimelineView.timeToX(time, dock.scale)
+					: edgeMs != null ? x + TimelineView.timeToX(time - edgeMs, dock.scale) : track.left + TimelineView.timeToX(time, dock.scale);
+				return { x, y: target.top + target.height / 2, to };
 			}, { kind, time, delta, grab });
 			if (alt) await page.keyboard.down('Alt');
 			if (shift) await page.keyboard.down('Shift');
@@ -361,9 +369,12 @@ async function verifyTimelineGestures(browser) {
 		await page.keyboard.press('Shift+F10');
 		assert(await page.getByRole('menuitem', { name: 'Reset timing', exact: true }).isVisible(), 'Shift+F10 opens the bar menu');
 		await page.keyboard.press('Escape');
-		// A one-cycle bar too short for its grips still moves by its body.
+		// A one-cycle bar too short for its grips still moves by its body. A long
+		// loop keeps it short at Fit whatever the dock's width.
 		await page.evaluate(async () => {
 			const layer = editor.layerManager.getLayerById(window.timelineFixtureId);
+			window.timelineShortBarLoop = { ...editor.documentLoop };
+			editor.setDocumentLoop({ mode: 'set', durationMs: 12000 }, { commit: false });
 			Object.assign(layer.animations[0], { periodMs: 200, iterations: 1, delayMs: 1000, phase: 0 });
 			editor.shapeGlitterManager.renderLayer(layer); editor.saveState('Short bar fixture');
 			await editor.updateExportDuration();
@@ -393,6 +404,7 @@ async function verifyTimelineGestures(browser) {
 		assert(Math.abs((await state()).period - 400) < 0.01);
 		await page.evaluate(async () => {
 			const layer = editor.layerManager.getLayerById(window.timelineFixtureId);
+			editor.setDocumentLoop(window.timelineShortBarLoop, { commit: false });
 			Object.assign(layer.animations[0], { periodMs: 500, iterations: 2, delayMs: 0, phase: 0.25 });
 			editor.shapeGlitterManager.renderLayer(layer); editor.saveState('Offset duration fixture'); await editor.updateExportDuration();
 		}); await ready();

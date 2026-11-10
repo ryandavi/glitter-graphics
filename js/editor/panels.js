@@ -314,7 +314,7 @@ isLayerContentLocked(layer) {
 		else if (target === 'panel') {
 			if (mobile?.isMobile) mobile.openLeadingSection();
 		} else {
-			if (this.pickers.flyout !== target) this.pickers.toggleFlyout(target);
+			this.pickers.openFlyout(target);
 			// In the phone's sheet a section does not open its Library by itself.
 			if (mobile?.isMobile) this.armPaintSlot(layer, target);
 		}

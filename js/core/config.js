@@ -754,6 +754,8 @@ const CONFIG = deepFreeze({
 			rulerTextInsetPx: 4, minorTickHeight: 4, majorTickHeight: 8, outputFrameStripHeight: 4, wheelLinePx: 28, wheelZoomPx: 100, staleShowMs: 200, curveSamples: 64,
 			// A bar is never drawn narrower than this; a grip is this wide to the pointer.
 			barMinPx: 12, gripPx: 8,
+			// Room past the drawn end, so the loop-end handle stays in reach at Fit.
+			loopEndGutterPx: 16,
 			// What the rows draw besides their bars, as the options menu lists it.
 			show: { curves: false, cycles: true, frames: false, details: false, nextLoop: false },
 			showLabels: { curves: 'Motion curves', cycles: 'Cycle marks', frames: 'Output frames', details: 'Details column', nextLoop: 'Next pass' },

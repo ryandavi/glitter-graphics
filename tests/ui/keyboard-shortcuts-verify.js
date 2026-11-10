@@ -33,13 +33,21 @@ async function main() {
 		await page.evaluate(() => editor.shapeGlitterManager.armAssetPicker());
 		assert(await page.locator('#designGallerySection').getAttribute('data-library') === 'shape', 'Shape picker showed the wrong library');
 		assert((await page.locator('#designGalleryTitleText').textContent()) === 'Shape', 'Shape picker did not name what it changes');
-		await page.evaluate(() => {
+		// Highlight any visible, selectable page text (at desktop width the dock tabs hide the
+		// Library title text).
+		const highlighted = await page.evaluate(() => {
+			const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT,
+				{ acceptNode: node => node.textContent.trim() && node.parentElement.checkVisibility() && getComputedStyle(node.parentElement).userSelect !== 'none' ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP });
+			const text = walker.nextNode();
+			if (!text) return '';
 			const range = document.createRange();
-			range.selectNodeContents(document.getElementById('designGalleryTitleText'));
+			range.selectNodeContents(text);
 			window.getSelection().removeAllRanges();
 			window.getSelection().addRange(range);
 			window.__glitterLayerClipboard = null;
+			return window.getSelection().toString();
 		});
+		assert(highlighted, 'The page has no visible text to highlight');
 		await page.keyboard.press('Control+c');
 		assert(await page.evaluate(() => window.__glitterLayerClipboard === null), 'Copying highlighted page text copied layers');
 		await page.evaluate(() => window.getSelection().removeAllRanges());

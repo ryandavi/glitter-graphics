@@ -23,10 +23,22 @@ class PickerRegistry {
 	}
 
 	// Pressing a line opens its section, swaps the window to it, or closes it.
+	// Pressing the open section's line while its window is folded unfolds it.
 	toggleFlyout(key) {
+		const library = this.editor.libraryWindow;
+		if (this.flyout === key && library?.flyoutFolded) {
+			library.setFlyoutFolded(false);
+			return;
+		}
 		this.flyout = this.flyout === key ? null : key;
 		this.closeAll();
-		this.editor.libraryWindow?.sync();
+		library?.sync();
+	}
+
+	// Shows a section in the window, unfolded, without ever closing it.
+	openFlyout(key) {
+		if (this.flyout !== key) this.toggleFlyout(key);
+		else if (this.editor.libraryWindow?.flyoutFolded) this.editor.libraryWindow.setFlyoutFolded(false);
 	}
 
 	closeFlyout() {

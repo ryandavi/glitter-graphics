@@ -71,7 +71,7 @@ async function verifyTimelineDock() {
 		await page.waitForFunction(() => editor.timelineDock?.isOpen);
 		await page.waitForTimeout(200);
 		await page.evaluate(() => editor.updateExportDuration());
-		assert(await page.locator('#timelineDock .timeline-ruler .property-note').isVisible(), 'A document with nothing animated must say so in the ruler band');
+		assert(await page.locator('#timelineDock .timeline-still').isVisible(), 'A document with nothing animated shows the still empty state');
 		assert(await page.evaluate(() => editor.animationTicker.tickListeners.size === 0 && editor.animationTicker.frameRequest == null), 'An empty dock does not keep the ticker running');
 		assert(await page.locator('#timelineDock .timeline-ruler').evaluate(node => !node.dispatchEvent(new WheelEvent('wheel', { bubbles: true, cancelable: true, ctrlKey: true, deltaY: -100 }))), 'An empty timeline also consumes Ctrl-wheel to prevent page zoom');
 		assert((await page.locator('#previewContainer').evaluate(node => node.clientHeight)) < fullHeight);
@@ -233,7 +233,9 @@ async function verifyTimelineDock() {
 		});
 		assert.equal(canvasResets, 0, 'Repainting the same ruler viewport does not reallocate the canvas');
 		await page.locator('#timelineDock .section-header-title').click();
-		assert(await page.evaluate(() => !PREFERENCES.get('timelineMinimized')), 'The header title leaves transport expanded');
+		assert(await page.evaluate(() => PREFERENCES.get('timelineMinimized')), 'The header title folds the dock like the bar');
+		await page.locator('#timelineDock .section-header-title').click();
+		assert(await page.evaluate(() => !PREFERENCES.get('timelineMinimized')), 'A second press on the title unfolds the dock');
 		await page.click('[aria-label="Timeline options"]');
 		assert(await page.getByRole('menuitemcheckbox', { name: 'Follow playhead', exact: true }).isChecked());
 		await page.getByRole('menuitemcheckbox', { name: 'Snap', exact: true }).click();
@@ -246,8 +248,8 @@ async function verifyTimelineDock() {
 		assert(await page.evaluate(() => editor.timelineDock.show.nextLoop && editor.timelineDock.body.querySelectorAll('.timeline-bar-ghost').length > 0), 'Next pass on shows the next pass');
 		const fitWidth = await page.evaluate(() => editor.timelineDock.trackWidth);
 		await page.evaluate(() => editor.timelineDock.showItems.find(item => item.dataset.show === 'nextLoop').click());
-		assert.deepStrictEqual(await page.evaluate(() => { const dock = editor.timelineDock; return { ghosts: dock.body.querySelectorAll('.timeline-bar-ghost').length, share: dock.nextLoopShare, loopFills: Math.abs(TimelineView.timeToX(dock.model.loopMs, dock.scale) - dock.trackWidth) < 0.5 }; }),
-			{ ghosts: 0, share: 0, loopFills: true }, 'Next pass off ends the track at the loop line');
+		assert.deepStrictEqual(await page.evaluate(() => { const dock = editor.timelineDock; return { ghosts: dock.body.querySelectorAll('.timeline-bar-ghost').length, share: dock.nextLoopShare, loopFills: Math.abs(TimelineView.timeToX(dock.model.loopMs, dock.scale) + dock.config.loopEndGutterPx - dock.trackWidth) < 0.5 }; }),
+			{ ghosts: 0, share: 0, loopFills: true }, 'Next pass off ends the track one grab gutter past the loop line');
 		assert(await page.evaluate(before => { const dock = editor.timelineDock; return Math.abs(dock.trackWidth - before) < 1 || dock.fitScale === dock.config.minPxPerSecond; }, fitWidth), 'Fit zoom fills the available width or stops at the readable minimum scale');
 		await page.evaluate(() => { editor.applyDefaultPanelLayout(); });
 		assert(await page.evaluate(() => !editor.timelineDock.show.nextLoop && editor.timelineDock.body.querySelectorAll('.timeline-bar-ghost').length === 0), 'Reset Panels restores the dock view choices');

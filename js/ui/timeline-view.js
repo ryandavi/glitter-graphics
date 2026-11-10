@@ -112,10 +112,11 @@ const TimelineView = {
 	// A bar's box on its track. A bar too short to hold its two grips and a
 	// body keeps the body: it is drawn at a least width and its grips sit
 	// outside its ends. The left grip stays inside where the track would clip it.
-	barBox(row, scale, config) {
+	// Inside grips sit `inset` in from each end, so that space is not body.
+	barBox(row, scale, config, inset = 0) {
 		const left = this.timeToX(row.startMs, scale);
 		const width = Math.max(config.barMinPx, this.timeToX(Math.max(0, row.endMs - row.startMs), scale));
-		const gripsOutside = !this.hasGripRoom(width, config);
+		const gripsOutside = !this.hasGripRoom(width - 2 * inset, config);
 		return { left, width, gripsOutside, leftGripInside: gripsOutside && left < config.gripPx };
 	},
 	hasGripRoom(width, config) { return width >= 3 * config.gripPx; },
