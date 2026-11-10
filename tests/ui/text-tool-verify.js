@@ -244,6 +244,68 @@ async function main() {
 		await page.waitForFunction(() => editor.layerManager.getActiveLayer().textData.orientation === 'horizontal');
 		await page.evaluate(() => editor.undo());
 		assert.equal(await page.evaluate(() => editor.layerManager.getActiveLayer().textData.orientation), 'stacked', 'Orientation changes undo in one step');
+
+		// Old-web styles draw mapped glyphs from plain typed text; Wrap writes
+		// around all of it; the Kaomoji tab inserts at the caret.
+		const extras = await page.evaluate(async () => {
+			const manager = editor.textGlitterManager;
+			editor.layerManager.clearSelection();
+			const layer = createTextAt(editor, { text: 'Hi', position: { x: 300, y: 320 } });
+			manager.endTextEdit();
+			await manager.runLayoutRefreshWithAnchor(layer, () => { layer.textData.textCase = 'fullwidth'; }, { saveHistory: true });
+			const drawn = manager.getMeasurementEntry(layer).layout.glyphs.map(glyph => glyph.char).join('');
+			const typed = layer.textData.text;
+			await editor.undo();
+			// Undo restores fresh layer objects.
+			const current = () => editor.layerManager.getLayerById(layer.id);
+			const undoneCase = current().textData.textCase;
+			manager.ui.textInput.setSelectionRange(0, 0);
+			manager.wrapText('xX_', '_Xx');
+			const wrapped = current().textData.text;
+			document.querySelector('#textSymbolTabs [data-symbol-set="kaomoji"]').click();
+			const grid = document.getElementById('textSymbols');
+			const tab = { count: grid.children.length, kaomoji: grid.classList.contains('is-kaomoji') };
+			manager.ui.textInput.setSelectionRange(wrapped.length, wrapped.length);
+			grid.firstElementChild.click();
+			const inserted = current().textData.text;
+			document.querySelector('#textSymbolTabs [data-symbol-set="symbols"]').click();
+			return { drawn, typed, undoneCase, wrapped, tab, inserted, symbols: grid.children.length };
+		});
+		assert.equal(extras.drawn, 'Ｈｉ', 'Fullwidth draws mapped glyphs');
+		assert.equal(extras.typed, 'Hi', 'The typed text stays plain');
+		assert.equal(extras.undoneCase, 'none', 'A style change undoes in one step');
+		assert.equal(extras.wrapped, 'xX_Hi_Xx', 'Wrap with no selection wraps all the text');
+		assert.deepEqual(extras.tab, { count: await page.evaluate(() => CONFIG.tools.text.kaomoji.length), kaomoji: true });
+		assert.equal(extras.inserted, `xX_Hi_Xx${await page.evaluate(() => CONFIG.tools.text.kaomoji[0])}`);
+		assert.equal(extras.symbols, await page.evaluate(() => CONFIG.tools.text.symbols.length));
+
+		// Stagger split letters: Cycle offsets phases in reading order in one
+		// undo step and leaves every cycle (so the loop) unchanged.
+		const stagger = await page.evaluate(async () => {
+			const manager = editor.textGlitterManager;
+			editor.layerManager.clearSelection();
+			const layer = createTextAt(editor, { text: 'ABC', position: { x: 120, y: 360 } });
+			manager.endTextEdit();
+			layer.animations = [GlitterAnimation.normalizeAnimation({ id: 'stagger-bounce', type: 'bounce', periodMs: 900 })];
+			editor.saveState('Animate');
+			await manager.splitText('characters');
+			const ids = [...editor.layerManager.selectedLayerIds];
+			const pieces = () => ids.map(id => editor.layerManager.getLayerById(id)).sort((a, b) => a.textData.text.localeCompare(b.textData.text));
+			editor.syncNoLayerPanelState();
+			const shown = !document.getElementById('multiSelectionTimingActions').hidden && !document.getElementById('multiSelectionStagger').closest('.app-menu-popover').hidden;
+			const defaults = staggerDefaults(editor, editor.layerManager.getSelectedLayers());
+			editor.staggerAnimations(editor.layerManager.getSelectedLayers(), defaults);
+			const phases = pieces().map(piece => piece.animations[0].phase);
+			const periods = pieces().map(piece => piece.animations[0].periodMs);
+			const status = document.getElementById('statusText')?.textContent || '';
+			await editor.undo();
+			return { shown, offset: defaults.offset, phases, periods, undone: pieces().map(piece => piece.animations[0].phase), status };
+		});
+		assert(stagger.shown, 'Stagger shows on the selection panel for animated layers');
+		assert.equal(stagger.offset, 'cycle');
+		assert.deepEqual(stagger.phases.map(phase => Math.round(phase * 1000) / 1000), [0, 0.333, 0.667], 'Letters stagger in reading order');
+		assert.deepEqual(stagger.periods, [900, 900, 900], 'Stagger keeps every cycle');
+		assert.deepEqual(stagger.undone, [0, 0, 0], 'Undo restores every phase in one step');
 		assert.deepEqual(errors, []);
 		await page.close();
 		const phone = await boot(browser, true);
@@ -281,7 +343,7 @@ async function main() {
 		await phone.page.keyboard.press('Escape');
 		assert.deepEqual(phone.errors, []);
 		await phone.page.close();
-		console.log('Text tool verification passed (desktop/mobile sessions, history, layout, split export, cap, symbols and paste)');
+		console.log('Text tool verification passed (desktop/mobile sessions, history, layout, split export, cap, symbols, styles, Wrap, kaomoji, stagger and paste)');
 	} finally { await browser.close(); }
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

@@ -31,6 +31,10 @@ setupImageListeners() {
 		});
 
 		openImageBtn?.addEventListener('click', () => imageUpload?.click());
+		document.querySelectorAll('#takePhotoBtn, #takePhotoMenuItem').forEach((button) => {
+			button.hidden = !CameraCapture.isSupported();
+			button.addEventListener('click', () => COMMANDS.takePhoto.run(this));
+		});
 
 		if (imageUpload) {
 			imageUpload.addEventListener('change', async (e) => {

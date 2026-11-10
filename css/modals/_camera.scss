@@ -1,0 +1,42 @@
+@use '../mixins' as *;
+
+/* ===== TAKE PHOTO MODAL ===== */
+// The live preview and the captured still share one stage; the countdown
+// sits over its centre.
+#cameraModal {
+	.camera-stage {
+		position: relative;
+		aspect-ratio: 16 / 9;
+		border-radius: var(--radius-lg);
+		overflow: hidden;
+		background: var(--color-checkerboard);
+
+		> video,
+		> canvas {
+			display: block;
+			width: 100%;
+			height: 100%;
+			object-fit: contain;
+		}
+
+		> [hidden] { display: none; }
+
+		&.is-mirrored > video { transform: scaleX(-1); }
+	}
+
+	.camera-countdown {
+		position: absolute;
+		inset: 0;
+		display: grid;
+		place-items: center;
+		color: #fff;
+		font-size: calc(var(--font-size-2xl) * 3);
+		font-weight: var(--font-weight-bold);
+		text-shadow: 0 2px 12px rgb(0 0 0 / 60%);
+		pointer-events: none;
+
+		&[hidden] { display: none; }
+	}
+
+	.modal-form { margin-top: var(--spacing-md); }
+}

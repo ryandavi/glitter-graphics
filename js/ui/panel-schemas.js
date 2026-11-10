@@ -114,13 +114,13 @@ function createRegistryOptionEntries(name, idPrefix) {
 	}));
 }
 
-// The speed of an animated GIF source (glitter, sticker or image), a set under
-// its section's Advanced. The loop estimate shows it for a GIF that can be
-// stretched (syncGifCycleControls).
+// The speed and start frame of an animated GIF source (glitter, sticker or
+// image), a set under its section's Advanced. Cycle shows for a GIF that can
+// be stretched, Start at for any animated GIF (syncGifCycleControls).
 function createGifCycleSet(idPrefix) {
 	return {
 		feature: 'gifCycle', label: 'Animation', hidden: true, attrs: { 'data-gif-cycle-set': '' },
-		rows: [{ kind: 'slider', id: `${idPrefix}GifCycle`, slider: 'gifCycle' }]
+		rows: [{ kind: 'slider', id: `${idPrefix}GifCycle`, slider: 'gifCycle' }, { kind: 'slider', id: `${idPrefix}GifStart`, slider: 'gifStart' }]
 	};
 }
 
@@ -530,6 +530,11 @@ const PANEL_SCHEMAS = {
 				] },
 				{ title: 'Actions', role: 'actions', note: { id: 'multiSelectionAppearanceSource' }, actions: [
 					{ actions: [{ id: 'multiSelectionCopyAppearance', label: 'Copy active layer appearance', title: 'Copy paint, outline, shadow, bevel, opacity and blend to unlocked layers of the same type' }] },
+					// Shown when the selection has something to offset (syncNoLayerPanelState).
+					{ id: 'multiSelectionTimingActions', hidden: true, actions: [
+						{ id: 'multiSelectionStagger', label: 'Stagger animations', menu: true, title: 'Offset the selected layers’ motion one after another, in reading order' },
+						{ id: 'multiSelectionRandomizeStart', label: 'Randomize GIF starts', title: 'Start each selected animated GIF or glitter at a random frame' }
+					] },
 					{ classes: 'multi-selection-actions', actions: [
 						{ id: 'multiSelectionDuplicateBtn', label: 'Duplicate' },
 						{ id: 'multiSelectionClipBtn', label: 'Clip to Layer Below' },
@@ -938,10 +943,15 @@ const PANEL_SCHEMAS = {
 					{ rows: [
 						{ kind: 'textarea', id: 'textLayerInput', classes: 'text-input-group', rows: 4, maxlength: CONFIG.tools.text.maxTextLength, placeholder: 'Type your glitter text' },
 						// One click inserts at the caret; the manager fills it from
-						// CONFIG.tools.text.symbols.
+						// CONFIG.tools.text.symbols or .kaomoji, per tab.
+						{ kind: 'segmented', id: 'textSymbolTabs', ariaLabel: 'Symbol set', options: [
+							{ label: 'Symbols', active: true, attrs: { 'data-symbol-set': 'symbols' } },
+							{ label: 'Kaomoji', attrs: { 'data-symbol-set': 'kaomoji' } }
+						] },
 						{ kind: 'host', id: 'textSymbols', classes: 'property-inset text-symbol-grid', attrs: { role: 'group', 'aria-label': 'Insert a symbol' } }
 					] },
 					{ classes: 'text-actions-group', actions: [
+						{ id: 'textWrap', label: 'Wrap', title: 'Write a decoration around the selected text, or all of it', menu: true },
 						{ id: 'textSplit', label: 'Split text', title: 'Split into characters, words or lines', menu: true },
 						{ id: 'textCopyStyleAsPreset', label: 'Copy style as preset', title: 'Copy the current style for the preset registry', feature: 'stylePresetCopy' },
 						{ id: 'textFitBoxToContent', label: 'Fit box to text', title: 'Resize the box to exactly fit the current text (keeps existing line breaks/wraps)' }
@@ -1256,6 +1266,22 @@ const PANEL_SCHEMAS = {
 					] },
 					{ kind: 'field', id: 'newCanvasColor', rowId: 'canvasColorRow', label: 'Color',
 						type: 'color', value: CONFIG.canvas.defaults.blankDocument.color }
+				] }
+			] }
+		]
+	},
+	// The Take Photo modal's settings (CameraCapture owns every value).
+	camera: {
+		prefix: 'camera',
+		form: true,
+		section: { id: 'cameraSettingsSection', bare: true },
+		sections: [
+			{ kind: 'section', sets: [
+				{ rows: [
+					{ kind: 'toggle', id: 'cameraMirror', label: 'Mirror', checked: true },
+					{ kind: 'select', id: 'cameraDevice', label: 'Camera', ariaLabel: 'Camera', options: [] },
+					{ kind: 'segmented', id: 'cameraCountdown', label: 'Countdown', ariaLabel: 'Countdown before the photo',
+						options: CONFIG.tools.camera.countdownSeconds.map(seconds => ({ label: seconds ? `${seconds} s` : 'Off', value: String(seconds) })) }
 				] }
 			] }
 		]

@@ -90,10 +90,18 @@ const ANIMATION_TIMING_KINDS = {
 				const fileCycleDuration = timing?.file.reduce((sum, duration) => sum + duration, 0);
 				return { key: descriptor.key, slot: descriptor.effectSlot, record: descriptor.timingRecord, label: descriptor.rowLabel || descriptor.label,
 					period: timing?.delays.reduce((sum, duration) => sum + duration, 0), fileCycleDuration, periodRange: timing?.range || null,
-					resolvePeriod: ms => roundTo(ms, CONFIG.export.timeline.renderClock.gifDelayQuantumMs), can: { period: Boolean(timing?.range && descriptor.timingRecord) } };
+					fileDurations: timing?.file || [], gifStart: timing ? getGifStartMs(timing.file, timing.startFrame) : 0,
+					resolvePeriod: ms => roundTo(ms, CONFIG.export.timeline.renderClock.gifDelayQuantumMs),
+					can: { period: Boolean(timing?.range && descriptor.timingRecord), gifStart: Boolean(descriptor.timingRecord && timing?.file.length > 1) } };
 			});
 		},
 		write(editor, layer, target, patch) {
+			// Start at snaps to a frame boundary of the file's own timing.
+			if (patch.gifStart != null) {
+				const start = getGifStartMs(target.fileDurations, getGifStartFrame(target.fileDurations, patch.gifStart));
+				if (start) target.record.gifStartMs = start;
+				else delete target.record.gifStartMs;
+			}
 			if (patch.period == null) return;
 			const quantum = CONFIG.export.timeline.renderClock.gifDelayQuantumMs;
 			const cycle = clampNumber(roundTo(patch.period, quantum), target.periodRange.min, target.periodRange.max);
@@ -128,9 +136,9 @@ function findTimingTarget(editor, key) {
 
 function isTimingPatchAllowed(target, patch) {
 	if (!target || !patch || typeof patch !== 'object' || Array.isArray(patch)) return false;
-	const names = { period: 'period', run: 'run', appear: 'appear', delayMs: 'run', iterations: 'run', phase: 'phase', direction: 'direction' };
+	const names = { period: 'period', run: 'run', appear: 'appear', delayMs: 'run', iterations: 'run', phase: 'phase', direction: 'direction', gifStart: 'gifStart' };
 	if (Object.keys(patch).some(name => !target.can[names[name]])) return false;
-	if (['period', 'delayMs', 'phase'].some(name => Object.hasOwn(patch, name) && !Number.isFinite(patch[name]))) return false;
+	if (['period', 'delayMs', 'phase', 'gifStart'].some(name => Object.hasOwn(patch, name) && !Number.isFinite(patch[name]))) return false;
 	if (Object.hasOwn(patch, 'iterations') && patch.iterations !== Infinity && !Number.isFinite(patch.iterations)) return false;
 	if (Object.hasOwn(patch, 'run') && (!patch.run || !Number.isFinite(patch.run.start) || (patch.run.end !== Infinity && !Number.isFinite(patch.run.end)) || patch.run.end < patch.run.start)) return false;
 	if (Object.hasOwn(patch, 'appear') && (Object.hasOwn(patch, 'run') || patch.appear !== null && (!patch.appear || !Number.isFinite(patch.appear.start) || patch.appear.end !== null && (!Number.isFinite(patch.appear.end) || patch.appear.end < patch.appear.start)))) return false;
@@ -138,7 +146,7 @@ function isTimingPatchAllowed(target, patch) {
 }
 
 function timingTargetValues(target) {
-	return { period: target.period, run: target.run, appear: target.appear, phase: target.phase, direction: target.direction };
+	return { period: target.period, run: target.run, appear: target.appear, phase: target.phase, direction: target.direction, gifStart: target.gifStart };
 }
 
 // Explicit batch actions copy authored layer data through the existing serializer,
@@ -213,6 +221,59 @@ function planTimingMoves(editor, keys, operation, value = 0) {
 		changes.push({ key: target.key, layerId: target.layerId, patch, run, delta, activityChanged: Boolean(next.active) !== Boolean(target.active) });
 	}
 	return { changes, reason: '' };
+}
+
+// Reading order: rows top to bottom, then left to right, by layer center. A
+// layer joins the current row when its center lies within half the smaller
+// height of the two, so letters of one line stay together.
+function sortByReadingOrder(items) {
+	const rows = [];
+	for (const item of [...items].sort((a, b) => a.y - b.y)) {
+		const row = rows.at(-1);
+		if (row && Math.abs(item.y - row.y) <= Math.min(item.height, row.height) / 2) row.items.push(item);
+		else rows.push({ y: item.y, height: item.height, items: [item] });
+	}
+	return rows.flatMap(row => row.items.sort((a, b) => a.x - b.x));
+}
+
+function staggerMotionTargets(editor, layer) {
+	return listTimingTargets(editor, [layer]).filter(target => target.kind === 'motion' && target.active && target.can.phase && target.can.run);
+}
+
+// The layers of a selection that carry motion, in reading order. Each keeps
+// all its active motions, which stagger together.
+function listStaggerEntries(editor, layers) {
+	return sortByReadingOrder(layers.map(layer => {
+		const transform = getLayerTransform(layer), frame = getLayerFrame(editor, layer);
+		return { layer, targets: staggerMotionTargets(editor, layer), x: transform?.position?.x || 0, y: transform?.position?.y || 0,
+			height: (frame?.height || 0) * Math.abs(transform?.scale?.y ?? 1) };
+	}).filter(entry => entry.targets.length));
+}
+
+// Cycle offsets each layer's phase by `step` (a fraction of a cycle), so
+// looping motion stays seamless; Start offsets each start by `step` ms from
+// the earliest one. Cycle is the default only when every motion loops forever.
+function staggerDefaults(editor, layers) {
+	const entries = listStaggerEntries(editor, layers);
+	const offset = entries.every(entry => entry.targets.every(target => target.run.end === Infinity)) ? 'cycle' : 'start';
+	return { count: entries.length, offset, step: offset === 'cycle' ? 1 / Math.max(1, entries.length) : FIELDS.staggerStartStep.value * 1000 };
+}
+
+function planStagger(editor, layers, { offset, step, reverse = false }) {
+	const entries = listStaggerEntries(editor, layers);
+	if (entries.length < 2) return { updates: [], count: entries.length, reason: 'Stagger needs two or more selected layers with motion.' };
+	if (!['cycle', 'start'].includes(offset) || !Number.isFinite(step) || step < 0) return { updates: [], count: entries.length, reason: 'Enter a valid stagger step.' };
+	if (reverse) entries.reverse();
+	const start = Math.min(...entries.flatMap(entry => entry.targets.map(target => target.run.start)));
+	const updates = entries.flatMap((entry, index) => entry.targets.map(target => ({ key: target.key,
+		patch: offset === 'cycle' ? { phase: (index * step) % 1 } : { delayMs: start + index * step } })));
+	return { updates, count: entries.length, reason: '' };
+}
+
+// Animated GIF uses (stickers, frames, the base image, glitter textures) in
+// these layers whose start frame can be set.
+function listGifStartTargets(editor, layers) {
+	return listTimingTargets(editor, layers).filter(target => target.kind === 'gifCycle' && target.can.gifStart);
 }
 
 function publishTimingWrites(editor, layers, { timingOnly = false } = {}) {

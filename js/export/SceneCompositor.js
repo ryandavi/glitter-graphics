@@ -779,6 +779,7 @@ class SceneCompositor {
 			effectSlot: descriptor.effectSlot,
 			frameCount,
 			frameDurations: timing.delays,
+			startFrame: timing.startFrame,
 			...this._createGifCycleControls(descriptor, timing)
 		});
 	}
@@ -787,7 +788,8 @@ class SceneCompositor {
 	// (`file`), or those stretched to the cycle stored on the record that names
 	// this use of the GIF. The planner and the retimed preview file both read
 	// `delays` from here, so a stretched GIF previews exactly as it exports.
-	// A stored cycle outside what the file can take is ignored.
+	// A stored cycle outside what the file can take is ignored. `startFrame`
+	// is the frame the use's Start at lands on (getGifStartFrame).
 	getAuthoredPassTiming(descriptor, animation, fallbackDuration) {
 		const frameCount = animation.frameCount ?? animation.frames.length;
 		const timing = this._reconcileAuthoredTiming(descriptor, animation, fallbackDuration);
@@ -795,7 +797,7 @@ class SceneCompositor {
 		const range = animation.canRetime ? getGifCycleRange(file) : null;
 		const cycle = descriptor.timingRecord?.gifCycleMs;
 		const retimed = range && cycle >= range.min && cycle <= range.max ? retimeGifDelays(file, cycle) : null;
-		return { file, delays: retimed || file, range };
+		return { file, delays: retimed || file, range, startFrame: getGifStartFrame(file, descriptor.timingRecord?.gifStartMs) };
 	}
 
 	// What makes a GIF's speed editable. Only the controls are gated: a stored

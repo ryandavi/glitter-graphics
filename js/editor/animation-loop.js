@@ -59,6 +59,21 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		this.timelineDock?.cancelGroupMove();
 		return this.applyTimingPlan(planTimingBatch(this, updates), options);
 	},
+	staggerAnimations(layers, options) {
+		const plan = planStagger(this, layers, options);
+		const result = plan.reason ? plan : this.writeTimingBatch(plan.updates, { label: 'Stagger animations' });
+		this.updateStatus(result.reason || (result.changed ? `Staggered ${plan.count} layers.` : 'Those layers are already staggered.'));
+		return result;
+	},
+	// Each GIF use starts on a random frame, so copies stop blinking in lockstep.
+	randomizeGifStarts(layers) {
+		const targets = listGifStartTargets(this, layers);
+		if (!targets.length) { this.updateStatus('Select layers with animated GIFs or glitter first.'); return null; }
+		const result = this.writeTimingBatch(targets.map(target => ({ key: target.key,
+			patch: { gifStart: getGifStartMs(target.fileDurations, Math.floor(Math.random() * target.fileDurations.length)) } })), { label: 'Randomize GIF starts' });
+		this.updateStatus(result.reason || `Randomized ${targets.length} GIF start${targets.length === 1 ? '' : 's'}.`);
+		return result;
+	},
 	applyTimingPlan(plan, { label = 'Change animation timing', commit = true, coalesceKey, timingOnly = false } = {}) {
 		if (plan.reason) return { ...plan, changed: false };
 		const layers = new Set();
@@ -329,6 +344,27 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 			},
 			onCommit: () => this.commitAnimationTiming('Change cycle')
 		});
+		// Its Start at row, `…GifStart` beside `…GifCycle`: the frame this use
+		// begins on, 1-based on the track.
+		const startId = id.replace(/GifCycle$/, 'GifStart');
+		control.startSlider = document.getElementById(startId);
+		control.startBinding = control.startSlider && bindSlider(control.startSlider, document.getElementById(`${startId}Value`), {
+			parseValue: Number,
+			cost: FIELDS.gifStart.cost,
+			formatValue: (frame) => (control.startSource ? `${Math.round(frame)} / ${control.startSource.fileDurations.length}` : ''),
+			resetValue: () => FIELDS.gifStart.value,
+			resetButton: document.getElementById(`reset${startId.charAt(0).toUpperCase()}${startId.slice(1)}`),
+			apply: async (frame) => {
+				const source = control.startSource;
+				const layer = source && this.layerManager.getLayerById(source.layerId);
+				if (!layer) return;
+				this.writeTiming(source.key, { gifStart: getGifStartMs(source.fileDurations, Math.round(frame) - 1) }, { live: true });
+				getLayerManagerForType(this, layer.type)?.renderLayer?.(layer);
+				this.requestPreviewUpdate();
+				await this.previewImages.retimedPreviewsSettled();
+			},
+			onCommit: () => this.commitAnimationTiming('Change GIF start')
+		});
 		(this.gifCycleControls ||= []).push(control);
 	},
 	// The slider value that puts a GIF back on its own timing.
@@ -339,10 +375,23 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 	syncGifCycleControls() {
 		(this.gifCycleControls || []).forEach((control) => {
 			const key = control.getKey();
-			const target = listTimingTargets(this).find(entry => entry.key === key && entry.kind === 'gifCycle' && entry.can.period);
-			control.source = target ? { ...target, ownerLayerId: target.layerId, naturalPeriod: target.period } : null;
-			const { slider, source } = control;
-			(slider.closest('[data-gif-cycle-set]') || slider.closest('.property-row')).hidden = !source;
+			const target = listTimingTargets(this).find(entry => entry.key === key && entry.kind === 'gifCycle');
+			control.source = target?.can.period ? { ...target, ownerLayerId: target.layerId, naturalPeriod: target.period } : null;
+			control.startSource = target?.can.gifStart ? target : null;
+			const { slider, source, startSlider, startSource } = control;
+			const set = slider.closest('[data-gif-cycle-set]');
+			(set || slider.closest('.property-row')).hidden = !source && !startSource;
+			if (set) slider.closest('.property-row').hidden = !source;
+			if (startSlider) {
+				startSlider.closest('.property-row').hidden = !startSource;
+				if (startSource) {
+					startSlider.max = String(startSource.fileDurations.length);
+					const frame = getGifStartFrame(startSource.fileDurations, startSource.gifStart) + 1;
+					writeSliderValue(startSlider, frame);
+					control.startBinding.updateDisplay(frame);
+					control.startBinding.syncResetButton(frame);
+				}
+			}
 			// The same source means the same estimate: the value on the track
 			// is then newer than the one the source was built with.
 			if (!source || control.synced === source) return;

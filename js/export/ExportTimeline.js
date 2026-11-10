@@ -1,6 +1,10 @@
 // Export timeline planning primitives. Loaded before SceneCompositor and the exporters.
 class AuthoredAnimationSource {
-	constructor({ key, label = null, rowLabel = null, ownerLayerId = null, effectSlot = null, frameCount = 0, frameDurations = [], fallbackDuration = 100, fileCycleDuration = null, periodRange = null, resolvePeriod = null, adjustable = false, retimeDelays = null }) {
+	// `frameDurations` are in file order. A nonzero `startFrame` rotates the
+	// pass so it begins on that frame: every time-based query below works on
+	// the rotated pass, and `frameOrder` maps a rotated position back to the
+	// file's frame index.
+	constructor({ key, label = null, rowLabel = null, ownerLayerId = null, effectSlot = null, frameCount = 0, frameDurations = [], fallbackDuration = 100, fileCycleDuration = null, periodRange = null, resolvePeriod = null, adjustable = false, retimeDelays = null, startFrame = 0 }) {
 		this.kind = 'authored';
 		this.key = key;
 		this.label = label;
@@ -9,10 +13,13 @@ class AuthoredAnimationSource {
 		this.effectSlot = effectSlot;
 		this.frameCount = Math.max(0, Math.floor(Number(frameCount) || 0));
 		this.isStatic = this.frameCount <= 1;
-		this.frameDurations = Array.from({ length: this.frameCount }, (_, index) => AuthoredAnimationSource.normalizeDuration(
+		this.fileFrameDurations = Array.from({ length: this.frameCount }, (_, index) => AuthoredAnimationSource.normalizeDuration(
 			frameDurations[index],
 			fallbackDuration
 		));
+		this.startFrame = this.frameCount > 1 ? Math.max(0, Math.trunc(startFrame) || 0) % this.frameCount : 0;
+		this.frameOrder = Array.from({ length: this.frameCount }, (_, index) => (this.startFrame + index) % this.frameCount);
+		this.frameDurations = this.frameOrder.map(index => this.fileFrameDurations[index]);
 		this.cumulativeBoundaries = [0];
 		this.frameDurations.forEach((duration) => {
 			this.cumulativeBoundaries.push(this.cumulativeBoundaries.at(-1) + duration);
@@ -29,7 +36,7 @@ class AuthoredAnimationSource {
 	get displayLabel() { return this.label || String(this.key); }
 
 	atPeriod(period) {
-		return new AuthoredAnimationSource({ ...this, frameDurations: this.retimeDelays?.(period) || this.frameDurations });
+		return new AuthoredAnimationSource({ ...this, frameDurations: this.retimeDelays?.(period) || this.fileFrameDurations });
 	}
 
 	static normalizeDuration(duration, fallback = 100) {
@@ -46,7 +53,7 @@ class AuthoredAnimationSource {
 			if (this.cumulativeBoundaries[middle + 1] <= cycleTime) low = middle + 1;
 			else high = middle;
 		}
-		return Math.min(low, Math.max(0, this.frameCount - 1));
+		return this.frameOrder[Math.min(low, Math.max(0, this.frameCount - 1))];
 	}
 
 	sampleAt(timestamp) {
@@ -77,7 +84,7 @@ class AuthoredAnimationSource {
 				const start = offset + this.cumulativeBoundaries[index];
 				if (start >= duration) break;
 				const end = offset + this.cumulativeBoundaries[index + 1];
-				occurrences.push({ index, start, end: Math.min(end, duration), clipped: end > duration });
+				occurrences.push({ index: this.frameOrder[index], start, end: Math.min(end, duration), clipped: end > duration });
 			}
 		}
 		return occurrences;

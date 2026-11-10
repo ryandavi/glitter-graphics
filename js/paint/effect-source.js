@@ -51,7 +51,8 @@ function resolveEffectPaintSource(effectData, options = {}) {
 			tile: Boolean(effectData.tile ?? CONFIG.tools.shapes.imageFill.defaultTile),
 			imageRendering: normalizeImageRendering(effectData.imageRendering),
 			opacity: opacity / 100,
-			gifCycleMs: effectData.gifCycleMs
+			gifCycleMs: effectData.gifCycleMs,
+			gifStartMs: effectData.gifStartMs
 		};
 	}
 
@@ -65,7 +66,8 @@ function resolveEffectPaintSource(effectData, options = {}) {
 			textureAnchor,
 			textureOffsetX,
 			textureOffsetY,
-			gifCycleMs: effectData.gifCycleMs
+			gifCycleMs: effectData.gifCycleMs,
+			gifStartMs: effectData.gifStartMs
 		};
 	}
 

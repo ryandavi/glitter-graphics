@@ -158,6 +158,8 @@ const CONFIG = deepFreeze({
 
 	tools: {
 		nineSlice: { maxTiles: 256 },
+		// Take Photo asks for this size; the image path scales it to the canvas limits.
+		camera: { idealWidth: 1280, idealHeight: 720, countdownSeconds: [0, 3, 5], fileName: 'Photo.png' },
 		// How far a GIF's cycle may be stretched, as a share of the file's own.
 		gifCycle: { stretchRange: { min: 0.5, max: 2 } },
 		autoGlitter: {
@@ -598,6 +600,12 @@ const CONFIG = deepFreeze({
 			placeholderText: 'Glitter ipsum',
 			decoration: { thickness: 0.06, underline: 0.1, strikethrough: -0.3 },
 			symbols: ['\u2605', '\u2606', '\u2665', '\u2661', '\u273f', '\u266a', '\u2022', '~', '\u2713', '\u221e', '\u2192', '\u00a9'],
+			// The symbol picker's second tab.
+			kaomoji: ['(◕‿◕)', '(｡♥‿♥｡)', 'ʕ•ᴥ•ʔ', '(づ｡◕‿‿◕｡)づ', '(✿◠‿◠)', '٩(◕‿◕｡)۶', '(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧', '( ˘ ³˘)♥',
+				'♥‿♥', '(*^▽^*)', '(≧◡≦)', '(╯°□°)╯︵ ┻━┻', '¯\\_(ツ)_/¯', '(ಥ﹏ಥ)', '(◡‿◡✿)', '(^_^)',
+				'(>_<)', '(T_T)', '(=^･ω･^=)', '(・ω・)', '☆*:.｡.o(≧▽≦)o.｡.:*☆', '⊂(◉‿◉)つ', '(っ˘ω˘ς )', '(˶ᵔ ᵕ ᵔ˶)'],
+			// Wrap writes a pair around the selected text, or around all of it.
+			wrappers: [['xX_', '_Xx'], ['~*~', '~*~'], ['★彡', '彡★'], ['.:*', '*:.'], ['꧁', '꧂'], ['♥ ', ' ♥'], ['*~', '~*']],
 			// Font size, letter spacing, line height and the border width and
 			// shadow offset defaults are field specs (js/core/fields.js).
 			border: {

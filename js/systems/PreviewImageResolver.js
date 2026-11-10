@@ -12,12 +12,12 @@ class PreviewImageResolver {
 
 	// The URL a preview element shows for an animated source: a still while
 	// motion is paused, a retimed copy when this use of the GIF stores a cycle
-	// length, otherwise the file. `use` is `{ element, timingRecord,
+	// length or a start frame, otherwise the file. `use` is `{ element, timingRecord,
 	// sourceIdentity }` as the export's authored descriptor names them.
 	getPreviewImageUrl(url, use = null) {
 		if (!url) return url;
 		if (!this.editor.animationTicker.paused) {
-			if (use?.timingRecord?.gifCycleMs) return this.getRetimedPreviewUrl(url, use);
+			if (use?.timingRecord?.gifCycleMs || use?.timingRecord?.gifStartMs) return this.getRetimedPreviewUrl(url, use);
 			if (use?.element) this.shownPreviews.delete(use.element);
 			return url;
 		}
@@ -40,14 +40,14 @@ class PreviewImageResolver {
 	// into it. Until that copy has decoded, the element keeps the URL it
 	// already shows; the copy then replaces it in one swap.
 	getRetimedPreviewUrl(url, use) {
-		const gifCycleMs = use.timingRecord.gifCycleMs;
-		const key = `${gifCycleMs}|${url}`;
+		const { gifCycleMs, gifStartMs } = use.timingRecord;
+		const key = `${gifCycleMs}|${gifStartMs}|${url}`;
 		let entry = this.retimedPreviews.get(key);
 		if (entry) this.retimedPreviews.delete(key);
 		else {
 			entry = { url: null, bytes: 0, settled: false };
 			// The record may change again before the file has loaded.
-			entry.ready = this.buildRetimedPreview(url, { sourceIdentity: use.sourceIdentity, timingRecord: { gifCycleMs } }).then((built) => {
+			entry.ready = this.buildRetimedPreview(url, { sourceIdentity: use.sourceIdentity, timingRecord: { gifCycleMs, gifStartMs } }).then((built) => {
 				Object.assign(entry, built, { settled: true });
 				if (this.retimedPreviews.get(key) !== entry) this.releaseRetimedPreview(entry);
 				else this.editor.requestPreviewUpdate();
@@ -71,8 +71,9 @@ class PreviewImageResolver {
 		try {
 			const bytes = await fetchGifBytes(url);
 			const timing = this.editor.sceneCompositor.getAuthoredPassTiming(use, readGifTiming(bytes), CONFIG.export.defaults.frameDelay);
-			if (timing.delays === timing.file) return {};
-			const retimed = retimeGifBytes(bytes, timing.delays);
+			if (timing.delays === timing.file && !timing.startFrame) return {};
+			const retimed = timing.startFrame ? rotateGifBytes(bytes, timing.startFrame, timing.delays) : retimeGifBytes(bytes, timing.delays);
+			if (!retimed) throw new Error('This GIF cannot be rewritten for preview');
 			objectUrl = URL.createObjectURL(new Blob([retimed], { type: 'image/gif' }));
 			await loadImageElement(objectUrl);
 			this.retimedUrls.add(objectUrl);

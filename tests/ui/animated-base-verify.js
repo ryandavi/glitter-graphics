@@ -121,6 +121,27 @@ const element = (page) => page.evaluate(() => {
 	assert(first.probes[0].join() === '204,51,85,255' && second.probes[0].join() === '51,170,119,255' && third.probes[0].join() === '51,85,204,255', `Frame colors: ${first.probes} | ${second.probes} | ${third.probes}`);
 	console.log('PASS Export frames follow the GIF; frame one equals the still base');
 
+	// Start at: the base begins on frame three in export and in the preview
+	// copy, and one undo removes it.
+	const startAt = await page.evaluate(async () => {
+		const e = editor, layer = e.getBaseLayer(), target = listTimingTargets(e, [layer]).find(target => target.kind === 'gifCycle');
+		const written = e.writeTiming(target.key, { gifStart: 390 });
+		e.syncGifCycleControls();
+		const row = document.getElementById('baseImageGifStart')?.closest('.property-row');
+		e.requestPreviewUpdate(); await e.previewImages.retimedPreviewsSettled(); e.requestPreviewUpdate();
+		await new Promise(resolve => setTimeout(resolve, 200));
+		const src = document.querySelector('.base-animation-element')?.src || '';
+		const reader = openGifReader(await fetchGifBytes(src)), pixels = new Uint8ClampedArray(reader.width * reader.height * 4);
+		reader.decodeAndBlitFrameRGBA(0, pixels);
+		return { written, stored: layer.background.gifStartMs, rowShown: Boolean(row && !row.hidden), sliderValue: document.getElementById('baseImageGifStart')?.value, blob: src.startsWith('blob:'), previewFirst: Array.from(pixels.slice(4 * (reader.width + 1), 4 * (reader.width + 1) + 4)).join() };
+	});
+	assert(startAt.written && startAt.stored === 400 && startAt.rowShown && startAt.sliderValue === '3', `Start at snaps to a frame and shows its row: ${JSON.stringify(startAt)}`);
+	assert(startAt.blob && startAt.previewFirst === '51,85,204,255', `The preview copy starts on frame three: ${JSON.stringify(startAt)}`);
+	const offsetFirst = await compose(page, 0), offsetSecond = await compose(page, 250);
+	assert(offsetFirst.probes[0].join() === '51,85,204,255' && offsetSecond.probes[0].join() === '204,51,85,255', `Offset export frames: ${offsetFirst.probes} | ${offsetSecond.probes}`);
+	assert(await page.evaluate(async () => { await editor.undo(); return editor.getBaseLayer().background.gifStartMs === undefined; }), 'Undo removes Start at');
+	console.log('PASS Start at offsets the base in preview and export, with undo');
+
 	// Play animation off is exactly a still base; back on plays again.
 	await page.evaluate(() => { const input = document.getElementById('baseBackgroundAnimate'); input.checked = false; input.dispatchEvent(new Event('change', { bubbles: true })); });
 	await page.waitForTimeout(150);

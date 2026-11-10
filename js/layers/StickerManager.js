@@ -495,6 +495,7 @@ class StickerManager {
 		// applies after a resize gesture.
 		activeLayer.stickerData.url = nextUrl;
 		delete activeLayer.stickerData.gifCycleMs;
+		delete activeLayer.stickerData.gifStartMs;
 
 		// Clear the cached still frame when changing sticker
 		activeLayer.stickerData.staticImageData = null;

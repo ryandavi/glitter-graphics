@@ -564,6 +564,14 @@ isLayerContentLocked(layer) {
 					? `Copy paint and effects from ${source.name || 'active layer'} to ${appearanceTargets.length} unlocked layer(s) of the same type; image fills stay unchanged`
 					: 'Select another unlocked layer of the same type as the active layer';
 			}
+			const canStagger = staggerDefaults(this, selectedLayers).count > 1;
+			const canRandomize = listGifStartTargets(this, selectedLayers).length > 0;
+			const timingActions = document.getElementById('multiSelectionTimingActions');
+			if (timingActions) timingActions.hidden = !canStagger && !canRandomize;
+			const stagger = document.getElementById('multiSelectionStagger');
+			if (stagger) stagger.closest('.app-menu-popover').hidden = !canStagger;
+			const randomize = document.getElementById('multiSelectionRandomizeStart');
+			if (randomize) randomize.hidden = !canRandomize;
 			this.syncMultiSelectionOpacity?.(selectedLayers);
 			this.syncMultiSelectionBlendMode?.(selectedLayers);
 			return;

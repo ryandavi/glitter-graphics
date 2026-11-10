@@ -20,8 +20,11 @@ const TEXT_ACTION_METHODS = {
 		bind('[data-text-align]', button => 'textAlign' + button.dataset.textAlign[0].toUpperCase() + button.dataset.textAlign.slice(1));
 		document.getElementById('textSplit')?.addEventListener('click', () => COMMANDS.splitText.run(this.editor));
 		bind('#textCopyStyleAsPreset', 'copyStyleAsPreset');
-		document.getElementById('textSymbols')?.replaceChildren(...CONFIG.tools.text.symbols.map(symbol => { const button = document.createElement('button'); button.className = 'btn-flat'; button.type = 'button'; button.textContent = symbol; button.title = `Insert ${symbol}`; button.addEventListener('click', () => this.insertTextSymbol(symbol)); return button; }));
-		document.getElementById('textSymbols')?.addEventListener('mousedown', event => event.preventDefault());
+		document.getElementById('textWrap')?.addEventListener('click', () => COMMANDS.textWrap.run(this.editor));
+		document.querySelectorAll('#textSymbolTabs [data-symbol-set]').forEach(button => button.addEventListener('click', () => this.renderTextSymbols(button.dataset.symbolSet)));
+		this.renderTextSymbols('symbols');
+		// Neither the symbols nor the tabs take focus, so the caret stays put.
+		for (const id of ['textSymbols', 'textSymbolTabs']) document.getElementById(id)?.addEventListener('mousedown', event => event.preventDefault());
 		const emoji = document.getElementById('textColorEmoji');
 		emoji?.addEventListener('change', () => {
 			const layer = this.getActiveTextLayer();
@@ -38,6 +41,28 @@ const TEXT_ACTION_METHODS = {
 		panel.replaceChildren(...entries.map(entry => { const button = document.createElement('button'); button.className = 'app-menu-item'; button.type = 'button'; button.textContent = entry.label; button.addEventListener('click', entry.run); return button; }));
 		if (!root._textMenu) root._textMenu = setupMenuPopover({ root, trigger, panel, bindTrigger: false });
 		root._textMenu.open();
+	},
+	// `set` names a CONFIG.tools.text list: symbols or kaomoji.
+	renderTextSymbols(set) {
+		const grid = document.getElementById('textSymbols');
+		if (!grid) return;
+		document.querySelectorAll('#textSymbolTabs [data-symbol-set]').forEach(button => {
+			const active = button.dataset.symbolSet === set;
+			button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active));
+		});
+		grid.classList.toggle('is-kaomoji', set === 'kaomoji');
+		grid.replaceChildren(...CONFIG.tools.text[set].map(symbol => { const button = document.createElement('button'); button.className = 'btn-flat'; button.type = 'button'; button.textContent = symbol; button.title = `Insert ${symbol}`; button.addEventListener('click', () => this.insertTextSymbol(symbol)); return button; }));
+	},
+	// Wraps the selection, or the whole text when nothing is selected.
+	wrapText(before, after) {
+		const layer = this.getActiveTextLayer();
+		if (!layer || !this.editor.canEditLayer(layer, { notify: true })) return;
+		const session = this.editSession, text = layer.textData.text;
+		let start = session?.selectionStart ?? this.ui.textInput.selectionStart, end = session?.selectionEnd ?? this.ui.textInput.selectionEnd;
+		if (start === end) { start = 0; end = text.length; }
+		const value = text.slice(0, start) + before + text.slice(start, end) + after + text.slice(end);
+		const caret = end + before.length + after.length;
+		this.applyTextEdit(layer, value, { start: caret, end: caret });
 	},
 	insertTextSymbol(symbol) {
 		const layer = this.getActiveTextLayer();
@@ -127,7 +152,8 @@ const TEXT_ACTION_METHODS = {
 		manager.setSelection(clones.map(clone => clone.id), { activeLayerId: clones[0].id });
 		manager.renderLayersList(); manager.reorderLayers();
 		this.editor.saveState('Split text'); this.editor.requestPreviewUpdate();
-		this.editor.updateStatus(`Split into ${clones.length} ${mode}.${layer.textData.textBackground?.enabled ? ' Each piece has its own background plate.' : ''}`);
+		const animated = layer.animationsEnabled !== false && (layer.animations || []).some(animation => GlitterAnimation.isActive(animation));
+		this.editor.updateStatus(`Split into ${clones.length} ${mode}.${layer.textData.textBackground?.enabled ? ' Each piece has its own background plate.' : ''}${animated && clones.length > 1 ? ' Stagger them from the selection panel.' : ''}`);
 	}
 };
 

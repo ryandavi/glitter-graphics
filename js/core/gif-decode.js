@@ -132,6 +132,69 @@ function retimeGifBytes(bytes, frameDurations) {
 	return output;
 }
 
+// A use's Start at is stored in ms of the file's own timing (`gifStartMs`):
+// how far into its cycle the GIF already is at time 0. It resolves to the
+// nearest frame boundary, so a later cycle change keeps the same frame.
+function getGifStartFrame(fileDurations, startMs) {
+	if (!(startMs > 0) || fileDurations.length < 2) return 0;
+	let best = 0, distance = Infinity, at = 0;
+	fileDurations.forEach((duration, index) => {
+		if (Math.abs(at - startMs) < distance) { best = index; distance = Math.abs(at - startMs); }
+		at += duration;
+	});
+	return best;
+}
+
+function getGifStartMs(fileDurations, frame) {
+	return fileDurations.slice(0, frame).reduce((sum, duration) => sum + duration, 0);
+}
+
+// A copy of the GIF that starts at `startFrame` and plays `frameDurations`
+// (file order). A GIF cannot begin mid-file, and an optimized GIF's frames
+// are patches over the frames before them, so each frame is written whole:
+// composited with the file's own disposal, cleared after it shows (disposal
+// 2), on an exact palette of its colors. Null when a composited frame needs
+// more colors than one palette holds.
+function rotateGifBytes(bytes, startFrame, frameDurations) {
+	const reader = openGifReader(bytes);
+	const { width, height } = reader, count = reader.numFrames();
+	const quantum = CONFIG.export.timeline.renderClock.gifDelayQuantumMs;
+	let canvas = new Uint8ClampedArray(width * height * 4);
+	const frames = [];
+	for (let index = 0; index < count; index++) {
+		const info = reader.frameInfo(index);
+		const restore = info.disposal === 3 ? canvas.slice() : null;
+		reader.decodeAndBlitFrameRGBA(index, canvas);
+		const colors = new Map(), pixels = new Uint8Array(width * height);
+		const transparent = canvas.some((value, offset) => offset % 4 === 3 && value === 0);
+		if (transparent) colors.set(-1, 0);
+		for (let pixel = 0; pixel < pixels.length; pixel++) {
+			const offset = pixel * 4;
+			const color = canvas[offset + 3] ? (canvas[offset] << 16) | (canvas[offset + 1] << 8) | canvas[offset + 2] : -1;
+			let entry = colors.get(color);
+			if (entry === undefined) {
+				if (colors.size === 256) return null;
+				entry = colors.size; colors.set(color, entry);
+			}
+			pixels[pixel] = entry;
+		}
+		const palette = Array.from(colors.keys(), color => Math.max(0, color));
+		while (palette.length < 2 || palette.length & (palette.length - 1)) palette.push(0);
+		frames.push({ pixels, palette, transparent });
+		if (info.disposal === 2) {
+			for (let y = info.y; y < info.y + info.height; y++) canvas.fill(0, (y * width + info.x) * 4, (y * width + info.x + info.width) * 4);
+		} else if (restore) canvas = restore;
+	}
+	const loop = reader.loopCount();
+	const output = new Uint8Array(1024 + count * (width * height * 2 + 1024));
+	const writer = new GifWriter(output, width, height, loop == null ? {} : { loop });
+	for (let step = 0; step < count; step++) {
+		const index = (startFrame + step) % count, frame = frames[index];
+		writer.addFrame(0, 0, width, height, frame.pixels, { palette: frame.palette, delay: Math.round(frameDurations[index] / quantum), disposal: 2, ...(frame.transparent ? { transparent: 0 } : {}) });
+	}
+	return output.slice(0, writer.end());
+}
+
 // Size, frame count and per-frame delays, without decoding any pixels.
 function readGifTiming(bytes) {
 	return describeGifTiming(openGifReader(bytes), bytes);

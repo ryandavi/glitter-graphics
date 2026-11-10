@@ -13,7 +13,7 @@ Object.assign(context, {
 	isFeatureEnabled: () => true, window: { dispatchEvent() {} }, CustomEvent: class {},
 	GlitterFilter: { isActive: () => false }, GlitterFilters: { get: () => ({}) }
 });
-for (const file of ['core/math.js', 'core/format.js', 'core/layer-types.js', 'paint/clip-mask.js', 'effects/easing.js', 'effects/animation.js', 'core/animation-timing.js', 'editor/animation-loop.js', 'editor/animation-edit.js']) vm.runInContext(fs.readFileSync(path.join(__dirname, '../../js', file), 'utf8'), context);
+for (const file of ['core/math.js', 'core/format.js', 'core/gif-decode.js', 'core/layer-types.js', 'paint/clip-mask.js', 'effects/easing.js', 'effects/animation.js', 'core/animation-timing.js', 'editor/animation-loop.js', 'editor/animation-edit.js']) vm.runInContext(fs.readFileSync(path.join(__dirname, '../../js', file), 'utf8'), context);
 vm.runInContext("LAYER_UI_CONFIG.shape = { visibilityWindow: true, clippable: true, clipBase: true }; LAYER_UI_CONFIG[LayerType.BASE_IMAGE] = { visibilityWindow: false };", context);
 const result = vm.runInContext(`(() => {
 	const animation = GlitterAnimation.normalizeAnimation({ id: 'first', type: 'pulse', periodMs: 1400 });
@@ -272,3 +272,33 @@ vm.runInContext(`(() => {
 	assert(editor.applyTimingGroup([keys[0]], 'reset').changed && !a.loopOriginalPeriods && editor.documentRevision > metaRevision && commits === metaCommits + 1, 'metadata-only restoration remains one undoable action');
 })()`, context);
 console.log('PASS atomic Fit/Reset and capability-aware paste, stale analysis, GIF quantization, copies, limits and original metadata');
+Object.assign(context, { getLayerTransform: layer => layer.transform, getLayerFrame: layer => layer.frame });
+vm.runInContext(`(() => {
+	const assert = (condition, message) => { if (!condition) throw new Error(message); };
+	const close = (a, b) => Math.abs(a - b) < 1e-7;
+	// Two lines of letters, listed out of order; the second line's centers wobble within half a letter.
+	const place = [['d', 30, 52], ['a', 0, 10], ['c', 0, 50], ['b', 10, 12], ['still', 20, 10]];
+	const layers = place.map(([id, x, y]) => ({ id, type: 'shape', transform: { position: { x, y }, scale: { x: 1, y: 1 } }, frame: { width: 8, height: 10 },
+		animations: id === 'still' ? [] : [GlitterAnimation.normalizeAnimation({ id: 'm-' + id, type: 'bounce', periodMs: 1000 })] }));
+	let commits = 0, status = '';
+	const editor = { layers, sceneCompositor: { describeAuthoredTiming: () => [] }, requestPreviewUpdate() {}, commitAnimationTiming() { commits++; }, updateStatus(text) { status = text; },
+		layerManager: { getLayerById: id => layers.find(layer => layer.id === id), serializeLayer: layer => JSON.parse(JSON.stringify(layer)) } };
+	Object.assign(editor, EDITOR_ANIMATION_LOOP_METHODS, { commitAnimationTiming() { commits++; } });
+	const phases = () => ['a', 'b', 'c', 'd'].map(id => layers.find(layer => layer.id === id).animations[0].phase);
+	const defaults = staggerDefaults(editor, layers);
+	assert(defaults.count === 4 && defaults.offset === 'cycle' && close(defaults.step, 0.25), 'looping motion defaults to a Cycle spread over one cycle, skipping still layers');
+	assert(editor.staggerAnimations(layers, defaults).changed && commits === 1, 'stagger commits one undo step');
+	assert(phases().every((phase, index) => close(phase, index * 0.25)), 'Cycle stagger follows reading order: ' + phases());
+	assert(status === 'Staggered 4 layers.', 'stagger reports the layer count');
+	assert(!editor.staggerAnimations(layers, defaults).changed && commits === 1, 'repeating a stagger changes nothing');
+	editor.staggerAnimations(layers, { ...defaults, reverse: true });
+	assert(phases().every((phase, index) => close(phase, (3 - index) * 0.25)), 'Reverse runs the order backwards');
+	for (const layer of layers) for (const animation of layer.animations) Object.assign(animation, { iterations: 1, phase: 0, delayMs: 200 });
+	const finite = staggerDefaults(editor, layers);
+	assert(finite.offset === 'start' && finite.step === FIELDS.staggerStartStep.value * 1000, 'finite motion defaults to Start with the field step');
+	editor.staggerAnimations(layers, finite);
+	const starts = ['a', 'b', 'c', 'd'].map(id => layers.find(layer => layer.id === id).animations[0]);
+	assert(starts.every((animation, index) => close(animation.delayMs, 200 + index * 80) && animation.iterations === 1), 'Start stagger offsets each start from the earliest and keeps run length');
+	assert(planStagger(editor, layers.slice(0, 1), finite).reason && planStagger(editor, layers, { offset: 'start', step: -1 }).reason, 'one layer or a negative step is rejected');
+})()`, context);
+console.log('PASS stagger: reading order, Cycle and Start, Reverse, one batch');

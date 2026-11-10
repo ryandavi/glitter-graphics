@@ -187,10 +187,13 @@ defineOptions('sparkleStyle', [
 	{ value: 'soft', label: 'Soft' }
 ]);
 
+// Each label shows its own mapping (getTextContent in text-content.js).
 defineOptions('textCase', [
-	{ value: 'none', label: 'As Typed' }, { value: 'upper', label: 'UPPERCASE' },
-	{ value: 'lower', label: 'lowercase' }, { value: 'title', label: 'Title Case' },
-	{ value: 'alternating', label: 'aLtErNaTiNg' }
+	{ value: 'none', label: 'As Typed', group: 'Case' }, { value: 'upper', label: 'UPPERCASE', group: 'Case' },
+	{ value: 'lower', label: 'lowercase', group: 'Case' }, { value: 'title', label: 'Title Case', group: 'Case' },
+	{ value: 'alternating', label: 'aLtErNaTiNg', group: 'Style' }, { value: 'leet', label: 'l33t', group: 'Style' },
+	{ value: 'fullwidth', label: 'ｆｕｌｌｗｉｄｔｈ', group: 'Style' },
+	{ value: 'smallcaps', label: 'ᴛɪɴʏ ᴄᴀᴘꜱ', group: 'Style' }
 ]);
 defineOptions('textOrientation', [
 	{ value: 'horizontal', label: 'Horizontal' },

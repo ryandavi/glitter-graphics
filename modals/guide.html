@@ -146,6 +146,7 @@
                     <ul>
                         <li>Images larger than 1024<span class="setting-separator"> × </span>1024<span class="setting-unit">px</span> are resized to fit. Glitter shows the new dimensions first, and you can continue or cancel. Your original file is never changed.</li>
                         <li>The maximum file size is 10<span class="setting-unit">MB</span>.</li>
+                        <li><strong>Take Photo</strong>, beside Open Image and in the menu, uses your camera instead. <strong>Mirror</strong> keeps the photo the way the preview shows it, <strong>Countdown</strong> waits 3 or 5 seconds, and <strong>Camera</strong> switches cameras when there is more than one. <strong>Use Photo</strong> opens it like any image; <strong>Retake</strong> tries again.</li>
                         <li>An animated GIF plays on the canvas and in animated exports. Glitter picked by color and Kira Kira read its first frame, so they stay put while the picture moves. Auto Glitter needs a still image, so it is unavailable until you turn off <strong>Play animation</strong>. A GIF longer than 12 seconds or 300 frames opens as a still image.</li>
                         <li>Once a document is open, dropping another image onto the workspace adds it as a new Sticker layer. It does not replace the canvas.</li>
                     </ul>
@@ -537,6 +538,8 @@
                         <li>Distribute three or more layers horizontally or vertically.</li>
                         <li>With one sticker, text, shape, or path layer selected, center it horizontally or vertically on the canvas.</li>
                         <li>Duplicate and Delete are under <strong>Actions</strong>.</li>
+                        <li><strong>Stagger animations</strong> appears under Actions when two or more selected layers have motion. <strong>Cycle</strong> puts each layer one step further into its loop, so a wave stays seamless. <strong>Start</strong> starts each one a step later, for a typewriter or pop-in. Layers go in reading order, top to bottom and left to right; <strong>Reverse order</strong> runs it backwards. It takes one Undo step.</li>
+                        <li><strong>Randomize GIF starts</strong> starts each selected animated sticker, frame or glitter on a random frame.</li>
                     </ul>
                 </div>
             </div>
@@ -620,7 +623,7 @@
                     <p><strong>Base Image settings</strong> – Select the protected <strong>Base Image</strong> layer to open <strong>Canvas Properties</strong>.</p>
                     <ul>
                         <li><strong>Background</strong> – Choose Image, Transparent, Glitter, Solid, Gradient, or Pattern. <strong>Replace</strong> swaps the base image without disturbing other layers.</li>
-                        <li><strong>Animation</strong> – Shown when the base image is an animated GIF. Turn off <strong>Play animation</strong> to use its first frame as a still.</li>
+                        <li><strong>Animation</strong> – Shown when the base image is an animated GIF. Turn off <strong>Play animation</strong> to use its first frame as a still. <strong>Start at</strong> picks the frame it starts on.</li>
                         <li><strong>Image</strong> – Enter a linked pixel size or percentage to resize the canvas and every editable layer together. Choose whether glitter textures and visual effects scale with the design.</li>
                         <li><strong>Canvas</strong> – Crop or extend the canvas without scaling content. Use Relative for pixel deltas, choose an anchor, and fill the new area with transparency or a color.</li>
                         <li><strong>Fit</strong> – Crop or extend the canvas to fit all artwork, the selected layers, or the area drawn with the Select Area tool, with optional padding on every side. In Canvas mode you can also choose a ratio or a named size.</li>
@@ -1316,7 +1319,7 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Text</strong> – Type on the canvas or in the text field. The symbols under the field insert at the caret. <strong>Case</strong> includes alternating caps, which skips spaces and symbols. With <strong>Color emoji</strong> in the Type group, emoji keep their system colors and still get an outline and shadow.</p>
+                    <p><strong>Text</strong> – Type on the canvas or in the text field. The symbols under the field insert at the caret. <strong>Case</strong> includes alternating caps, which skips spaces and symbols, and the old-web styles l33t, fullwidth and tiny caps. A style changes only what is drawn, so the typed text stays plain. Fonts without fullwidth or tiny-cap letters draw them in a fallback font. The <strong>Kaomoji</strong> tab beside the symbols inserts faces such as (◕‿◕). <strong>Wrap</strong> writes a decoration such as xX_…_Xx or ~*~…~*~ around the selected text, or around all of it. With <strong>Color emoji</strong> in the Type group, emoji keep their system colors and still get an outline and shadow.</p>
                 </div>
             </div>
 
@@ -1378,7 +1381,7 @@
                     <p><strong>Actions</strong></p>
                     <ul>
                         <li><strong>Fit box to text</strong> – Fits a Fixed frame to its content.</li>
-                        <li><strong>Split text</strong> – Replaces the layer with one layer per Character, Word, or Line, at their current positions. Each piece keeps its style and its own background plate. Glitter asks before it drops hidden overflow text, and refuses a split that exceeds the 25-layer limit. Undo restores the original layer.</li>
+                        <li><strong>Split text</strong> – Replaces the layer with one layer per Character, Word, or Line, at their current positions. Each piece keeps its style, motion and its own background plate; Stagger animations then sets the pieces moving one after another. Glitter asks before it drops hidden overflow text, and refuses a split that exceeds the 25-layer limit. Undo restores the original layer.</li>
                     </ul>
                 </div>
             </div>
@@ -2004,6 +2007,7 @@
         <div class="guide-subsection">
             <h4 id="layer-animation">Animation <span class="feature-badge feature-badge-beta">Beta</span></h4>
             <p><strong>Animation</strong> adds one or more looping motions or transitions to any Glitter Fill, Sticker, Text, or Shape layer. Its card is at the bottom of the selected layer's properties. It is in <strong>Beta</strong> and still being refined.</p>
+            <p>Animated stickers, frame images, glitter textures and the Base Image keep their own GIF timing. Under the section's Advanced, <strong>Cycle</strong> sets how long one pass takes and <strong>Start at</strong> sets the frame it starts on, so two copies of one GIF no longer blink together.</p>
 
             <div class="guide-item">
                 <div class="guide-item-icon">

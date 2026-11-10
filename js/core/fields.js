@@ -26,6 +26,8 @@ const FIELDS = Object.freeze({
 	patternScrollCycle: { label: 'Cycle', unit: 'ms', min: 100, max: 20000, step: 100, value: 2000, scale: 'log' },
 	// The track's range is set per GIF, from the cycles that file can be stretched to.
 	gifCycle: { label: 'Cycle', unit: 's', min: 0.04, max: 20, step: 0.01, value: 1, cost: 'raster' },
+	// The frame a use of a GIF starts on, 1-based; the track's max is set per GIF.
+	gifStart: { label: 'Start at', unit: '', min: 1, max: 2, step: 1, value: 1, cost: 'raster' },
 	areaModifyAmount: { label: 'Amount', unit: 'px', min: 1, max: 100, step: 1, value: 4, cost: 'compute' },
 	recolorHue: { label: 'Hue', unit: '°', min: -180, max: 180, step: 1, value: 0 },
 	recolorSaturation: { label: 'Saturation', unit: '%', min: -100, max: 100, step: 1, value: 0 },
@@ -49,6 +51,9 @@ const FIELDS = Object.freeze({
 	animLasts: { label: 'Stretch duration', unit: 's', min: 0, get max() { return CONFIG.export.timeline.maxTimelineMs / 1000; }, step: 0.001, value: 1 },
 	animDelay: { label: 'Starts at', unit: 's', min: 0, get max() { return CONFIG.export.timeline.maxTimelineMs / 1000; }, step: 0.05, value: 0 },
 	animPhase: { label: 'Start offset', unit: '%', min: 0, max: 100, step: 1, value: 0 },
+	// Stagger across a selection: a share of one cycle, or seconds between starts.
+	staggerCycleStep: { label: 'Step', unit: '%', min: 0, max: 100, step: 0.1 },
+	staggerStartStep: { label: 'Step', unit: 's', min: 0, max: 5, step: 0.01, value: 0.08 },
 	animAnchorX: { label: 'Anchor X', unit: '%', min: 0, max: 100, step: 1, value: 50 },
 	animAnchorY: { label: 'Anchor Y', unit: '%', min: 0, max: 100, step: 1, value: 50 },
 	animKeyPosition: { label: 'Position', unit: '%', min: 0, max: 100, step: 0.1, value: 0, cost: 'style' },

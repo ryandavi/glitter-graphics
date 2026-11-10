@@ -242,6 +242,52 @@ setupLayerTypePickerListeners() {
 		return this.layerManager.getSelectedLayers().filter((layer) => layer.id !== source.id && layer.type === source.type && canEditLayerInStack(layer));
 	},
 
+	// Stagger's popover: Offset (Cycle or Start), Step and Reverse. Without a
+	// visible selection panel (the command on a closed inspector) it applies
+	// the defaults.
+	openStaggerMenu() {
+		const layers = this.layerManager.getSelectedLayers(), defaults = staggerDefaults(this, layers);
+		if (defaults.count < 2) { this.updateStatus('Stagger needs two or more selected layers with motion.'); return; }
+		const trigger = document.getElementById('multiSelectionStagger'), root = trigger?.closest('.app-menu-popover');
+		const panel = root && (root._staggerPanel ||= root.querySelector('.app-menu-panel'));
+		if (!trigger?.offsetParent || !panel) { this.staggerAnimations(layers, defaults); return; }
+		if (root._staggerMenu?.isOpen()) { root._staggerMenu.close(); return; }
+		let offset = defaults.offset;
+		const offsetRow = buildPanelItem({ kind: 'segmented', label: 'Offset', ariaLabel: 'Stagger offset', options: [
+			{ label: 'Cycle', attrs: { 'data-stagger-offset': 'cycle' } }, { label: 'Start', attrs: { 'data-stagger-offset': 'start' } }
+		] }, {});
+		const cycleRow = buildPanelItem({ kind: 'field', type: 'number', ...FIELDS.staggerCycleStep, value: Math.round(1000 / defaults.count) / 10 }, {});
+		const startRow = buildPanelItem({ kind: 'field', type: 'number', ...FIELDS.staggerStartStep }, {});
+		const reverseRow = buildPanelItem({ kind: 'toggle', label: 'Reverse order' }, {});
+		const note = buildElement('property-note');
+		note.setAttribute('aria-live', 'polite');
+		const sync = () => {
+			offsetRow.querySelectorAll('[data-stagger-offset]').forEach(button => {
+				const active = button.dataset.staggerOffset === offset;
+				button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active));
+			});
+			cycleRow.hidden = offset !== 'cycle'; startRow.hidden = offset !== 'start';
+			note.textContent = offset === 'cycle' ? 'Each layer is one step further into its cycle, so loops stay seamless.' : 'Each layer starts one step after the one before.';
+		};
+		offsetRow.querySelectorAll('[data-stagger-offset]').forEach(button => button.addEventListener('click', () => { offset = button.dataset.staggerOffset; sync(); }));
+		const apply = buildIconButton({ className: 'btn-flat primary', label: 'Apply', onClick: () => {
+			const step = offset === 'cycle' ? cycleRow.querySelector('input').valueAsNumber / 100 : startRow.querySelector('input').valueAsNumber * 1000;
+			const result = this.staggerAnimations(this.layerManager.getSelectedLayers(), { offset, step, reverse: reverseRow.querySelector('input').checked });
+			if (result.reason) note.textContent = result.reason;
+			else root._staggerMenu.close({ focusTrigger: true });
+		} });
+		apply.textContent = 'Apply';
+		const cancel = buildIconButton({ className: 'btn-flat', label: 'Cancel', onClick: () => root._staggerMenu.close({ focusTrigger: true }) });
+		cancel.textContent = 'Cancel';
+		const buttons = buildElement('property-row is-control'), pair = buildElement('property-pair');
+		pair.append(cancel, apply); buttons.append(pair);
+		panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-label', 'Stagger animations');
+		panel.replaceChildren(buildMenuLabel(`${defaults.count} layers with motion, in reading order`), offsetRow, cycleRow, startRow, reverseRow, note, buttons);
+		sync();
+		root._staggerMenu ||= setupMenuPopover({ root, trigger, panel, fixed: true, bindTrigger: false, itemSelector: 'input, button:not([disabled])' });
+		root._staggerMenu.open();
+	},
+
 	async runMultiSelectionAction(label, action) {
 		if (this._multiSelectionActionActive) return;
 		this._multiSelectionActionActive = true;
@@ -424,6 +470,8 @@ setupLayerTypePickerListeners() {
 		document.getElementById('multiSelectionCopyAppearance')?.addEventListener('click', () => {
 			this.runMultiSelectionAction('Copy selected layer appearance', () => this.copyMultiSelectionAppearance());
 		});
+		document.getElementById('multiSelectionStagger')?.addEventListener('click', () => COMMANDS.staggerAnimations.run(this));
+		document.getElementById('multiSelectionRandomizeStart')?.addEventListener('click', () => COMMANDS.randomizeGifStarts.run(this));
 
 		const applyMultiOpacity = (commit = false) => {
 			const layers = this.layerManager.getSelectedLayers();

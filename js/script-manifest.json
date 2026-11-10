@@ -150,6 +150,7 @@
 		"js/core/debug.js",
 		"js/systems/GestureManager.js",
 		"js/systems/ModalManager.js",
+		"js/systems/CameraCapture.js",
 		"js/export/ExportTimeline.js",
 		"js/export/GifPalette.js",
 		"js/export/AuthoredFrameResolver.js",

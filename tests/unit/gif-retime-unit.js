@@ -6,11 +6,11 @@ const path = require('path');
 const vm = require('vm');
 const { GifReader, GifWriter } = require('../../js/vendor/omggif.js');
 
-const context = vm.createContext({ GifReader, Uint8Array, navigator: { hardwareConcurrency: 4 } });
-for (const file of ['js/core/math.js', 'js/core/color.js', 'js/core/releases.js', 'js/core/fields.js', 'js/core/area.js', 'js/core/config.js', 'js/core/gif-decode.js']) {
+const context = vm.createContext({ GifReader, GifWriter, Uint8Array, Uint8ClampedArray, navigator: { hardwareConcurrency: 4 } });
+for (const file of ['js/core/math.js', 'js/core/color.js', 'js/core/releases.js', 'js/core/fields.js', 'js/core/area.js', 'js/core/config.js', 'js/core/gif-decode.js', 'js/export/ExportTimeline.js']) {
 	vm.runInContext(fs.readFileSync(path.join(__dirname, '../..', file), 'utf8'), context);
 }
-const { retimeGifDelays, retimeGifBytes, readGifTiming, getGifCycleRange } = vm.runInContext('({ retimeGifDelays, retimeGifBytes, readGifTiming, getGifCycleRange })', context);
+const { retimeGifDelays, retimeGifBytes, readGifTiming, getGifCycleRange, getGifStartFrame, getGifStartMs, rotateGifBytes, AuthoredAnimationSource } = vm.runInContext('({ retimeGifDelays, retimeGifBytes, readGifTiming, getGifCycleRange, getGifStartFrame, getGifStartMs, rotateGifBytes, AuthoredAnimationSource })', context);
 const sum = (values) => values.reduce((total, value) => total + value, 0);
 const list = (values) => Array.from(values);
 
@@ -88,4 +88,65 @@ for (const item of require('../../data/glitter.index.json').filter((entry) => en
 }
 assert(checked > 0, 'No shipped glitter could be retimed');
 
-process.stdout.write(`PASS GIF retiming: delay settling, limits, byte rewrite, ${checked} shipped assets\n`);
+// Start at: the stored ms resolves to the nearest frame boundary of the file's timing.
+assert.strictEqual(getGifStartFrame([100, 100, 100], 0), 0);
+assert.strictEqual(getGifStartFrame([100, 100, 100], 140), 1);
+assert.strictEqual(getGifStartFrame([100, 100, 100], 160), 2);
+assert.strictEqual(getGifStartFrame([100, 100, 100], 290), 2, 'past the last boundary stays on the last frame');
+assert.strictEqual(getGifStartFrame([100], 50), 0, 'a still has no start frame');
+assert.strictEqual(getGifStartMs([40, 60, 100], 2), 100);
+
+// Rotation re-encodes whole composited frames, so an optimized GIF (patches
+// over earlier frames, every disposal) starts cleanly mid-cycle.
+function composites(bytes) {
+	const reader = new GifReader(bytes), frames = [];
+	let canvas = new Uint8ClampedArray(reader.width * reader.height * 4);
+	for (let index = 0; index < reader.numFrames(); index++) {
+		const info = reader.frameInfo(index), restore = info.disposal === 3 ? canvas.slice() : null;
+		reader.decodeAndBlitFrameRGBA(index, canvas);
+		frames.push(list(canvas));
+		if (info.disposal === 2) for (let y = info.y; y < info.y + info.height; y++) canvas.fill(0, (y * reader.width + info.x) * 4, (y * reader.width + info.x + info.width) * 4);
+		else if (restore) canvas = restore;
+	}
+	return frames;
+}
+const optimizedBuffer = new Uint8Array(8192);
+const optimizedWriter = new GifWriter(optimizedBuffer, 4, 4, { loop: 0, palette: [0x000000, 0xff0000, 0x00ff00, 0x0000ff] });
+optimizedWriter.addFrame(0, 0, 4, 4, new Uint8Array(16).fill(1), { delay: 5, disposal: 1 });
+optimizedWriter.addFrame(0, 0, 2, 2, new Uint8Array(4).fill(2), { delay: 6, disposal: 3 });
+optimizedWriter.addFrame(2, 2, 2, 2, new Uint8Array([3, 0, 0, 3]), { delay: 7, disposal: 2, transparent: 0 });
+optimizedWriter.addFrame(1, 1, 2, 2, new Uint8Array(4).fill(2), { delay: 8, disposal: 1 });
+const optimized = optimizedBuffer.slice(0, optimizedWriter.end());
+const fileDelays = list(readGifTiming(optimized).frameDelays);
+for (const start of [1, 2, 3]) {
+	const rotated = rotateGifBytes(optimized, start, fileDelays);
+	const original = composites(optimized), shown = composites(rotated);
+	original.forEach((_, step) => assert.deepStrictEqual(shown[step], original[(start + step) % original.length], `start ${start}: frame ${step} shows file frame ${(start + step) % original.length}`));
+	assert.deepStrictEqual(list(readGifTiming(rotated).frameDelays), fileDelays.map((_, step) => fileDelays[(start + step) % fileDelays.length]), `start ${start}: delays follow their frames`);
+	assert.strictEqual(new GifReader(rotated).loopCount(), 0, 'the loop count is kept');
+}
+const stretchedDelays = [60, 70, 80, 90];
+assert.deepStrictEqual(list(readGifTiming(rotateGifBytes(optimized, 2, stretchedDelays)).frameDelays), [80, 90, 60, 70], 'a retimed cycle rotates with its frames');
+
+// Export reads the same rotation: time 0 is the start frame, and the pass wraps.
+const source = new AuthoredAnimationSource({ key: 'gif', frameCount: 4, frameDurations: [100, 200, 300, 400], startFrame: 2 });
+assert.deepStrictEqual([0, 299, 300, 699, 700, 899, 900, 1000].map(time => source.frameIndexAt(time)), [2, 2, 3, 3, 0, 1, 1, 2]);
+assert.strictEqual(source.cycleDuration, 1000, 'the cycle length is unchanged');
+assert.deepStrictEqual(list(source.boundariesUntil(1000)), [300, 700, 800]);
+assert.deepStrictEqual(list(source.occurrencesUntil(1000).map(entry => entry.index)), [2, 3, 0, 1]);
+const stretchedSource = new AuthoredAnimationSource({ ...source, retimeDelays: () => [200, 200, 200, 200] }).atPeriod(800);
+assert.deepStrictEqual([0, 199, 200, 400].map(time => stretchedSource.frameIndexAt(time)), [2, 2, 3, 0], 'a retimed pass keeps its start frame');
+
+// Shipped glitter rotates exactly.
+let rotatedAssets = 0;
+for (const item of require('../../data/glitter.index.json').filter((entry) => entry.isAnimated).slice(0, 8)) {
+	const asset = new Uint8Array(fs.readFileSync(path.join(__dirname, '../..', item.url)));
+	const frames = composites(asset), start = Math.floor(frames.length / 2);
+	const rotated = rotateGifBytes(asset, start, list(readGifTiming(asset).frameDelays));
+	if (!rotated) continue;
+	composites(rotated).forEach((frame, step) => assert.deepStrictEqual(frame, frames[(start + step) % frames.length], `${item.name}: rotated frame ${step}`));
+	rotatedAssets++;
+}
+assert(rotatedAssets > 0, 'No shipped glitter could be rotated');
+
+process.stdout.write(`PASS GIF retiming: delay settling, limits, byte rewrite, ${checked} shipped assets, start frames and rotation (${rotatedAssets} shipped)\n`);
