@@ -193,6 +193,7 @@ input.layer-name-input {
 	align-items: center;
 	justify-content: space-between;
 	gap: var(--spacing-base);
+	flex: 0 0 auto;
 	box-sizing: border-box;
 	height: var(--dock-header-height);
 	padding: var(--spacing-xs) var(--spacing-base);

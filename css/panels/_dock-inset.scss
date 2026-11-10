@@ -1,0 +1,71 @@
+@use '../mixins' as *;
+
+// ===========================================================================
+// DOCK INSET
+// ---------------------------------------------------------------------------
+// The docks (tool rail, Layers/Library, Inspector, Timeline) and the flyout
+// float as rounded cards on the workspace, with one even gap between every
+// pair and around the outside. Each gap is a flex `gap` on the shared parent,
+// so two neighbours never add their spacing together.
+//
+// This file only overrides the flush layout; remove its @use line in
+// style.scss to return to flush docks.
+// ===========================================================================
+
+@media (min-width: ($mobile-breakpoint + 1px)) {
+	:root {
+		--dock-gap: var(--spacing-base);
+		// A card's sections sit inside its 1px border, so they round one less.
+		--dock-inner-radius: calc(var(--radius-panel) - 1px);
+	}
+
+	// The gaps: around the row, rail | row, the side docks | canvas, and
+	// canvas over timeline.
+	.main-area {
+		padding: var(--dock-gap);
+		gap: var(--dock-gap);
+	}
+
+	.main-content,
+	.preview-panel { gap: var(--dock-gap); }
+
+	// The cards. Their resize handles hang outside them, so the cards do not
+	// clip; their sections (already overflow: hidden) carry the rounding.
+	.toolbar,
+	.layers-panel,
+	.inspector-panel,
+	.timeline-dock {
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-panel);
+	}
+
+	.layers-panel > .section,
+	.layers-panel > .library-window,
+	.inspector-panel > .section,
+	.timeline-dock > .section {
+		border-radius: var(--dock-inner-radius);
+	}
+
+	// The left dock floating over a narrow canvas is a whole card too.
+	.layers-panel.is-dock-overlay {
+		border: 1px solid var(--color-window-border);
+		border-radius: var(--radius-panel);
+	}
+
+	// The flyout keeps the same distance from the Inspector and the canvas
+	// edges (LibraryWindow reads this margin as its gap).
+	.flyout-window { margin: var(--dock-gap); }
+
+	// Each divider handle centres on the middle of the gap instead of on a
+	// shared border line (the offset runs from the card's padding edge).
+	.panel-resize-handle,
+	.timeline-resize-handle {
+		--divider-offset: calc(var(--panel-handle-hit) / -2 - var(--dock-gap) / 2 - 1px);
+	}
+
+	.main-area > .panel-resize-handle {
+		top: var(--dock-gap);
+		bottom: var(--dock-gap);
+		left: calc(var(--toolbar-width) + var(--dock-gap) * 1.5 - var(--panel-handle-hit) / 2);
+	}
+}

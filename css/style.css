@@ -13511,3 +13511,46 @@ body.modal-open {
     height: 60px;
   }
 }
+@media (min-width: 1041px) {
+  :root {
+    --dock-gap: var(--spacing-base);
+    --dock-inner-radius: calc(var(--radius-panel) - 1px);
+  }
+  .main-area {
+    padding: var(--dock-gap);
+    gap: var(--dock-gap);
+  }
+  .main-content,
+  .preview-panel {
+    gap: var(--dock-gap);
+  }
+  .toolbar,
+  .layers-panel,
+  .inspector-panel,
+  .timeline-dock {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-panel);
+  }
+  .layers-panel > .section,
+  .layers-panel > .library-window,
+  .inspector-panel > .section,
+  .timeline-dock > .section {
+    border-radius: var(--dock-inner-radius);
+  }
+  .layers-panel.is-dock-overlay {
+    border: 1px solid var(--color-window-border);
+    border-radius: var(--radius-panel);
+  }
+  .flyout-window {
+    margin: var(--dock-gap);
+  }
+  .panel-resize-handle,
+  .timeline-resize-handle {
+    --divider-offset: calc(var(--panel-handle-hit) / -2 - var(--dock-gap) / 2 - 1px);
+  }
+  .main-area > .panel-resize-handle {
+    top: var(--dock-gap);
+    bottom: var(--dock-gap);
+    left: calc(var(--toolbar-width) + var(--dock-gap) * 1.5 - var(--panel-handle-hit) / 2);
+  }
+}

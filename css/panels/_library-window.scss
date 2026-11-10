@@ -124,6 +124,10 @@
 // its rows as beside them.
 .flyout-window .flyout-host > .property-card.is-flyout-open > .property-card-body { padding-block: var(--property-gutter); }
 
+// The Library takes the window's remaining height, so its browser scrolls
+// instead of growing past the window.
+.design-panel.library-window > .design-gallery-section.visible { flex: 1 1 0; }
+
 // The sheet's pane fills it when the Library isn't showing.
 .library-window:not(.has-library) > .flyout-section.is-open { flex: 1 1 0; }
 

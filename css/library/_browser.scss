@@ -58,6 +58,7 @@ body:not(.boot-library) #designGalleryContent > :not(.boot-library-loading) { di
 
 	>.asset-browser-content {
 		flex: 1;
+		min-height: 0;
 		padding: var(--spacing-md);
 
 		>.category-grid,

@@ -63,3 +63,6 @@
 @use 'modals/responsive' as modal-responsive;
 @use 'modals/confirmation';
 @use 'mobile';
+
+// Docks as inset rounded cards. Delete this line to return to flush docks.
+@use 'panels/dock-inset';
