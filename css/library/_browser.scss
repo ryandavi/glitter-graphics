@@ -202,7 +202,15 @@ body:not(.boot-library) #designGalleryContent > :not(.boot-library-loading) { di
 	}
 }
 
-.asset-browser-rail-up { flex: 0 0 auto; }
+// The picker row can stand taller than one control (its thumbnail), so the up
+// button takes the row's height and stays square.
+.asset-browser-rail-up {
+	flex: 0 0 auto;
+	align-self: stretch;
+	height: auto;
+	width: auto;
+	aspect-ratio: 1;
+}
 
 // Where the browser has the customizable select, each row is thumbnail, name
 // and count, and sets sit under their style's heading. Elsewhere, and on

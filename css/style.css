@@ -3853,7 +3853,7 @@ input.layer-name-input {
   display: none;
   align-items: center;
   gap: var(--spacing-sm);
-  padding: var(--spacing-xs) var(--spacing-sm);
+  padding: var(--spacing-sm);
   border-bottom: 1px solid var(--color-border);
 }
 @media (min-width: 1041px) {
@@ -3861,9 +3861,15 @@ input.layer-name-input {
     display: flex;
   }
 }
-.library-kind-bar > select {
+.library-kind-bar > select,
+.library-kind-bar > .library-kind-target {
+  box-sizing: border-box;
   flex: 1 1 0;
   min-width: 0;
+  height: var(--control-height);
+}
+.library-kind-bar > select {
+  padding-block: 0;
 }
 .library-kind-bar > .library-kind-target {
   overflow: hidden;
@@ -3871,8 +3877,7 @@ input.layer-name-input {
   text-overflow: ellipsis;
   font-size: var(--font-size-sm);
   letter-spacing: 0.5px;
-  flex: 1 1 0;
-  min-width: 0;
+  line-height: var(--control-height);
   color: var(--color-text-secondary);
 }
 

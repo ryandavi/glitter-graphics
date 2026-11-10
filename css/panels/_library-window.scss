@@ -160,18 +160,27 @@
 	display: none;
 	align-items: center;
 	gap: var(--spacing-sm);
-	padding: var(--spacing-xs) var(--spacing-sm);
+	padding: var(--spacing-sm);
 	border-bottom: 1px solid var(--color-border);
 
 	@media (min-width: ($mobile-breakpoint + 1px)) { display: flex; }
 
-	> select { flex: 1 1 0; min-width: 0; }
+	// The chooser and the armed session's target swap in place, so both are
+	// exactly one control tall and the bar never changes height.
+	> select,
+	> .library-kind-target {
+		box-sizing: border-box;
+		flex: 1 1 0;
+		min-width: 0;
+		height: var(--control-height);
+	}
+
+	> select { padding-block: 0; }
 
 	> .library-kind-target {
 		@include truncate;
 		@include text-sm;
-		flex: 1 1 0;
-		min-width: 0;
+		line-height: var(--control-height);
 		color: var(--color-text-secondary);
 	}
 }
