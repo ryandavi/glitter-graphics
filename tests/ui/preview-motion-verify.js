@@ -55,7 +55,7 @@ async function verifyPlayhead(browser) {
 	assert(resumed.elapsed >= 150, 'Resume with the dock closed does not restart the clock');
 
 	// Dock open: Pause holds the playhead, seek moves everything to it.
-	await page.click('#timelineToggle');
+	await page.evaluate(() => editor.toggleTimeline());
 	await page.waitForFunction(() => editor.timelineDock?.isOpen);
 	await page.evaluate(() => editor.updateExportDuration());
 	await page.waitForTimeout(120);
@@ -177,7 +177,7 @@ async function verifyPlayhead(browser) {
 
 	// Closing the dock while paused returns to the rest pose.
 	await page.evaluate(() => editor.animationTicker.seek(300));
-	await page.click('#timelineToggle');
+	await page.evaluate(() => editor.toggleTimeline());
 	await page.waitForFunction(() => !editor.timelineDock.isOpen);
 	const closed = await page.evaluate(() => ({ time: editor.animationTicker.getCurrentTime(), rest: editor.canvasElementsContainer.classList.contains('preview-motion-paused') }));
 	assert.deepEqual(closed, { time: 300, rest: false }, 'Closing the dock preserves the held playhead');

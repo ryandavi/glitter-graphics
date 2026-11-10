@@ -26,11 +26,18 @@ class TimelineDock {
 		const icon = buildElement('section-header-title-icon icon-wrapper sm', undefined, 'span');
 		icon.appendChild(createIcon('timeline'));
 		this.title.append(icon, buildElement('section-header-title-text', 'Timeline', 'span'));
+		// The bar folds the dock; the title is its keyboard stop.
+		this.title.tabIndex = 0; this.title.setAttribute('role', 'button');
+		this.title.addEventListener('keydown', event => {
+			if (event.target !== this.title || !['Enter', ' '].includes(event.key)) return;
+			event.preventDefault(); event.stopPropagation(); this.toggleMinimized();
+		});
 		// What the export would write, and whether it closes.
 		this.summary = buildElement('timeline-summary');
 		this.summary.append(this.buildFrameReadout());
 		const actions = buildElement('section-header-actions');
-		const action = 'section-header-action btn-icon icon-wrapper visible';
+		// The transport sits flat on the bar, like the time beside it.
+		const action = 'section-header-action btn-icon-simple icon-wrapper sm visible';
 		// Shows the same state as the view menu's Pause motion.
 		this.play = this.button(action, 'Pause motion', 'motion-pause', () => editor.setPlayback(editor.animationTicker.paused));
 		this.time = buildElement('timeline-time', undefined, 'span');
@@ -41,7 +48,6 @@ class TimelineDock {
 		this.exact = this.button(action, 'Play exact export frames', 'frame', () => this.frameView.playExact());
 		this.exact.setAttribute('aria-pressed', 'false');
 		transport.append(this.play, this.exact, this.time);
-		this.minimize = this.button(action, 'Collapse timeline', 'chevron-down', () => this.toggleMinimized());
 		this.zoom = document.createElement('input'); this.zoom.type = 'range'; this.zoom.className = 'timeline-zoom';
 		this.zoom.min = 0; this.zoom.max = 1; this.zoom.step = 'any'; this.zoom.setAttribute('aria-label', 'Timeline zoom');
 		this.zoom.addEventListener('input', () => {
@@ -49,14 +55,21 @@ class TimelineDock {
 			this.setZoom(value === 0 ? 'fit' : Math.exp(Math.log(this.fitScale) + value * Math.log(Math.max(this.fitScale, max) / this.fitScale)));
 		});
 		this.zoom.addEventListener('dblclick', () => this.setZoom('fit'));
-		const close = this.button(action, 'Close timeline', 'x-mark', () => editor.toggleTimeline());
-		this.addAnimation = this.button(action, 'Add animation', 'plus', () => editor.addAnimation(editor.layerManager.getActiveLayer()));
-		actions.append(this.addAnimation, this.zoom, this.buildOptionsMenu(), this.minimize, close);
+		// The dock closes from the View menu; Add animation sits on the selected
+		// layer's row (buildGroup).
+		actions.append(this.zoom, this.buildOptionsMenu());
 		this.header.append(this.title, transport, this.summary, actions);
-		// A press on the bar itself folds the dock, like the chevron; its controls keep their own clicks.
-		this.header.addEventListener('click', (event) => {
-			if (event.target.closest('button, input, select, a, [role="button"], [tabindex], .app-menu')) return;
-			this.toggleMinimized();
+		// A press on the bar itself folds the dock. Only a press that starts and
+		// ends on bare bar counts: a slider drag released on the bar, a gap
+		// between two buttons, or a menu item rebuilt under the pointer does not.
+		const onControl = target => !target.isConnected
+			|| Boolean(target.closest('button, input, select, a, [role="button"]:not(.section-header-title), [tabindex]:not(.section-header-title), .app-menu, .timeline-transport, .section-header-actions'));
+		let barPress = false;
+		this.header.addEventListener('pointerdown', event => { barPress = event.button === 0 && !onControl(event.target); });
+		this.header.addEventListener('click', event => {
+			const fold = barPress && !onControl(event.target);
+			barPress = false;
+			if (fold) this.toggleMinimized();
 		});
 		// The ruler stays above the scrolling rows and follows their sideways
 		// scroll; the playhead is one line over both.
@@ -588,11 +601,6 @@ class TimelineDock {
 		if (!this.available) return;
 		this.transport.hidden = !this.hasTimedRows;
 		this.zoom.hidden = !this.hasTimedRows;
-		const layer = this.editor.layerManager.getActiveLayer();
-		const reason = !layer ? 'Select a layer to add an animation' : !isAnimatableLayerType(layer.type) ? 'This layer cannot take animations'
-			: !this.editor.canEditLayer(layer) ? 'Unlock the layer to add an animation'
-				: (layer.animations?.length || 0) >= CONFIG.tools.animation.maxStackSize ? 'The animation stack is full' : '';
-		this.addAnimation.disabled = Boolean(reason); this.addAnimation.title = reason || 'Add animation';
 		this.editor.animationPanel.syncKeyAdd();
 		this.fit.disabled = this.stale || !this.editor.getLoopCandidate()?.canApply;
 		this.exact.disabled = this.stale || !this.hasTimedRows || !this.model?.loopMs;
@@ -660,7 +668,7 @@ class TimelineDock {
 		this.rowNodesByKey.clear();
 		this.hasRows = this.model.groups.some(group => group.window || group.rows.length);
 		this.stage.classList.toggle('is-empty', !this.hasRows);
-		if (!this.hasTimedRows && !this.editor.layers.some(layer => layer.animations?.length)) this.ruler.appendChild(buildElement('property-note', 'Nothing moves yet. Select a layer and press + to add an animation.'));
+		if (!this.hasTimedRows && !this.editor.layers.some(layer => layer.animations?.length)) this.ruler.appendChild(buildElement('property-note', 'Nothing moves yet. Select a layer and press + on its row to add an animation.'));
 		if (!this.model.groups.length) {
 			reconcileKeyedChildren(this.body, [], { key: group => group.layerId, build: group => this.buildGroup(group) });
 			this.syncControls();
@@ -710,7 +718,10 @@ class TimelineDock {
 		const optimizable = estimate?.frameOptions?.optimizable;
 		this.readout.replaceChildren();
 		if (!exact || optimizable) this.readout.appendChild(createIcon('triangle-exclamation'));
-		this.readout.appendChild(buildElement('timeline-readout-text', `${frameCount} frames · ${(outputFormat || 'gif').toUpperCase()}`, 'span'));
+		// The format drops first when the bar is narrow.
+		const text = buildElement('timeline-readout-text', `${frameCount} frames`, 'span');
+		text.append(buildElement('timeline-readout-format', ` · ${(outputFormat || 'gif').toUpperCase()}`, 'span'));
+		this.readout.append(text);
 		this.readout.hidden = false;
 		this.readout.classList.toggle('is-warning', !exact || optimizable);
 		this.readout.title = [!exact ? TimelineView.SEAM_TEXT : '',
@@ -1595,7 +1606,21 @@ class TimelineDock {
 			if (!label || !layer) continue;
 			syncLayerRow(label, layer);
 			group.querySelector('.timeline-group-header').classList.toggle('is-selected', this.editor.layerManager.isLayerSelected(group.dataset.layerId));
+			this.syncAddAnimation(label, layer);
 		}
+	}
+
+	// Add animation shows on the active layer's row only, and says why it is
+	// off when the layer cannot take one.
+	syncAddAnimation(label, layer) {
+		const button = label.querySelector('.timeline-add-animation');
+		if (!button) return;
+		button.hidden = layer.id !== this.editor.activeLayerId || !isAnimatableLayerType(layer.type);
+		const reason = !this.editor.canEditLayer(layer) ? 'Unlock the layer to add an animation'
+			: (layer.animations?.length || 0) >= CONFIG.tools.animation.maxStackSize ? 'The animation stack is full' : '';
+		button.disabled = Boolean(reason);
+		const text = reason || `Add animation to ${describeLayer(layer, this.editor).name}`;
+		button.title = text; button.setAttribute('aria-label', text);
 	}
 
 	// What the focused bar can do, in the status bar.
@@ -1620,11 +1645,8 @@ class TimelineDock {
 	applyMinimized() {
 		const minimized = PREFERENCES.get('timelineMinimized');
 		this.host.classList.toggle('is-minimized', minimized);
-		this.minimize.querySelector('use').setAttribute('href', minimized ? '#icon-chevron-right' : '#icon-chevron-down');
-		this.minimize.setAttribute('aria-expanded', String(!minimized));
-		const label = minimized ? 'Expand timeline' : 'Collapse timeline';
-		this.minimize.title = label;
-		this.minimize.setAttribute('aria-label', label);
+		this.title.setAttribute('aria-expanded', String(!minimized));
+		this.title.title = minimized ? 'Expand timeline' : 'Collapse timeline';
 	}
 
 	toggleMinimized() {

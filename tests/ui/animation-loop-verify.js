@@ -65,10 +65,9 @@ async function verifyTimelineDock() {
 	const localUrl = originalUrl || 'http://localhost/glitter/';
 	const { browser, page, errors } = await openApp({ viewport: { width: 1920, height: 900 }, document: { width: 320, height: 240 } });
 	try {
-		assert(await page.locator('#timelineToggle').isVisible());
 		assert.strictEqual(await page.evaluate(() => !!editor.timelineDock), false, 'Closed dock must not load its lazy group');
 		const fullHeight = await page.locator('#previewContainer').evaluate(node => node.clientHeight);
-		await page.click('#timelineToggle');
+		await page.evaluate(() => editor.toggleTimeline());
 		await page.waitForFunction(() => editor.timelineDock?.isOpen);
 		await page.waitForTimeout(200);
 		await page.evaluate(() => editor.updateExportDuration());
@@ -200,11 +199,11 @@ async function verifyTimelineDock() {
 		assert(await page.evaluate(() => window.timelineResizeRow === editor.timelineDock.body.querySelector('.timeline-row:not(.timeline-group-window)')), 'Height-only resizing keeps the row nodes');
 		const minimized = await page.evaluate(() => {
 			const dock = editor.timelineDock, row = dock.body.querySelector('.timeline-row:not(.timeline-group-window)'), estimate = editor.loopEstimate;
-			dock.minimize.click();
+			dock.toggleMinimized();
 			dock.sync({ ...estimate, renderClock: { ...estimate.renderClock, frameCount: 83 } });
 			const result = { same: row === dock.body.querySelector('.timeline-row:not(.timeline-group-window)'), pending: dock.rowsPending,
 				readout: dock.readout.textContent, ticks: editor.animationTicker.tickListeners.size };
-			dock.minimize.click();
+			dock.toggleMinimized();
 			result.expanded = !dock.rowsPending && row === dock.body.querySelector('.timeline-row:not(.timeline-group-window)');
 			dock.close(); result.closedTicks = editor.animationTicker.tickListeners.size;
 			dock.open();
@@ -257,7 +256,6 @@ async function verifyTimelineDock() {
 			assert.strictEqual(await page.locator('.timeline-row-label').first().evaluate(node => getComputedStyle(node).position), 'sticky');
 		}
 		await page.setViewportSize({ width: 390, height: 844 });
-		assert(!(await page.locator('#timelineToggle').isVisible()));
 		assert(!(await page.locator('#timelineDock').isVisible()));
 		assert(await page.evaluate(() => PREFERENCES.get('timelineOpen')));
 		await page.setViewportSize({ width: 1600, height: 900 });
@@ -272,9 +270,9 @@ async function verifyTimelineDock() {
 				await page.setViewportSize({ width, height: 900 });
 				await page.evaluate(theme => { document.documentElement.dataset.theme = theme === 'default' ? 'dark' : theme; }, theme);
 				const file = `dock-${width}-${theme}.png`;
-				await page.click('#timelineToggle'); await page.waitForTimeout(250);
+				await page.evaluate(() => editor.toggleTimeline()); await page.waitForTimeout(250);
 				await page.screenshot({ path: path.join(beforeDir, file) });
-				await page.click('#timelineToggle'); await page.waitForTimeout(250);
+				await page.evaluate(() => editor.toggleTimeline()); await page.waitForTimeout(250);
 				await page.screenshot({ path: path.join(afterDir, file) });
 				index.push({ name: `Timeline ${width} ${theme}`, file });
 			}
@@ -284,7 +282,7 @@ async function verifyTimelineDock() {
 			await page.setViewportSize({ width: 1600, height: 900 });
 		}
 
-		await page.click('#timelineToggle');
+		await page.evaluate(() => editor.toggleTimeline());
 		await page.waitForTimeout(200);
 		assert.strictEqual(await page.locator('#previewContainer').evaluate(node => node.clientHeight), fullHeight);
 		assert.strictEqual(await page.evaluate(() => editor.viewport.lastViewportHeight), fullHeight, 'Closing must use the viewport resize path');
@@ -305,7 +303,6 @@ async function verifyTimelineDock() {
 			try {
 				const allowed = url.includes('localhost') || url.includes('features=timeline');
 				if (allowed) await fixture.page.waitForFunction(() => editor.timelineDock?.isOpen);
-				assert.strictEqual(await fixture.page.locator('#timelineToggle').isVisible(), allowed);
 				assert.strictEqual(await fixture.page.locator('#timelineDock').isVisible(), allowed);
 				assert.strictEqual(requested.some(request => /js\/ui\/timeline-(view|dock|group)\.js/.test(request)), allowed);
 				assert.deepStrictEqual(fixture.errors, []);

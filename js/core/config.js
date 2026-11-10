@@ -870,7 +870,10 @@ const CONFIG = deepFreeze({
 				toolbar: { max: 240, namesWidth: 100, snaps: [200, 240] },
 				layers: { min: 240, max: 620, snaps: [260, 300, 360, 400, 480] },
 				inspector: { min: 300, max: 720, snaps: [300, 350, 420, 520, 620] }
-			}
+			},
+			// The floating flyout window: as wide as the Inspector until dragged,
+			// never narrower than this unless the canvas area is.
+			flyoutMinWidth: 260
 		},
 		hints: {
 			enabledByDefault: true

@@ -9,6 +9,7 @@ const LAYER_ROW_PARTS = [
 	{ id: 'text', variants: ['panel', 'timeline'] },
 	{ id: 'detail', variants: ['panel'] },
 	{ id: 'badges', variants: ['panel'] },
+	{ id: 'animate', variants: ['timeline'] },
 	{ id: 'lock', variants: ['panel', 'timeline'] },
 	{ id: 'locate', variants: ['panel'] },
 	{ id: 'delete', variants: ['panel'] }
@@ -79,13 +80,15 @@ function buildLayerRow(editor, layer, { variant = 'panel' } = {}) {
 		chevron: action('timeline-group-chevron', 'chevron-down', () => {}), handle,
 		visibility: action('layer-visibility', 'eye', layer => manager.toggleLayerVisibility(layer.id)),
 		clip: action('layer-clip', 'clip', layer => editor.toggleClippingMask([layer])), swatch, text,
+		// The timeline's Add animation: on the selected layer's row (TimelineDock.syncSelection).
+		animate: action('timeline-add-animation', 'plus', layer => editor.addAnimation(layer)),
 		lock: action('lock', 'lock', layer => manager.pressLayerLock(layer)),
 		locate: action('goto-glitter', 'locate', layer => manager.goToLayerSource(layer.id)),
 		delete: action('delete', 'trash', layer => manager.deleteLayerFromRow(layer))
 	};
 	for (const part of LAYER_ROW_PARTS) {
 		if (!show(part.id) || !parts[part.id]) continue;
-		if (['lock', 'locate', 'delete'].includes(part.id) || (part.id === 'clip' && variant === 'timeline')) actions.append(parts[part.id]);
+		if (['animate', 'lock', 'locate', 'delete'].includes(part.id) || (part.id === 'clip' && variant === 'timeline')) actions.append(parts[part.id]);
 		else row.append(parts[part.id]);
 	}
 	row.append(actions);

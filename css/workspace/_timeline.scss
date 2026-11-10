@@ -94,6 +94,12 @@
 		}
 	}
 
+	// The title is the bar's keyboard stop for folding the dock.
+	> .timeline-section > .section-header > .section-header-title {
+		border-radius: var(--radius-xs);
+		&:focus-visible { outline: none; box-shadow: var(--control-focus-ring); }
+	}
+
 	// Minimized, the dock is its bar.
 	&.is-minimized {
 		height: auto;
@@ -339,6 +345,13 @@
 		min-width: 0;
 	}
 	.timeline-group-label .lock { opacity: 0; }
+	// Add animation, on the selected layer's row: the accent's quiet surface,
+	// so it reads as the row's one offer.
+	.timeline-group-label .timeline-add-animation:not(:disabled) {
+		background: var(--color-accent-surface);
+		color: var(--color-accent);
+		&:hover { background: var(--color-accent-surface-strong); }
+	}
 	.timeline-group-label:is(:hover, :focus-within, .is-locked) .lock { opacity: 1; }
 	.timeline-group-track { background: transparent; }
 	.timeline-group-window { display: contents; }
@@ -442,6 +455,9 @@
 		&:focus-visible { outline: none; --timeline-bar-ring: inset var(--control-focus-ring); }
 	}
 	.timeline-bar-ghost.is-range::before { background: var(--color-border); }
+	// In a layer's header the visibility bar spans the header's height, which
+	// the layer row sets, not the motion rows'.
+	.timeline-group-track > :is(.timeline-bar, .timeline-bar-ghost) { bottom: var(--timeline-bar-inset); height: auto; }
 	.timeline-window-dim {
 		position: absolute;
 		inset: 0;
@@ -584,5 +600,14 @@
 		.timeline-row-info { display: none; }
 		.timeline-stage { --timeline-label-column: var(--timeline-label-min); }
 		.timeline-group-label > .layer-drag-handle, .timeline-group-label > .timeline-group-chevron { display: none; }
+		// The bar drops its name and the export's format first.
+		> .timeline-section > .section-header {
+			gap: var(--spacing-sm);
+			.section-header-title-text, .timeline-readout-format { display: none; }
+		}
+	}
+	@container timeline (max-width: #{tokens.$timeline-narrow-width}) {
+		// Then the zoom, and the frame count unless it warns.
+		.timeline-zoom, .timeline-readout-text, .timeline-readout:not(.is-warning) { display: none; }
 	}
 }

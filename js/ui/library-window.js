@@ -91,6 +91,8 @@ class LibraryWindow {
 	// moves under it, and closes on a press outside it.
 	initializeFlyoutWindow() {
 		if (!this.flyoutWindow) return;
+		this.initializeFlyoutFold();
+		this.initializeFlyoutResize();
 		const reposition = () => this.positionFlyout();
 		window.addEventListener('resize', reposition);
 		document.getElementById('designPanel')?.addEventListener('scroll', reposition, { passive: true });
@@ -201,6 +203,67 @@ class LibraryWindow {
 		this.kindSelect.value = this.browseChoice;
 	}
 
+	// A press on the window's bar folds it to the bar; the title is the
+	// keyboard stop. The bar's own controls keep their clicks.
+	initializeFlyoutFold() {
+		const header = document.getElementById('flyoutHeader');
+		const title = header?.querySelector('.section-header-title');
+		if (!title) return;
+		title.tabIndex = 0; title.setAttribute('role', 'button');
+		const toggle = () => {
+			if (this.flyoutSection.parentElement === this.flyoutWindow) this.setFlyoutFolded(!this.flyoutFolded);
+		};
+		header.addEventListener('click', (event) => {
+			if (event.target.isConnected && !event.target.closest('button, input, select, a, label, [data-no-accordion-toggle]')) toggle();
+		});
+		title.addEventListener('keydown', (event) => {
+			if (event.target !== title || !['Enter', ' '].includes(event.key)) return;
+			event.preventDefault(); event.stopPropagation(); toggle();
+		});
+		this.setFlyoutFolded(false);
+	}
+
+	setFlyoutFolded(folded) {
+		this.flyoutFolded = folded;
+		this.flyoutWindow.classList.toggle('is-folded', folded);
+		const title = document.querySelector('#flyoutHeader > .section-header-title');
+		title?.setAttribute('aria-expanded', String(!folded));
+		if (title) title.title = folded ? 'Expand' : 'Collapse';
+		this.positionFlyout();
+	}
+
+	// The window's left edge sizes it. It is as wide as the Inspector until
+	// dragged, and never wider than the canvas area beside the Inspector.
+	initializeFlyoutResize() {
+		const host = this.flyoutWindow;
+		const handle = document.createElement('div');
+		handle.className = 'panel-resize-handle panel-resize-handle-start flyout-resize-handle ui-ignore-gestures';
+		host.appendChild(handle);
+		const min = () => Math.min(CONFIG.ui.panelResize.flyoutMinWidth, this.flyoutMaxWidth ?? Infinity);
+		const max = () => this.flyoutMaxWidth ?? window.innerWidth;
+		const width = () => Math.round(host.getBoundingClientRect().width);
+		const apply = (value) => {
+			const next = Math.round(Math.max(min(), Math.min(max(), value)));
+			host.style.setProperty('--flyout-width', `${next}px`);
+			this.syncFlyoutSeparator(Math.round(min()), Math.round(max()), next);
+			this.positionFlyout();
+		};
+		this.syncFlyoutSeparator = bindSizeHandle(handle, {
+			orientation: 'vertical', label: 'Resize window', direction: -1, bodyClass: 'is-resizing-panel',
+			canUse: () => this.flyoutOpen, read: width, apply,
+			persist: (value) => PREFERENCES.set('flyoutWidth', value),
+			reset: () => PREFERENCES.reset('flyoutWidth')
+		});
+		// The stored width, also when Settings resets it.
+		const restore = (value) => {
+			if (value) host.style.setProperty('--flyout-width', `${value}px`);
+			else host.style.removeProperty('--flyout-width');
+			this.positionFlyout();
+		};
+		PREFERENCES.onChange('flyoutWidth', restore);
+		restore(PREFERENCES.get('flyoutWidth'));
+	}
+
 	// Flyout mode: a floating panel over the canvas. Opening, closing and
 	// switching it moves no dock, so the canvas rect and timeline are untouched.
 	syncFlyoutWindow(show) {
@@ -225,6 +288,11 @@ class LibraryWindow {
 		const gap = parseFloat(getComputedStyle(host).marginTop) || 0;
 		host.style.setProperty('--flyout-right', `${origin.right - inspector.left}px`);
 		host.style.setProperty('--flyout-max-height', `${Math.max(0, canvas.height - gap * 2)}px`);
+		// A narrow canvas area narrows the window rather than pushing it off
+		// the left edge.
+		this.flyoutMaxWidth = Math.max(0, Math.round(inspector.left - Math.max(canvas.left, 0) - gap * 2));
+		host.style.setProperty('--flyout-max-width', `${this.flyoutMaxWidth}px`);
+		this.syncFlyoutSeparator?.(Math.round(Math.min(CONFIG.ui.panelResize.flyoutMinWidth, this.flyoutMaxWidth)), this.flyoutMaxWidth, Math.round(host.getBoundingClientRect().width));
 		const line = document.querySelector('.property-line.is-flyout-open');
 		const anchor = line ? Math.min(Math.max(line.getBoundingClientRect().top, inspector.top), inspector.bottom) : inspector.top;
 		const top = Math.max(canvas.top + gap, Math.min(anchor, canvas.bottom - gap - host.offsetHeight));
@@ -247,6 +315,8 @@ class LibraryWindow {
 			this.flyoutCard?.classList.remove('is-flyout-open');
 			this.flyoutCard?.parentElement.classList.remove('has-flyout-open');
 			card?.classList.add('is-flyout-open');
+			// Another section opens unfolded.
+			if (this.flyoutFolded) this.setFlyoutFolded(false);
 			card?.parentElement.classList.add('has-flyout-open');
 			this.flyoutCard = card;
 			// The window's bar is the section's: the Inspector's bar beside it

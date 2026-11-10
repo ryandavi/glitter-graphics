@@ -31,7 +31,10 @@
 	position: absolute;
 	top: var(--flyout-top, 0);
 	right: var(--flyout-right, 0);
-	width: var(--library-window-width);
+	// As wide as the Inspector until dragged (LibraryWindow), and never wider
+	// than the canvas area beside it.
+	width: var(--flyout-width, var(--library-window-width));
+	max-width: var(--flyout-max-width, none);
 	max-height: var(--flyout-max-height, 100%);
 	margin: var(--spacing-md);
 	z-index: calc(var(--z-panel-elevated) + 1);
@@ -44,6 +47,17 @@
 	overflow: hidden;
 
 	&.is-open { display: flex; }
+
+	// Folded by a press on its bar: the bar alone.
+	&.is-folded > .flyout-section > .section-content { display: none; }
+	> .flyout-section > .section-header { cursor: pointer; }
+	> .flyout-section > .section-header > .section-header-title {
+		border-radius: var(--radius-xs);
+		&:focus-visible { outline: none; box-shadow: var(--control-focus-ring); }
+	}
+
+	// Its left edge sizes it, inside the window's rounded clip.
+	> .flyout-resize-handle { --divider-offset: 0px; }
 
 	// The phone's flyout is the sheet's section, not this window.
 	@include mobile { display: none; }
@@ -100,6 +114,10 @@
 
 // The glass is the window's; the section sits clear on it.
 .flyout-window > .flyout-section { background: none; }
+
+// In the window the section is the whole pane: the same inset above and below
+// its rows as beside them.
+.flyout-window .flyout-host > .property-card.is-flyout-open > .property-card-body { padding-block: var(--property-gutter); }
 
 // The sheet's pane fills it when the Library isn't showing.
 .library-window:not(.has-library) > .flyout-section.is-open { flex: 1 1 0; }

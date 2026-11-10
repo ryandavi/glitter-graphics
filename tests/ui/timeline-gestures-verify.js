@@ -17,13 +17,13 @@ async function verifyTimelineGestures(browser) {
 		const emptyBand = await page.evaluate(() => {
 			const dock = editor.timelineDock;
 			return { height: dock.ruler.getBoundingClientRect().height, empty: dock.body.querySelectorAll('.property-empty, .timeline-group-track').length,
-				hint: dock.ruler.textContent, disabled: dock.addAnimation.disabled, columns: getComputedStyle(dock.body.querySelector('.timeline-group-header')).gridTemplateColumns.split(' ').length,
+				hint: dock.ruler.textContent, add: (button => ({ hidden: button.hidden, disabled: button.disabled }))(dock.body.querySelector(`[data-layer-id="${emptyTimelineLayerId}"] .timeline-add-animation`)), columns: getComputedStyle(dock.body.querySelector('.timeline-group-header')).gridTemplateColumns.split(' ').length,
 				chevron: dock.body.querySelector(`[data-layer-id="${emptyTimelineLayerId}"] .timeline-group-chevron`).getBoundingClientRect().toJSON() };
 		});
 		assert.equal(emptyBand.empty, 1, 'A static layer has an editable visibility track without a body empty state');
 		assert.equal(emptyBand.columns, 3, 'A static layer retains the timeline columns for visibility authoring');
-		assert.equal(emptyBand.hint, "Nothing moves yet. Select a layer and press + to add an animation.");
-		assert.equal(emptyBand.disabled, false, 'Header Add animation is enabled for the active animatable layer');
+		assert.equal(emptyBand.hint, "Nothing moves yet. Select a layer and press + on its row to add an animation.");
+		assert.deepEqual(emptyBand.add, { hidden: false, disabled: false }, 'The active animatable layer row offers Add animation');
 		await page.evaluate(async () => { editor.setDocumentLoop({ mode: 'set', durationMs: 1600 }, { commit: false }); PREFERENCES.set('timelineSnap', false); await editor.updateExportDuration(); });
 		const rangeReady = () => page.waitForFunction(() => !editor.timelineDock.stale && editor.timelineDock.model.loopMs === 1600);
 		await rangeReady();

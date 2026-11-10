@@ -27,6 +27,8 @@ const PREFERENCE_SCHEMA = Object.freeze({
 	timelineLabelWidth: { default: () => CONFIG.ui.timeline.labelWidth },
 	timelineShow: { default: () => ({ ...CONFIG.ui.timeline.show }) },
 	balanceSidebars: { default: () => true },
+	// The flyout window's dragged width; null follows the Inspector.
+	flyoutWidth: { default: () => null },
 	filterPreviewLevel: { default: () => 'still' },
 	// The Library view menu: tile size ('s' | 'm' | 'l') for every kind's grid,
 	// and whether the Quick picks row shows.
