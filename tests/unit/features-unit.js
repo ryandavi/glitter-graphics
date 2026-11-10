@@ -7,6 +7,7 @@ const vm = require('vm');
 
 const root = path.resolve(__dirname, '../..');
 const source = fs.readFileSync(path.join(root, 'js/core/features.js'), 'utf8');
+assert(/timeline: Object\.freeze\(\{ stage: '\w+', layouts:/.test(source), 'timeline entry found');
 function fixture({ stage = 'local', local = false, debug = false, search = '', phone = false, layout = 'desktop' } = {}) {
 	const media = { matches: phone };
 	let mediaCalls = 0;
@@ -16,7 +17,9 @@ function fixture({ stage = 'local', local = false, debug = false, search = '', p
 		isLocalHost: () => local,
 		window: { location: { search }, matchMedia: query => { assert.strictEqual(query, '(max-width: 1040px)'); mediaCalls++; return media; } }
 	});
-	vm.runInContext(source.replace("stage: 'local', layouts:", `stage: '${stage}', layouts:`).replace("['desktop']", `['${layout}']`), context);
+	// Every case stages the timeline itself, whatever it ships as.
+	const staged = source.replace(/timeline: Object\.freeze\(\{ stage: '\w+', layouts:/, `timeline: Object.freeze({ stage: '${stage}', layouts:`);
+	vm.runInContext(staged.replace("['desktop']", `['${layout}']`), context);
 	return { context, media, mediaCalls: () => mediaCalls, run: text => vm.runInContext(text, context) };
 }
 
@@ -34,7 +37,8 @@ const app = fixture({ local: true });
 assert.throws(() => app.run("isFeatureEnabled('missing')"), /Unknown feature/);
 assert.throws(() => app.run("isFeatureEnabled('toString')"), /Unknown feature/);
 assert.strictEqual(app.run('Object.keys(FEATURES).join()'), 'customMotion,timeline,docks,loopLength,gifCycle,history,personalWeb,htmlScene,stylePresetCopy,memoryOverlay,welcomeOnStartup');
-for (const id of ['customMotion', 'history', 'personalWeb', 'htmlScene']) {
+assert(fixture().run("isFeatureEnabled('customMotion')"));
+for (const id of ['history', 'personalWeb', 'htmlScene']) {
 	assert(app.run(`isFeatureEnabled('${id}')`));
 	assert(!fixture().run(`isFeatureEnabled('${id}')`));
 	assert(fixture({ search: `?features=${id}` }).run(`isFeatureEnabled('${id}')`));

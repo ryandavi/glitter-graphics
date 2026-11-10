@@ -301,7 +301,9 @@ const { openApp } = require('../lib/app');
 	for (const phone of [false, true]) {
 		const gated = await openApp({ viewport: phone ? { width: 390, height: 844 } : undefined, touch: phone, document: { width: 160, height: 120 }, setup: async page => {
 			if (phone) return;
-			for (const file of ['js/core/features.js', 'js/dist/boot.js']) await page.route(`**/${file}*`, route => route.fulfill({ contentType: 'text/javascript', body: "document.documentElement.classList.remove('is-localhost');\n" + fs.readFileSync(file, 'utf8') }));
+			// Custom authoring and the timeline switched off, as on a host where they are not released.
+			const gateOff = text => text.replace(/(customMotion|timeline):(\s*)Object\.freeze\(\{(\s*)stage:(\s*)(['"])on\5/g, '$1:$2Object.freeze({$3stage:$4$5off$5');
+			for (const file of ['js/core/features.js', 'js/dist/boot.js']) await page.route(`**/${file}*`, route => route.fulfill({ contentType: 'text/javascript', body: gateOff(fs.readFileSync(file, 'utf8')) }));
 		} });
 		try {
 			const stored = await gated.page.evaluate(async () => {
