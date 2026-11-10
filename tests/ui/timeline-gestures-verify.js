@@ -14,19 +14,24 @@ async function verifyTimelineGestures(browser) {
 			await editor.ensureTimelineDock(); PREFERENCES.set('timelineOpen', true); await editor.updateExportDuration();
 		});
 		await page.waitForFunction(() => editor.timelineDock?.model?.groups.some(group => group.layerId === emptyTimelineLayerId) && !editor.timelineDock.stale);
-		const emptyBand = await page.evaluate(() => {
-			const dock = editor.timelineDock;
-			return { height: dock.ruler.getBoundingClientRect().height, empty: dock.body.querySelectorAll('.property-empty, .timeline-group-track').length,
-				hint: dock.ruler.textContent, add: (button => ({ hidden: button.hidden, disabled: button.disabled }))(dock.body.querySelector(`[data-layer-id="${emptyTimelineLayerId}"] .timeline-add-animation`)), columns: getComputedStyle(dock.body.querySelector('.timeline-group-header')).gridTemplateColumns.split(' ').length,
-				chevron: dock.body.querySelector(`[data-layer-id="${emptyTimelineLayerId}"] .timeline-group-chevron`).getBoundingClientRect().toJSON() };
+		const stillBand = await page.evaluate(() => {
+			const dock = editor.timelineDock, add = dock.body.querySelector('.timeline-still button');
+			return { ruler: dock.ruler.hidden, groups: dock.body.querySelectorAll('.timeline-group').length,
+				title: dock.body.querySelector('.timeline-still .property-empty-title')?.textContent, add: add && { hidden: add.hidden, disabled: add.disabled } };
 		});
-		assert.equal(emptyBand.empty, 1, 'A static layer has an editable visibility track without a body empty state');
-		assert.equal(emptyBand.columns, 3, 'A static layer retains the timeline columns for visibility authoring');
-		assert.equal(emptyBand.hint, "Nothing moves yet. Select a layer and press + on its row to add an animation.");
-		assert.deepEqual(emptyBand.add, { hidden: false, disabled: false }, 'The active animatable layer row offers Add animation');
+		assert.equal(stillBand.groups, 0, 'A still document shows the empty state without layer rows');
+		assert.equal(stillBand.ruler, true, 'A still document has no ruler');
+		assert.equal(stillBand.title, 'Nothing is animated');
+		assert.deepEqual(stillBand.add, { hidden: false, disabled: false }, 'The empty state animates an animatable active layer');
 		await page.evaluate(async () => { editor.setDocumentLoop({ mode: 'set', durationMs: 1600 }, { commit: false }); PREFERENCES.set('timelineSnap', false); await editor.updateExportDuration(); });
 		const rangeReady = () => page.waitForFunction(() => !editor.timelineDock.stale && editor.timelineDock.model.loopMs === 1600);
 		await rangeReady();
+		const emptyBand = await page.evaluate(() => {
+			const dock = editor.timelineDock;
+			return { height: dock.ruler.getBoundingClientRect().height, add: (button => ({ hidden: button.hidden, disabled: button.disabled }))(dock.body.querySelector(`[data-layer-id="${emptyTimelineLayerId}"] .timeline-add-animation`)), columns: getComputedStyle(dock.body.querySelector('.timeline-group-header')).gridTemplateColumns.split(' ').length,
+				chevron: dock.body.querySelector(`[data-layer-id="${emptyTimelineLayerId}"] .timeline-group-chevron`).getBoundingClientRect().toJSON() };		});
+		assert.equal(emptyBand.columns, 3, 'A static layer in a set loop has the timeline columns for visibility authoring');
+		assert.deepEqual(emptyBand.add, { hidden: false, disabled: false }, 'The active animatable layer row offers Add animation');
 		const rangeState = () => page.evaluate(() => { const value = editor.layerManager.getLayerById(emptyTimelineLayerId).appear; return value ? { start: roundTo(value.start, 0.001), end: value.end === null ? null : roundTo(value.end, 0.001) } : null; });
 		const rangeDrag = async (kind, ms, cancel = false) => {
 			await rangeReady();

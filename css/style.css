@@ -5310,11 +5310,12 @@ body.tool-select .preview-container.is-over-picked-layer {
   flex: 0 0 auto;
   height: var(--timeline-ruler-height);
 }
-.timeline-dock .timeline-ruler > .property-note {
-  display: flex;
-  align-items: center;
-  height: 100%;
-  white-space: nowrap;
+.timeline-dock .timeline-still {
+  min-height: 100%;
+  box-sizing: border-box;
+}
+.timeline-dock .timeline-still > .property-empty-text {
+  max-width: 44ch;
 }
 .timeline-dock .timeline-ruler-view {
   margin-left: var(--timeline-label-column);

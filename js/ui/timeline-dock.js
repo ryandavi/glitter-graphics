@@ -259,7 +259,7 @@ class TimelineDock {
 
 	get isOpen() { return !this.host.hidden; }
 	get available() { return this.isOpen && isFeatureAvailable('timeline'); }
-	get hasTimedRows() { return this.model?.groups.some(group => group.window?.target.active || group.rows.some(row => row.source)); }
+	get hasTimedRows() { return Boolean(this.model?.loopSet) || Boolean(this.model?.groups.some(group => group.window?.target.active || group.rows.some(row => row.source))); }
 
 	open() {
 		if (!isFeatureAvailable('timeline')) return;
@@ -666,10 +666,16 @@ class TimelineDock {
 		this.frameIndex = null;
 		this.time.textContent = ''; this.displayTime = null;
 		this.rowNodesByKey.clear();
-		this.hasRows = this.model.groups.some(group => group.window || group.rows.length);
+		// A still document has nothing to time: the prompt alone, and every
+		// layer row arrives with the ruler once something moves.
+		const still = !this.model.moves;
+		this.hasRows = !still && this.model.groups.some(group => group.window || group.rows.length);
 		this.stage.classList.toggle('is-empty', !this.hasRows);
-		if (!this.hasTimedRows && !this.editor.layers.some(layer => layer.animations?.length)) this.ruler.appendChild(buildElement('property-note', 'Nothing moves yet. Select a layer and press + on its row to add an animation.'));
-		if (!this.model.groups.length) {
+		this.ruler.hidden = still;
+		this.stillEmpty?.remove();
+		this.stillEmpty = null;
+		if (still) this.body.append(this.buildStillEmpty());
+		if (still || !this.model.groups.length) {
 			reconcileKeyedChildren(this.body, [], { key: group => group.layerId, build: group => this.buildGroup(group) });
 			this.syncControls();
 			return;
@@ -1573,6 +1579,7 @@ class TimelineDock {
 	syncKeys() { if (this.available) this.keyLane.refresh(); }
 
 	syncSelection() {
+		this.syncStillEmpty();
 		if (this.barEpoch !== (this.editor.animationRevisionEpoch || 0)) {
 			this.barEpoch = this.editor.animationRevisionEpoch || 0;
 			this.selectedBars.clear(); this.barSelectionExplicit = false; this.barAnchor = null;
@@ -1608,6 +1615,37 @@ class TimelineDock {
 			group.querySelector('.timeline-group-header').classList.toggle('is-selected', this.editor.layerManager.isLayerSelected(group.dataset.layerId));
 			this.syncAddAnimation(label, layer);
 		}
+	}
+
+	// A still document's empty state, in place of the rows. Its button animates
+	// the active layer, and shows only when that layer can take a motion.
+	buildStillEmpty() {
+		const empty = buildPropertyEmpty({ icon: 'timeline', title: 'Nothing is animated', text: '', visible: true });
+		empty.classList.add('timeline-still');
+		const button = this.flatButton('Animate', () => {
+			const layer = this.editor.layerManager.getLayerById(this.editor.activeLayerId);
+			if (this.canAnimate(layer)) this.editor.addAnimation(layer);
+		}, 'btn-flat primary');
+		empty.append(button);
+		this.stillEmpty = empty;
+		this.syncStillEmpty();
+		return empty;
+	}
+
+	canAnimate(layer) {
+		return Boolean(layer && isAnimatableLayerType(layer.type) && this.editor.canEditLayer(layer));
+	}
+
+	syncStillEmpty() {
+		const empty = this.stillEmpty;
+		if (!empty) return;
+		const layer = this.editor.layerManager.getLayerById(this.editor.activeLayerId), ready = this.canAnimate(layer);
+		empty.querySelector('.property-empty-text').textContent = ready
+			? 'Animate this layer, or add one that already moves, like glitter or an animated sticker. Its timing shows up here.'
+			: 'Select a layer to animate, or add one that already moves, like glitter or an animated sticker. Its timing shows up here.';
+		const button = empty.querySelector('button');
+		button.hidden = !ready;
+		if (ready) { const name = describeLayer(layer, this.editor).name; button.textContent = `Animate ${name}`; button.title = `Add an animation to ${name}`; button.setAttribute('aria-label', button.title); }
 	}
 
 	// Add animation shows on the active layer's row only, and says why it is
@@ -1736,15 +1774,18 @@ class TimelineDock {
 		node.querySelector('.timeline-group-window')?.remove();
 		let track = node.querySelector('.timeline-group-track');
 		if (!this.hasRows) { track?.remove(); return; }
+		// The span covers the layer's timed rows; a layer with none (the base
+		// image, or a still layer with no window) is there for the whole loop.
 		const timed = group.rows.filter(row => row.source);
-		if (!timed.length) { track?.remove(); return; }
+		const loopMs = this.model.loopMs;
+		if (!timed.length && !(loopMs > 0 && this.hasTimedRows)) { track?.remove(); return; }
 		if (!track) { track = buildElement('timeline-track timeline-group-track'); node.querySelector('.timeline-group-header').append(track); }
 		let span = track.querySelector('.timeline-group-span');
-		if (!timed.length) { span?.remove(); return; }
 		if (!span) { span = buildElement('timeline-group-span'); track.append(span); }
-		const start = Math.min(...timed.map(row => row.startMs));
+		const start = timed.length ? Math.min(...timed.map(row => row.startMs)) : 0;
+		const end = timed.length ? Math.max(...timed.map(row => row.endMs)) : loopMs;
 		span.style.left = `${TimelineView.timeToX(start, this.scale)}px`;
-		span.style.width = `${TimelineView.timeToX(Math.max(...timed.map(row => row.endMs)) - start, this.scale)}px`;
+		span.style.width = `${TimelineView.timeToX(end - start, this.scale)}px`;
 	}
 
 	relayout() {

@@ -51,8 +51,13 @@ const TimelineView = {
 			});
 			groups.set(layerId, rows);
 		});
+		// Something in the document has time: a motion (on or off), a GIF, a
+		// cycle, a visibility window or a set loop length (a still slideshow is
+		// timed by its windows). Without one the dock shows a prompt only.
+		const loopSet = editor?.documentLoop?.mode === 'set' && loopMs > 0;
+		const moves = loopSet || (editor ? targets.some(target => target.kind === 'appear' ? target.active : target.period > 0) : entries.length > 0 || layers.some(layer => layer.animations?.length));
 		return {
-			loopMs, loopFit: estimate?.loopFit, exact: estimate?.exact, frameStarts: estimate?.renderClock?.frameStarts || [],
+			moves, loopSet, loopMs, loopFit: estimate?.loopFit, exact: estimate?.exact, frameStarts: estimate?.renderClock?.frameStarts || [],
 			frameCount: estimate?.renderClock?.frameCount || 0, outputFormat: estimate?.outputFormat,
 			groups: [...layers].reverse().filter(layer => !layer.isPreview).map(layer => {
 				const sourceRows = groups.get(layer.id) || [];

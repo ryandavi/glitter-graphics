@@ -223,8 +223,9 @@
 	.timeline-ruler {
 		flex: 0 0 auto;
 		height: var(--timeline-ruler-height);
-		> .property-note { display: flex; align-items: center; height: 100%; white-space: nowrap; }
 	}
+	// A still document: the shared empty state fills the rows' area.
+	.timeline-still { min-height: 100%; box-sizing: border-box; > .property-empty-text { max-width: 44ch; } }
 	.timeline-ruler-view { margin-left: var(--timeline-label-column); overflow: hidden; }
 	.timeline-ruler-track {
 		position: relative;
