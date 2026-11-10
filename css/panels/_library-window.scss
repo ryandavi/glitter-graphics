@@ -44,7 +44,6 @@
 	border: 1px solid var(--color-window-border);
 	border-radius: var(--radius-panel);
 	box-shadow: 0 2px 5px var(--color-shadow-strong);
-	overflow: hidden;
 
 	&.is-open { display: flex; }
 
@@ -56,8 +55,10 @@
 		&:focus-visible { outline: none; box-shadow: var(--control-focus-ring); }
 	}
 
-	// Its left edge sizes it, inside the window's rounded clip.
-	> .flyout-resize-handle { --divider-offset: 0px; }
+	// Its left edge sizes it: centred on the border like every dock divider, so
+	// the window clips its section rather than itself. The accent line stops
+	// short of the rounded corners.
+	> .flyout-resize-handle { --split-line-height: calc(100% - 2 * var(--radius-panel)); }
 
 	// The phone's flyout is the sheet's section, not this window.
 	@include mobile { display: none; }
@@ -113,7 +114,11 @@
 }
 
 // The glass is the window's; the section sits clear on it.
-.flyout-window > .flyout-section { background: none; }
+.flyout-window > .flyout-section {
+	background: none;
+	border-radius: inherit;
+	overflow: hidden;
+}
 
 // In the window the section is the whole pane: the same inset above and below
 // its rows as beside them.

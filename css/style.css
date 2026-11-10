@@ -3728,7 +3728,6 @@ input.layer-name-input {
   border: 1px solid var(--color-window-border);
   border-radius: var(--radius-panel);
   box-shadow: 0 2px 5px var(--color-shadow-strong);
-  overflow: hidden;
 }
 .flyout-window.is-open {
   display: flex;
@@ -3747,7 +3746,7 @@ input.layer-name-input {
   box-shadow: var(--control-focus-ring);
 }
 .flyout-window > .flyout-resize-handle {
-  --divider-offset: 0px;
+  --split-line-height: calc(100% - 2 * var(--radius-panel));
 }
 @media (max-width: 1040px) {
   .flyout-window {
@@ -3798,6 +3797,8 @@ input.layer-name-input {
 
 .flyout-window > .flyout-section {
   background: none;
+  border-radius: inherit;
+  overflow: hidden;
 }
 
 .flyout-window .flyout-host > .property-card.is-flyout-open > .property-card-body {
@@ -8556,6 +8557,7 @@ body.tool-text .text-hover-baselines {
 
 .animation-transport {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--spacing-xs);
   width: 100%;
 }
@@ -8572,18 +8574,33 @@ body.tool-text .text-hover-baselines {
 
 .animation-transport-options {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: var(--spacing-xs);
 }
 .animation-transport-options > button {
-  flex: 1;
-  min-width: 0;
+  flex: 1 0 0;
+  min-width: max-content;
+}
+.animation-transport-options > .property-note {
+  flex: 1 0 100%;
 }
 
 .animation-transport-position {
   display: flex;
   justify-content: space-between;
   gap: var(--spacing-xs);
+  min-width: 0;
   font-variant-numeric: tabular-nums;
+}
+.animation-transport-position > label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.animation-transport-position > output {
+  flex-shrink: 0;
 }
 
 .auto-glitter-settings-section .auto-glitter-palette-style {
@@ -9536,7 +9553,13 @@ body.tool-text .text-hover-baselines {
   max-width: none;
 }
 .property-panel .property-set.property-actions.is-split {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: flex;
+  flex-flow: row wrap;
+}
+.property-panel .property-set.property-actions.is-split > button,
+.property-panel .property-set.property-actions.is-split > .app-menu {
+  flex: 1 0 0;
+  min-width: max-content;
 }
 
 .property-panel .property-card + .property-actions.section-actions {

@@ -171,8 +171,9 @@
 }
 
 // ----- R6: actions ----------------------------------------------------------
-// One button per line: buttons carry words. `.is-split` opts into two columns
-// where two full labels fit (Open / Save Project).
+// One button per line: buttons carry words. `.is-split` opts into two equal
+// columns where two full labels fit (Open / Save Project), and stacks them
+// where they don't, so a label is never cut.
 .property-panel .property-set.property-actions {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr);
@@ -191,7 +192,13 @@
 	}
 
 
-	&.is-split { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	&.is-split {
+		display: flex;
+		flex-flow: row wrap;
+
+		> button,
+		> .app-menu { flex: 1 0 0; min-width: max-content; }
+	}
 }
 
 // A group-level row (`.section-actions`: panel-end Actions, Reset effects)

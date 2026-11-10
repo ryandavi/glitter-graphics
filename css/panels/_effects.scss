@@ -305,8 +305,10 @@
 .animation-module.is-empty > .property-card-body {
 	> .property-set, > .advanced-disclosure { display: none; }
 }
+// The column is the box's width, never its buttons' label widths.
 .animation-transport {
 	display: grid;
+	grid-template-columns: minmax(0, 1fr);
 	gap: var(--spacing-xs);
 	width: 100%;
 	input[type="range"] { width: 100%; min-width: 0; }
@@ -316,16 +318,24 @@
 	grid-template-columns: minmax(0, 1fr) repeat(3, var(--control-height));
 	gap: var(--spacing-xs);
 }
+// Side by side where the full labels fit, stacked where they don't
+// (the same rule as `.property-actions.is-split`).
 .animation-transport-options {
 	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
 	gap: var(--spacing-xs);
-	> button { flex: 1; min-width: 0; }
+	> button { flex: 1 0 0; min-width: max-content; }
+	> .property-note { flex: 1 0 100%; }
 }
 .animation-transport-position {
 	display: flex;
 	justify-content: space-between;
 	gap: var(--spacing-xs);
+	min-width: 0;
 	font-variant-numeric: tabular-nums;
+	> label { @include truncate; min-width: 0; }
+	> output { flex-shrink: 0; }
 }
 
 .auto-glitter-settings-section {
