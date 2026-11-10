@@ -1,6 +1,20 @@
 @use '../mixins' as *;
 @use '../tokens' as tokens;
 
+// A playhead's head: a softly squared tab on the ruler, pointed where it
+// meets its line.
+@mixin timeline-pin($color) {
+	content: '';
+	position: absolute;
+	top: var(--spacing-2xs);
+	left: calc(0.5px - var(--timeline-pin-size) / 2);
+	width: var(--timeline-pin-size);
+	height: calc(var(--timeline-pin-size) + var(--spacing-xs));
+	border-radius: var(--radius-xs);
+	clip-path: polygon(0 0, 100% 0, 100% 65%, 50% 100%, 0 65%);
+	background: $color;
+}
+
 .timeline-frame-view {
 	position: absolute;
 	inset: 0;
@@ -40,6 +54,9 @@
 	--timeline-bar-inset: var(--spacing-xs);
 	--timeline-hue-authored: var(--color-timeline-authored);
 	--timeline-hue-procedural: var(--color-timeline-procedural);
+	// The playhead's pin, and the rounding every bar shares.
+	--timeline-pin-size: calc(var(--spacing-base) + var(--spacing-2xs));
+	--timeline-bar-radius: var(--radius-md);
 
 	> .timeline-section {
 		flex: 1;
@@ -132,21 +149,9 @@
 		flex-direction: column;
 		overflow: hidden;
 
-		// The label column: one darker strip from the ruler to the floor, which
-		// the labels over it share.
-		&::before {
-			content: '';
-			position: absolute;
-			inset: 0 auto 0 0;
-			box-sizing: border-box;
-			width: var(--timeline-label-column);
-			border-right: 1px solid var(--timeline-line);
-			background: var(--timeline-row-bg);
-		}
-		&.is-empty {
-			&::before { content: none; }
-			.timeline-group-header { grid-template-columns: minmax(0, 1fr); width: 100%; }
-		}
+		// No column strip and no row lines: space separates the rows, and the
+		// bars carry the color.
+		&.is-empty .timeline-group-header { grid-template-columns: minmax(0, 1fr); width: 100%; }
 	}
 	&.shows-details .timeline-stage { --timeline-info-column: var(--timeline-info-width); }
 	&:not(.shows-details) .timeline-row-info { display: none; }
@@ -168,10 +173,15 @@
 		width: 1px;
 		pointer-events: none;
 	}
-	.timeline-hover-guide { background: var(--color-text-secondary); opacity: var(--opacity-muted); }
+	// Where a press would land: a grey pin and line under the pointer.
+	.timeline-hover-guide {
+		background: color-mix(in srgb, var(--color-text-secondary) 50%, transparent);
+		&::after { @include timeline-pin(var(--color-text-tertiary)); }
+	}
 	.timeline-playhead-time { position: absolute; top: var(--spacing-base); left: var(--spacing-xs); white-space: nowrap; font-variant-numeric: tabular-nums; }
-	&.shows-rest .timeline-playhead::after { background: var(--color-bg-primary); border: 1px solid var(--color-accent); }
-	.timeline-bar-icon { position: absolute; left: var(--spacing-xs); top: 50%; transform: translateY(-50%); pointer-events: none; opacity: var(--opacity-muted); }
+	&.shows-rest .timeline-playhead::after { background: var(--color-bg-primary); box-shadow: inset 0 0 0 1.5px var(--color-accent); }
+	// Past the left grip, with a gap, so the two never meet.
+	.timeline-bar-icon { position: absolute; left: calc(var(--timeline-bar-inset) + var(--timeline-grip) + var(--spacing-xs)); top: 50%; transform: translateY(-50%); pointer-events: none; opacity: var(--opacity-muted); }
 	// Where a drag snapped.
 	.timeline-snap-guide { background: var(--color-text-primary); opacity: var(--opacity-dragging); }
 	.timeline-playhead {
@@ -187,17 +197,8 @@
 			height: var(--timeline-ruler-height);
 			background: var(--color-accent-surface-strong);
 		}
-		// Its head, on the ruler.
-		&::after {
-			content: '';
-			position: absolute;
-			top: 0;
-			left: calc(-1 * var(--spacing-xs));
-			width: calc(2 * var(--spacing-xs) + 1px);
-			height: var(--spacing-base);
-			border-radius: 0 0 var(--radius-xs) var(--radius-xs);
-			background: var(--color-accent);
-		}
+		// Its head: a pin on the ruler, pointing down the line.
+		&::after { @include timeline-pin(var(--color-accent)); }
 	}
 
 	// The label column's edge, dragged to size it. It sits on the column's
@@ -222,7 +223,6 @@
 	.timeline-ruler {
 		flex: 0 0 auto;
 		height: var(--timeline-ruler-height);
-		border-bottom: 1px solid var(--timeline-line);
 		> .property-note { display: flex; align-items: center; height: 100%; white-space: nowrap; }
 	}
 	.timeline-ruler-view { margin-left: var(--timeline-label-column); overflow: hidden; }
@@ -232,17 +232,6 @@
 		overflow: hidden;
 		cursor: ew-resize;
 		touch-action: none;
-
-		// The loop, as a strip along the ruler's top edge.
-		&::before {
-			content: '';
-			position: absolute;
-			inset: 0 auto auto 0;
-			width: var(--timeline-loop-x);
-			height: var(--spacing-2xs);
-			background: var(--color-accent);
-			opacity: var(--opacity-muted);
-		}
 	}
 	.timeline-ruler-ticks { display: block; }
 	// The loop's end: a handle on the ruler, and everything past it set back.
@@ -251,13 +240,13 @@
 		inset: 0 0 0 var(--timeline-loop-x);
 		display: flex;
 		align-items: center;
-		border-left: 2px solid var(--color-text-secondary);
+		gap: var(--spacing-xs);
+		border-left: 1px solid var(--color-text-tertiary);
 		padding-left: var(--spacing-sm);
 		font-size: var(--font-size-xs);
-		font-weight: var(--font-weight-semibold);
 		font-variant-numeric: tabular-nums;
-		color: var(--color-text-secondary);
-		background: var(--color-bg-secondary);
+		color: var(--color-text-tertiary);
+		background: color-mix(in srgb, var(--color-bg-primary) 60%, transparent);
 		cursor: ew-resize;
 		touch-action: none;
 
@@ -330,38 +319,35 @@
 	// A layer's row: the layer in the label column, the span of its
 	// animations on the track. The row is as wide as the tracks, so the line
 	// between groups is its own.
-	.timeline-group-header {
-		border-bottom: 1px solid var(--timeline-line);
-		background: var(--color-bg-secondary);
-	}
+	.timeline-group + .timeline-group { margin-top: var(--spacing-xs); }
+	// Sticky over the bars as the rows scroll sideways, so they wear the
+	// dock's own background.
 	.timeline-group-label, .timeline-row-label, .timeline-key-label {
 		position: sticky;
 		left: 0;
 		z-index: 1;
-		border-right: 1px solid var(--timeline-line);
 	}
 	.timeline-group-label {
-		--list-row-background: var(--color-bg-secondary);
+		--list-row-background: var(--color-bg-primary);
 		min-width: 0;
 	}
 	.timeline-group-label .lock { opacity: 0; }
 	// Add animation, on the selected layer's row: the accent's quiet surface,
 	// so it reads as the row's one offer.
 	.timeline-group-label .timeline-add-animation:not(:disabled) {
-		background: var(--color-accent-surface);
 		color: var(--color-accent);
-		&:hover { background: var(--color-accent-surface-strong); }
+		&:hover { background: var(--color-accent-surface); }
 	}
 	.timeline-group-label:is(:hover, :focus-within, .is-locked) .lock { opacity: 1; }
 	.timeline-group-track { background: transparent; }
 	.timeline-group-window { display: contents; }
-	.timeline-group-header.is-selected .timeline-group-track { background: color-mix(in srgb, var(--color-accent) 10%, transparent); }
+	.timeline-group-header.is-selected .timeline-group-track { background: color-mix(in srgb, var(--color-accent) 6%, transparent); }
 	.timeline-group-span {
 		position: absolute;
 		top: 50%;
 		height: var(--spacing-xs);
 		transform: translateY(-50%);
-		border-radius: var(--radius-xs);
+		border-radius: var(--radius-pill);
 		background: var(--color-border-hover);
 		pointer-events: none;
 	}
@@ -383,8 +369,6 @@
 		position: relative;
 		min-height: var(--timeline-row-height);
 		align-items: center;
-		border-bottom: 1px solid var(--timeline-line);
-		background: var(--timeline-row-bg);
 	}
 	.timeline-row-label {
 		display: flex;
@@ -394,7 +378,7 @@
 		text-align: left;
 		padding: 0 var(--spacing-sm);
 		height: var(--timeline-row-height);
-		background: var(--timeline-row-bg);
+		background: var(--color-bg-primary);
 		color: var(--color-text-secondary);
 		font-weight: var(--font-weight-normal);
 		> .timeline-motion-enabled, > .timeline-motion-placeholder { flex: 0 0 var(--control-height); width: var(--control-height); }
@@ -417,20 +401,20 @@
 			content: '';
 			position: absolute;
 			inset: 0 0 0 var(--timeline-loop-x);
-			border-left: 1px solid var(--color-text-secondary);
-			background: color-mix(in srgb, var(--color-bg-secondary) 55%, transparent);
+			border-left: 1px solid var(--timeline-line);
+			background: color-mix(in srgb, var(--color-bg-primary) 60%, transparent);
 			pointer-events: none;
 		}
 	}
 	.timeline-bar, .timeline-bar-ghost {
 		--timeline-bar-hue: var(--timeline-hue-procedural);
-		--timeline-bar-strength: 34%;
+		--timeline-bar-strength: 62%;
 		position: absolute;
 		top: var(--timeline-bar-inset);
 		height: calc(var(--timeline-row-height) - 2 * var(--timeline-bar-inset));
 		background: none;
 		border: 0;
-		border-radius: var(--radius-sm);
+		border-radius: var(--timeline-bar-radius);
 		padding: 0;
 		&::before {
 			content: '';
@@ -443,7 +427,7 @@
 			transition: background-color var(--transition-fast);
 		}
 	}
-	.timeline-bar-ghost { overflow: hidden; --timeline-bar-strength: 22%; pointer-events: none; }
+	.timeline-bar-ghost { overflow: hidden; --timeline-bar-strength: 24%; pointer-events: none; }
 	// The cursor says what a press on the body would do.
 	.timeline-bar {
 		cursor: pointer;
@@ -468,11 +452,12 @@
 	}
 	.timeline-group.is-locked .timeline-bar { cursor: not-allowed; }
 
-	.timeline-row:is(:hover, :focus-within) .timeline-bar { --timeline-bar-strength: 50%; }
+	.timeline-row:is(:hover, :focus-within) .timeline-bar { --timeline-bar-strength: 80%; }
 	.timeline-row:is(.is-selected, .is-dragging) .timeline-bar {
 		--timeline-bar-strength: 100%;
-		--timeline-bar-ring: inset 0 0 0 1px color-mix(in srgb, var(--color-text-primary) 70%, transparent);
+		--timeline-bar-ring: inset 0 0 0 1.5px color-mix(in srgb, var(--color-text-on-accent) 85%, transparent);
 	}
+	.timeline-bar-icon { color: var(--color-text-on-accent); }
 	// An edge or a cycle boundary that can be dragged: a wide target around a
 	// thin grip, drawn on the bar under the pointer and on the selected bar.
 	.timeline-bar-handle, .timeline-period-notch {
@@ -488,15 +473,18 @@
 		&::before {
 			content: '';
 			position: absolute;
-			inset: 25% auto 25% 50%;
+			inset: 28% auto 28% 50%;
 			width: var(--spacing-2xs);
 			margin-left: calc(var(--spacing-2xs) / -2);
-			border-radius: var(--radius-xs);
-			background: var(--color-text-primary);
+			border-radius: var(--radius-pill);
+			background: var(--color-text-on-accent);
 		}
 	}
-	.timeline-bar-handle.is-left { left: 0; }
-	.timeline-bar-handle.is-right { right: 0; }
+	// The trim grips sit inside the bar's ends, clear of its rounding, and
+	// show faintly on every bar so the ends read as handles.
+	.timeline-bar-handle.is-left { left: var(--timeline-bar-inset); }
+	.timeline-bar-handle.is-right { right: var(--timeline-bar-inset); }
+	.timeline-bar > .timeline-bar-handle { opacity: var(--opacity-disabled); }
 	// A bar too short for its grips keeps its body: the grips sit past its ends.
 	.timeline-bar.has-outside-grips {
 		.timeline-bar-handle.is-left { left: calc(-1 * var(--timeline-grip)); }
@@ -510,7 +498,7 @@
 	.timeline-row.is-changing-cycles .timeline-period-notch { display: none; }
 	.timeline-period-notch { transform: translateX(-50%); cursor: col-resize; }
 	.timeline-row:is(:hover, :focus-within, .is-selected, .is-dragging) {
-		.timeline-bar-handle, .timeline-period-notch { opacity: var(--btn-icon-opacity); }
+		.timeline-bar-handle, .timeline-period-notch { opacity: 1; }
 	}
 	// One cursor for the whole of a drag, whatever it passes over.
 	&[data-dragging] {
@@ -530,7 +518,7 @@
 		pointer-events: none;
 	}
 	&.shows-cycles .timeline-bar-marks {
-		background-image: repeating-linear-gradient(to right, var(--timeline-row-bg) 0 1px, transparent 1px var(--cycle-px));
+		background-image: repeating-linear-gradient(to right, color-mix(in srgb, var(--color-text-on-accent) 22%, transparent) 0 1px, transparent 1px var(--cycle-px));
 		background-position: var(--cycle-offset-px) 0;
 	}
 	&.shows-curves .timeline-bar-marks::before {
@@ -541,7 +529,7 @@
 		background-position: 0 0;
 		background-repeat: no-repeat;
 	}
-	.timeline-cycle-mark { position: absolute; top: 60%; bottom: 0; width: 1px; background: var(--timeline-row-bg); opacity: var(--opacity-soft); }
+	.timeline-cycle-mark { position: absolute; top: 25%; bottom: 25%; width: 1px; background: color-mix(in srgb, var(--color-text-on-accent) 30%, transparent); }
 	// A keyed motion's keys, repeated in every cycle of its bar.
 	.timeline-key-dot {
 		position: absolute;
@@ -566,7 +554,6 @@
 		display: grid;
 		grid-template-columns: var(--timeline-columns);
 		align-items: center;
-		border-top: 1px solid var(--timeline-line);
 	}
 	.timeline-key-label {
 		display: flex;
@@ -574,7 +561,7 @@
 		gap: var(--spacing-2xs);
 		height: var(--timeline-row-height);
 		padding: 0 var(--spacing-xs) 0 var(--spacing-base);
-		background: var(--timeline-row-bg);
+		background: var(--color-bg-primary);
 		color: var(--color-text-secondary);
 
 		> .active { background: var(--color-accent-surface-strong); color: var(--color-accent); }

@@ -464,7 +464,7 @@ class TimelineDock {
 				ctx.fillText(TimelineView.tickLabel(ms), x + this.config.rulerTextInsetPx, tickBottom / 2);
 			}
 			ctx.fillStyle = line;
-			const tickHeight = labeled ? tickBottom : this.config.minorTickHeight;
+			const tickHeight = labeled ? this.config.majorTickHeight : this.config.minorTickHeight;
 			ctx.fillRect(x, tickBottom - tickHeight, 1, tickHeight);
 		}
 		if (strip) for (const cell of TimelineView.frameCells(this.model.frameStarts, this.model.loopMs, this.scale, this.config.minTickPx)) {

@@ -179,7 +179,7 @@ async function verifyTimelineDock() {
 			return { off, on: { rectangles, labels } };
 		});
 		assert.deepEqual(ruler.off.rectangles.slice(0, 6).map(rect => rect.args), [
-			[0, 0, 1, 28], [30, 24, 1, 4], [60, 24, 1, 4], [90, 24, 1, 4], [120, 24, 1, 4], [150, 0, 1, 28]
+			[0, 20, 1, 8], [30, 24, 1, 4], [60, 24, 1, 4], [90, 24, 1, 4], [120, 24, 1, 4], [150, 20, 1, 8]
 		], 'Ruler minor ticks divide the labeled half-second evenly');
 		assert.deepEqual(ruler.off.labels.slice(0, 3).map(label => label[0]), ['0 s', '0.5 s', '1 s']);
 		assert(ruler.off.rectangles.every(rect => rect.args[2] === 1), 'Output frames off leaves only tick lines');
@@ -239,16 +239,18 @@ async function verifyTimelineDock() {
 		await page.getByRole('menuitemcheckbox', { name: 'Snap', exact: true }).click();
 		assert(await page.evaluate(() => !PREFERENCES.get('timelineSnap')), 'Snap is a remembered menu choice');
 		await page.evaluate(async oldLoop => { PREFERENCES.reset('timelineSnap'); editor.setDocumentLoop(oldLoop, { commit: false }); await editor.updateExportDuration(); }, oldLoop);
-		// A stored choice from before Next pass existed still shows the next pass.
+		// A stored choice from before Next pass existed takes its default: off.
 		await page.evaluate(() => PREFERENCES.set('timelineShow', { cycles: true, frames: false, details: true }));
-		assert(await page.evaluate(() => editor.timelineDock.show.nextLoop && editor.timelineDock.body.querySelectorAll('.timeline-bar-ghost').length > 0));
+		assert(await page.evaluate(() => !editor.timelineDock.show.nextLoop && editor.timelineDock.body.querySelectorAll('.timeline-bar-ghost').length === 0));
+		await page.evaluate(() => PREFERENCES.set('timelineShow', { cycles: true, frames: false, details: true, nextLoop: true }));
+		assert(await page.evaluate(() => editor.timelineDock.show.nextLoop && editor.timelineDock.body.querySelectorAll('.timeline-bar-ghost').length > 0), 'Next pass on shows the next pass');
 		const fitWidth = await page.evaluate(() => editor.timelineDock.trackWidth);
 		await page.evaluate(() => editor.timelineDock.showItems.find(item => item.dataset.show === 'nextLoop').click());
 		assert.deepStrictEqual(await page.evaluate(() => { const dock = editor.timelineDock; return { ghosts: dock.body.querySelectorAll('.timeline-bar-ghost').length, share: dock.nextLoopShare, loopFills: Math.abs(TimelineView.timeToX(dock.model.loopMs, dock.scale) - dock.trackWidth) < 0.5 }; }),
 			{ ghosts: 0, share: 0, loopFills: true }, 'Next pass off ends the track at the loop line');
 		assert(await page.evaluate(before => { const dock = editor.timelineDock; return Math.abs(dock.trackWidth - before) < 1 || dock.fitScale === dock.config.minPxPerSecond; }, fitWidth), 'Fit zoom fills the available width or stops at the readable minimum scale');
 		await page.evaluate(() => { editor.applyDefaultPanelLayout(); });
-		assert(await page.evaluate(() => editor.timelineDock.show.nextLoop && editor.timelineDock.body.querySelectorAll('.timeline-bar-ghost').length > 0), 'Reset Panels restores the dock view choices');
+		assert(await page.evaluate(() => !editor.timelineDock.show.nextLoop && editor.timelineDock.body.querySelectorAll('.timeline-bar-ghost').length === 0), 'Reset Panels restores the dock view choices');
 		await page.setViewportSize({ width: 1100, height: 900 });
 		await page.waitForTimeout(250);
 		if (process.env.GLITTER_TEST_CSS) {

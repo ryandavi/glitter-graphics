@@ -751,11 +751,11 @@ const CONFIG = deepFreeze({
 			followMarginPx: 24, edgeScrollPx: 24, edgeScrollPxPerSecond: 240,
 			defaultZoom: 'fit', minTickPx: 4, maxMarksPerBar: 600, nextLoopFraction: 0.25,
 			tickLabelMinPx: 110, tickSteps: [100, 200, 500, 1000, 2000, 5000],
-			rulerTextInsetPx: 4, minorTickHeight: 4, outputFrameStripHeight: 4, wheelLinePx: 28, wheelZoomPx: 100, staleShowMs: 200, curveSamples: 64,
+			rulerTextInsetPx: 4, minorTickHeight: 4, majorTickHeight: 8, outputFrameStripHeight: 4, wheelLinePx: 28, wheelZoomPx: 100, staleShowMs: 200, curveSamples: 64,
 			// A bar is never drawn narrower than this; a grip is this wide to the pointer.
 			barMinPx: 12, gripPx: 8,
 			// What the rows draw besides their bars, as the options menu lists it.
-			show: { curves: true, cycles: true, frames: false, details: true, nextLoop: true },
+			show: { curves: false, cycles: true, frames: false, details: false, nextLoop: false },
 			showLabels: { curves: 'Motion curves', cycles: 'Cycle marks', frames: 'Output frames', details: 'Details column', nextLoop: 'Next pass' },
 			snapPx: 8, dragThresholdPx: 3,
 			keyPositionTolerance: 0.001, keyNudgeStep: 0.01, keyFastNudgeStep: 0.05,
