@@ -57,8 +57,10 @@ class ExportResultPresenter {
 
 		document.querySelectorAll('#exportResultNav [data-export-view]').forEach((option) => { option.onclick = () => this._showView(option.dataset.exportView); });
 		this.onShow();
-		// The frame is reused, so a new result starts at the top of the side column.
+		// The frame is reused, so a new result starts at the top. The side column
+		// scrolls on desktop, the whole body on a phone.
 		modal.querySelector('.export-side').scrollTop = 0;
+		modal.querySelector('.modal-body').scrollTop = 0;
 	}
 
 	_renderFacts(facts) {
@@ -123,6 +125,9 @@ class ExportResultPresenter {
 
 	_renderDetails(details) {
 		document.getElementById('exportResultNav').hidden = !details;
+		const disclosure = document.getElementById('exportDetails');
+		disclosure.hidden = !details;
+		setAdvancedDisclosureOpen(disclosure, false);
 		document.getElementById('exportDetailsView').replaceChildren(...(details?.tables || []).map((table) => {
 			const group = document.createElement('section');
 			group.className = 'export-detail-group';
@@ -183,10 +188,11 @@ class ExportResultPresenter {
 		}
 	}
 
-	// The views swap inside the side column, so the preview and facts stay put.
+	// On desktop the views swap inside the side column, so the preview and facts
+	// stay put. The stylesheet reads `data-view`; a phone ignores it and stacks
+	// the notes over the Details disclosure.
 	_showView(view) {
-		document.getElementById('exportResultView').hidden = view !== 'result';
-		document.getElementById('exportDetailsView').hidden = view !== 'details';
+		document.querySelector('#exportPreviewModal .export-result').dataset.view = view;
 		document.querySelectorAll('#exportResultNav [data-export-view]').forEach((option) => {
 			const active = option.dataset.exportView === view;
 			option.classList.toggle('active', active);

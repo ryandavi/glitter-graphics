@@ -13,6 +13,22 @@ class ProjectSerializer {
 
 	constructor(editor) {
 		this.editor = editor;
+		this.encodedFiles = new WeakMap();
+	}
+
+	// Each file is read into a data URL once per `owner` while its `key` (the
+	// file itself, or a sticker's object URL) stays the same, so the recovery
+	// copy's repeat writes skip the base image and custom stickers. Resolves
+	// with { type, data }.
+	encodeFile(owner, key, readBlob) {
+		let entry = this.encodedFiles.get(owner);
+		if (entry?.key !== key) {
+			const encoded = Promise.resolve().then(readBlob).then(async blob => ({ type: blob.type, data: await blobToDataUrl(blob) }));
+			encoded.catch(() => this.encodedFiles.delete(owner));
+			entry = { key, encoded };
+			this.encodedFiles.set(owner, entry);
+		}
+		return entry.encoded;
 	}
 
 	async serialize() {
@@ -62,7 +78,10 @@ class ProjectSerializer {
 		await this.load(data);
 	}
 
-	async load(data) {
+	// `saved` is whether the loaded document counts as saved to a file: true
+	// for a file, the recovery copy's own flag for a resume. `recovered` marks
+	// that resume, which replaces nothing.
+	async load(data, { saved = true, recovered = false } = {}) {
 		this.validateProjectData(data);
 		const migrated = this.runMigrations(data);
 		const report = await this.preflight(migrated);
@@ -83,6 +102,7 @@ class ProjectSerializer {
 			this.applyPreflightSubstitutions(migrated, report);
 		}
 
+		if (!recovered && !await this.editor.confirmReplaceRecovery()) return false;
 		if ((this.editor.originalImage || this.editor.historyManager.canUndo()) && !this.editor.isSaved) {
 			const action = await this.editor.chooseAction({
 				title: 'Replace Current Project',
@@ -129,7 +149,7 @@ class ProjectSerializer {
 		this.editor.layerManager.restoreSelectionState(activeLayer ? activeLayer.id : null);
 		this.editor.setProjectName(migrated.name || '', { markDirty: false });
 		this.editor.openedFromNewerProjectVersion = migrated.version > ProjectSerializer.FORMAT_VERSION;
-		this.editor.finishDocumentReplace({ saved: true, loop: migrated.loop, markers: migrated.markers });
+		this.editor.finishDocumentReplace({ saved, loop: migrated.loop, markers: migrated.markers });
 		this.editor.updateSelectedColorsDisplay();
 		this.editor.updateStatus('Project loaded');
 		return true;
@@ -254,7 +274,7 @@ class ProjectSerializer {
 			baseImage.preset = { ...source.preset };
 		} else if (source?.file) {
 			baseImage.mimeType = source.file.type || 'application/octet-stream';
-			baseImage.data = await blobToDataUrl(source.file);
+			baseImage.data = (await this.encodeFile(source.file, source.file, () => source.file)).data;
 		}
 
 		const sourceWidth = source?.renderedWidth ?? source?.preset?.width ?? this.editor.originalCanvas.width;
@@ -269,7 +289,8 @@ class ProjectSerializer {
 		// file is no longer it (a project reopened from its still canvas).
 		if (placement) {
 			baseImage.animation = { placement: structuredClone(placement) };
-			if (source.animation.file !== source.file) baseImage.animation.data = await blobToDataUrl(source.animation.file);
+			const { file } = source.animation;
+			if (file !== source.file) baseImage.animation.data = (await this.encodeFile(file, file, () => file)).data;
 		}
 
 		return baseImage;
@@ -313,13 +334,13 @@ class ProjectSerializer {
 		for (const stickerId of usedIds) {
 			const sticker = this.editor.stickerLibrary.getItemById(stickerId);
 			if (!sticker?.url) continue;
-			const blob = await fetch(sticker.url).then((response) => response.blob());
+			const encoded = await this.encodeFile(sticker, sticker.url, () => fetch(sticker.url).then((response) => response.blob()));
 			customStickers[stickerId] = {
 				name: sticker.name || 'Sticker',
 				fileName: sticker.filename || `${sticker.name || stickerId}.png`,
-				mimeType: sticker.mimeType || blob.type || 'image/png',
+				mimeType: sticker.mimeType || encoded.type || 'image/png',
 				backgroundRemoved: sticker.backgroundRemoved === true,
-				data: await blobToDataUrl(blob)
+				data: encoded.data
 			};
 		}
 
@@ -368,15 +389,16 @@ class ProjectSerializer {
 		for (const id of ids) {
 			const item = this.editor.glitterLibrary.getItemById(id);
 			if (item?.source === 'user-upload') {
-				const blob = await fetch(item.url).then(response => response.blob());
-				embedded[id] = { upload: { name: item.name, fileName: item.filename, mimeType: item.mimeType }, data: await blobToDataUrl(blob) };
+				const { data } = await this.encodeFile(item, item.url, () => fetch(item.url).then(response => response.blob()));
+				embedded[id] = { upload: { name: item.name, fileName: item.filename, mimeType: item.mimeType }, data };
 				continue;
 			}
 			if (!item?.recipe) continue;
+			const gif = bytes => new Blob([bytes], { type: 'image/gif' });
 			embedded[id] = {
 				recipe: item.recipe,
-				data: await blobToDataUrl(new Blob([item.gifBytes], { type: 'image/gif' })),
-				sourceData: item.sourceBytes ? await blobToDataUrl(new Blob([item.sourceBytes], { type: 'image/gif' })) : null
+				data: (await this.encodeFile(item, item.gifBytes, () => gif(item.gifBytes))).data,
+				sourceData: item.sourceBytes ? (await this.encodeFile(item.sourceBytes, item.sourceBytes, () => gif(item.sourceBytes))).data : null
 			};
 		}
 		return embedded;

@@ -6,20 +6,22 @@
 // names the Inspector panel (a `sectionPrefix`) that stands in for the
 // selection's while the session lasts, and `closesLibrary` keeps the Library
 // window shut for it. `flyout` returns the session's own section for the
-// window to show in a layer section's place, or null.
+// window to show in a layer section's place, or null. `holdsEdits` marks a
+// session whose edits are not in the document until it commits, so the
+// recovery copy waits for it.
 const SESSIONS = Object.freeze([
 	{ id: 'keyRecording', isActive: editor => Boolean(editor.keyRecording?.active),
 		end: editor => editor.keyRecording.end(), cancel: editor => editor.keyRecording.end(), confirm: editor => editor.keyRecording.end(),
 		nudge: (editor, event) => editor.keyRecording.nudge(event), delete: editor => editor.animationPanel.deleteKey(editor.keyRecording.layer, editor.keyRecording.entry),
 		allows: (_editor, command) => command.group !== 'Transform' || command === COMMANDS.nudge },
-	{ id: 'autoGlitter', isActive: editor => editor.autoGlitterManager.isSessionActive(),
+	{ id: 'autoGlitter', isActive: editor => editor.autoGlitterManager.isSessionActive(), holdsEdits: true,
 		panel: 'autoGlitterSettings', closesLibrary: true,
 		cancel: editor => editor.autoGlitterManager.requestDiscardSession(),
 		history: editor => editor.autoGlitterManager.getHistory(),
 		flyout: editor => editor.autoGlitterManager.getFlyoutCard(),
 		allows: (editor, command) => command.group === 'View' || command.group === 'History' || (command.group === 'Tools' && editor.autoGlitterManager.allowsPreviewTool(command.tool)) },
-	{ id: 'crop', isActive: (editor) => editor.currentTool === ToolType.CROP && Boolean(editor.canvasBounds), mode: { label: 'Crop', icon: 'crop' }, confirm: (editor) => editor.applyCanvasBounds(), cancel: (editor) => editor.cancelCanvasBounds({ keepTool: true }), nudge: (editor, event) => editor.cropEdit.nudge(event), history: (editor) => editor.canvasBounds },
-	{ id: 'textEdit', isActive: (editor) => Boolean(editor.textGlitterManager?.editSession),
+	{ id: 'crop', isActive: (editor) => editor.currentTool === ToolType.CROP && Boolean(editor.canvasBounds), holdsEdits: true, mode: { label: 'Crop', icon: 'crop' }, confirm: (editor) => editor.applyCanvasBounds(), cancel: (editor) => editor.cancelCanvasBounds({ keepTool: true }), nudge: (editor, event) => editor.cropEdit.nudge(event), history: (editor) => editor.canvasBounds },
+	{ id: 'textEdit', isActive: (editor) => Boolean(editor.textGlitterManager?.editSession), holdsEdits: true,
 		history: (editor, direction) => editor.textGlitterManager.getTextEditHistory(direction),
 		mode: { label: 'Text', icon: 'text' }, end: editor => editor.textGlitterManager.endTextEdit(), cancel: (editor) => editor.textGlitterManager.endTextEdit() },
 	{ id: 'pathEdit', isActive: (editor) => Boolean(editor.pathEdit?.session),

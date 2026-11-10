@@ -105,6 +105,56 @@ setupImageListeners() {
 			workspaceStart.setAttribute('aria-hidden', noDocument ? 'false' : 'true');
 		}
 		document.body.classList.toggle('no-document', noDocument);
+		if (noDocument && this.recovery) this.refreshWorkspaceStartResume();
+	},
+
+	// The Resume tile leads the start card while a recovery copy exists
+	// (js/editor/document-recovery.js). It reads only the copy's summary.
+	async refreshWorkspaceStartResume() {
+		const summary = this.isRecoveryEnabled() && !this.originalImage ? await RECOVERY_STORE.readSummary() : null;
+		if (!this.originalImage) this.renderWorkspaceStartResume(summary);
+	},
+
+	renderWorkspaceStartResume(summary) {
+		const host = document.getElementById('workspaceStartPresets');
+		const previous = host?.querySelector('.workspace-start-resume');
+		if (previous?.dataset.thumbnailUrl) URL.revokeObjectURL(previous.dataset.thumbnailUrl);
+		previous?.remove();
+		if (!host || !summary) return;
+		const name = summary.name || CONFIG.project.name.placeholder;
+		const { width, height } = summary.canvas;
+		const edited = formatRelativeTime(summary.savedAt);
+		const tile = buildElement('workspace-start-resume');
+		const media = buildElement('action-card-media workspace-start-preset-preview workspace-start-resume-preview', undefined, 'span');
+		if (summary.thumbnail) {
+			const image = buildElement('workspace-start-resume-thumbnail', undefined, 'img');
+			image.alt = '';
+			image.src = tile.dataset.thumbnailUrl = URL.createObjectURL(summary.thumbnail);
+			media.appendChild(image);
+		} else {
+			media.appendChild(buildElement('icon-wrapper', undefined, 'span')).appendChild(createIcon('clock-history'));
+		}
+		const size = `${width} × ${height} px`;
+		const card = buildActionCard({
+			className: 'is-quiet workspace-start-preset workspace-start-resume-card',
+			dataset: {},
+			ariaLabel: `Resume ${name}, ${width} by ${height} pixels, edited ${edited}${summary.fileSaved ? '' : ', not saved to a file'}`,
+			media,
+			title: name,
+			details: [
+				{ text: `Resume · edited ${edited}` },
+				summary.fileSaved ? { text: size } : { text: `${size} · Not saved to a file`, className: 'is-warning' }
+			]
+		});
+		card.addEventListener('click', () => this.resumeRecovery());
+		const discard = buildIconButton({
+			className: 'btn-icon-simple icon-wrapper sm workspace-start-resume-discard',
+			label: 'Discard recovered work',
+			icon: 'x-mark',
+			onClick: () => this.discardRecovery()
+		});
+		tile.append(card, discard);
+		host.prepend(tile);
 	},
 
 	// One-click blank canvases on the start card. Each tile uses the default
@@ -209,9 +259,10 @@ setupImageListeners() {
 	},
 
 	async createBlankCanvas(width, height, color = CONFIG.canvas.defaults.blankDocument.color) {
-		await this.loadBlankImage(width, height, color);
+		if (!await this.loadBlankImage(width, height, color)) return false;
 		PREFERENCES.set('recentCanvasSizes', pushRecent(PREFERENCES.get('recentCanvasSizes'),
 			{ width, height }, CONFIG.canvas.recentSizeCount, (a, b) => a.width === b.width && a.height === b.height));
+		return true;
 	},
 
 	renderRecentCanvasSizes() {
@@ -341,7 +392,7 @@ setupImageListeners() {
 				const color = backgroundType === 'transparent' ? 'transparent' : colorInput.value;
 				const name = nameInput.value.trim();
 
-				await this.createBlankCanvas(width, height, color);
+				if (!await this.createBlankCanvas(width, height, color)) return;
 				this.setProjectName(name, { markDirty: false });
 				this.modalManager.close('newCanvasModal');
 			});

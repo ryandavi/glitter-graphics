@@ -52,6 +52,7 @@ const EDITOR_DOCUMENT_IO_METHODS = {
 		this.refreshDocumentUI();
 		TOOLS[this.currentTool]?.onActivate?.(this);
 		this.requestPreviewUpdate();
+		this.writeRecoveryNow();
 	},
 	getBaseLayer() { return this.layerManager.getBaseLayer(); },
 	getConstrainedCanvasSize(width, height) {
@@ -254,6 +255,12 @@ const EDITOR_DOCUMENT_IO_METHODS = {
 			}
 		}
 
+		// A project load asks for itself; its base image arrives with deferFinish.
+		if (!deferFinish && !await this.confirmReplaceRecovery()) {
+			URL.revokeObjectURL(objectUrl);
+			return false;
+		}
+
 		const file = blob instanceof File ? blob : new File([blob], fileName, { type: blob.type || 'image/png' });
 		this.beginDocumentReplace();
 		const animation = source?.kind === 'preset' ? null : await this.readBaseAnimation(file);
@@ -337,6 +344,7 @@ const EDITOR_DOCUMENT_IO_METHODS = {
 			const blob = await this.projectSerializer.serializeToBlob();
 			downloadBlob(blob, this.getProjectDownloadName());
 			this.isSaved = true;
+			this.noteRecoveryFileSaved();
 			this.updateStatus('Project saved');
 		} catch (error) {
 			console.error('Project save failed:', error);

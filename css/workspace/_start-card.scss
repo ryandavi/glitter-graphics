@@ -102,6 +102,46 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 	background: var(--new-canvas-preview-bg);
 }
 
+// Resume: the recovery copy of the last document, a full-width row ahead of
+// the preset tiles with its Discard button in the top right corner. Scoped
+// under the row so the phone's preset tile rules do not reach it.
+.workspace-start-resume {
+	position: relative;
+	grid-column: 1 / -1;
+
+	> .workspace-start-resume-card {
+		width: 100%;
+		@include action-card-horizontal;
+		grid-template-rows: none;
+		align-content: center;
+		padding-right: calc(var(--spacing-base) + var(--row-height));
+
+		> .action-card-media { grid-row: 1 / span 3; }
+		> .action-card-title { @include truncate; }
+		> .is-warning { color: var(--color-warning-text); }
+	}
+
+	.workspace-start-resume-preview {
+		width: 64px;
+		height: 64px;
+		margin-bottom: 0;
+	}
+}
+
+.workspace-start-resume-thumbnail {
+	max-width: 100%;
+	max-height: 100%;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-sm);
+	background: var(--new-canvas-preview-bg);
+}
+
+.workspace-start-resume-discard {
+	position: absolute;
+	top: var(--spacing-xs);
+	right: var(--spacing-xs);
+}
+
 .workspace-start-actions {
 	display: flex;
 	flex-wrap: wrap;

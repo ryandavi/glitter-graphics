@@ -67,6 +67,14 @@ const CONFIG = deepFreeze({
 			autoSelect: true,
 			autoCreateGlitterLayer: true
 		},
+		// The recovery copy of the open document (js/editor/document-recovery.js):
+		// written this long after the last edit, never later than maxWaitMs into
+		// a run of edits, with a start card thumbnail this many px on its long side.
+		recovery: {
+			debounceMs: 2000,
+			maxWaitMs: 30000,
+			thumbnailSize: 160
+		},
 		assets: {
 			manifestVersion: '2026-10-10-timing'
 		}

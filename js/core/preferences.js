@@ -6,6 +6,7 @@ const PREFERENCE_SCHEMA = Object.freeze({
 	showHints: { default: () => CONFIG.ui.hints.enabledByDefault },
 	backgroundRemovalHintSeen: { default: () => false, keepOnReset: true },
 	confirmDestructiveActions: { default: () => true },
+	recoverUnsavedWork: { default: () => true },
 	showWelcomeOnStartup: { default: () => true },
 	welcomeLastSeenRelease: { default: () => null },
 	scaleCorners: { default: () => CONFIG.rendering.transformBehavior.scaleCorners },

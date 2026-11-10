@@ -235,6 +235,17 @@
 	}
 
 	// ----- Details ----------------------------------------------------------
+	// The details sit in an Advanced disclosure so a phone can stack them under
+	// the notes. On desktop the view switch picks one pane instead, so the
+	// disclosure's own toggle is not used and its content always shows.
+	.export-result[data-view='details'] #exportResultView,
+	.export-result[data-view='result'] .export-details { display: none; }
+
+	.export-details {
+		> .advanced-disclosure-toggle { display: none; }
+		> .advanced-disclosure-content { display: flex; }
+	}
+
 	#exportDetailsView { gap: var(--spacing-lg); }
 
 	.export-detail-group {
@@ -257,20 +268,63 @@
 	.modal-footer > button:disabled { display: none; }
 
 	// ----- Phone ------------------------------------------------------------
-	// One column. The facts become one meta line under the preview and the
-	// Ko-fi link takes its own footer line.
+	// One column, and the whole body scrolls: the preview, one meta line, the
+	// export menu, the notes, then the details behind a disclosure. Scrolling
+	// moves the preview away and gives the save steps the full height. Ko-fi
+	// is a heart button in the action row.
 	@include modal-compact {
 		--export-pad: var(--spacing-md);
 
+		.modal-body {
+			overflow-y: auto;
+			overscroll-behavior: contain;
+		}
+
 		.export-result {
+			flex: 0 0 auto;
 			grid-template-columns: minmax(0, 1fr);
-			grid-template-rows: 40dvh auto auto minmax(0, 1fr);
+			grid-template-rows: 40dvh auto auto auto;
 			grid-template-areas:
 				'stage'
 				'facts'
 				'controls'
 				'side';
 		}
+
+		.export-side {
+			min-height: auto;
+			overflow: visible;
+		}
+
+		.export-view-switch { display: none; }
+
+		.export-result[data-view] #exportResultView { display: flex; }
+
+		.export-result[data-view] .export-details {
+			display: flex;
+
+			> .advanced-disclosure-toggle { display: flex; }
+			> .advanced-disclosure-content { display: none; }
+			&.is-open > .advanced-disclosure-content { display: flex; }
+		}
+
+		// Icon only, at the start of the action row; the label stays for
+		// screen readers and the title for a long press.
+		.modal-footer > .export-support-link {
+			order: 0;
+			flex: 0 0 auto;
+			align-self: stretch;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			padding: 0 var(--spacing-md);
+
+			&::after { display: none; }
+
+			> svg.icon { margin-right: 0; }
+		}
+
+		.export-support-label { @include visually-hidden; }
 
 		// Little room is left under the controls, so the menu opens over the preview.
 		.export-controls .app-menu-panel {

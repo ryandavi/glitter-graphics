@@ -15,6 +15,15 @@ function formatDimensions(width, height, unit = 'px') {
 	return `${width}<span class="setting-separator"> × </span>${height}<span class="setting-unit">${unit}</span>`;
 }
 
+// "just now", "5 minutes ago", "yesterday", "3 weeks ago".
+function formatRelativeTime(timestamp, now = Date.now()) {
+	const seconds = Math.round((timestamp - now) / 1000);
+	if (Math.abs(seconds) < 60) return 'just now';
+	const units = [['year', 31536000], ['month', 2592000], ['week', 604800], ['day', 86400], ['hour', 3600], ['minute', 60]];
+	const [unit, size] = units.find(([, unitSeconds]) => Math.abs(seconds) >= unitSeconds);
+	return new Intl.RelativeTimeFormat('en', { numeric: 'auto' }).format(Math.round(seconds / size), unit);
+}
+
 function formatSizeBadge(width, height) {
 	return `${Math.round(width)} × ${Math.round(height)}`;
 }

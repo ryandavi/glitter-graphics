@@ -223,13 +223,15 @@ class GlitterEditor {
 	}
 
 	// ===== GETTERS & SETTERS =====
-	// The status bar's save field follows every write.
+	// The status bar's save field follows every write, and anything that
+	// leaves the document unsaved schedules its recovery copy.
 	get isSaved() {
 		return this._isSaved;
 	}
 
 	set isSaved(value) {
 		this._isSaved = Boolean(value);
+		if (!this._isSaved) this.scheduleRecoveryWrite();
 		this.updateStatusBar();
 	}
 
@@ -294,6 +296,7 @@ class GlitterEditor {
 		});
 		this.setupExportListeners();
 		this.setupImageListeners();
+		this.setupRecovery();
 		this.setupModalListeners();
 		this.setupPreviewListeners();
 		this.setupGlobalListeners();
@@ -407,13 +410,14 @@ class GlitterEditor {
 			: `blank_${width}x${height}.png`;
 		const file = new File([blob], fileName, { type: 'image/png' });
 
-		await this.loadImageFile(file, {
+		const loaded = await this.loadImageFile(file, {
 			...options,
 			source: {
 				kind: 'preset',
 				preset: { width, height, color }
 			}
 		});
+		if (!loaded) return false;
 		const baseLayer = this.layerManager.getBaseLayer();
 		if (baseLayer) {
 			baseLayer.background.mode = color === 'transparent' ? 'none' : 'solid';
@@ -1080,6 +1084,7 @@ Object.assign(
 	EDITOR_ANIMATION_EDIT_METHODS,
 	EDITOR_TIMELINE_METHODS,
 	EDITOR_DOCUMENT_IO_METHODS,
+	EDITOR_RECOVERY_METHODS,
 	EDITOR_EXPORT_FLOW_METHODS,
 	EDITOR_KEYBOARD_METHODS,
 	EDITOR_PANEL_METHODS,

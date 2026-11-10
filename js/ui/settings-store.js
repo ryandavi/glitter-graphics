@@ -159,6 +159,7 @@ const APP_SETTINGS_LAYOUT = (() => {
 			toggle('showHints', 'Helpful Hints', 'Show contextual hints based on active tool and selected layer.', { id: 'showHelpfulHints' }),
 			toggle('showAllControls', 'Show All Controls', 'Keep every Advanced section open, in panels and in these windows.', { }),
 			toggle('confirmDestructiveActions', 'Confirm Before Deleting', 'Ask before deleting layers or clearing paint.', { }),
+			toggle('recoverUnsavedWork', 'Keep a Recovery Copy', 'Keep a copy of unsaved work in this browser, so the start card can resume it after the tab closes. Off deletes the copy.', { aliases: 'autosave recover resume restore crash draft unsaved' }),
 			toggle('reduceMotion', 'Reduce Motion', 'Turn off interface transitions and animated previews. Exported animation is unaffected.', { aliases: 'animation accessibility motion transitions' }),
 			toggle('showWelcomeOnStartup', 'Welcome on Startup', 'Show the Welcome screen when Glitter Editor starts.', { feature: 'welcomeOnStartup' }),
 			toggle('balanceSidebars', 'Balance Sidebar Widths', 'Keep the Inspector as wide as the toolbar and Layers together. Dragging the Inspector turns this off.', { aliases: 'panels layout symmetric widths resize' })

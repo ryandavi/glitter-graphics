@@ -5942,6 +5942,68 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
   background: var(--new-canvas-preview-bg);
 }
 
+.workspace-start-resume {
+  position: relative;
+  grid-column: 1/-1;
+}
+.workspace-start-resume > .workspace-start-resume-card {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: var(--spacing-sm);
+  row-gap: 1px;
+  padding: var(--spacing-sm) var(--spacing-base);
+  text-align: left;
+}
+.workspace-start-resume > .workspace-start-resume-card > .action-card-media {
+  grid-column: 1;
+  grid-row: 1/-1;
+}
+.workspace-start-resume > .workspace-start-resume-card > .action-card-title {
+  grid-column: 2;
+  align-self: end;
+}
+.workspace-start-resume > .workspace-start-resume-card > .action-card-detail {
+  grid-column: 2;
+  align-self: start;
+}
+.workspace-start-resume > .workspace-start-resume-card {
+  grid-template-rows: none;
+  align-content: center;
+  padding-right: calc(var(--spacing-base) + var(--row-height));
+}
+.workspace-start-resume > .workspace-start-resume-card > .action-card-media {
+  grid-row: 1/span 3;
+}
+.workspace-start-resume > .workspace-start-resume-card > .action-card-title {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.workspace-start-resume > .workspace-start-resume-card > .is-warning {
+  color: var(--color-warning-text);
+}
+.workspace-start-resume .workspace-start-resume-preview {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 0;
+}
+
+.workspace-start-resume-thumbnail {
+  max-width: 100%;
+  max-height: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--new-canvas-preview-bg);
+}
+
+.workspace-start-resume-discard {
+  position: absolute;
+  top: var(--spacing-xs);
+  right: var(--spacing-xs);
+}
+
 .workspace-start-actions {
   display: flex;
   flex-wrap: wrap;
@@ -7943,6 +8005,15 @@ body.tool-text .text-hover-baselines {
 }
 .text-symbol-grid > .btn-flat {
   padding: 0;
+}
+.text-symbol-grid.is-kaomoji {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.text-symbol-grid.is-kaomoji > .btn-flat {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: var(--font-size-xs);
 }
 
 .filter-looks-picker {
@@ -11116,6 +11187,16 @@ body.modal-open {
 #exportPreviewModal .export-save-guide .export-instruction-tip {
   color: var(--color-text-tertiary);
 }
+#exportPreviewModal .export-result[data-view=details] #exportResultView,
+#exportPreviewModal .export-result[data-view=result] .export-details {
+  display: none;
+}
+#exportPreviewModal .export-details > .advanced-disclosure-toggle {
+  display: none;
+}
+#exportPreviewModal .export-details > .advanced-disclosure-content {
+  display: flex;
+}
 #exportPreviewModal #exportDetailsView {
   gap: var(--spacing-lg);
 }
@@ -11137,10 +11218,63 @@ body.modal-open {
   #exportPreviewModal {
     --export-pad: var(--spacing-md);
   }
+  #exportPreviewModal .modal-body {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
   #exportPreviewModal .export-result {
+    flex: 0 0 auto;
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: 40dvh auto auto minmax(0, 1fr);
+    grid-template-rows: 40dvh auto auto auto;
     grid-template-areas: "stage" "facts" "controls" "side";
+  }
+  #exportPreviewModal .export-side {
+    min-height: auto;
+    overflow: visible;
+  }
+  #exportPreviewModal .export-view-switch {
+    display: none;
+  }
+  #exportPreviewModal .export-result[data-view] #exportResultView {
+    display: flex;
+  }
+  #exportPreviewModal .export-result[data-view] .export-details {
+    display: flex;
+  }
+  #exportPreviewModal .export-result[data-view] .export-details > .advanced-disclosure-toggle {
+    display: flex;
+  }
+  #exportPreviewModal .export-result[data-view] .export-details > .advanced-disclosure-content {
+    display: none;
+  }
+  #exportPreviewModal .export-result[data-view] .export-details.is-open > .advanced-disclosure-content {
+    display: flex;
+  }
+  #exportPreviewModal .modal-footer > .export-support-link {
+    order: 0;
+    flex: 0 0 auto;
+    align-self: stretch;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 var(--spacing-md);
+  }
+  #exportPreviewModal .modal-footer > .export-support-link::after {
+    display: none;
+  }
+  #exportPreviewModal .modal-footer > .export-support-link > svg.icon {
+    margin-right: 0;
+  }
+  #exportPreviewModal .export-support-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
   }
   #exportPreviewModal .export-controls .app-menu-panel {
     top: auto;
@@ -12826,6 +12960,45 @@ body.modal-open {
   font-size: var(--font-size-sm);
   letter-spacing: 0.5px;
   color: var(--color-text-tertiary);
+}
+
+/* ===== TAKE PHOTO MODAL ===== */
+#cameraModal .camera-stage {
+  position: relative;
+  aspect-ratio: 16/9;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--color-checkerboard);
+}
+#cameraModal .camera-stage > video,
+#cameraModal .camera-stage > canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+#cameraModal .camera-stage > [hidden] {
+  display: none;
+}
+#cameraModal .camera-stage.is-mirrored > video {
+  transform: scaleX(-1);
+}
+#cameraModal .camera-countdown {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: calc(var(--font-size-2xl) * 3);
+  font-weight: var(--font-weight-bold);
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+}
+#cameraModal .camera-countdown[hidden] {
+  display: none;
+}
+#cameraModal .modal-form {
+  margin-top: var(--spacing-md);
 }
 
 @media (max-width: 600px) {
