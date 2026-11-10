@@ -3837,7 +3837,7 @@ input.layer-name-input {
 }
 
 @media (min-width: 1041px) {
-  .library-window.has-flyout > .design-gallery-section .library-close-action {
+  .library-window .design-gallery-section .library-close-action {
     display: none;
   }
 }
@@ -4319,6 +4319,10 @@ body:not(.boot-library) #designGalleryContent > :not(.boot-library-loading) {
 
 .asset-browser-rail-up {
   flex: 0 0 auto;
+  align-self: stretch;
+  height: auto;
+  width: auto;
+  aspect-ratio: 1;
 }
 
 @supports (appearance: base-select) {
@@ -7738,6 +7742,11 @@ body.tool-pen .preview-container[data-path-hover=empty] #canvasElementsContainer
 /* Point text has no frame to align within, so vertical alignment is only
    available for box text. Line height still controls explicit line breaks. */
 .text-settings-section:not([data-box-mode=fixed]) .text-valign-row {
+  display: none;
+}
+
+/* Padding insets copy inside a box; point text has none. */
+.text-settings-section[data-box-mode=point] #textPaddingRow {
   display: none;
 }
 

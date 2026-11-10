@@ -981,7 +981,12 @@ const PANEL_SCHEMAS = {
 						{ kind: 'segmented', label: 'Orientation', ariaLabel: 'Text orientation', options: getOptions('textOrientation').map(option => ({ label: option.label, attrs: { 'data-text-orientation': option.value } })) },
 						{ kind: 'segmented', label: 'Mode', ariaLabel: 'Text box mode', classes: 'text-box-mode-group', revert: true, options: getOptions('textBoxMode').map(option => ({ label: option.label, attrs: { 'data-text-box-mode': option.value } })) },
 						{ kind: 'note', id: 'textBoxModeHint', text: 'Point text hugs the copy. Switch to Box for wrapping and edge resizing.' },
-						{ kind: 'segmented', label: 'Vertical', ariaLabel: 'Vertical text alignment', classes: 'text-valign-group', rowClasses: 'text-valign-row', options: getOptions('textVerticalAlign').map(option => ({ label: option.label, icon: option.icon, attrs: { 'data-text-valign': option.value } })) }
+						{ kind: 'numberPair', label: 'Padding', rowId: 'textPaddingRow', title: 'Space between the box edges and the text', items: [
+							{ id: 'textPaddingH', slider: 'textPaddingH', mark: 'H', label: 'Horizontal box padding' },
+							{ id: 'textPaddingV', slider: 'textPaddingV', mark: 'V', label: 'Vertical box padding' }
+						] },
+						{ kind: 'segmented', label: 'Vertical', ariaLabel: 'Vertical text alignment', classes: 'text-valign-group', rowClasses: 'text-valign-row', options: getOptions('textVerticalAlign').map(option => ({ label: option.label, icon: option.icon, attrs: { 'data-text-valign': option.value } })) },
+						{ kind: 'segmented', label: 'Trim', ariaLabel: 'Vertical trim', classes: 'text-vtrim-group', revert: true, options: getOptions('textVerticalTrim').map(option => ({ label: option.label, active: option.value === CONFIG.tools.text.defaultVerticalTrim, attrs: { 'data-text-vtrim': option.value, title: option.hint } })) }
 					] }
 				] },
 				// Warp bends glyph placement (js/paint/text-warp.js): presets first,

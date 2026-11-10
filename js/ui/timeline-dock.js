@@ -307,8 +307,8 @@ class TimelineDock {
 	}
 
 	syncClock() {
-		const timed = this.available && this.hasTimedRows && this.model.loopMs > 0
-			&& (!PREFERENCES.get('timelineMinimized') || this.frameView.exact || this.keyRecording.active);
+		// Minimized, the bar's time label still runs, so the clock stays subscribed.
+		const timed = this.available && this.hasTimedRows && this.model.loopMs > 0;
 		if (!timed) {
 			this.unsubscribeTick?.(); this.unsubscribeTick = null;
 			this.unsubscribeSeek?.(); this.unsubscribeSeek = null;
@@ -476,12 +476,16 @@ class TimelineDock {
 	}
 
 	paintPlayhead(ms) {
-		if (!this.available || !this.rulerTrack) return;
+		if (!this.available) return;
+		// Minimized from the start, the rows (and the ruler) are never built.
 		if (PREFERENCES.get('timelineMinimized')) {
 			this.keyRecording.paint(ms);
 			if (this.frameView.exact || this.keyRecording.active) this.frameView.paint(ms);
+			// The transport stays visible while minimized, so its time label keeps running.
+			this.paintTime(ms, this.restPose);
 			return;
 		}
+		if (!this.rulerTrack) return;
 		const paused = this.editor.animationTicker.paused;
 		const moved = ms !== this.lastPlayheadMs;
 		if (PREFERENCES.get('timelineFollow') && this.stagePointer == null && !this.host.classList.contains('is-minimized')) {
@@ -511,9 +515,19 @@ class TimelineDock {
 			this.playhead.style.setProperty('--timeline-frame-width', `${width}px`);
 		}
 		this.playhead.style.setProperty('--timeline-frame-left', `${TimelineView.timeToX(this.frameStart - Math.min(ms, loopMs), this.scale)}px`);
-		const rest = this.editor.animationTicker.paused && (this.frameView.blocked || this.editor.animationTicker.restPreview || !this.editor.animationTicker.holding);
+		const rest = this.restPose;
 		this.host.classList.toggle('shows-rest', rest);
 		this.playheadTime.hidden = this.scrubPointer == null && !this.drag;
+		this.paintTime(ms, rest);
+	}
+
+	get restPose() {
+		const ticker = this.editor.animationTicker;
+		return ticker.paused && (this.frameView.blocked || ticker.restPreview || !ticker.holding);
+	}
+
+	paintTime(ms, rest) {
+		const { loopMs } = this.model;
 		const hundredth = Math.round(ms / 10);
 		if (this.displayTime === hundredth && this.displayLoop === loopMs && this.displayRest === rest) return;
 		this.displayTime = hundredth; this.displayLoop = loopMs; this.displayRest = rest;
@@ -521,8 +535,8 @@ class TimelineDock {
 		if (this.time.querySelector('input') || this.time.textContent === text) return;
 		this.time.textContent = text;
 		this.playheadTime.textContent = formatSeconds(ms);
-		this.rulerTrack.setAttribute('aria-valuenow', formatSeconds(ms, { unit: false }));
-		this.rulerTrack.setAttribute('aria-valuetext', formatSeconds(ms));
+		this.rulerTrack?.setAttribute('aria-valuenow', formatSeconds(ms, { unit: false }));
+		this.rulerTrack?.setAttribute('aria-valuetext', formatSeconds(ms));
 	}
 
 	applyHeight(value) {

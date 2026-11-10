@@ -1,4 +1,9 @@
 // Shared text-local layout; contexts are supplied by the caller.
+
+// The inset between a text box's edges and its copy. Point text ignores it.
+function getTextBoxPadding(data) {
+	return { x: Math.max(0, Number(data?.paddingX) || 0), y: Math.max(0, Number(data?.paddingY) || 0) };
+}
 const TextLayout = {
 	getAlignOffset(align, maxWidth, lineWidth) {
 		if (align === 'center') return (maxWidth - lineWidth) / 2;
@@ -172,7 +177,11 @@ TextLayout.layout = function(ctx, text, data, options) {
 	const stacked = data.orientation === 'stacked';
 	const boxed = data.boxMode !== 'point';
 	const layoutWidth = boxed ? Math.max(minBoxSize, Math.round(data.boxWidth || minBoxSize)) : null;
-	let lines = stacked ? [] : boxed ? this.wrapTextLines(ctx, display.split('\n'), layoutWidth, letterSpacing, fontSize).lines : display.split('\n').map(line => this.measureLine(ctx, line, letterSpacing, fontSize));
+	// Box padding insets the text inside the box. The box keeps its size, so
+	// a box-sized background still fills it while the copy wraps narrower.
+	const { x: padX, y: padY } = boxed ? getTextBoxPadding(data) : { x: 0, y: 0 };
+	const innerLayoutWidth = boxed ? Math.max(1, layoutWidth - padX * 2) : null;
+	let lines = stacked ? [] : boxed ? this.wrapTextLines(ctx, display.split('\n'), innerLayoutWidth, letterSpacing, fontSize).lines : display.split('\n').map(line => this.measureLine(ctx, line, letterSpacing, fontSize));
 	let stackWidth = 0;
 	let stackRows = 0;
 	if (stacked) {
@@ -210,8 +219,10 @@ TextLayout.layout = function(ctx, text, data, options) {
 		if (display[cursor] === '\n') cursor++;
 	});
 	const width = layoutWidth ?? (stacked ? stackWidth : lines.reduce((max, line) => Math.max(max, line.width), 0));
+	const innerWidth = innerLayoutWidth ?? width;
 	const contentHeight = ascent + descent + lineHeightPx * Math.max((stacked ? stackRows : lines.length) - 1, 0);
-	const height = data.boxMode === 'fixed' ? Math.max(minBoxSize, Math.round(data.boxHeight || minBoxSize)) : contentHeight;
+	const height = data.boxMode === 'fixed' ? Math.max(minBoxSize, Math.round(data.boxHeight || minBoxSize)) : contentHeight + padY * 2;
+	const innerHeight = data.boxMode === 'fixed' ? Math.max(1, height - padY * 2) : contentHeight;
 	// Fit the visible ink after alignment, rather than reserving the sample
 	// font's ascent above a lowercase line that will be shifted upward.
 	let fitTop = Infinity;
@@ -221,7 +232,7 @@ TextLayout.layout = function(ctx, text, data, options) {
 		const baseline = ascent + (stacked ? line.row : index) * lineHeightPx;
 		const top = Math.min(fitTop, baseline - line.ascent);
 		const bottom = Math.max(fitBottom, baseline + line.descent);
-		const fits = bottom - top <= height && (!stacked || line.columnX + line.columnWidth <= width);
+		const fits = bottom - top <= innerHeight && (!stacked || line.columnX + line.columnWidth <= innerWidth);
 		if (!fits && !stacked) full = true;
 		if (full || !fits) return false;
 		fitTop = top;
@@ -230,7 +241,7 @@ TextLayout.layout = function(ctx, text, data, options) {
 	}) : lines;
 	const visibleLines = stacked ? fittingLines : lines.slice(0, fittingLines.length);
 	const visible = visibleLines.length;
-	let offsetY = 0;
+	let offsetY = padY;
 	if (data.boxMode === 'fixed' && visible) {
 		const top = Math.min(...visibleLines.map((line, index) => ascent + (stacked ? line.row : index) * lineHeightPx - line.ascent));
 		const bottom = Math.max(...visibleLines.map((line, index) => ascent + (stacked ? line.row : index) * lineHeightPx + line.descent));
@@ -238,22 +249,22 @@ TextLayout.layout = function(ctx, text, data, options) {
 		const lineBlockHeight = ascent + descent + rows * lineHeightPx;
 		// Font metrics hold the baseline still as ascenders and descenders change.
 		// Only a box smaller than that line block needs an ink-based fit correction.
-		offsetY = this.getVerticalAlignOffset(data.verticalAlign, height, lineBlockHeight);
-		offsetY = Math.max(-top, Math.min(offsetY, height - bottom));
+		offsetY = this.getVerticalAlignOffset(data.verticalAlign, innerHeight, lineBlockHeight);
+		offsetY = padY + Math.max(-top, Math.min(offsetY, innerHeight - bottom));
 	}
 	const glyphs = [];
 	const runs = [];
 	const decorations = [];
 	visibleLines.forEach((line, lineIndex) => {
 		const baseline = offsetY + ascent + (stacked ? line.row : lineIndex) * lineHeightPx;
-		const startX = stacked ? this.getAlignOffset(data.align, width, stackWidth) + line.columnX + (line.columnWidth - line.width) / 2 : this.getAlignOffset(data.align, width, line.width);
+		const startX = padX + (stacked ? this.getAlignOffset(data.align, innerWidth, stackWidth) + line.columnX + (line.columnWidth - line.width) / 2 : this.getAlignOffset(data.align, innerWidth, line.width));
 		line.x = startX;
 		line.baseline = baseline;
 		const firstGlyph = glyphs.length;
 		const chars = splitGraphemes(line.text);
 		const gaps = (line.text.match(/\s+/gu) || []).length;
 		const justify = data.align === 'justify' && boxed && line.wrapped && gaps > 0;
-		const extra = justify ? Math.max(0, width - line.width) / gaps : 0;
+		const extra = justify ? Math.max(0, innerWidth - line.width) / gaps : 0;
 		let x = startX;
 		let displayOffset = line.displayStart;
 		let prefix = '';
@@ -289,9 +300,9 @@ TextLayout.layout = function(ctx, text, data, options) {
 				}
 			} else runs.push({ text: line.text, x: startX, baseline, line: lineIndex });
 		}
-		if (justify) { line.width = width; line.inkRight += width - ctx.measureText(line.text).width; }
+		if (justify) { line.width = innerWidth; line.inkRight += innerWidth - ctx.measureText(line.text).width; }
 		const ratios = CONFIG.tools.text.decoration;
-		for (const kind of ['underline', 'strikethrough']) if (data.decoration?.[kind] && line.text) decorations.push({ x: startX, y: baseline + fontSize * ratios[kind], width: justify ? width : line.width, height: Math.max(1, fontSize * ratios.thickness), line: lineIndex });
+		for (const kind of ['underline', 'strikethrough']) if (data.decoration?.[kind] && line.text) decorations.push({ x: startX, y: baseline + fontSize * ratios[kind], width: justify ? innerWidth : line.width, height: Math.max(1, fontSize * ratios.thickness), line: lineIndex });
 	});
 	return { lines, visibleLines, glyphs, runs, decorations, contentWidth: stacked ? stackWidth : Math.max(0, ...lines.map(line => line.width)), contentHeight, layoutWidth: width, layoutHeight: height, contentOffsetY: offsetY, hasOverflow: visible < lines.length };
 };

@@ -141,9 +141,10 @@
 
 .library-back-action { display: none; }
 
-// Beside a flyout section, the section's bar names the target and closes the pick.
+// On the desktop the Library is a dock tab, so it takes no Close: picking,
+// Esc or the Layers tab end the pick. Only the phone's sheet keeps Close.
 @media (min-width: ($mobile-breakpoint + 1px)) {
-	.library-window.has-flyout > .design-gallery-section .library-close-action { display: none; }
+	.library-window .design-gallery-section .library-close-action { display: none; }
 }
 
 // As the phone's sheet the window is short, so it shows one thing at a time:

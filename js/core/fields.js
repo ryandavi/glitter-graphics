@@ -159,6 +159,8 @@ const FIELDS = Object.freeze({
 	textFontSize: { label: 'Font size', unit: 'px', min: 12, max: 256, step: 1, value: 64, cost: 'raster' },
 	textLetterSpacing: { label: 'Letter spacing', unit: 'px', min: -20, max: 40, step: 1, value: 0, cost: 'raster' },
 	textLineHeight: { label: 'Line height', unit: '%', min: 50, max: 250, step: 1, value: 100, cost: 'raster' },
+	textPaddingH: { label: 'Horizontal box padding', unit: 'px', min: 0, max: 200, step: 1, value: 0, cost: 'raster' },
+	textPaddingV: { label: 'Vertical box padding', unit: 'px', min: 0, max: 200, step: 1, value: 0, cost: 'raster' },
 	textWarpBend: { label: 'Bend', unit: '%', min: -100, max: 100, step: 1, value: 50, cost: 'raster' },
 	transformScale: { label: 'Scale', unit: '%', min: 10, max: 500, step: 1, value: 100 },
 	transformRotation: { label: 'Rotation', unit: '°', min: 0, max: 360, step: 1, value: 0 },

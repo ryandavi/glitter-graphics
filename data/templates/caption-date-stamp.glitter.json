@@ -57,6 +57,7 @@
 				"lineHeight": 1,
 				"align": "right",
 				"verticalAlign": "top",
+				"verticalTrim": "cap",
 				"boxMode": "point",
 				"colorEmoji": true,
 				"decoration": {

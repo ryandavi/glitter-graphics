@@ -203,6 +203,13 @@ defineOptions('textBoxMode', [
 ]);
 defineOptions('textAlign', ['left', 'center', 'right', 'justify'].map(value => ({ value, label: value[0].toUpperCase() + value.slice(1), icon: `text-align-${value}` })));
 defineOptions('textVerticalAlign', ['top', 'middle', 'bottom'].map(value => ({ value, label: value[0].toUpperCase() + value.slice(1), icon: `text-align-${value}` })));
+// Which glyph extent the text box measures. Standard reserves room for
+// descenders; Cap height runs cap top to baseline, so caps and digits sit
+// centered in boxes and backgrounds while descenders hang below.
+defineOptions('textVerticalTrim', [
+	{ value: 'standard', label: 'Standard', hint: 'Box fits capitals and descenders. The baseline stays put as you type.' },
+	{ value: 'cap', label: 'Cap height', hint: 'Box runs from cap height to baseline, so capitals center in backgrounds. Descenders hang below.' }
+]);
 
 if (typeof module !== 'undefined' && module.exports) module.exports = { ANCHOR_POINTS };
 

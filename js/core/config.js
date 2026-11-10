@@ -591,6 +591,7 @@ const CONFIG = deepFreeze({
 			colorGlyphProbe: { size: 64, fontSize: 32, x: 8, baseline: 40 },
 			defaultBoxMode: 'point',
 			defaultVerticalAlign: 'top',
+			defaultVerticalTrim: 'standard',
 			minBoxSize: 4,
 			maxTextLength: 200,
 			// New text starts with this copy selected, so typing replaces it.

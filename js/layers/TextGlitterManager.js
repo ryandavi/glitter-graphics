@@ -67,6 +67,7 @@ class TextGlitterManager {
 			warpSummary: document.getElementById('textWarpSummary'),
 			alignButtons: Array.from(document.querySelectorAll('[data-text-align]')),
 			verticalAlignButtons: Array.from(document.querySelectorAll('[data-text-valign]')),
+			verticalTrimButtons: Array.from(document.querySelectorAll('[data-text-vtrim]')),
 			boxModeButtons: Array.from(document.querySelectorAll('[data-text-box-mode]')),
 			boxModeHint: document.getElementById('textBoxModeHint'),
 			fitBoxToContent: document.getElementById('textFitBoxToContent'),
@@ -167,6 +168,15 @@ class TextGlitterManager {
 				const verticalAlign = button.dataset.textValign;
 				if (!layer || !verticalAlign || verticalAlign === layer.textData.verticalAlign) return;
 				editLayout(layer, () => { layer.textData.verticalAlign = verticalAlign; });
+			});
+		});
+
+		this.ui.verticalTrimButtons.forEach((button) => {
+			button.addEventListener('click', () => {
+				const layer = this.getActiveTextLayer();
+				const verticalTrim = button.dataset.textVtrim;
+				if (!layer || !verticalTrim || verticalTrim === layer.textData.verticalTrim) return;
+				editLayout(layer, () => { layer.textData.verticalTrim = verticalTrim; });
 			});
 		});
 
@@ -452,6 +462,10 @@ class TextGlitterManager {
 		if (layer.textData.boxMode === 'autoHeight') delete layer.textData.boxHeight;
 		if (!isOptionValue('textAlign', layer.textData.align)) layer.textData.align = 'left';
 		if (!isOptionValue('textVerticalAlign', layer.textData.verticalAlign)) layer.textData.verticalAlign = CONFIG.tools.text.defaultVerticalAlign;
+		if (!isOptionValue('textVerticalTrim', layer.textData.verticalTrim)) layer.textData.verticalTrim = CONFIG.tools.text.defaultVerticalTrim;
+		const padding = getTextBoxPadding(layer.textData);
+		layer.textData.paddingX = padding.x;
+		layer.textData.paddingY = padding.y;
 		layer.textData.decoration = { underline: Boolean(layer.textData.decoration?.underline), strikethrough: Boolean(layer.textData.decoration?.strikethrough) };
 		layer.textData.colorEmoji = typeof layer.textData.colorEmoji === 'boolean' ? layer.textData.colorEmoji : CONFIG.tools.text.defaultColorEmoji;
 		this.normalizeTextBackground(layer);
@@ -534,8 +548,10 @@ class TextGlitterManager {
 		const entry = this.getMeasurementEntry(layer);
 		layer.textData.boxMode = 'fixed';
 		const minBoxSize = this.getMinBoxSize();
-		layer.textData.boxWidth = Math.max(minBoxSize, Math.ceil(entry.layoutWidth || entry.textWidth || 1) + 1);
-		layer.textData.boxHeight = Math.max(minBoxSize, Math.ceil(entry.layoutHeight || entry.textHeight || 1) + 1);
+		// Point text has no padding, so the box adds it around the captured block.
+		const pad = getTextBoxPadding(layer.textData);
+		layer.textData.boxWidth = Math.max(minBoxSize, Math.ceil(entry.layoutWidth || entry.textWidth || 1) + 1 + pad.x * 2);
+		layer.textData.boxHeight = Math.max(minBoxSize, Math.ceil(entry.layoutHeight || entry.textHeight || 1) + 1 + pad.y * 2);
 	}
 
 	// "Fit to Text" for an already-fixed box: shrink-wraps the box to the
@@ -570,9 +586,10 @@ class TextGlitterManager {
 		const tops = entry.lines.map((line, index) => (stacked ? line.row : index) * entry.lineHeightPx - line.ascent);
 		const bottoms = entry.lines.map((line, index) => (stacked ? line.row : index) * entry.lineHeightPx + line.descent);
 		const fullHeight = Math.max(entry.layout.contentHeight, Math.max(...bottoms) - Math.min(...tops));
+		const pad = getTextBoxPadding(layer.textData);
 		return {
-			width: Math.max(minBoxSize, Math.ceil(entry.layout.contentWidth) + 1),
-			height: Math.max(minBoxSize, Math.ceil(fullHeight) + 1)
+			width: Math.max(minBoxSize, Math.ceil(entry.layout.contentWidth) + 1 + pad.x * 2),
+			height: Math.max(minBoxSize, Math.ceil(fullHeight) + 1 + pad.y * 2)
 		};
 	}
 
@@ -705,9 +722,12 @@ class TextGlitterManager {
 			lineHeight: FIELDS.textLineHeight.value / 100,
 			align,
 			verticalAlign: CONFIG.tools.text.defaultVerticalAlign,
+			verticalTrim: CONFIG.tools.text.defaultVerticalTrim,
 			boxMode: options.boxMode || CONFIG.tools.text.defaultBoxMode,
 			boxWidth: options.boxWidth,
 			boxHeight: options.boxHeight,
+			paddingX: FIELDS.textPaddingH.value,
+			paddingY: FIELDS.textPaddingV.value,
 			colorEmoji: CONFIG.tools.text.defaultColorEmoji,
 			decoration: { underline: false, strikethrough: false },
 			width: 0,
@@ -783,6 +803,7 @@ class TextGlitterManager {
 		this.syncTextActionUI(layer);
 		this.updateAlignmentSelection(layer.textData.align);
 		this.updateVerticalAlignmentSelection(layer.textData.verticalAlign);
+		this.ui.verticalTrimButtons.forEach(button => button.classList.toggle('active', button.dataset.textVtrim === (layer.textData.verticalTrim || CONFIG.tools.text.defaultVerticalTrim)));
 		this.updateBoxModeSelection(layer);
 		this.syncTextBackgroundUI(layer);
 		this.syncWarpUI(layer);
@@ -976,9 +997,12 @@ class TextGlitterManager {
 			textData.align,
 			isTextWarpActive(textData.warp) ? [textData.warp.type, textData.warp.bend] : null,
 			textData.verticalAlign || 'top',
+			textData.verticalTrim || CONFIG.tools.text.defaultVerticalTrim,
 			textData.boxMode || 'point',
 			textData.boxWidth ?? null,
 			textData.boxHeight ?? null,
+			textData.paddingX || 0,
+			textData.paddingY || 0,
 			textData.decoration,
 			textData.colorEmoji,
 			textData.border ? [textData.border.widthPx, getBorderPlacement(textData.border), getBorderEdgeStyle(textData.border)] : null,
@@ -1030,9 +1054,13 @@ class TextGlitterManager {
 		ctx.font = FontLibrary.getDeclaration(font, fontSize, layer.textData.fontWeight, layer.textData.fontStyle);
 		ctx.textBaseline = 'alphabetic';
 
-		const sampleMetrics = ctx.measureText('Hg');
+		// The line box comes from font samples, not the typed ink, so the baseline
+		// holds still while typing. Cap-height trim measures 'H' alone and drops
+		// the descender reserve, so capitals center in boxes and backgrounds.
+		const capTrim = layer.textData.verticalTrim === 'cap';
+		const sampleMetrics = ctx.measureText(capTrim ? 'H' : 'Hg');
 		const ascent = sampleMetrics.actualBoundingBoxAscent || fontSize * 0.8;
-		const descent = sampleMetrics.actualBoundingBoxDescent || fontSize * 0.2;
+		const descent = capTrim ? 0 : sampleMetrics.actualBoundingBoxDescent || fontSize * 0.2;
 
 		const layout = TextLayout.layout(ctx, layer.textData.text, layer.textData, { fontSize, letterSpacing, lineHeightPx, ascent, descent, minBoxSize: this.getMinBoxSize() });
 		const { lines: measuredLines, visibleLines, layoutWidth, layoutHeight, hasOverflow, contentOffsetY } = layout;

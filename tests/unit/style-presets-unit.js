@@ -264,7 +264,7 @@ function visit(node) {
 visit(ast);
 vm.runInContext(fs.readFileSync(path.join(root, 'js/transforms/transform-math.js'), 'utf8'), context);
 const allowedTransformKeys = new Set(Object.keys(run('createDefaultTransform')()));
-const textOptions = { boxMode: 'textBoxMode', align: 'textAlign', verticalAlign: 'textVerticalAlign', textCase: 'textCase' };
+const textOptions = { boxMode: 'textBoxMode', align: 'textAlign', verticalAlign: 'textVerticalAlign', verticalTrim: 'textVerticalTrim', textCase: 'textCase' };
 const slotOptions = { mode: 'paintMode', edgeStyle: 'borderEdgeStyle', placement: 'borderPlacement', drawOrder: 'borderDrawOrder', style: 'borderStyle' };
 for (const file of fs.readdirSync(path.join(root, 'data/templates')).filter(file => file.endsWith('.glitter.json'))) {
 	const template = JSON.parse(fs.readFileSync(path.join(root, 'data/templates', file), 'utf8'));

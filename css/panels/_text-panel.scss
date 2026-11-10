@@ -20,6 +20,11 @@
 	display: none;
 }
 
+/* Padding insets copy inside a box; point text has none. */
+.text-settings-section[data-box-mode="point"] #textPaddingRow {
+	display: none;
+}
+
 /* "Fit to Text" only makes sense once there's a box to fit */
 .text-settings-section:not([data-box-mode="fixed"]) #textFitBoxToContent {
 	display: none;
