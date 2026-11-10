@@ -148,9 +148,14 @@
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
+		// The label column's line, full height, behind the ruler and rows.
+		background: linear-gradient(var(--color-border), var(--color-border)) no-repeat;
+		background-size: 1px 100%;
+		background-position: var(--timeline-label-column) 0;
 
 		// No column strip and no row lines: space separates the rows, and the
 		// bars carry the color.
+		&.is-empty { background: none; }
 		&.is-empty .timeline-group-header { grid-template-columns: minmax(0, 1fr); width: 100%; }
 	}
 	&.shows-details .timeline-stage { --timeline-info-column: var(--timeline-info-width); }
@@ -223,6 +228,7 @@
 	.timeline-ruler {
 		flex: 0 0 auto;
 		height: var(--timeline-ruler-height);
+		border-bottom: 1px solid var(--color-border);
 	}
 	// A still document: the shared empty state fills the rows' area.
 	.timeline-still { min-height: 100%; box-sizing: border-box; > .property-empty-text { max-width: 44ch; } }
@@ -320,7 +326,7 @@
 	// A layer's row: the layer in the label column, the span of its
 	// animations on the track. The row is as wide as the tracks, so the line
 	// between groups is its own.
-	.timeline-group + .timeline-group { margin-top: var(--spacing-xs); }
+	.timeline-group + .timeline-group > .timeline-group-header { border-top: 1px solid var(--color-border); }
 	// Sticky over the bars as the rows scroll sideways, so they wear the
 	// dock's own background.
 	.timeline-group-label, .timeline-row-label, .timeline-key-label {

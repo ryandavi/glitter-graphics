@@ -58,9 +58,12 @@
 		display: flex;
 		flex: 1 1 auto;
 		flex-direction: column;
-		gap: var(--spacing-2xs);
 		min-height: 0;
 		overflow-y: auto;
+
+		// A hairline between rows replaces the old gap, so each row reads as
+		// its own band.
+		> .layer-item + .layer-item { border-top: 1px solid var(--color-border); }
 	}
 
 	> .section-content.layers-list { padding: 0; }

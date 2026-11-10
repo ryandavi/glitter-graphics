@@ -3499,9 +3499,11 @@ body.is-resizing-panel canvas {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
-  gap: var(--spacing-2xs);
   min-height: 0;
   overflow-y: auto;
+}
+.layers-section > .layers-list > .layer-item + .layer-item {
+  border-top: 1px solid var(--color-border);
 }
 .layers-section > .section-content.layers-list {
   padding: 0;
@@ -5235,6 +5237,12 @@ body.tool-select .preview-container.is-over-picked-layer {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background: linear-gradient(var(--color-border), var(--color-border)) no-repeat;
+  background-size: 1px 100%;
+  background-position: var(--timeline-label-column) 0;
+}
+.timeline-dock .timeline-stage.is-empty {
+  background: none;
 }
 .timeline-dock .timeline-stage.is-empty .timeline-group-header {
   grid-template-columns: minmax(0, 1fr);
@@ -5338,6 +5346,7 @@ body.tool-select .preview-container.is-over-picked-layer {
 .timeline-dock .timeline-ruler {
   flex: 0 0 auto;
   height: var(--timeline-ruler-height);
+  border-bottom: 1px solid var(--color-border);
 }
 .timeline-dock .timeline-still {
   min-height: 100%;
@@ -5440,8 +5449,8 @@ body.tool-select .preview-container.is-over-picked-layer {
   max-height: calc(8 * var(--control-height));
   overflow-y: auto;
 }
-.timeline-dock .timeline-group + .timeline-group {
-  margin-top: var(--spacing-xs);
+.timeline-dock .timeline-group + .timeline-group > .timeline-group-header {
+  border-top: 1px solid var(--color-border);
 }
 .timeline-dock .timeline-group-label, .timeline-dock .timeline-row-label, .timeline-dock .timeline-key-label {
   position: sticky;
