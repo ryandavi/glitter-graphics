@@ -761,6 +761,10 @@ const CONFIG = deepFreeze({
 			keyPositionTolerance: 0.001, keyNudgeStep: 0.01, keyFastNudgeStep: 0.05,
 			keySingularTolerance: 1e-8,
 			frameViewMaxSide: 500,
+			// A preview range shorter than this would loop a single still.
+			previewRangeMinMs: 50,
+			// Named document times on the ruler.
+			markers: { max: 64, nameMaxLength: 40, defaultName: 'Marker' },
 			// A Space press released this soon, with no pan, plays and pauses.
 			spaceTapMs: 250
 		},

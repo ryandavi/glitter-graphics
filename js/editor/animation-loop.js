@@ -205,8 +205,15 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 			const controls = buildElement('animation-transport-actions'); controls.append(play, start, back, forward);
 			const options = buildElement('animation-transport-options'); options.append(exact);
 			if (!host.closest('#animationLoopSection')) options.append(loop);
-			host.append(controls, position, seek, options);
-			const control = { host, play, start, back, forward, exact, loop, seek, time, options, visible: false };
+			// Shown only while a preview range constrains playback.
+			const range = buildElement('animation-transport-options'); range.hidden = true;
+			const rangeNote = buildElement('property-note', '', 'span');
+			const rangeStart = button('Go to preview range start', 'arrow-left', () => this.animationTicker.goToRangeStart());
+			const rangeReset = button('Reset preview range to the full loop', 'x-mark', () => this.animationTicker.clearPreviewRange());
+			for (const [button, label] of [[rangeStart, 'Range start'], [rangeReset, 'Full loop']]) { button.classList.remove('is-icon'); button.append(buildElement('name', label, 'span')); }
+			range.append(rangeNote, rangeStart, rangeReset);
+			host.append(controls, position, seek, options, range);
+			const control = { host, play, start, back, forward, exact, loop, seek, time, options, range, rangeNote, rangeStart, visible: false };
 			const cancel = () => {
 				if (!control.gesture) return;
 				const previous = control.gesture; control.gesture = null;
@@ -236,7 +243,7 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		window.addEventListener('blur', cancel);
 		window.addEventListener('resize', cancel);
 		document.addEventListener('visibilitychange', () => { if (document.hidden) cancel(); });
-		for (const event of ['playbackChanged', 'animationChanged', 'layerChanged', 'imageLoaded', 'imageRemoved']) window.addEventListener(event, change => this.syncAnimationTransports({ timingOnly: event === 'animationChanged' && change.detail?.timingOnly }));
+		for (const event of ['playbackChanged', 'previewRangeChanged', 'animationChanged', 'layerChanged', 'imageLoaded', 'imageRemoved']) window.addEventListener(event, change => this.syncAnimationTransports({ timingOnly: event === 'animationChanged' && change.detail?.timingOnly }));
 		this.syncAnimationTransports();
 	},
 	syncAnimationTransports({ timingOnly = false } = {}) {
@@ -258,6 +265,11 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 			control.exact.setAttribute('aria-pressed', String(Boolean(this.previewFrameView?.exact)));
 			control.exact.setAttribute('aria-busy', String(Boolean(this.previewFrameView?.done && !this.previewFrameView?.exact)));
 			control.exact.title = this.previewFrameView?.done && !this.previewFrameView?.exact ? 'Preparing Preview export' : this.previewFrameView?.exact ? 'Return to authored preview' : 'Preview export';
+			const range = this.animationTicker.previewRange, active = this.animationTicker.activeRange();
+			control.range.hidden = !range || !available;
+			if (range) control.rangeNote.textContent = active ? `Preview range ${formatSeconds(active.start, { unit: false })}–${formatSeconds(active.end)}`
+				: this.previewFrameView?.exact ? 'Preview export plays the full loop' : 'Preview range is outside the loop';
+			control.rangeStart.disabled = !active;
 		}
 		this.paintAnimationTransports(this.animationTicker.getPlayheadTime());
 		if (available && this.animationTransports.some(control => control.visible)) {

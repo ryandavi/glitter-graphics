@@ -17,6 +17,9 @@ class AnimationTicker {
 		this.heldMs = 0;
 		// Whether the frozen time is a playhead to resume from.
 		this.holding = false;
+		// A temporary playback constraint: where Play wraps while it is active.
+		// It never reaches the document, history, export planning or Fit.
+		this.previewRange = null;
 		this.reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)') || null;
 		this.reducedMotion?.addEventListener?.('change', () => this.refresh());
 		editor.previewWrapper.addEventListener('pointerdown', () => { if (this.paused && !editor.keyRecording?.active) this.setRestPreview(true); }, true);
@@ -53,7 +56,10 @@ class AnimationTicker {
 	}
 
 	setPaused(paused) {
-		const playhead = this.getPlayheadTime();
+		let playhead = this.getPlayheadTime();
+		const range = this.activeRange();
+		// Play enters an active range at its start and continues in document time.
+		if (!paused && range && (playhead < range.start || playhead >= range.end)) { playhead = range.start; this.heldMs = playhead; this.holding = true; }
 		if (!paused && this.holding) this.timelineStartedAt = performance.now() - this.heldMs;
 		this.paused = Boolean(paused);
 		this.holding = this.paused;
@@ -66,7 +72,46 @@ class AnimationTicker {
 		this.visibilityTargets.clear();
 		this.heldMs = 0; this.holding = false; this.restPreview = false;
 		this.loopMs = null; this.timelineStartedAt = null;
+		this.previewRange = null;
+		window.dispatchEvent(new CustomEvent('previewRangeChanged'));
 		this.refresh();
+	}
+
+	// The range in effect: inside the current loop, at least the minimum long,
+	// and set aside while Preview export plays the prepared frames.
+	activeRange() {
+		const range = this.previewRange;
+		if (!range || this.editor.previewFrameView?.exact) return null;
+		const loop = this.loopMs > 0 ? this.loopMs : Infinity;
+		const end = Math.min(range.end, loop);
+		return end - range.start >= CONFIG.ui.timeline.previewRangeMinMs ? { start: range.start, end } : null;
+	}
+
+	// Returns the accepted range, or null when it is too short to play.
+	setPreviewRange(range) {
+		const min = CONFIG.ui.timeline.previewRangeMinMs;
+		const start = Math.max(0, Number(range?.start) || 0), end = Number(range?.end);
+		const next = Number.isFinite(end) && end - start >= min ? { start, end } : null;
+		if (range && !next) return null;
+		const playing = !this._isPreviewPaused();
+		const playhead = this.getPlayheadTime();
+		this.previewRange = next;
+		const active = this.activeRange();
+		if (playing) {
+			const time = active && (playhead < active.start || playhead >= active.end) ? active.start : playhead;
+			this.timelineStartedAt = performance.now() - time;
+		}
+		window.dispatchEvent(new CustomEvent('previewRangeChanged'));
+		this.refresh();
+		return next;
+	}
+
+	clearPreviewRange() { this.setPreviewRange(null); }
+
+	goToRangeStart() {
+		const range = this.activeRange();
+		if (!range) return;
+		this.editor.setPlayback(false); this.seek(range.start);
 	}
 
 	setRestPreview(on) {
@@ -90,7 +135,9 @@ class AnimationTicker {
 
 	setLoop(ms) {
 		if (!(ms > 0)) return;
+		const changed = this.loopMs !== ms;
 		this.loopMs = ms;
+		if (changed && this.previewRange) window.dispatchEvent(new CustomEvent('previewRangeChanged'));
 		if (this.timelineStartedAt == null) this.timelineStartedAt = performance.now();
 		this.heldMs = this._wrap(this.heldMs);
 	}
@@ -116,7 +163,7 @@ class AnimationTicker {
 	// wraps, so a playhead loops even while the preview runs free.
 	getPlayheadTime(now = performance.now()) {
 		if (this._isPreviewPaused()) return this.heldMs;
-		return this._wrap(this.timelineStartedAt == null ? 0 : Math.max(0, now - this.timelineStartedAt));
+		return this._elapsedAt(now);
 	}
 
 	_wrap(ms) {
@@ -163,7 +210,11 @@ class AnimationTicker {
 	}
 
 	_elapsedAt(now) {
-		return this._wrap(this.timelineStartedAt == null ? 0 : Math.max(0, now - this.timelineStartedAt));
+		const raw = this.timelineStartedAt == null ? 0 : Math.max(0, now - this.timelineStartedAt);
+		const range = this.activeRange();
+		// Before the range (a seek while playing) the clock runs up to it.
+		if (range && raw >= range.start) return range.start + (raw - range.start) % (range.end - range.start);
+		return this._wrap(raw);
 	}
 
 	refresh() {

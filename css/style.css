@@ -5329,6 +5329,67 @@ body.tool-select .preview-container.is-over-picked-layer {
   border-left-color: var(--color-accent);
   color: var(--color-text-primary);
 }
+.timeline-dock .timeline-preview-range {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-inline: 1px solid var(--color-text-secondary);
+  background: var(--color-bg-tertiary);
+}
+.timeline-dock .timeline-preview-range-edge {
+  position: absolute;
+  z-index: 1;
+  inset: 0 auto 0 0;
+  width: var(--timeline-grip);
+  transform: translateX(-50%);
+  cursor: ew-resize;
+  touch-action: none;
+}
+.timeline-dock .timeline-preview-range-edge:hover, .timeline-dock .timeline-preview-range-edge:focus-visible {
+  background: var(--color-accent-surface);
+}
+.timeline-dock .timeline-preview-range-edge.is-end {
+  left: 100%;
+}
+.timeline-dock .timeline-marker {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--timeline-grip);
+  padding: 0;
+  border: 0;
+  background: none;
+  transform: translateX(-50%);
+  cursor: ew-resize;
+  touch-action: none;
+}
+.timeline-dock .timeline-marker::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 50%;
+  width: 1px;
+  background: var(--color-text-primary);
+}
+.timeline-dock .timeline-marker::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: var(--spacing-sm);
+  height: var(--spacing-sm);
+  background: var(--color-text-primary);
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+}
+.timeline-dock .timeline-marker:hover::before, .timeline-dock .timeline-marker:hover::after, .timeline-dock .timeline-marker:focus-visible::before, .timeline-dock .timeline-marker:focus-visible::after {
+  background: var(--color-accent);
+}
+.timeline-dock .timeline-marker.is-beyond-loop {
+  opacity: var(--opacity-muted);
+}
+.timeline-dock .timeline-marker-list {
+  display: grid;
+  gap: var(--spacing-xs);
+  max-height: calc(8 * var(--control-height));
+  overflow-y: auto;
+}
 .timeline-dock .timeline-group-header {
   border-bottom: 1px solid var(--timeline-line);
   background: var(--color-bg-secondary);

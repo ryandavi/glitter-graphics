@@ -934,8 +934,149 @@ async function verifyTimingBatchActions(browser) {
 	} finally { await context.close(); }
 }
 
+async function verifyPreviewRangeAndMarkers(browser) {
+	const { page, context, errors } = await openApp({ browser, viewport: { width: 1920, height: 1000 }, document: { width: 200, height: 160 } });
+	try {
+		await page.evaluate(async () => {
+			editor.setPlayback(false); PREFERENCES.set('timelineSnap', false); PREFERENCES.set('timelineZoom', 'fit');
+			const layer = editor.shapeGlitterManager.createLayer({ shapeId: 'square', width: 30, height: 30 });
+			layer.name = 'Ranged'; getLayerFillSlot(layer).mode = 'solid';
+			layer.animations = [GlitterAnimation.normalizeAnimation({ id: editor.layerManager.generateLayerId(), type: 'pulse', periodMs: 1000 })];
+			editor.layerManager.insertLayer(layer); window.rangeLayerId = layer.id;
+			editor.setDocumentLoop({ mode: 'set', durationMs: 4000 }, { commit: false });
+			editor.saveState('Range fixture'); await editor.ensureTimelineDock(); PREFERENCES.set('timelineOpen', true); await editor.updateExportDuration();
+		});
+		const ready = async () => { await page.evaluate(() => editor.updateExportDuration()); await page.waitForFunction(() => !editor.timelineDock.stale && editor.timelineDock.rulerTrack); };
+		await ready();
+		const rulerPoint = ms => page.evaluate(ms => {
+			const dock = editor.timelineDock, track = dock.rulerTrack.getBoundingClientRect();
+			return { x: track.x + TimelineView.timeToX(ms, dock.scale), y: track.y + track.height / 2 };
+		}, ms);
+		const output = () => page.evaluate(() => ({ loop: editor.resolveAnimationLoop().duration, frames: editor.loopEstimate.renderClock.frameCount, context: JSON.stringify(editor.loopAnalysisContext()), documentLoop: { ...editor.documentLoop } }));
+		const history = () => page.evaluate(() => editor.historyManager.historyIndex);
+		const range = () => page.evaluate(() => { const value = editor.animationTicker.previewRange; return value && { start: Math.round(value.start), end: Math.round(value.end) }; });
+		const before = await output(), start = await history();
+
+		// Preview range: ruler menu, numeric editor, play wrapping, edge drag, cancel and reset.
+		let point = await rulerPoint(1000);
+		await page.mouse.click(point.x, point.y, { button: 'right' });
+		await page.getByRole('menuitem', { name: 'Set preview range start here', exact: true }).click();
+		assert(Math.abs((await range()).start - 1000) <= 10 && (await range()).end === 4000, 'The ruler menu sets the range start and keeps the loop end');
+		await page.getByRole('button', { name: 'Timeline options' }).click();
+		await page.getByRole('menuitem', { name: 'Preview range…', exact: true }).click();
+		await page.getByRole('spinbutton', { name: 'Starts in seconds' }).fill('1');
+		await page.getByRole('spinbutton', { name: 'Ends in seconds' }).fill('0.02');
+		await page.getByRole('spinbutton', { name: 'Ends in seconds' }).press('Enter');
+		assert.match(await page.locator('[role="dialog"][aria-label="Preview range"]').textContent(), /at least/, 'A too-short numeric range is refused with its reason');
+		await page.getByRole('spinbutton', { name: 'Ends in seconds' }).fill('2');
+		await page.getByRole('spinbutton', { name: 'Ends in seconds' }).press('Enter');
+		assert.deepEqual(await range(), { start: 1000, end: 2000 });
+		assert.equal(await history(), start, 'A preview range never enters history');
+		assert.deepEqual(await output(), before, 'A preview range changes neither the loop, its analysis nor the export frame plan');
+		assert.equal(await page.evaluate(() => 'previewRange' in editor.historyManager.createStateSnapshot()), false);
+		assert.equal(await page.evaluate(async () => JSON.stringify(await editor.projectSerializer.serialize()).includes('previewRange')), false, 'A preview range stays out of projects');
+		assert(await page.evaluate(() => !editor.timelineDock.rangeBand.hidden && editor.timelineDock.rangeBand.getBoundingClientRect().width > 0), 'The ruler draws the active range');
+		assert(await page.evaluate(() => [...document.querySelectorAll('.animation-transport-options')].some(row => !row.hidden && /Preview range 1\.00/.test(row.textContent))), 'The Inspector transport names the active range');
+		await page.evaluate(() => { editor.animationTicker.seek(3500); editor.setPlayback(true); });
+		assert(await page.evaluate(() => Math.abs(editor.animationTicker.getPlayheadTime() - 1000) < 50), 'Play from outside the range enters it at its start');
+		await page.waitForTimeout(1300);
+		const wrapped = await page.evaluate(() => editor.animationTicker.getPlayheadTime());
+		assert(wrapped >= 1000 && wrapped < 2000, `Play loops inside the range (${wrapped})`);
+		await page.evaluate(() => editor.setPlayback(false));
+		const edgeDrag = async (ms, cancel = false) => {
+			const box = await page.locator('.timeline-preview-range-edge.is-end').boundingBox(), target = await rulerPoint(ms);
+			await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2); await page.mouse.down();
+			await page.mouse.move(target.x, target.y, { steps: 5 });
+			if (cancel) await page.keyboard.press('Escape');
+			await page.mouse.up();
+		};
+		await edgeDrag(2500, true);
+		assert.deepEqual(await range(), { start: 1000, end: 2000 }, 'Escape restores the range edge');
+		await edgeDrag(2500);
+		assert(Math.abs((await range()).end - 2500) <= 10 && await history() === start, 'Dragging the range end changes only the transient range');
+		await page.evaluate(() => editor.animationTicker.seek(3500));
+		assert.equal(Math.round(await page.evaluate(() => editor.animationTicker.getPlayheadTime())), 3500, 'Seeking outside the range remains possible while paused');
+		await page.getByRole('button', { name: 'Timeline options' }).click();
+		await page.getByRole('menuitem', { name: 'Go to preview range start', exact: true }).click();
+		assert.equal(Math.round(await page.evaluate(() => editor.animationTicker.getPlayheadTime())), 1000);
+		await page.getByRole('button', { name: 'Timeline options' }).click();
+		await page.getByRole('menuitem', { name: 'Go to loop start', exact: true }).click();
+		assert.equal(Math.round(await page.evaluate(() => editor.animationTicker.getPlayheadTime())), 0, 'Go to loop start differs from Go to range start');
+		await page.getByRole('button', { name: 'Timeline options' }).click();
+		await page.getByRole('menuitem', { name: 'Reset preview range to full loop', exact: true }).click();
+		assert.equal(await range(), null);
+
+		// Markers: add, drag/cancel, nudge, rename, snap, beyond-loop, undo and reload.
+		point = await rulerPoint(1500);
+		await page.mouse.click(point.x, point.y, { button: 'right' });
+		await page.getByRole('menuitem', { name: 'Add marker here', exact: true }).click();
+		const markers = () => page.evaluate(() => editor.getTimelineMarkers().map(({ name, at }) => ({ name, at })));
+		assert.equal((await markers()).length, 1);
+		assert.equal(await history(), start + 1, 'Adding a marker is one history step');
+		const marker = page.locator('.timeline-marker').first();
+		const markerDrag = async (ms, cancel = false) => {
+			const box = await marker.boundingBox(), target = await rulerPoint(ms);
+			await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2); await page.mouse.down();
+			await page.mouse.move(target.x, target.y, { steps: 5 });
+			if (cancel) await page.keyboard.press('Escape');
+			await page.mouse.up();
+		};
+		const added = (await markers())[0].at;
+		await markerDrag(3000, true);
+		assert.equal((await markers())[0].at, added, 'Escape restores a dragged marker');
+		assert.equal(await history(), start + 1);
+		await markerDrag(3000);
+		assert(Math.abs((await markers())[0].at - 3000) <= 10 && await history() === start + 2, 'A marker drag commits once');
+		await marker.focus(); await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowRight');
+		assert.equal(await history(), start + 3, 'Repeated marker nudges share one history step');
+		await page.getByRole('button', { name: 'Timeline options' }).click();
+		await page.getByRole('menuitem', { name: 'Markers…', exact: true }).click();
+		const name = page.getByRole('textbox', { name: 'Marker name' });
+		await name.fill('Drop'); await name.press('Enter');
+		await page.keyboard.press('Control+a');
+		assert.equal(await name.evaluate(node => node.selectionEnd - node.selectionStart), 4, 'Native text-field shortcuts keep working in the marker editor');
+		await page.getByRole('spinbutton', { name: 'Time in seconds' }).fill('2.03'); await page.getByRole('spinbutton', { name: 'Time in seconds' }).press('Enter');
+		assert.deepEqual(await markers(), [{ name: 'Drop', at: 2030 }]);
+		assert.equal(await history(), start + 5, 'Rename and numeric move are one step each');
+		await page.keyboard.press('Escape');
+		await page.evaluate(() => PREFERENCES.set('timelineSnap', true));
+		const key = await page.evaluate(() => GlitterAnimation.sourceKey(rangeLayerId, editor.layerManager.getLayerById(rangeLayerId).animations[0]));
+		const barBox = await page.locator(`.timeline-row[data-source-key="${key}"] .timeline-bar`).first().boundingBox();
+		const near = await page.evaluate(() => TimelineView.timeToX(2034, editor.timelineDock.scale));
+		await page.mouse.move(barBox.x + 20, barBox.y + barBox.height / 2); await page.mouse.down();
+		await page.mouse.move(barBox.x + 20 + near, barBox.y + barBox.height / 2, { steps: 6 });
+		assert.match(await page.locator('.timeline-drag-readout').textContent(), /Drop/, 'The drag readout names the marker it snapped to');
+		await page.mouse.up(); await ready();
+		assert.equal(await page.evaluate(() => editor.layerManager.getLayerById(rangeLayerId).animations[0].delayMs), 2030, 'A bar snaps to a marker');
+		await page.evaluate(() => editor.historyManager.undo()); await ready();
+		await page.evaluate(() => editor.setDocumentLoop({ mode: 'set', durationMs: 1600 }, { commit: false })); await ready();
+		assert(await marker.evaluate(node => node.classList.contains('is-beyond-loop') && /past the loop end/.test(node.getAttribute('aria-label'))), 'A marker past a shortened loop is marked');
+		await page.evaluate(() => editor.setDocumentLoop(CONFIG.project.loop, { commit: false })); await ready();
+		const automatic = await page.evaluate(() => editor.resolveAnimationLoop().duration);
+		await page.evaluate(() => editor.addTimelineMarker(CONFIG.export.timeline.setLoopRange.max)); await ready();
+		assert.equal(await page.evaluate(() => editor.resolveAnimationLoop().duration), automatic, 'Markers never extend an Automatic loop');
+		await page.evaluate(() => editor.historyManager.undo()); await ready();
+		assert.deepEqual(await markers(), [{ name: 'Drop', at: 2030 }], 'Undo removes the added marker');
+		await page.evaluate(() => editor.animationTicker.setPreviewRange({ start: 500, end: 900 }));
+		await page.evaluate(async () => {
+			const project = JSON.parse(JSON.stringify(await editor.projectSerializer.serialize()));
+			editor.isSaved = true; await editor.projectSerializer.load(project);
+		});
+		await ready();
+		assert.deepEqual(await markers(), [{ name: 'Drop', at: 2030 }], 'Markers survive project reload');
+		assert.equal(await range(), null, 'Document replacement clears the preview range');
+		assert.equal(await page.locator('.timeline-marker').count(), 1);
+		await page.locator('.timeline-marker').first().focus(); await page.keyboard.press('Delete');
+		assert.deepEqual(await markers(), []);
+		await page.evaluate(() => editor.historyManager.undo()); await ready();
+		assert.deepEqual(await markers(), [{ name: 'Drop', at: 2030 }], 'Undo restores a deleted marker');
+		assert.deepEqual(errors, []);
+		console.log('PASS preview range and markers: ruler/numeric range, play wrapping, cancel, distinct start actions, unchanged loop/export; marker add/drag/cancel/nudge/rename/snap, beyond-loop, automatic loop, undo and reload');
+	} finally { await context.close(); }
+}
+
 if (require.main === module) {
 	const { chromium } = require('playwright');
-	(async () => { const browser = await chromium.launch(); try { await verifyTimelineGestures(browser); await verifyTimelineCoordination(browser); await verifyTimingBatchActions(browser); } finally { await browser.close(); } })().catch(error => { console.error(error); process.exitCode = 1; });
+	(async () => { const browser = await chromium.launch(); try { await verifyTimelineGestures(browser); await verifyTimelineCoordination(browser); await verifyTimingBatchActions(browser); await verifyPreviewRangeAndMarkers(browser); } finally { await browser.close(); } })().catch(error => { console.error(error); process.exitCode = 1; });
 }
-module.exports = { verifyTimelineGestures, verifyTimelineCoordination, verifyTimingBatchActions };
+module.exports = { verifyTimelineGestures, verifyTimelineCoordination, verifyTimingBatchActions, verifyPreviewRangeAndMarkers };

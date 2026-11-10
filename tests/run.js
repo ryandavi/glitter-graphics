@@ -7,6 +7,7 @@ const SUITES = [
 	{ file: 'unit/animation-timing-unit.js', tags: ['unit', 'quick'] },
 	{ file: 'ui/animation-without-timeline-verify.js', tags: ['layers', 'quick'] },
 	{ file: 'unit/timeline-view-unit.js', tags: ['unit', 'quick'] },
+	{ file: 'unit/preview-range-markers-unit.js', tags: ['unit', 'quick'] },
 	{ file: 'unit/features-unit.js', tags: ['unit', 'quick'] },
 	{ file: 'unit/gif-retime-unit.js', tags: ['unit', 'quick', 'export'] },
 	{ file: 'ui/clipping-preview-verify.js', tags: ['layers', 'touch', 'export'] },

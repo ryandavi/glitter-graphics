@@ -44,8 +44,9 @@ const EDITOR_DOCUMENT_IO_METHODS = {
 		this.updateHelpfulMessage();
 		this.syncTransformHandlesForActiveLayer();
 	},
-	finishDocumentReplace({ saved = false, loop = CONFIG.project.loop } = {}) {
+	finishDocumentReplace({ saved = false, loop = CONFIG.project.loop, markers = [] } = {}) {
 		this.setDocumentLoop(loop, { commit: false });
+		this.setTimelineMarkers(markers, null, { commit: false });
 		this.historyManager.reset(this.originalImage ? this.historyManager.createStateSnapshot() : null);
 		this.isSaved = saved;
 		this.refreshDocumentUI();

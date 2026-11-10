@@ -1,5 +1,8 @@
 'use strict';
 
+// Drags on the ruler that edit no timing target.
+const RULER_DRAG_KINDS = new Set(['marker', 'range-start', 'range-end']);
+
 class TimelineDock {
 	constructor(editor, host) {
 		this.editor = editor;
@@ -144,6 +147,13 @@ class TimelineDock {
 			this.syncControls();
 			this.revealActive();
 		});
+		window.addEventListener('timelineMarkersChanged', () => {
+			if (this.drag?.kind === 'marker' && !this.editor.documentMarkers.some(marker => marker.id === this.drag.markerId)) this.finishDrag(true);
+			if (this.available) this.paintRulerOverlays();
+			this.markerEditor?.refresh();
+		});
+		window.addEventListener('previewRangeChanged', () => { if (this.available) this.paintRulerOverlays(); this.syncRangeItems(); });
+		window.addEventListener('playbackChanged', () => { if (this.available) this.paintRulerOverlays(); this.syncRangeItems(); });
 		window.addEventListener('interfaceThemeChanged', () => {
 			if (!this.available || !this.rulerTicks) return;
 			this.syncRulerStyle();
@@ -202,8 +212,13 @@ class TimelineDock {
 			button.setAttribute('role', 'menuitemcheckbox');
 			return button;
 		});
+		this.rangeStartItem = item('Go to preview range start', () => this.editor.animationTicker.goToRangeStart());
+		this.rangeResetItem = item('Reset preview range to full loop', () => this.editor.animationTicker.clearPreviewRange());
+		this.syncRangeItems();
 		panel.append(
-			this.fit, separator(), item('Select all eligible timing bars', () => this.selectAllBars()), item('Clear timing bar selection', () => this.clearBarSelection()), separator(), ...this.viewChoices,
+			this.fit, separator(), item('Select all eligible timing bars', () => this.selectAllBars()), item('Clear timing bar selection', () => this.clearBarSelection()), separator(),
+			item('Go to loop start', () => this.editor.animationTicker.goToStart()), item('Preview range…', () => this.openRangeEditor(trigger)), this.rangeStartItem, this.rangeResetItem,
+			item('Markers…', () => this.openMarkerEditor(trigger)), separator(), ...this.viewChoices,
 			separator(), buildMenuLabel('Show'), ...this.showItems
 		);
 		root.append(trigger, panel);
@@ -256,6 +271,7 @@ class TimelineDock {
 		this.finishDrag(true);
 		this.menu?.close();
 		this.coordinationMenu?.close();
+		this.closeTimelineEditors();
 		this.frameMenu.close();
 		this.optionsMenu.close();
 		this.host.hidden = true;
@@ -309,7 +325,7 @@ class TimelineDock {
 		};
 		this.scrubDrag = bindPointerDrag(this.stage, {
 			canStart: event => this.available && this.model?.loopMs
-				&& event.target.closest('.timeline-ruler-track') && !event.target.closest('.timeline-loop-end'),
+				&& event.target.closest('.timeline-ruler-track') && !event.target.closest('.timeline-loop-end, .timeline-marker, .timeline-preview-range-edge'),
 			start: event => {
 				this.rulerTrack.focus({ preventScroll: true });
 				this.scrubPointer = event.pointerId;
@@ -660,6 +676,7 @@ class TimelineDock {
 			this.rulerTrack.setAttribute('aria-valuemax', formatSeconds(loopMs, { unit: false }));
 			this.rulerTrack.querySelector('.timeline-loop-end').lastChild.nodeValue = formatSeconds(loopMs);
 			this.ruler.hidden = false;
+			this.paintRulerOverlays();
 		}
 		reconcileKeyedChildren(this.body, this.model.groups, {
 			key: group => group.layerId, build: group => this.buildGroup(group), reuse: (node, group) => this.reuseGroup(node, group)
@@ -728,6 +745,14 @@ class TimelineDock {
 		const canvas = document.createElement('canvas'); canvas.className = 'timeline-ruler-ticks';
 		this.rulerTicks = { canvas };
 		this.syncRulerStyle();
+		this.rangeBand = buildElement('timeline-preview-range'); this.rangeBand.hidden = true;
+		for (const end of ['start', 'end']) {
+			const edge = buildElement(`timeline-preview-range-edge is-${end}`);
+			edge.dataset.drag = `range-${end}`;
+			edge.title = `Drag to change where the preview range ${end === 'start' ? 'starts' : 'ends'}`;
+			this.rangeBand.append(edge);
+		}
+		this.markerNodes = new Map();
 		const loop = buildElement('timeline-loop-end', formatSeconds(this.model.loopMs));
 		loop.dataset.drag = 'loop';
 		loop.title = 'Drag to set loop length; double-click for Automatic';
@@ -741,15 +766,22 @@ class TimelineDock {
 		track.addEventListener('pointerleave', () => { this.hoverGuide.hidden = true; });
 		track.addEventListener('contextmenu', event => {
 			event.preventDefault();
+			const marker = event.target.closest('.timeline-marker');
+			if (marker) { this.openMarkerMenu(marker.dataset.markerId, event); return; }
 			const ms = clampNumber(TimelineView.xToTime(event.clientX - track.getBoundingClientRect().left, this.scale), 0, this.model.loopMs * (1 + this.nextLoopShare));
+			const ticker = this.editor.animationTicker, range = ticker.previewRange, min = this.config.previewRangeMinMs, loopMs = this.model.loopMs;
 			this.menu = openActionMenu({ root: view, trigger: track, actions: [
 				{ label: 'Move playhead here', run: () => { this.editor.setPlayback(false); this.editor.animationTicker.seek(ms); } },
+				{ label: 'Add marker here', run: () => this.editor.addTimelineMarker(ms) },
+				{ label: 'Set preview range start here', disabled: ms > loopMs - min, run: () => ticker.setPreviewRange({ start: ms, end: range && range.end - ms >= min ? Math.min(range.end, loopMs) : loopMs }) },
+				{ label: 'Set preview range end here', disabled: ms < min || ms > loopMs, run: () => ticker.setPreviewRange({ start: range && ms - range.start >= min ? range.start : 0, end: ms }) },
+				{ label: 'Reset preview range to full loop', disabled: !range, run: () => ticker.clearPreviewRange() },
 				{ label: 'Set loop end here', disabled: ms <= 0, run: () => this.editor.setDocumentLoop({ mode: 'set', durationMs: ms }) },
 				{ label: 'Automatic loop length', checked: this.editor.documentLoop.mode === 'auto', run: () => this.editor.setDocumentLoop(CONFIG.project.loop) },
 				{ label: 'Zoom to fit', run: () => this.setZoom('fit') }
 			], event });
 		});
-		track.append(canvas, loop);
+		track.append(this.rangeBand, canvas, loop);
 		view.append(track);
 		return view;
 	}
@@ -1075,6 +1107,7 @@ class TimelineDock {
 	resetDocumentView() {
 		this.finishDrag(true); this.clearBarSelection();
 		this.coordinationRoot?.remove(); this.coordinationRoot = null; this.coordinationMenu = null;
+		this.closeTimelineEditors();
 		this.collapsed.clear(); this.lastNavigatedKey = null;
 	}
 
@@ -1245,6 +1278,7 @@ class TimelineDock {
 				const node = target.closest('.timeline-row');
 				const row = this.rowFor(node);
 				let kind = target.dataset.drag;
+				if (RULER_DRAG_KINDS.has(kind)) return this.startRulerDrag(kind, target, event);
 				if (kind === 'body' && (event.ctrlKey || event.metaKey || event.shiftKey)) return false;
 				if (kind !== 'loop') {
 					if (!this.canEdit(row)) {
@@ -1283,10 +1317,7 @@ class TimelineDock {
 					scrollLeft: this.body.scrollLeft, moved: false
 				};
 				const snapModel = groupKeys ? { ...this.model, groups: this.model.groups.map(group => ({ ...group, window: groupKeys.includes(group.window?.key) ? null : group.window, rows: group.rows.filter(row => !groupKeys.includes(row.key)) })) } : this.model;
-				this.drag.targets = TimelineView.snapTargets(snapModel, row, kind, this.editor.animationTicker.getPlayheadTime(), {
-					scale: this.scale, config: this.config, frames: this.showsFrames, collapsed: this.collapsed,
-					endMs: this.model.loopMs * (1 + this.nextLoopShare)
-				});
+				this.drag.targets = TimelineView.snapTargets(snapModel, row, kind, this.editor.animationTicker.getPlayheadTime(), this.snapView());
 			},
 			move: event => { this.moveDrag(event); if (this.drag) this.trackEdgePointer(event); },
 			end: cancelled => this.finishDrag(cancelled)
@@ -1305,7 +1336,7 @@ class TimelineDock {
 		if (!drag || event.pointerId !== drag.pointerId) return;
 		if (!this.available) { this.finishDrag(true); return; }
 		if (drag.groupKeys && !this.groupDragCurrent(drag)) { this.finishDrag(true); return; }
-		if (!drag.moved) {
+		if (!drag.moved && !RULER_DRAG_KINDS.has(drag.kind)) {
 			this.frameView.invalidate();
 			this.frameView.blocked = true;
 			this.host.dataset.dragging = drag.kind;
@@ -1341,8 +1372,14 @@ class TimelineDock {
 			if (kind === 'move') time = row.startMs + delta;
 			const wanted = time = snapped(time, drag.targets, threshold);
 			if (kind === 'move' || kind === 'left') time = clampNumber(time, 0, FIELDS.animDelay.max * 1000);
+			else if (kind === 'marker') time = clampNumber(time, 0, CONFIG.export.timeline.setLoopRange.max);
+			else if (kind === 'range-start') time = clampNumber(time, 0, drag.initial.end - this.config.previewRangeMinMs);
+			else if (kind === 'range-end') time = clampNumber(time, drag.initial.start + this.config.previewRangeMinMs, this.model.loopMs);
 			if (time !== wanted) target = null;
-			if (kind === 'loop') value = { mode: 'set', durationMs: time };
+			if (kind === 'marker') value = Math.round(time);
+			else if (kind === 'range-start') value = { ...drag.initial, start: time };
+			else if (kind === 'range-end') value = { ...drag.initial, end: time };
+			else if (kind === 'loop') value = { mode: 'set', durationMs: time };
 			else if (kind === 'right') value = TimelineView.runFromRightEdge(row, time, this.model.loopMs);
 			else if (kind === 'left') value = TimelineView.runFromLeftEdge(row, time);
 			else value = TimelineView.runFromBodyMove(row, time - row.startMs);
@@ -1356,6 +1393,15 @@ class TimelineDock {
 	}
 
 	writeDrag(drag, value) {
+		if (drag.kind === 'marker') {
+			this.editor.moveTimelineMarker(drag.markerId, value, { commit: false });
+			drag.value = this.editor.documentMarkers.find(marker => marker.id === drag.markerId)?.at ?? value;
+			return drag.value;
+		}
+		if (drag.kind === 'range-start' || drag.kind === 'range-end') {
+			drag.value = this.editor.animationTicker.setPreviewRange(value) || drag.value || drag.initial;
+			return drag.value;
+		}
 		if (drag.groupKeys) {
 			const delta = value.start - drag.initial.start;
 			const result = this.editor.moveTimingTargets(drag.groupKeys, 'move', delta - drag.groupDelta, { commit: false });
@@ -1395,6 +1441,15 @@ class TimelineDock {
 		const { kind } = drag;
 		// Where the dragged edge is, and where the snap landed, in time.
 		let edge, guide = target?.ms, anchor = drag.node;
+		if (RULER_DRAG_KINDS.has(kind)) {
+			edge = kind === 'marker' ? value : kind === 'range-start' ? value.start : value.end;
+			const name = kind === 'marker' ? this.editor.documentMarkers.find(marker => marker.id === drag.markerId)?.name : null;
+			const word = target && TimelineView.SNAP_WORDS[target.kind];
+			const snap = typeof word === 'function' ? word(target) : word;
+			this.paintRulerOverlays();
+			this.paintDragFeedback(`${kind === 'marker' ? name : kind === 'range-start' ? 'Range starts' : 'Range ends'} ${formatSeconds(edge)}${snap ? ` · ${snap}` : ''}`, edge, this.ruler, target ? guide : null);
+			return;
+		}
 		if (kind === 'loop') {
 			edge = this.editor.documentLoop.durationMs;
 			this.stage.style.setProperty('--timeline-loop-x', `${TimelineView.timeToX(edge, this.scale)}px`);
@@ -1454,6 +1509,13 @@ class TimelineDock {
 		delete this.host.dataset.dragging;
 		drag.node?.classList.remove('is-dragging', 'is-changing-cycles');
 		if (!drag.moved) {
+			if (this.syncPending) this.resync();
+			return;
+		}
+		if (RULER_DRAG_KINDS.has(drag.kind)) {
+			if (cancelled) this.writeDrag(drag, drag.initial);
+			else if (drag.kind === 'marker' && drag.value !== drag.initial) this.editor.saveState('Move marker');
+			this.paintRulerOverlays();
 			if (this.syncPending) this.resync();
 			return;
 		}
@@ -1672,6 +1734,7 @@ class TimelineDock {
 		}
 		this.frameIndex = null;
 		this.keyLane.layout?.(); this.syncScroll(); this.syncControls();
+		this.paintRulerOverlays();
 	}
 
 	buildNotches(row, bar) {
@@ -1687,6 +1750,193 @@ class TimelineDock {
 			notch.style.left = `${TimelineView.timeToX(ms - row.startMs, this.scale)}px`;
 			notch.title = 'Drag to change the cycle length'; bar.appendChild(notch);
 		}
+	}
+
+	// What every timeline drag snaps against besides the rows.
+	snapView(extra = {}) {
+		return { scale: this.scale, config: this.config, frames: this.showsFrames, collapsed: this.collapsed,
+			endMs: this.model.loopMs * (1 + this.nextLoopShare), markers: this.editor.getTimelineMarkers(), ...extra };
+	}
+
+	startRulerDrag(kind, target, event) {
+		if (!this.rulerTrack) return false;
+		const ticker = this.editor.animationTicker;
+		const markerId = kind === 'marker' ? target.dataset.markerId : null;
+		const marker = markerId && this.editor.documentMarkers.find(entry => entry.id === markerId);
+		if (kind === 'marker' ? !marker : !ticker.activeRange()) return false;
+		event.preventDefault();
+		this.menu?.close();
+		this.drag = {
+			kind, markerId, row: null, node: null, loopMs: this.model.loopMs, x: event.clientX, pointerId: event.pointerId,
+			initial: kind === 'marker' ? marker.at : ticker.activeRange(), trackLeft: this.rulerTrack.getBoundingClientRect().left,
+			scrollLeft: this.body.scrollLeft, moved: false,
+			targets: TimelineView.snapTargets(this.model, { key: null, kind: 'ruler' }, kind, ticker.getPlayheadTime(), this.snapView({ excludeMarker: markerId }))
+		};
+		this.drag.value = this.drag.initial;
+		if (kind === 'marker') target.focus({ preventScroll: true });
+	}
+
+	// The preview range band and the marker flags, in ruler pixels.
+	paintRulerOverlays() {
+		if (!this.rulerTrack?.isConnected || !this.model?.loopMs) return;
+		const range = this.editor.animationTicker.activeRange();
+		this.rangeBand.hidden = !range;
+		if (range) {
+			this.rangeBand.style.left = `${TimelineView.timeToX(range.start, this.scale)}px`;
+			this.rangeBand.style.width = `${TimelineView.timeToX(range.end - range.start, this.scale)}px`;
+			this.rangeBand.title = `Preview range ${formatSeconds(range.start, { unit: false })}–${formatSeconds(range.end)}. Play loops here; export writes the full loop.`;
+		}
+		const drawnEnd = this.model.loopMs * (1 + this.nextLoopShare);
+		const markers = this.editor.getTimelineMarkers();
+		reconcileKeyedChildren(this.rulerTrack, markers, { key: marker => marker.id, build: marker => this.buildMarker(marker) });
+		for (const id of this.markerNodes.keys()) if (!markers.some(marker => marker.id === id)) this.markerNodes.delete(id);
+		for (const marker of markers) {
+			const node = this.markerNodes.get(marker.id);
+			if (!node) continue;
+			const beyond = marker.at >= this.model.loopMs;
+			node.style.left = `${TimelineView.timeToX(Math.min(marker.at, drawnEnd), this.scale)}px`;
+			node.classList.toggle('is-beyond-loop', beyond);
+			const text = `${marker.name}, ${formatSeconds(marker.at)}${beyond ? ', past the loop end' : ''}`;
+			node.title = text; node.setAttribute('aria-label', `Marker ${text}`);
+		}
+	}
+
+	buildMarker(marker) {
+		const node = document.createElement('button');
+		node.type = 'button'; node.className = 'timeline-marker';
+		node.dataset.drag = 'marker'; node.dataset.markerId = marker.id; node.dataset.id = marker.id;
+		this.markerNodes.set(marker.id, node);
+		node.addEventListener('click', () => this.goToMarker(marker.id));
+		node.addEventListener('keydown', event => {
+			const current = this.editor.documentMarkers.find(entry => entry.id === marker.id);
+			if (!current || event.ctrlKey || event.metaKey || event.altKey) return;
+			const step = { ArrowLeft: -1, ArrowRight: 1 }[event.key];
+			if (step) {
+				const frame = this.model.frameStarts[1] || 1000 / CONFIG.tools.animation.exportFps;
+				this.editor.moveTimelineMarker(marker.id, current.at + step * frame * (event.shiftKey ? 10 : 1), { coalesceKey: this.editor.historyManager.burstCoalesceKey('timeline-marker-nudge') });
+			} else if (event.key === 'Delete' || event.key === 'Backspace') this.editor.deleteTimelineMarker(marker.id);
+			else if (event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10')) this.openMarkerMenu(marker.id);
+			else return;
+			event.preventDefault(); event.stopPropagation();
+		});
+		return node;
+	}
+
+	goToMarker(id) {
+		const marker = this.editor.documentMarkers.find(entry => entry.id === id);
+		if (!marker || !this.model?.loopMs) return;
+		if (marker.at >= this.model.loopMs) { this.editor.updateStatus(`${marker.name} is past the loop end. Lengthen the loop or move the marker to play it.`); return; }
+		this.editor.setPlayback(false); this.editor.animationTicker.seek(marker.at);
+	}
+
+	openMarkerMenu(id, event = null) {
+		const marker = this.editor.documentMarkers.find(entry => entry.id === id), node = this.markerNodes.get(id);
+		if (!marker || !node) return;
+		const playhead = this.editor.animationTicker.getPlayheadTime();
+		const rect = node.getBoundingClientRect();
+		this.menu = openActionMenu({ root: node.closest('.timeline-ruler-view'), trigger: node, event, anchor: event ? null : { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom }, actions: [
+			{ label: `Go to ${marker.name}`, disabled: marker.at >= this.model.loopMs, run: () => this.goToMarker(id) },
+			{ label: 'Move to playhead', disabled: Math.round(playhead) === marker.at, run: () => this.editor.moveTimelineMarker(id, playhead) },
+			{ label: 'Rename or move…', run: () => this.openMarkerEditor(node, id) },
+			{ label: 'Delete marker', run: () => this.editor.deleteTimelineMarker(id) }
+		] });
+	}
+
+	syncRangeItems() {
+		if (!this.rangeStartItem) return;
+		this.rangeStartItem.disabled = !this.editor.animationTicker.activeRange();
+		this.rangeResetItem.disabled = !this.editor.animationTicker.previewRange;
+	}
+
+	closeTimelineEditors() {
+		this.timelineEditor?.menu.close();
+		this.timelineEditor?.root.remove();
+		this.timelineEditor = null; this.markerEditor = null;
+	}
+
+	// A small dialog in the dock: the numeric and keyboard way to do what the
+	// ruler does by dragging.
+	openTimelineEditor(label, trigger, build) {
+		this.menu?.close(); this.optionsMenu?.close(); this.closeTimelineEditors();
+		const root = buildElement('app-menu'), panel = buildMenuPanel();
+		panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-label', label);
+		root.append(panel); this.host.append(root);
+		const editor = { root, panel };
+		editor.menu = setupMenuPopover({ root, trigger, panel, fixed: true, bindTrigger: false, itemSelector: 'input, button:not([disabled])' });
+		this.timelineEditor = editor;
+		build(panel, editor);
+		editor.menu.open();
+		editor.focus?.();
+		return editor;
+	}
+
+	secondsField(label, ms, attrs = {}) {
+		const field = buildPanelItem({ kind: 'field', type: 'number', label, unit: 's', step: 'any', min: 0, value: Number((ms / 1000).toFixed(3)), attrs: { 'aria-label': `${label} in seconds`, ...attrs } }, {});
+		return { field, input: field.querySelector('input') };
+	}
+
+	flatButton(text, onClick, className = 'btn-flat') {
+		const button = buildIconButton({ className, label: text, onClick }); button.textContent = text;
+		return button;
+	}
+
+	openRangeEditor(trigger) {
+		const ticker = this.editor.animationTicker, loopMs = this.model?.loopMs || 0;
+		if (!(loopMs > 0)) return;
+		const current = ticker.activeRange() || { start: 0, end: loopMs };
+		this.openTimelineEditor('Preview range', trigger, (panel, editor) => {
+			const start = this.secondsField('Starts', current.start), end = this.secondsField('Ends', current.end, { max: String(loopMs / 1000) });
+			const note = buildElement('property-note', 'Play loops inside the range. Export still writes the full loop.'); note.setAttribute('aria-live', 'polite');
+			const apply = this.flatButton('Apply', () => {
+				const range = { start: start.input.valueAsNumber * 1000, end: Math.min(loopMs, end.input.valueAsNumber * 1000) };
+				if (!ticker.setPreviewRange(range)) { note.textContent = `A preview range lasts at least ${formatSeconds(this.config.previewRangeMinMs)} inside the ${formatSeconds(loopMs)} loop.`; return; }
+				editor.menu.close({ focusTrigger: true });
+			}, 'btn-flat primary');
+			const reset = this.flatButton('Full loop', () => { ticker.clearPreviewRange(); editor.menu.close({ focusTrigger: true }); });
+			reset.disabled = !ticker.previewRange;
+			const buttons = buildElement('property-row is-control'), pair = buildElement('property-pair'); pair.append(reset, apply); buttons.append(pair);
+			for (const { input } of [start, end]) input.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); apply.click(); } });
+			panel.append(buildMenuLabel('Preview range'), start.field, end.field, note, buttons);
+			editor.focus = () => start.input.select();
+		});
+	}
+
+	openMarkerEditor(trigger, focusId = null) {
+		this.openTimelineEditor('Markers', trigger, (panel, editor) => {
+			const list = buildElement('timeline-marker-list');
+			const add = this.flatButton('Add marker at playhead', () => {
+				const marker = this.editor.addTimelineMarker(this.editor.animationTicker.getPlayheadTime());
+				if (marker) list.querySelector(`[data-marker-id="${marker.id}"] input[type="text"]`)?.select();
+			});
+			const empty = buildElement('property-note', 'No markers yet. Markers name moments to snap and seek to; they never change the loop or the export.');
+			editor.refresh = () => {
+				const active = document.activeElement, focusedId = active?.closest?.('[data-marker-id]')?.dataset.markerId, focusedType = active?.type;
+				const markers = this.editor.getTimelineMarkers();
+				empty.hidden = markers.length > 0;
+				add.disabled = markers.length >= this.config.markers.max;
+				list.replaceChildren(...markers.map(marker => {
+					const item = buildElement('property-group'); item.dataset.markerId = marker.id;
+					const name = buildPanelItem({ kind: 'field', type: 'text', label: 'Name', value: marker.name, maxlength: this.config.markers.nameMaxLength, attrs: { 'aria-label': 'Marker name' } }, {});
+					const nameInput = name.querySelector('input');
+					const time = this.secondsField('Time', marker.at, { max: String(CONFIG.export.timeline.setLoopRange.max / 1000) });
+					nameInput.addEventListener('change', () => { if (!this.editor.renameTimelineMarker(marker.id, nameInput.value)) nameInput.value = marker.name; });
+					time.input.addEventListener('change', () => {
+						if (!Number.isFinite(time.input.valueAsNumber) || !this.editor.moveTimelineMarker(marker.id, time.input.valueAsNumber * 1000)) time.input.value = String(marker.at / 1000);
+					});
+					for (const input of [nameInput, time.input]) input.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); input.dispatchEvent(new Event('change')); } });
+					const remove = this.flatButton('Delete', () => this.editor.deleteTimelineMarker(marker.id));
+					remove.setAttribute('aria-label', `Delete ${marker.name}`);
+					const beyond = marker.at >= (this.model?.loopMs || Infinity) ? buildElement('property-note', 'Past the loop end: kept, but not played.') : null;
+					item.append(name, time.field, ...(beyond ? [beyond] : []), remove);
+					return item;
+				}));
+				if (focusedId) list.querySelector(`[data-marker-id="${focusedId}"] input[type="${focusedType === 'number' ? 'number' : 'text'}"]`)?.focus();
+			};
+			this.markerEditor = editor;
+			panel.append(buildMenuLabel('Markers'), empty, list, add);
+			editor.refresh();
+			editor.focus = () => (focusId ? list.querySelector(`[data-marker-id="${focusId}"] input`) : add)?.focus();
+		});
 	}
 
 	stepZoom(direction, anchorX) {

@@ -258,6 +258,69 @@
 		&:hover { border-left-color: var(--color-accent); color: var(--color-text-primary); }
 	}
 
+	// A temporary preview range: a band under the ticks with an edge grip at
+	// each end. It constrains playback only, so it carries no status color.
+	.timeline-preview-range {
+		position: absolute;
+		inset: 0 auto 0 0;
+		border-inline: 1px solid var(--color-text-secondary);
+		background: var(--color-bg-tertiary);
+	}
+	// The band sits under the tick canvas; its grips sit over it.
+	.timeline-preview-range-edge {
+		position: absolute;
+		z-index: 1;
+		inset: 0 auto 0 0;
+		width: var(--timeline-grip);
+		transform: translateX(-50%);
+		cursor: ew-resize;
+		touch-action: none;
+		&:hover, &:focus-visible { background: var(--color-accent-surface); }
+		&.is-end { left: 100%; }
+	}
+
+	// A marker: a named document time, as a flag on the ruler. Its hit target
+	// is the grip width; the drawn line stays one pixel.
+	.timeline-marker {
+		position: absolute;
+		inset: 0 auto 0 0;
+		width: var(--timeline-grip);
+		padding: 0;
+		border: 0;
+		background: none;
+		transform: translateX(-50%);
+		cursor: ew-resize;
+		touch-action: none;
+
+		&::before {
+			content: '';
+			position: absolute;
+			inset: 0 auto 0 50%;
+			width: 1px;
+			background: var(--color-text-primary);
+		}
+		&::after {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: 50%;
+			width: var(--spacing-sm);
+			height: var(--spacing-sm);
+			background: var(--color-text-primary);
+			clip-path: polygon(0 0, 100% 0, 0 100%);
+		}
+		&:hover::before, &:hover::after, &:focus-visible::before, &:focus-visible::after { background: var(--color-accent); }
+		// Past the loop end: still shown and editable, set back like the
+		// rest of the next pass.
+		&.is-beyond-loop { opacity: var(--opacity-muted); }
+	}
+	.timeline-marker-list {
+		display: grid;
+		gap: var(--spacing-xs);
+		max-height: calc(8 * var(--control-height));
+		overflow-y: auto;
+	}
+
 	// A layer's row: the layer in the label column, the span of its
 	// animations on the track. The row is as wide as the tracks, so the line
 	// between groups is its own.

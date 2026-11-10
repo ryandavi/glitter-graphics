@@ -208,11 +208,11 @@ const TimelineView = {
 			row.can.run || row.can.phase || row.can.period ? 'right-click or Shift+F10 for more' : null
 		].filter(Boolean).join(' · ');
 	},
-	SNAP_RANKS: { playhead: 0, edge: 0, key: 0, cycle: 0, loop: 1, frame: 2, ruler: 3 },
+	SNAP_RANKS: { playhead: 0, edge: 0, key: 0, cycle: 0, marker: 0, loop: 1, frame: 2, ruler: 3 },
 	SNAP_WORDS: {
 		playhead: 'playhead', edge: 'another bar', cycle: 'whole cycle', loop: target => target.ms === 0 ? 'loop start' : 'loop end',
 		fit: 'fits the animations', frame: 'frame', ruler: target => formatSeconds(target.ms),
-		period: 'fits the loop', phase: 'quarter', key: 'another key'
+		period: 'fits the loop', phase: 'quarter', key: 'another key', marker: target => target.name
 	},
 	// The words beside a drag: the value, what it was, and what it snapped to.
 	// `value` and `initial` are the drag's own: a run for an edge or a move, a
@@ -282,6 +282,8 @@ const TimelineView = {
 				if (other.key !== row.key) targets.push(target(other.startMs, 'edge'), target(other.endMs, 'edge'));
 			}
 		}
+		// Markers are snap targets only; they never extend the loop themselves.
+		for (const marker of view?.markers || []) if (marker.id !== view.excludeMarker) targets.push({ ms: marker.at, kind: 'marker', name: marker.name });
 		if (kind === 'right' && row.kind !== 'range') {
 			const drawing = { ...row, endMs: Infinity };
 			targets.push(...this.cycleStarts(drawing, model.loopMs).map(ms => target(ms, 'cycle')), target(model.loopMs, 'loop'));

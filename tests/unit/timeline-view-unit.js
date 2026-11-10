@@ -167,6 +167,15 @@ for (const kind of ['move', 'left', 'duration']) {
 assert.equal(view.snapTargets(gestureModel, trimmed, 'loop')[0].exact, true);
 assert.equal(view.snapTargets(gestureModel, trimmed, 'loop')[0].kind, 'fit');
 assert.equal(view.snapTime(4790, view.snapTargets(gestureModel, trimmed, 'loop'), 20).ms, 4800);
+// Markers are ordinary snap targets with their own name; a dragged marker is
+// not its own target, and markers never become loop candidates.
+const markerView = { ...snapView, markers: [{ id: 'm1', name: 'Beat', at: 1250 }, { id: 'm2', name: 'Late', at: 9000 }] };
+const markerTargets = view.snapTargets(gestureModel, trimmed, 'move', 70, markerView);
+assert.deepEqual(json(markerTargets.filter(target => target.kind === 'marker').map(target => target.ms)), [1250, 9000]);
+assert.equal(view.snapTime(1240, markerTargets, 20).target.kind, 'marker', 'A marker outranks the ruler tick beside it');
+assert.equal(view.dragReadout('move', trimmed, { start: 1250, end: 2250 }, trimmed.source.run, view.snapTime(1240, markerTargets, 20).target).endsWith(' · Beat'), true);
+assert(!view.snapTargets(gestureModel, { key: null, kind: 'ruler' }, 'marker', 70, { ...markerView, excludeMarker: 'm1' }).some(target => target.kind === 'marker' && target.ms === 1250));
+assert(!view.snapTargets(gestureModel, trimmed, 'loop', 70, markerView).some(target => target.kind === 'marker'));
 const config = { barMinPx: 12, gripPx: 8 };
 const outside = { ...row, startMs: 6000, endMs: 4800, exportCycleMs: 1400 };
 assert.equal(view.timeToCycle(outside, 4800), null, 'A delayed bar has no cycle inside a shorter loop');
