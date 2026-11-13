@@ -25,7 +25,6 @@ const RELEASES = [
 		date: '2026-11-01',
 		dateLabel: 'November 1, 2026',
 		projectFormat: 6,
-		unreleased: true,
 		summary: 'Added path drawing, area selections, canvas cropping and text editing, expanded animation timing and playback, introduced SVG import and export, and rebuilt the workspace around one Library window.',
 		features: [
 			{ type: 'added', text: 'Added the Pen and Line tools and Path layers: draw straight or curved paths, lines, and arrows, edit their points, and give each a glitter or color stroke, fill, and outline.', guide: 'paths' },
@@ -42,7 +41,7 @@ const RELEASES = [
 			{ type: 'added', text: 'Animated GIFs opened as the Base Image now play on the canvas and in exports, with a Play animation switch in Canvas Properties. Auto Glitter is unavailable while they play.', guide: 'getting-started' },
 			{ type: 'changed', text: 'Marquee now fits the canvas and loops seamlessly, with a choice of no repeat, an edge wrap, or a tiled row with an adjustable gap. Added looping Ricochet and Wander for layers and Sparkles.', guide: 'layer-animation' },
 			{ type: 'added', text: 'Added animated Scanlines crawl and a Hue Cycle filter that rotates the colors of the artwork beneath it, with matching playback and export.', guide: 'animated-filters' },
-			{ type: 'added', text: 'Added the Timeline on desktop, with draggable timing bars, snapping, zoom, output-frame markers, and export-frame playback. Select several bars to move, align, stagger, fit, reset, or paste timing together in one undo step.', guide: 'layer-animation' },
+			{ type: 'added', text: 'Added the Timeline on desktop, with draggable timing bars, snapping, zoom, output-frame markers, and export-frame playback. Open it from the Timeline button in the top bar or the View menu. Select several bars to move, align, stagger, fit, reset, or paste timing together in one undo step.', guide: 'layer-animation' },
 			{ type: 'added', text: 'Added Stagger animations for a multi-selection: each layer\'s motion starts one step after the last, in reading order, so split letters wave, bounce, or pop in one by one.', guide: 'layer-animation' },
 			{ type: 'added', text: 'Added Custom motion with editable keys and easing, conversion from supported presets, and desktop canvas controls for posing position, rotation, and scale keys.', guide: 'layer-animation' },
 
@@ -66,6 +65,7 @@ const RELEASES = [
 			{ type: 'changed', text: 'Reorganized the glitter and sticker libraries by style and set, with adjustable tile sizes, quick picks, broader search, and clearer source and creator details. Added new fonts, glitters, and sparkle sets.', guide: 'library' },
 			{ type: 'changed', text: 'Redesigned the phone layout around a chip bar for the selected layer\'s properties.', guide: 'mobile' },
 			{ type: 'changed', text: 'Redesigned New Canvas, Settings, Export Settings, and Commands & Shortcuts as titled cards, with resets for a single setting, a group, or everything.', guide: 'app-settings' },
+			{ type: 'added', text: 'Added automatic recovery of unsaved work: if the page closes or crashes, the start screen offers to resume your last graphic.', guide: 'getting-started' },
 			{ type: 'added', text: 'Added Take Photo to the start screen and the menu: start a graphic from a camera photo, with mirroring, a camera choice, and a countdown.', guide: 'getting-started' },
 			{ type: 'added', text: 'Added one-click canvas presets to the start screen, recent custom sizes in New Canvas, and template previews that open at their own size.', guide: 'getting-started' },
 			{ type: 'added', text: 'Added Balance Sidebar Widths to keep the Inspector aligned with the toolbar and Layers panel, and smoother value scrubbing for numeric controls.', guide: 'app-settings' },

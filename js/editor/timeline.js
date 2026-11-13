@@ -56,6 +56,7 @@ const EDITOR_TIMELINE_METHODS = {
 		if (!isFeatureAvailable('timeline')) return;
 		const open = Boolean(this.originalImage && PREFERENCES.get('timelineOpen'));
 		const button = document.getElementById('timelineToggle');
+		button.disabled = !this.originalImage;
 		button.classList.toggle('active', open);
 		button.setAttribute('aria-pressed', String(open));
 		const view = document.getElementById('viewTimelineToggle');

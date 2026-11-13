@@ -114,7 +114,7 @@ class ExportResultPresenter {
 			note.textContent = notice.text;
 			if (notice.action?.id === 'fix-loop' && this.onFixLoop) {
 				const action = document.createElement('button');
-				action.type = 'button'; action.className = 'btn-text'; action.textContent = notice.action.label;
+				action.type = 'button'; action.className = 'export-notice-action'; action.textContent = notice.action.label;
 				action.addEventListener('click', this.onFixLoop);
 				note.append(' ', action);
 			}

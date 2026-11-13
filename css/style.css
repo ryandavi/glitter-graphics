@@ -11107,6 +11107,24 @@ body.modal-open {
   flex-direction: column;
   gap: var(--spacing-xs);
 }
+#exportPreviewModal .export-notice-action {
+  display: inline;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-accent);
+  font: inherit;
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+#exportPreviewModal .export-notice-action:hover {
+  text-decoration: underline;
+}
+#exportPreviewModal .export-notice-action:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
 #exportPreviewModal .export-limits {
   display: flex;
   flex-direction: column;
@@ -11208,8 +11226,12 @@ body.modal-open {
 #exportPreviewModal .export-support-link {
   text-decoration: none;
 }
-#exportPreviewModal .export-support-link > svg.icon {
-  margin-right: var(--spacing-xs);
+#exportPreviewModal .export-support-mark {
+  display: inline-block;
+  width: auto;
+  height: 1.5em;
+  margin-right: var(--spacing-sm);
+  vertical-align: middle;
 }
 #exportPreviewModal .modal-footer > button:disabled {
   display: none;
@@ -11243,6 +11265,8 @@ body.modal-open {
   }
   #exportPreviewModal .export-result[data-view] .export-details > .advanced-disclosure-toggle {
     display: flex;
+    min-height: 0;
+    padding-block: var(--spacing-xs);
   }
   #exportPreviewModal .export-result[data-view] .export-details > .advanced-disclosure-content {
     display: none;
@@ -11257,12 +11281,17 @@ body.modal-open {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0 var(--spacing-md);
+    min-width: var(--row-height);
+    padding: 0 var(--spacing-xs);
   }
   #exportPreviewModal .modal-footer > .export-support-link::after {
     display: none;
   }
-  #exportPreviewModal .modal-footer > .export-support-link > svg.icon {
+  #exportPreviewModal .modal-footer > .export-support-link:hover, #exportPreviewModal .modal-footer > .export-support-link:focus-visible {
+    background: var(--color-bg-tertiary);
+  }
+  #exportPreviewModal .modal-footer > .export-support-link > .export-support-mark {
+    height: 28px;
     margin-right: 0;
   }
   #exportPreviewModal .export-support-label {

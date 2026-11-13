@@ -146,6 +146,22 @@
 
 	}
 
+	// A notice's action is a link in the sentence, so it wraps with the text
+	// instead of breaking out as a padded button.
+	.export-notice-action {
+		display: inline;
+		padding: 0;
+		border: 0;
+		background: none;
+		color: var(--color-accent);
+		font: inherit;
+		font-weight: var(--font-weight-semibold);
+		cursor: pointer;
+
+		&:hover { text-decoration: underline; }
+		&:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; border-radius: var(--radius-xs); }
+	}
+
 	// The warning is the one box in the notes. Its rows are a table: service,
 	// limit, note and the Fit action, each in its own column so the badges
 	// line up.
@@ -258,10 +274,17 @@
 	// ----- Footer -----------------------------------------------------------
 	// Inline, not flex: the external-link mark every `target="_blank"` link
 	// gets is placed after the label by the text flow.
+	// Ko-fi's own cup mark, not a UI glyph: it keeps its colors in every theme.
 	.export-support-link {
 		text-decoration: none;
+	}
 
-		> svg.icon { margin-right: var(--spacing-xs); }
+	.export-support-mark {
+		display: inline-block;
+		width: auto;
+		height: 1.5em;
+		margin-right: var(--spacing-sm);
+		vertical-align: middle;
 	}
 
 	// An action that cannot run here (Share without the Web Share API) is left out.
@@ -271,7 +294,7 @@
 	// One column, and the whole body scrolls: the preview, one meta line, the
 	// export menu, the notes, then the details behind a disclosure. Scrolling
 	// moves the preview away and gives the save steps the full height. Ko-fi
-	// is a heart button in the action row.
+	// is its cup mark alone at the start of the action row.
 	@include modal-compact {
 		--export-pad: var(--spacing-md);
 
@@ -303,7 +326,13 @@
 		.export-result[data-view] .export-details {
 			display: flex;
 
-			> .advanced-disclosure-toggle { display: flex; }
+			> .advanced-disclosure-toggle {
+				display: flex;
+				// Full width, so a short row is still easy to tap; the row height
+				// would only add space above it.
+				min-height: 0;
+				padding-block: var(--spacing-xs);
+			}
 			> .advanced-disclosure-content { display: none; }
 			&.is-open > .advanced-disclosure-content { display: flex; }
 		}
@@ -317,11 +346,18 @@
 			display: inline-flex;
 			align-items: center;
 			justify-content: center;
-			padding: 0 var(--spacing-md);
+			min-width: var(--row-height);
+			padding: 0 var(--spacing-xs);
 
 			&::after { display: none; }
 
-			> svg.icon { margin-right: 0; }
+			&:hover,
+			&:focus-visible { background: var(--color-bg-tertiary); }
+
+			> .export-support-mark {
+				height: 28px;
+				margin-right: 0;
+			}
 		}
 
 		.export-support-label { @include visually-hidden; }
