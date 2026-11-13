@@ -25,6 +25,7 @@ const RELEASES = [
 		date: '2026-11-01',
 		dateLabel: 'November 1, 2026',
 		projectFormat: 6,
+		lastCommit: '8885ffaf',
 		summary: 'Added path drawing, area selections, canvas cropping and text editing, expanded animation timing and playback, introduced SVG import and export, and rebuilt the workspace around one Library window.',
 		features: [
 			{ type: 'added', text: 'Added the Pen and Line tools and Path layers: draw straight or curved paths, lines, and arrows, edit their points, and give each a glitter or color stroke, fill, and outline.', guide: 'paths' },
