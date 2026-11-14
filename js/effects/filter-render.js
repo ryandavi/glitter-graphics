@@ -150,13 +150,11 @@
 		return styles;
 	}
 
-	// Reused across calls: one canvas
-	// per named role instead of a fresh allocation per call. Safe because
-	// renderToCanvas is only ever invoked from SceneCompositor.js (verified — no
-	// live-preview call site) with layers rendered strictly sequentially, never
-	// re-entrantly or in parallel, so a given slot can't be clobbered mid-use by
-	// another renderToCanvas call. If that ever changes (e.g. parallel layer
-	// rendering), this pooling breaks and needs revisiting.
+	// Reused across calls: one canvas per named role instead of a fresh
+	// allocation per call. Safe because every slot is taken and released inside
+	// the synchronous part of renderToCanvas (the async pixel path uses none),
+	// so callers (SceneCompositor, the Take Photo effects) can't clobber one
+	// another. An await added between a slot's use and its release breaks this.
 	const scratchCanvasSlots = new Map();
 	function getScratchCanvas(slot, width, height) {
 		let canvas = scratchCanvasSlots.get(slot);
@@ -169,11 +167,10 @@
 		return canvas;
 	}
 
-	// Reused across calls: both are
-	// fully consumed within renderToCanvas's color-burn branch (composited is
-	// written back via context.putImageData before the function returns) and
-	// never stored past that call, so pooling is safe. renderToCanvas is only
-	// ever invoked sequentially from SceneCompositor.js, never re-entrantly.
+	// Reused across calls: both are fully consumed within renderToCanvas's
+	// synchronous color-burn branch (composited is written back via
+	// context.putImageData before the function returns) and never stored past
+	// that call, so pooling is safe.
 	let colorBurnScaledSourceScratch = null;
 	let colorBurnCompositedScratch = null;
 	function getColorBurnScratch(slot, width, height, sourceData) {

@@ -34,6 +34,7 @@
 	).map((entry) => ({ value: entry.value, label: entry.label }));
 	const autoPalette = (values) => values.palette == null || values.palette === 'auto';
 	const patterned = (values) => ['bayer', 'halftone'].includes(values.algorithm);
+	const warpOptions = [{ value: 'bulge', label: 'Bulge' }, { value: 'pinch', label: 'Pinch' }, { value: 'twirl', label: 'Twirl' }];
 	const deepFryOptions = [{ value: 'light', label: 'Light' }, { value: 'crispy', label: 'Crispy' }, { value: 'nuclear', label: 'Nuclear' }];
 	const gradientOptions = () => (root.GRADIENT_PRESETS?.entries || [
 		{ id: 'pink-blue', label: 'Pink / Blue' }, { id: 'purple-gold', label: 'Purple / Gold' }, { id: 'spectrum', label: 'Spectrum' }
@@ -150,7 +151,7 @@
 			}
 		}),
 		blur: Object.freeze({ id: 'blur', label: 'Blur', group: 'stylize', fields: Object.freeze({ radius: numeric('filterBlurRadius', 'filterBlurRadius') }), recipe: (values) => [step('blur', { radius: values.radius, mode: 'normal', opacity: 1 })] }),
-		instagram: Object.freeze({ id: 'instagram', label: 'Instagram', group: 'instagram', tags: ['cssgram'], fields: Object.freeze({
+		instagram: Object.freeze({ id: 'instagram', label: 'Instagram', group: 'instagram', lookField: 'presetId', tags: ['cssgram'], fields: Object.freeze({
 			strength: numeric('filterInstagramStrength', 'filterStrength'), showName: boolean(false, 'filterShowName', 'Show Filter Name')
 		}), recipe: instagramRecipe, summary: (values) => Presets[values.presetId]?.name || Presets[values.presetId]?.instagramName || 'Instagram' }),
 		scanlines: Object.freeze({ id: 'scanlines', label: 'Scanlines', group: 'web', tags: ['crt', 'retro'], fields: Object.freeze({
@@ -224,6 +225,14 @@
 		'rgb-split': Object.freeze({ id: 'rgb-split', label: 'RGB Split', group: 'pixel', fields: Object.freeze({
 			offset: numeric('filterRgbSplit', 'filterRgbSplit')
 		}), recipe: (values) => [step('rgbSplit', { offset: values.offset })] }),
+		// One op, one look per shape (lookField). The warp centres in the canvas
+		// or the filter region, so moving the region places it.
+		warp: Object.freeze({ id: 'warp', label: 'Warp', group: 'distort', lookField: 'shape', tags: ['funhouse', 'distort', 'face'], fields: Object.freeze({
+			shape: select('bulge', 'filterWarpShape', 'Shape', warpOptions),
+			amount: numeric('filterWarpAmount', 'filterWarpAmount'),
+			radius: numeric('filterWarpRadius', 'filterWarpRadius')
+		}), recipe: (values) => [step('warp', { shape: values.shape, amount: values.amount / 100, radius: values.radius / 100 })],
+			summary: (values) => warpOptions.find((entry) => entry.value === values.shape)?.label || 'Warp' }),
 		'gradient-map': Object.freeze({ id: 'gradient-map', label: 'Gradient Map', group: 'pixel', fields: Object.freeze({
 			gradientId: select('pink-blue', 'filterGradientMap', 'Gradient', gradientOptions)
 		}), recipe: (values) => [step('gradientMap', { stops: gradientStops(values.gradientId) })] })
@@ -266,6 +275,14 @@
 		return recipe(value).every((entry) => typeof Ops.get(entry.op)?.css === 'function') ? 1 : 3;
 	}
 
+	// A look is a filter type, or for a filter with a `lookField`, one value of
+	// that field (`instagram:rio`, `warp:twirl`); such filters have no plain look.
+	function lookId(value) {
+		const filter = FILTERS[value?.type];
+		if (!filter) return null;
+		return filter.lookField ? `${filter.id}:${value[filter.lookField]}` : filter.id;
+	}
+
 	const instagramLookEntries = Object.entries(Presets).map(([presetId, preset]) => ({
 		id: `instagram:${presetId}`,
 		label: preset.name || preset.instagramName,
@@ -278,18 +295,22 @@
 		id: 'filter-looks',
 		groups: [
 			{ id: 'adjust', label: 'Adjust' }, { id: 'stylize', label: 'Stylize' },
-			{ id: 'web', label: 'Web & Film' }, { id: 'pixel', label: 'Pixel & Damage' }, { id: 'instagram', label: 'Instagram' }
+			{ id: 'web', label: 'Web & Film' }, { id: 'pixel', label: 'Pixel & Damage' }, { id: 'distort', label: 'Distort' },
+			{ id: 'instagram', label: 'Instagram' }
 		],
 		entries: [
-			...FILTER_TYPES.filter((id) => id !== 'instagram').map((id) => ({
+			...FILTER_TYPES.filter((id) => !FILTERS[id].lookField).map((id) => ({
 				id, label: FILTERS[id].label, group: FILTERS[id].group, tags: FILTERS[id].tags, value: { type: id }
+			})),
+			...warpOptions.map((option) => ({
+				id: lookId({ type: 'warp', shape: option.value }), label: option.label, group: 'distort', tags: FILTERS.warp.tags, value: { type: 'warp', shape: option.value }
 			})),
 			...instagramLookEntries
 		],
 		renderThumbnail(entry, element) { root.GlitterFilter?.renderCssThumbnail?.(element, normalize(entry.value.type, entry.value)); }
 	});
 
-	const api = { FILTERS, FILTER_TYPES, looksLibrary, get: (id) => FILTERS[id] || null, list: () => Object.values(FILTERS), fieldOptions, normalize, recipe, tier };
+	const api = { FILTERS, FILTER_TYPES, looksLibrary, lookId, get: (id) => FILTERS[id] || null, list: () => Object.values(FILTERS), fieldOptions, normalize, recipe, tier };
 	root.GlitterFilters = api;
 	if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof self !== 'undefined' ? self : globalThis);

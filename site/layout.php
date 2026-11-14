@@ -22,28 +22,25 @@
 	<noscript><style>.advanced-disclosure > .advanced-disclosure-content { display: flex; }</style></noscript>
 	<link rel="icon" href="<?= page_escape($base . $site['favicon']) ?>" type="image/x-icon">
 </head>
-<body class="content-page<?= $home ? ' home-page' : '' ?>">
+<body class="content-page<?= $home || $error ? ' home-page' : '' ?>">
 <?php readfile(__DIR__ . '/sprite.html'); ?>
 	<template id="tpl-icon"><svg class="icon"><use></use></svg></template>
 <?php require __DIR__ . '/header.php'; ?>
 	<div class="content-page-scroll">
 <?php if ($home): ?>
 <?php require __DIR__ . '/home.php'; ?>
+<?php elseif ($error): ?>
+<?php require __DIR__ . '/error.php'; ?>
 <?php else: ?>
 		<main class="doc-page-main <?= page_escape(implode(' ', array_map(function ($kind) { return 'doc-page-' . $kind; }, $page['kinds']))) ?>" id="main">
 			<article class="doc-content">
-<?php if ($error): ?>
-<h1>Page unavailable</h1>
-<p>Check the address or try again later.</p>
-<?php else: ?>
 <?php readfile(dirname(__DIR__) . '/' . $page['slug'] . '/content.html'); ?>
-<?php endif; ?>
 			</article>
 		</main>
 <?php endif; ?>
 <?php require __DIR__ . '/footer.php'; ?>
 	</div>
-<?php foreach (array_merge($page['scripts'] ?? $site['scripts'], $home ? $site['homeScripts'] : []) as $script): ?>
+<?php foreach (array_merge($page['scripts'] ?? $site['scripts'], $home || $error ? $site['homeScripts'] : []) as $script): ?>
 	<script src="<?= page_escape($base . $script) ?>"></script>
 <?php endforeach; ?>
 <?php readfile(__DIR__ . '/analytics.html'); ?>

@@ -197,7 +197,7 @@ const LAYER_SETUPS = {
 			const lookGroups = document.getElementById('filterLooksGroup');
 			if (lookGroups.closest('.property-set')?.querySelector('.property-label')?.textContent !== 'Category') throw new Error('Filter look category dropdown is not in its own labelled property set');
 			if (document.getElementById('filterLooksPicker').contains(lookGroups) || document.getElementById('filterLooksPicker').closest('.property-set') === lookGroups.closest('.property-set')) throw new Error('Filter look group dropdown is nested inside the preset grid property set');
-			if ([...lookGroups.options].map((option) => option.textContent).join(',') !== 'All,Adjust,Stylize,Web & Film,Pixel & Damage,Instagram') throw new Error('Filter look groups are incorrect');
+			if ([...lookGroups.options].map((option) => option.textContent).join(',') !== 'All,Adjust,Stylize,Web & Film,Pixel & Damage,Distort,Instagram') throw new Error('Filter look groups are incorrect');
 			if (document.getElementById('filterCurrentLookName')?.textContent !== 'Clarendon') throw new Error('Current Look summary is not synced to Clarendon');
 			if (document.getElementById('filterCustomizeTitle')?.textContent !== 'Clarendon settings') throw new Error('Filter settings heading does not identify Clarendon');
 			lookGroups.value = '';

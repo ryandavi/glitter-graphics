@@ -1281,7 +1281,9 @@ const PANEL_SCHEMAS = {
 					{ kind: 'toggle', id: 'cameraMirror', label: 'Mirror', checked: true },
 					{ kind: 'select', id: 'cameraDevice', label: 'Camera', ariaLabel: 'Camera', options: [] },
 					{ kind: 'segmented', id: 'cameraCountdown', label: 'Countdown', ariaLabel: 'Countdown before the photo',
-						options: CONFIG.tools.camera.countdownSeconds.map(seconds => ({ label: seconds ? `${seconds} s` : 'Off', value: String(seconds) })) }
+						options: CONFIG.tools.camera.countdownSeconds.map(seconds => ({ label: seconds ? `${seconds} s` : 'Off', value: String(seconds) })) },
+					// Reviewing a GIF: play forward then back, so the loop doesn't jump.
+					{ kind: 'toggle', id: 'cameraBounce', label: 'Bounce', checked: true }
 				] }
 			] }
 		]

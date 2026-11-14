@@ -31,6 +31,9 @@ const PREFERENCE_SCHEMA = Object.freeze({
 	// The flyout window's dragged width; null follows the Inspector.
 	flyoutWidth: { default: () => null },
 	filterPreviewLevel: { default: () => 'still' },
+	// Take Photo: the last shot mode, and whether the booth makes sounds.
+	cameraMode: { default: () => 'photo' },
+	cameraSound: { default: () => true },
 	// The Library view menu: tile size ('s' | 'm' | 'l') for every kind's grid,
 	// and whether the Quick picks row shows.
 	libraryTileSize: { default: () => 'm' },

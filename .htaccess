@@ -1,1 +1,11 @@
 DirectoryIndex index.php index.html
+
+# Addresses with no file or folder behind them get the site's error page
+# (404.php). Missing assets keep Apache's plain 404 instead of a whole page.
+<IfModule mod_rewrite.c>
+	RewriteEngine On
+	RewriteCond %{REQUEST_FILENAME} !-f
+	RewriteCond %{REQUEST_FILENAME} !-d
+	RewriteCond %{REQUEST_URI} !\.(js|mjs|css|map|json|png|gif|jpe?g|webp|avif|svg|ico|woff2?|ttf|otf|mp3|wav|ogg|mp4|webm|zip|txt|xml)$ [NC]
+	RewriteRule ^ 404.php [L]
+</IfModule>

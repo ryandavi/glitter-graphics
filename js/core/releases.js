@@ -19,6 +19,19 @@
 // a release ships; an unreleased entry has none.
 const RELEASES = [
 	{
+		id: 'v0.7.0',
+		version: '0.7.0',
+		name: 'Photo Booth',
+		unreleased: true,
+		features: [
+			{ type: 'added', name: 'Photo booth modes', text: 'Take Photo can shoot one photo, a 2×2 grid, a four-photo strip, or an eight-frame GIF that opens as an animated base image, with Bounce to play it forward and back.', guide: 'getting-started' },
+			{ type: 'added', name: 'Photo booth effects', text: 'Preview filter looks live on the camera, then keep the one you pick as a Filter layer you can still change.', guide: 'getting-started' },
+			{ type: 'added', name: 'Shutter sound and flash', text: 'Take Photo beeps through the countdown and flashes with a shutter sound for each shot. Turn the sound off from the speaker button.', guide: 'getting-started' },
+			{ type: 'added', name: 'Warp filter', text: 'Bulge, Pinch, and Twirl looks in a new Distort group. Give the filter a region to place the warp over a face.', guide: 'filters' },
+			{ type: 'fixed', name: 'Take Photo without a camera', text: 'Take Photo hides when the listed camera cannot be opened, and camera errors now show as a message instead of only in the status line.' }
+		]
+	},
+	{
 		id: 'v0.6.0',
 		version: '0.6.0',
 		name: 'Paths, Crop & Library',

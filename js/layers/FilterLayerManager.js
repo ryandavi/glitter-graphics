@@ -262,7 +262,7 @@ class FilterLayerManager {
 		if (!this.ui.looks) return;
 		const activeLayer = this.getActiveLayer();
 		const filterData = activeLayer?.filterData;
-		const activeId = filterData?.type === 'instagram' ? `instagram:${filterData.presetId}` : filterData?.type;
+		const activeId = GlitterFilters.lookId(filterData);
 		GlitterPresetLibrary.renderPresetGrid(this.ui.looks, GlitterFilters.looksLibrary, {
 			activeId,
 			contextId: activeLayer?.id,
@@ -305,7 +305,7 @@ class FilterLayerManager {
 	showActiveLookInLibrary() {
 		const layer = this.getActiveLayer();
 		const filterData = layer?.filterData;
-		const activeId = filterData?.type === 'instagram' ? `instagram:${filterData.presetId}` : filterData?.type;
+		const activeId = GlitterFilters.lookId(filterData);
 		const entry = GlitterFilters.looksLibrary.get(activeId);
 		if (!entry || !this.ui.lookGroup) return;
 		this.ui.lookGroup.value = entry.group;

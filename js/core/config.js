@@ -166,8 +166,32 @@ const CONFIG = deepFreeze({
 
 	tools: {
 		nineSlice: { maxTiles: 256 },
-		// Take Photo asks for this size; the image path scales it to the canvas limits.
-		camera: { idealWidth: 1280, idealHeight: 720, countdownSeconds: [0, 3, 5], fileName: 'Photo.png' },
+		// Take Photo, the photo booth (js/systems/CameraCapture.js). It asks for
+		// the ideal size; every result is scaled to fit the canvas limits.
+		camera: {
+			idealWidth: 1280, idealHeight: 720, countdownSeconds: [0, 3, 5],
+			fileNames: { image: 'Photo.png', animation: 'Photo.gif' },
+			// Shot modes, in segmented-control order. `layout` composes the shots
+			// into one image; `animated` encodes them as a GIF instead.
+			modes: {
+				photo: { label: 'Photo', shots: 1 },
+				grid: { label: 'Grid', shots: 4, intervalMs: 1000, layout: { columns: 2, rows: 2 } },
+				strip: { label: 'Strip', shots: 4, intervalMs: 1000, layout: { columns: 1, rows: 4 } },
+				gif: { label: 'GIF', shots: 8, intervalMs: 150, animated: true }
+			},
+			// Grid and Strip: gutter as a share of a cell's shorter side.
+			grid: { gutter: 0.04, background: '#ffffff' },
+			// The white flash holds this long, then fades.
+			flashMs: 120,
+			sound: { volume: 0.25, shutterMs: 60, beepMs: 30, beepHz: 880, lastBeepHz: 1320 },
+			// Effects: filter look ids, shown around None in a 3×3 grid. Sizes and
+			// rates come from the WP-0 timing spike (2026-11-14): at 160 px every
+			// look renders in under 13 ms, at 400 px the slowest (Dither) in ~40 ms.
+			effects: {
+				looks: ['warp:bulge', 'warp:twirl', 'warp:pinch', 'sepia', 'grayscale', 'dreamy-glow', 'dither', 'deep-fry'],
+				cellWidth: 160, cellIntervalMs: 200, stageWidth: 400, stageIntervalMs: 66
+			}
+		},
 		// How far a GIF's cycle may be stretched, as a share of the file's own.
 		gifCycle: { stretchRange: { min: 0.5, max: 2 } },
 		autoGlitter: {

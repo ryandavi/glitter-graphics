@@ -88,6 +88,9 @@ const FIELDS = Object.freeze({
 	filterJpegBlockSize: { label: 'Block size', unit: 'px', min: 1, max: 12, step: 1, value: 1 },
 	filterChromaBleed: { label: 'Chroma bleed', unit: '%', min: 0, max: 100, step: 1, value: 20 },
 	filterRgbSplit: { label: 'Offset', unit: 'px', min: 0, max: 40, step: 1, value: 6 },
+	// Warp radius is a share of half the shorter side of the canvas or region.
+	filterWarpAmount: { label: 'Amount', unit: '%', min: 0, max: 100, step: 1, value: 60 },
+	filterWarpRadius: { label: 'Radius', unit: '%', min: 10, max: 150, step: 1, value: 80 },
 	paletteColorCount: { label: 'Colors', unit: '', min: 2, max: 12, step: 1, value: 5 },
 	paletteMerge: { label: 'Combine similar', unit: '', min: 0.01, max: 0.12, step: 0.005, value: 0.045 },
 	paletteHueLimit: { label: 'Hue correction', unit: '?', min: 0, max: 180, step: 1, value: 20 },

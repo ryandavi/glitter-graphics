@@ -130,7 +130,10 @@ function setupMenuPopover({
 		panel.querySelector(itemSelector)?.focus({ preventScroll: true });
 	};
 	function onPointerDown(event) {
-		if (!root.contains(event.target) && !panel.contains(event.target)) close();
+		// An action menu has no trigger toggle and its root can be a whole
+		// region (the canvas), so only the panel counts as inside.
+		if (panel.contains(event.target)) return;
+		if (!bindTrigger || !root.contains(event.target)) close();
 	}
 	function onKeydown(event) {
 		if (event.key === 'Escape') {

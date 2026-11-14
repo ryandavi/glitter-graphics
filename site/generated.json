@@ -16,7 +16,7 @@
 			"description": "How to use Glitter Editor: starting a project, the tools, layers, the Library, animation and export.",
 			"scripts": [
 				"js/core/dom.js?v=3531b1f4",
-				"js/ui/menu-popover.js?v=fdfbce8a",
+				"js/ui/menu-popover.js?v=3861a0e1",
 				"js/core/key-labels.js?v=80b61ded",
 				"js/site/content-page.js?v=5f3be1cc"
 			]
@@ -38,7 +38,7 @@
 				"js/core/entities-group.js?v=b984c1dd",
 				"js/ui/tooltip.js?v=305ed707",
 				"js/ui/doc-modal.js?v=f6a51f4c",
-				"js/ui/menu-popover.js?v=fdfbce8a",
+				"js/ui/menu-popover.js?v=3861a0e1",
 				"js/core/key-labels.js?v=80b61ded",
 				"js/site/content-page.js?v=5f3be1cc"
 			]
@@ -60,7 +60,7 @@
 				"js/core/entities-group.js?v=b984c1dd",
 				"js/ui/tooltip.js?v=305ed707",
 				"js/ui/doc-modal.js?v=f6a51f4c",
-				"js/ui/menu-popover.js?v=fdfbce8a",
+				"js/ui/menu-popover.js?v=3861a0e1",
 				"js/core/key-labels.js?v=80b61ded",
 				"js/site/content-page.js?v=5f3be1cc"
 			]
@@ -79,7 +79,7 @@
 				"js/ui/about-timeline.js?v=ceed4c47",
 				"js/ui/tooltip.js?v=305ed707",
 				"js/ui/doc-modal.js?v=f6a51f4c",
-				"js/ui/menu-popover.js?v=fdfbce8a",
+				"js/ui/menu-popover.js?v=3861a0e1",
 				"js/core/key-labels.js?v=80b61ded",
 				"js/site/content-page.js?v=5f3be1cc"
 			],
@@ -112,7 +112,7 @@
 				"js/core/entities-group.js?v=b984c1dd",
 				"js/ui/tooltip.js?v=305ed707",
 				"js/ui/doc-modal.js?v=f6a51f4c",
-				"js/ui/menu-popover.js?v=fdfbce8a",
+				"js/ui/menu-popover.js?v=3861a0e1",
 				"js/core/key-labels.js?v=80b61ded",
 				"js/site/content-page.js?v=5f3be1cc"
 			]
@@ -129,16 +129,16 @@
 			"description": "Every Glitter Editor release, newest first: what was added, changed and fixed.",
 			"scripts": [
 				"js/core/dom.js?v=3531b1f4",
-				"js/ui/menu-popover.js?v=fdfbce8a",
+				"js/ui/menu-popover.js?v=3861a0e1",
 				"js/core/key-labels.js?v=80b61ded",
 				"js/site/content-page.js?v=5f3be1cc"
 			]
 		}
 	],
-	"stylesheet": "css/style.css?v=3aee99ad",
+	"stylesheet": "css/style.css?v=9f2702f5",
 	"favicon": "images/etc/favicon.ico?v=bcdad78e",
 	"scripts": [
-		"js/ui/menu-popover.js?v=fdfbce8a",
+		"js/ui/menu-popover.js?v=3861a0e1",
 		"js/core/key-labels.js?v=80b61ded",
 		"js/site/content-page.js?v=5f3be1cc"
 	],

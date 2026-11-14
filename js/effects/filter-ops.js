@@ -50,6 +50,66 @@
 		return imageData;
 	}
 
+	// Warp: at full Amount, Bulge and Pinch raise the radius curve to this
+	// power (or its inverse), and Twirl turns the centre this many radians.
+	const WARP_RADIAL_POWER = 1.5;
+	const WARP_TWIRL_RADIANS = Math.PI * 1.5;
+
+	// Funhouse distortions centred in the image the op receives (the canvas,
+	// or the filter region). Inverse mapping: each pixel inside the radius
+	// samples the source bilinearly, with edges clamped; pixels outside stay.
+	// Radius is a share of half the shorter side.
+	function warp(imageData, { shape = 'bulge', amount = 0, radius = 1 } = {}) {
+		const width = imageData.width;
+		const height = imageData.height;
+		const strength = Math.max(0, Math.min(1, Number(amount) || 0));
+		const reach = Math.max(1, Math.min(width, height) / 2 * Math.max(0, Number(radius) || 0));
+		if (!strength) return imageData;
+		const source = new Uint8ClampedArray(imageData.data);
+		const data = imageData.data;
+		const centerX = (width - 1) / 2;
+		const centerY = (height - 1) / 2;
+		// Bulge and Pinch are one curve: a power above 1 magnifies the centre,
+		// its inverse shrinks it.
+		const power = (1 + strength * WARP_RADIAL_POWER) ** (shape === 'pinch' ? -1 : 1);
+		const turn = strength * WARP_TWIRL_RADIANS;
+		const sample = (x, y, target) => {
+			const left = Math.max(0, Math.min(width - 1, Math.floor(x)));
+			const top = Math.max(0, Math.min(height - 1, Math.floor(y)));
+			const right = Math.min(width - 1, left + 1);
+			const bottom = Math.min(height - 1, top + 1);
+			const fx = Math.max(0, Math.min(1, x - left));
+			const fy = Math.max(0, Math.min(1, y - top));
+			const a = (top * width + left) * 4, b = (top * width + right) * 4, c = (bottom * width + left) * 4, d = (bottom * width + right) * 4;
+			for (let channel = 0; channel < 4; channel++) {
+				const upper = source[a + channel] + (source[b + channel] - source[a + channel]) * fx;
+				const lower = source[c + channel] + (source[d + channel] - source[c + channel]) * fx;
+				data[target + channel] = upper + (lower - upper) * fy;
+			}
+		};
+		const minX = Math.max(0, Math.floor(centerX - reach)), maxX = Math.min(width - 1, Math.ceil(centerX + reach));
+		const minY = Math.max(0, Math.floor(centerY - reach)), maxY = Math.min(height - 1, Math.ceil(centerY + reach));
+		for (let y = minY; y <= maxY; y++) for (let x = minX; x <= maxX; x++) {
+			const dx = x - centerX, dy = y - centerY;
+			const distance = Math.hypot(dx, dy);
+			if (distance >= reach || distance === 0) continue;
+			const r = distance / reach;
+			let sourceX, sourceY;
+			if (shape === 'twirl') {
+				const angle = turn * (1 - r) ** 2;
+				const cos = Math.cos(angle), sin = Math.sin(angle);
+				sourceX = centerX + dx * cos - dy * sin;
+				sourceY = centerY + dx * sin + dy * cos;
+			} else {
+				const scale = r ** power / r;
+				sourceX = centerX + dx * scale;
+				sourceY = centerY + dy * scale;
+			}
+			sample(sourceX, sourceY, (y * width + x) * 4);
+		}
+		return imageData;
+	}
+
 	function gradientMap(imageData, stops) {
 		const normalized = [...(stops || [])].sort((a, b) => (a.offset ?? a.at) - (b.offset ?? b.at)).map((entry) => {
 			const hex = String(entry.color || '#000000').replace('#', '');
@@ -178,6 +238,12 @@
 			}),
 			pixel: (imageData, params, context = {}) => runPixelEffects(imageData, ditherSettings(params, context), context),
 			isActive: () => true
+		}),
+		warp: Object.freeze({
+			id: 'warp',
+			params: Object.freeze({ shape: Object.freeze({ kind: 'string' }), amount: Object.freeze({ min: 0, max: 1 }), radius: Object.freeze({ min: 0, max: 1.5 }) }),
+			pixel: (imageData, params) => warp(imageData, params),
+			isActive: (params) => Number(params.amount) > 0 && Number(params.radius) > 0
 		}),
 		rgbSplit: Object.freeze({ id: 'rgbSplit', params: Object.freeze({ offset: Object.freeze({ min: 0, max: 40 }) }), pixel: (imageData, params) => rgbSplit(imageData, params.offset), isActive: (params) => Number(params.offset) > 0 }),
 		gradientMap: Object.freeze({ id: 'gradientMap', params: Object.freeze({ stops: Object.freeze({ kind: 'gradientStops' }) }), pixel: (imageData, params) => gradientMap(imageData, params.stops), isActive: () => true })

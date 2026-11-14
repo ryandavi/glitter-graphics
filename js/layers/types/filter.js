@@ -44,6 +44,8 @@ registerLayerType(LayerType.FILTER, {
 		{ path: 'filterData.pixelSize', field: 'pixelEffectsPixelSize', documentScale: 'effect', when: (value) => value > 1 }
 	],
 	managerKey: 'filterLayerManager',
+	// addLayer(LayerType.FILTER, { filterLayer: { filterData } }) starts on a look.
+	createOptionsKey: 'filterLayer',
 	timelineSources: (layer, context) => context.compositor._createFilterTimelineSources(layer),
 	blendable: true,
 	renderSwatch: (layer, context) => {

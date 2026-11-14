@@ -61,6 +61,7 @@ const SUITES = [
 	{ file: 'unit/export-fit-unit.js', tags: ['unit', 'export', 'quick'] },
 	{ file: 'unit/text-background-geometry-unit.js', tags: ['unit', 'effects'] },
 	{ file: 'parity/filter-parity.js', tags: ['unit', 'effects', 'quick'] },
+	{ file: 'unit/filter-warp-unit.js', tags: ['unit', 'effects', 'quick'] },
 	{ file: 'parity/pixel-filter-verify.js', tags: ['export', 'effects', 'quick'] },
 	{ file: 'unit/gradient-presets.js', tags: ['unit', 'effects', 'quick'] },
 	{ file: 'unit/sparkles-unit.js', tags: ['unit', 'effects', 'quick'] },

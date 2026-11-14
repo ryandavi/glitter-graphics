@@ -56,13 +56,20 @@ async function importSvgFile(editor, file, options = {}) {
 	} finally { done(); }
 }
 
+// Resolves false when the last file did not open (declined, failed or
+// unsupported), so a caller can follow up only on success.
 async function openEditorFiles(editor, files, options = {}) {
 	const project = files.find((file) => FILE_HANDLERS[0].match(file));
 	if (project) return FILE_HANDLERS[0].open(editor,project,options);
+	let opened = false;
 	for (const file of files) {
 		const handler = FILE_HANDLERS.find((entry) => entry.match(file));
-		if (!handler) { editor.showError('Choose an image, SVG or saved Glitter project.'); continue; }
-		try { if (await handler.open(editor,file,options) === false) break; }
-		catch (error) { editor.showError(`Could not open ${file.name}: ${error.message}`); break; }
+		if (!handler) { editor.showError('Choose an image, SVG or saved Glitter project.'); opened = false; continue; }
+		try {
+			opened = await handler.open(editor,file,options) !== false;
+			if (!opened) break;
+		}
+		catch (error) { editor.showError(`Could not open ${file.name}: ${error.message}`); opened = false; break; }
 	}
+	return opened;
 }

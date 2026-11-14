@@ -6,11 +6,12 @@ const { openApp } = require('../lib/app');
 async function main() {
 	const { browser, page, errors } = await openApp({ document: { width: 180, height: 140 } });
 	try {
-		for (const data of [{ type: 'invert' }, { type: 'vignette', amount: 80 }, { type: 'blur', radius: 6 }, { type: 'scanlines', crawl: 'slow' }]) {
+		for (const data of [{ type: 'invert' }, { type: 'vignette', amount: 80 }, { type: 'blur', radius: 6 }, { type: 'scanlines', crawl: 'slow' }, { type: 'warp', shape: 'twirl', amount: 100, radius: 150 }]) {
 			await page.evaluate(async data => {
 				await editor.loadBlankImage(180, 140, '#0033cc'); editor.animationTicker.setPaused(true); editor.viewport.setZoom(1);
-				// Red ends at the region's left edge: a blur must not read it.
-				const shape = editor.shapeGlitterManager.createLayer({ shapeId: 'square', width: 110, height: 140, position: { x: 0, y: 70 } });
+				// Red ends at the region's left edge: a blur must not read it. A warp
+				// needs red inside the region to show it moved pixels.
+				const shape = editor.shapeGlitterManager.createLayer({ shapeId: 'square', width: data.type === 'warp' ? 180 : 110, height: 140, position: { x: 0, y: 70 } });
 				shape.shapeData.fill.mode = 'solid'; shape.shapeData.fill.color = '#ff0000'; editor.layerManager.insertLayer(shape);
 				const filter = editor.filterLayerManager.createLayer({ filterData: { ...data, region: { width: 70, height: 70 } } });
 				editor.layerManager.insertLayer(filter); editor.setTool(ToolType.HAND); editor.requestPreviewUpdate();
@@ -36,6 +37,11 @@ async function main() {
 				}
 				assert(max <= 4, `${data.type} at ${timestamp}: preview/export difference ${max}`);
 				assert.deepStrictEqual(output.slice((70 * 180 + 130) * 4, (70 * 180 + 130) * 4 + 4), [0, 51, 204, 255], 'Pixels outside the region stay unchanged');
+				if (data.type === 'warp') {
+					let movedRed = 0;
+					for (let y = 38; y < 102; y++) for (let x = 95; x < 124; x++) if (output[(y * 180 + x) * 4] > 128) movedRed++;
+					assert(movedRed > 0, 'The twirl carries red past the straight edge');
+				}
 				if (data.type === 'blur') assert.deepStrictEqual(output.slice((70 * 180 + 56) * 4, (70 * 180 + 56) * 4 + 4), [0, 51, 204, 255], 'Blur clamps at the region edge');
 				process.stdout.write(`PASS regional ${data.type} at ${timestamp} ms: ${64 * 68} pixels, maximum channel difference ${max}\n`);
 			}

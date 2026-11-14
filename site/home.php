@@ -2,47 +2,11 @@
 <?php
 // The homepage body. Its data (tiles, credits, counts, release) comes from
 // generated.json, built by tools/build-pages.js from the Library's data files.
-// Each visit starts the wordmark on a different tile.
-$swatches = $page['swatches'];
-$start = array_rand($swatches);
-$stickers = $page['stickerPresets'] ? $page['stickerPresets'][array_rand($page['stickerPresets'])] : [];
-// A root-relative URL: a url() inside a custom property would otherwise resolve
-// against the stylesheet that reads it.
-function home_tile_style($swatch, $base) {
-	return '--tile: url("' . $base . $swatch['url'] . '"); --tile-w: ' . (int) $swatch['width'] . '; --tile-h: ' . (int) $swatch['height'] . ';';
-}
-function home_credit($swatch, $set) {
-	$author = $set['authorUrl']
-		? '<a href="' . page_escape($set['authorUrl']) . '">' . page_escape($set['author']) . '</a>'
-		: page_escape($set['author']);
-	return page_escape($swatch['name']) . ', from <a href="' . page_escape($set['sourceUrl']) . '">' . page_escape($set['name']) . '</a> by ' . $author;
-}
 $reading = array_values(array_filter($site['pages'], function ($item) { return $item['source'] !== 'releases'; }));
 $updates = array_values(array_filter($site['pages'], function ($item) { return $item['source'] === 'releases'; }))[0] ?? null;
 ?>
 		<main class="home-main" id="main">
-			<section class="home-hero" aria-labelledby="homeTitle">
-				<div class="home-canvas" id="homeCanvas" style="<?= page_escape(home_tile_style($swatches[$start], $base)) ?>">
-					<svg class="home-alias-filter" width="0" height="0" aria-hidden="true" focusable="false"><filter id="homeAlias" x="-0.1" y="-0.5" width="1.2" height="2" color-interpolation-filters="sRGB"><feComponentTransfer><feFuncA type="discrete" tableValues="0 1"/></feComponentTransfer></filter></svg>
-					<div class="home-canvas-object">
-						<h1 class="home-wordmark" id="homeTitle">Glitter</h1>
-<?php foreach ($stickers as $sticker): ?>
-						<img class="home-sticker" src="<?= page_escape($base . $sticker['url']) ?>" alt="" title="<?= page_escape($sticker['name']) ?>" width="<?= (int) $sticker['width'] ?>" height="<?= (int) $sticker['height'] ?>" style="--w: <?= (int) $sticker['width'] ?>; --x: <?= (float) $sticker['x'] ?>; --y: <?= (float) $sticker['y'] ?>; --r: <?= (float) $sticker['rotate'] ?>">
-<?php endforeach; ?>
-						<span class="home-canvas-handles" aria-hidden="true">
-							<span class="transform-handle transform-handle-corner"></span><span class="transform-handle transform-handle-corner"></span><span class="transform-handle transform-handle-corner"></span><span class="transform-handle transform-handle-corner"></span>
-						</span>
-					</div>
-				</div>
-				<div class="home-fill">
-					<div class="home-swatches" role="group" aria-label="Fill the wordmark with a glitter tile">
-<?php foreach ($swatches as $index => $swatch): $set = $page['sets'][$swatch['set']]; ?>
-						<button class="home-swatch" type="button" aria-pressed="<?= $index === $start ? 'true' : 'false' ?>" aria-label="<?= page_escape($swatch['name']) ?>" title="<?= page_escape($swatch['name']) ?>" style="<?= page_escape(home_tile_style($swatch, $base)) ?>" data-credit="<?= page_escape(home_credit($swatch, $set)) ?>"></button>
-<?php endforeach; ?>
-					</div>
-					<p class="home-credit" id="homeCredit" aria-live="polite"><?= home_credit($swatches[$start], $page['sets'][$swatches[$start]['set']]) ?></p>
-				</div>
-			</section>
+<?php $hero = $page; $heroWord = 'Glitter'; require __DIR__ . '/home-hero.php'; ?>
 
 			<section class="home-intro">
 				<p class="home-lead">Glitter Editor makes glitter graphics: sparkly text, stickers and animated GIFs, built from the glitter tiles people made and traded online around the turn of the millennium.</p>

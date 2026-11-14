@@ -12,9 +12,14 @@ foreach ($site['pages'] as $candidate) {
 	if ($candidate['slug'] === $slug) $page = $candidate;
 }
 if ($error) {
+	// .htaccess rewrites missing pages here (REDIRECT_STATUS 200), so anything
+	// that isn't an error status reads as a 404.
 	$status = (int) ($_SERVER['REDIRECT_STATUS'] ?? 404);
-	http_response_code($status >= 400 && $status <= 599 ? $status : 404);
-	$page = ['slug' => 'error', 'title' => 'Page unavailable', 'description' => 'This page could not be loaded.', 'kinds' => ['document']];
+	if ($status < 400 || $status > 599) $status = 404;
+	http_response_code($status);
+	$page = $status === 404
+		? ['slug' => 'error', 'title' => 'Page not found', 'description' => 'There is no page at this address. It may have moved, or the link may have a typo.']
+		: ['slug' => 'error', 'title' => 'Error', 'description' => 'This page could not be loaded. Try again in a moment.'];
 }
 if (!$page) {
 	http_response_code(404);
