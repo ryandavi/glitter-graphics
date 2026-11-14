@@ -648,8 +648,8 @@ $modal-compact-breakpoint: 600px;
 	background: var(--color-bg-tertiary);
 }
 
-// A release screenshot inside a <figure>: the About modal's version history
-// and the Updates page share it.
+// A release screenshot inside a <figure>, wherever js/core/releases.js renders
+// a release (the Updates page and the About and Welcome modals).
 @mixin release-image {
 	>img {
 		display: block;

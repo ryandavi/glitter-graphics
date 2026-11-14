@@ -152,7 +152,7 @@ updateOrientationButtons(width, height) {
 		this.modalManager.register('welcomeModal', {
 			openBtnId: 'openWelcomeModal',
 			closeBtnId: 'closeWelcomeModal',
-			externalContentUrl: 'modals/welcome.html?v=43c35dff',
+			externalContentUrl: 'modals/welcome.html?v=1ac1eacc',
 			cacheContent: true,
 			showWhileLoading: true,
 			loadingLabel: 'Preparing Glitter…',
@@ -161,8 +161,7 @@ updateOrientationButtons(width, height) {
 				initPixelScalerInContainer(modalBody);
 				// Only the latest release earns a first-time reader's attention;
 				// older ones are a click away instead of pushing past the fold.
-				this.renderVersionHistory(modalBody, { limit: 1, openCount: 1 });
-				this.setupWelcomeUpdatesActions(modalBody);
+				this.renderVersionHistory(modalBody, { headingLevel: 3 });
 				this.setupWelcomeModalListeners();
 				initTooltipsInContainer(modalBody);
 			},
@@ -267,15 +266,19 @@ updateOrientationButtons(width, height) {
 		syncMarker();
 	},
 
-renderVersionHistory(root, { limit = null, openCount = 0 } = {}) {
-	const releases = limit == null ? CONFIG.app.releases : CONFIG.app.releases.slice(0, limit);
+// The latest release in the Updates page's form, then a link to the page that
+// has every release. Where the modal sits at heading level 3 the release
+// heading is one level down.
+renderVersionHistory(root, { headingLevel = 4 } = {}) {
+	const latest = CONFIG.app.releases.find((release) => !release.unreleased) ?? CONFIG.app.releases[0];
 
 	root.querySelectorAll('[data-app-version]').forEach((slot) => {
 		slot.textContent = CONFIG.app.version;
 	});
 
 	root.querySelectorAll('[data-version-history]').forEach((history) => {
-		history.innerHTML = releases.map((release, index) => renderReleaseEntryHtml(release, { open: index < openCount })).join('');
+		history.innerHTML = renderUpdateReleaseHtml(latest, { anchor: false, headingLevel })
+			+ '<p>The <a href="updates/" target="_blank" rel="noopener">Updates</a> page lists what changed in every release.</p>';
 		if (history.dataset.guideLinksBound !== 'true') {
 			history.dataset.guideLinksBound = 'true';
 			history.addEventListener('click', (event) => {
@@ -286,15 +289,6 @@ renderVersionHistory(root, { limit = null, openCount = 0 } = {}) {
 			});
 		}
 	});
-},
-
-// Welcome keeps the latest release concise; the full history lives in About.
-setupWelcomeUpdatesActions(modalBody) {
-	const pastUpdatesBtn = modalBody.querySelector('[data-welcome-past-updates]');
-
-	if (pastUpdatesBtn) {
-		pastUpdatesBtn.addEventListener('click', () => this.openDocumentAt('aboutModal', 'AboutVersionHistory'));
-	}
 },
 
 // index.html#modal=history&at=HistoryMicasTile opens a document modal at a

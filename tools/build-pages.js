@@ -145,9 +145,9 @@ function unlinkUnpublished(html, publishedModals) {
 // What the editor's onLoaded hooks fill in (js/editor/modals-wiring.js), written
 // into the HTML so it reads without JavaScript.
 function fillStatic(html, page, { registries, pages }) {
-	const { CONFIG, KEY_LABELS_PC, formatKeyLabel, renderReleaseEntryHtml } = registries;
+	const { CONFIG, KEY_LABELS_PC, formatKeyLabel, renderUpdateReleaseHtml } = registries;
 	// The site has a page of every release, so the article points there
-	// instead of repeating it; the editor's modal still renders the list here.
+	// instead of repeating it; the editor's modal renders the latest release here.
 	const updates = pages.find(item => item.source === 'releases');
 	const edits = [];
 	for (const node of elementRanges(html, () => true)) {
@@ -155,8 +155,8 @@ function fillStatic(html, page, { registries, pages }) {
 		if (attrs['data-app-version'] !== undefined) edits.push(innerRange(node, escapeHtml(CONFIG.app.version)));
 		if (attrs['data-version-history'] !== undefined) {
 			edits.push(innerRange(node, updates
-				? `<p>Every release, newest first, is on <a href="${updates.slug}/">${escapeHtml(updates.title)}</a>.</p>`
-				: CONFIG.app.releases.map((release, index) => renderReleaseEntryHtml(release, { open: index === 0 })).join('')));
+				? `<p>The <a href="${updates.slug}/">${escapeHtml(updates.title)}</a> page lists what changed in every release.</p>`
+				: renderUpdateReleaseHtml(CONFIG.app.releases[0], { anchor: false, headingLevel: 4 })));
 		}
 		if (attrs.id === 'PreservationTimelineList') {
 			const timeline = getTimeline();
@@ -200,48 +200,11 @@ function prefixRelativeUrls(html, prefix) {
 }
 
 // The Updates page reads as one document: a contents list, then each release
-// as a plain section with its changes grouped by type. The editor's About modal
-// keeps the collapsible renderReleaseEntryHtml list.
-const releaseGroups = [['added', 'Added'], ['changed', 'Changed'], ['fixed', 'Fixed']];
-
-// A version as a label: the shared badge, monospaced so versions line up.
-function versionBadge(version) {
-	return `<span class="badge is-version">v${escapeHtml(version)}</span>`;
-}
-
-function releaseAnchor(release) {
-	return `v${String(release.version).replace(/\./gu, '-')}`;
-}
-
-function renderUpdateReleaseHtml(release, { normalizeReleaseFeature, releaseFeatureTextHtml }) {
-	const features = release.features.map(normalizeReleaseFeature);
-	const parts = [
-		`<h2>${escapeHtml(release.name)}</h2>`,
-		`<p class="update-release-meta">${versionBadge(release.version)} <time datetime="${escapeHtml(release.date)}">${escapeHtml(release.dateLabel)}</time></p>`
-	];
-	if (release.image?.src) {
-		parts.push(`<figure class="update-release-image"><img src="${escapeHtml(release.image.src)}" alt="${escapeHtml(release.image.alt || '')}" loading="lazy" decoding="async"></figure>`);
-	}
-	parts.push(`<p>${escapeHtml(release.summary)}</p>`);
-	for (const [type, label] of releaseGroups) {
-		const items = features.filter(feature => feature.type === type).map(feature => {
-			const { guide } = feature;
-			const link = guide
-				? ` <a class="version-history-guide-link" href="guide/#${escapeHtml(guide)}" data-guide-anchor="${escapeHtml(guide)}">Show me</a>`
-				: '';
-			return `<li>${releaseFeatureTextHtml(feature, escapeHtml)}${link}</li>`;
-		});
-		if (items.length) parts.push(`<h3 class="update-release-group">${label}</h3>\n<ul>\n${items.join('\n')}\n</ul>`);
-	}
-	if (release.projectFormat != null) {
-		parts.push(`<p class="version-history-format-note">Saves project files in format version ${escapeHtml(release.projectFormat)}.</p>`);
-	}
-	return `<section class="update-release" id="${releaseAnchor(release)}">\n${parts.join('\n')}\n</section>`;
-}
-
+// as a plain section with its changes grouped by type (renderUpdateReleaseHtml,
+// shared with the editor's About and Welcome modals).
 function pageBody(page, fragment, context) {
 	if (page.source === 'releases') {
-		const { CONFIG } = context.registries;
+		const { CONFIG, versionBadge, releaseAnchor, renderUpdateReleaseHtml } = context.registries;
 		const releases = CONFIG.app.releases.filter(release => !release.unreleased);
 		const toc = releases.map(release => `<li><a href="#${releaseAnchor(release)}">${versionBadge(release.version)} ${escapeHtml(release.name)}</a></li>`).join('\n');
 		return [
@@ -249,7 +212,7 @@ function pageBody(page, fragment, context) {
 			`<div class="modal-hero-image">\n<img src="images/modal/glitter-text.gif" data-pixel-scale="3" class="center" alt="${escapeHtml(page.title)}" width="1200" height="900" loading="lazy" decoding="async" style="width: 1200px">\n<h1>${escapeHtml(page.title)}</h1>\n</div>`,
 			`<p>What changed in each release of Glitter Editor, newest first.</p>`,
 			`<div class="toc is-unnumbered" id="UpdatesTOC">\n<h2>Contents</h2>\n<ol>\n${toc}\n</ol>\n</div>`,
-			...releases.map(release => renderUpdateReleaseHtml(release, context.registries))
+			...releases.map(release => renderUpdateReleaseHtml(release))
 		].join('\n');
 	}
 	let html = fragment.replace(/^<!-- GENERATED[^\n]*-->\n/u, '');

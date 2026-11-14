@@ -71,7 +71,7 @@ body.content-page {
 
 /* ----- Reading column ----- */
 .doc-page-main {
-	// Wide figures measure the page, not the 800px column (see .figure-gallery).
+	// Wide figures measure the page, not the 800px column (see .figure-wide).
 	container-type: inline-size;
 	flex: 1 0 auto;
 	width: 100%;
@@ -84,10 +84,9 @@ body.content-page {
 		// Long URLs and newsgroup names wrap instead of widening the page.
 		overflow-wrap: break-word;
 
-		// Galleries and full-editor Guide screenshots (outside the subsection
-		// cards) may grow past the prose column, up to --page-wide-width, and never past the page.
-		.figure-gallery,
-		.guide-section>.guide-screenshot:not(.guide-screenshot-modal) {
+		// A figure marked .figure-wide may grow past the prose column, up to
+		// --page-wide-width, and never past the page.
+		.figure-wide {
 			--breakout-width: min(var(--page-wide-width), 100cqi);
 			width: var(--breakout-width);
 			max-width: none;
@@ -120,9 +119,8 @@ body.content-page {
 		grid-column: 2;
 		width: 100%;
 
-		// Galleries stop short of the contents column.
-		.figure-gallery,
-		.guide-section>.guide-screenshot:not(.guide-screenshot-modal) {
+		// Wide figures stop short of the contents column.
+		.figure-wide {
 			--breakout-width: var(--side-breakout);
 		}
 	}

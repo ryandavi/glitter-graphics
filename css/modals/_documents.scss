@@ -1,10 +1,10 @@
 @use '../mixins' as *;
 
-/* ===== DOCUMENT MODALS (About, History, Personal Web, Preservation) =====
+/* ===== DOCUMENT MODALS (About, Guide, History, Personal Web, Preservation, Updates) =====
    These share one prose/timeline/reference stylesheet since all use the same
    "long-form document" shape; only the content differs. A modal opts in with
    the .document-modal class on its overlay (see index.html), so adding another
-   document needs no change here. The Guide keeps its own #guideModal rules.
+   document needs no change here. The Guide adds its own #guideModal rules.
    The standalone page of the same document (tools/build-pages.js) opts in
    with .doc-page-document on its <main>; .doc-content is the element that
    holds the fragment in both places. */
@@ -269,19 +269,16 @@
 
 
 
-	.figure-wrapper+h2,
-
-	p+h2,
-	ol+h2,
-	ul+h2 {
+	// A heading's space above it comes from the heading, whatever ends the
+	// section before it (a paragraph, a list, a figure, a table or a wrapper
+	// like the version history). A heading straight under another heading
+	// keeps the tight pairing.
+	:not(h1, h2, h3, h4, h5, h6)+h2 {
 		margin-top: var(--spacing-xl);
-
 	}
 
 	p+p,
-	p+h3,
-	ol+h3,
-	ul+h3 {
+	:not(h1, h2, h3, h4, h5, h6)+h3 {
 		margin-top: var(--spacing-md);
 	}
 
@@ -301,9 +298,7 @@
 
 
 
-	p+h4,
-	ol+h4,
-	ul+h4,
+	:not(h1, h2, h3, h4, h5, h6)+h4,
 
 	ol+ul,
 	ul+ol {
@@ -499,6 +494,17 @@
 			max-width: 100%;
 			@include form-control($background: var(--color-bg-secondary), $min-width: 0);
 		}
+	}
+
+	// A country's flag in its row (the rows are the Library's .preview-select,
+	// css/library/_browser.scss). Native pickers show the text only.
+	.timeline-filter-flag {
+		flex: 0 0 auto;
+		width: calc(var(--icon-size-xs) * 4 / 3);
+		height: var(--icon-size-xs);
+		border-radius: var(--radius-xs);
+		object-fit: cover;
+		box-shadow: 0 0 0 1px var(--color-border);
 	}
 
 	.timeline-filter-search {

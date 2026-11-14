@@ -1,5 +1,12 @@
 'use strict';
 
+// Country flags (images/flags, flag-icons, MIT). The script sits two folders
+// below the root both as js/ui/about-timeline.js on a page and inside
+// js/dist/boot.js in the editor, so the flags resolve from its own URL.
+// tools/build-pages.js runs this file without a document.
+const TIMELINE_FLAG_ROOT = typeof document === 'undefined' ? '' : new URL('../../images/flags/', document.currentScript?.src || document.baseURI).href;
+const TIMELINE_FLAG_CODES = new Set(['at', 'br', 'ca', 'fi', 'gb', 'ge', 'il', 'jp', 'us']);
+
 // One timeline entry as HTML. The editor renders the filtered list through it,
 // and tools/build-pages.js renders the full list into the Preservation page so
 // it reads without JavaScript. `item.html` is authored markup (see
@@ -45,10 +52,24 @@ function initPreservationTimeline(modalBody) {
 		label.textContent = labelText;
 		const select = document.createElement('select');
 		select.id = id;
-		options.forEach(({ value, label: text }) => {
+		// The Library's select: styled rows where the browser has the
+		// customizable select, the native picker elsewhere and on phones.
+		enableSelectPreviews(select);
+		options.forEach(({ value, label: text, flag }) => {
 			const opt = document.createElement('option');
 			opt.value = value;
-			opt.textContent = text;
+			if (flag) {
+				const img = document.createElement('img');
+				img.className = 'timeline-filter-flag';
+				img.src = `${TIMELINE_FLAG_ROOT}${flag}.svg`;
+				img.alt = '';
+				img.setAttribute('aria-hidden', 'true');
+				opt.appendChild(img);
+			}
+			const optLabel = document.createElement('span');
+			optLabel.className = 'option-label';
+			optLabel.textContent = text;
+			opt.appendChild(optLabel);
 			select.appendChild(opt);
 		});
 		wrap.append(label, select);
@@ -74,7 +95,7 @@ function initPreservationTimeline(modalBody) {
 	const countryOptions = [{ value: 'all', label: 'All countries' }].concat(
 		Object.keys(countryCounts)
 			.sort((a, b) => (ABOUT_TIMELINE_COUNTRY_LABELS[a] || a).localeCompare(ABOUT_TIMELINE_COUNTRY_LABELS[b] || b))
-			.map(code => ({ value: code, label: `${ABOUT_TIMELINE_COUNTRY_LABELS[code] || code} (${countryCounts[code]})` }))
+			.map(code => ({ value: code, label: `${ABOUT_TIMELINE_COUNTRY_LABELS[code] || code} (${countryCounts[code]})`, flag: TIMELINE_FLAG_CODES.has(code) ? code : null }))
 	);
 	const decadeOptions = [{ value: 'all', label: 'All decades' }].concat(
 		Object.keys(decadeCounts).sort().map(decade => ({ value: decade, label: `${decade} (${decadeCounts[decade]})` }))

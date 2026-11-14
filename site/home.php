@@ -67,7 +67,7 @@ $updates = array_values(array_filter($site['pages'], function ($item) { return $
 <?php endforeach; ?>
 				</ul>
 <?php if ($updates): ?>
-				<p class="home-release">Version <?= page_escape($page['release']['version']) ?>, <?= page_escape($page['release']['name']) ?>, came out <?= page_escape($page['release']['dateLabel']) ?>. <a href="<?= page_escape($base . $updates['slug']) ?>/">See every update</a>.</p>
+				<p class="home-release"><span class="badge is-version">v<?= page_escape($page['release']['version']) ?></span> <?= page_escape($page['release']['name']) ?> came out <?= page_escape($page['release']['dateLabel']) ?>. <a href="<?= page_escape($base . $updates['slug']) ?>/">See every update</a>.</p>
 <?php endif; ?>
 			</section>
 		</main>

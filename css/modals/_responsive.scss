@@ -58,8 +58,7 @@
 		}
 	}
 
-	.modal-overlay.document-modal,
-	#guideModal {
+	.modal-overlay.document-modal {
 		padding:
 			max(8px, env(safe-area-inset-top))
 			max(8px, env(safe-area-inset-right))

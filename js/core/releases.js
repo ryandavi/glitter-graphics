@@ -259,33 +259,52 @@ function releaseFeatureTextHtml({ name, text }, escape) {
 	return name ? `<strong>${escape(name)}.</strong> ${escape(text)}` : escape(text);
 }
 
-// One version-history entry as HTML: the editor's About and Welcome modals
-// (js/editor/modals-wiring.js) and the standalone About and Updates pages
-// (tools/build-pages.js) all render through this, so they can't drift. Each
-// entry is the shared "Advanced disclosure" primitive (.advanced-disclosure,
-// see disclosures.js). A feature's `guide` becomes a real link to that Guide
-// section; the editor opens the Guide modal on a plain click instead.
-function renderReleaseEntryHtml(release, { open = false, guideHref = 'guide/' } = {}) {
-	const escape = (value) => String(value).replace(/[&<>"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[character]);
-	const image = release.image?.src
-		? `<figure class="version-history-image"><img src="${escape(release.image.src)}" alt="${escape(release.image.alt || '')}" loading="lazy" decoding="async"></figure>`
-		: '';
-	const features = release.features.map((feature) => {
-		const normalized = normalizeReleaseFeature(feature);
-		const { type, guide } = normalized;
-		const link = guide
-			? `<a class="version-history-guide-link" href="${escape(guideHref)}#${escape(guide)}" data-guide-anchor="${escape(guide)}">Show me</a>`
-			: '';
-		return `<li class="version-history-feature"><span class="badge version-history-badge is-${escape(type)}">${escape(type)}</span> ${releaseFeatureTextHtml(normalized, escape)} ${link}</li>`;
-	}).join('');
-	const format = release.projectFormat != null
-		? `<p class="version-history-format-note">Saves project files in format version ${escape(release.projectFormat)}.</p>`
-		: '';
-	return `<div class="advanced-disclosure version-history-entry${open ? ' is-open' : ''}" data-advanced="">`
-		+ `<button type="button" class="advanced-disclosure-toggle version-history-toggle" data-advanced-toggle="" aria-expanded="${open}">`
-		+ `<span class="version-history-header"><span class="version-history-title">v${escape(release.version)} — ${escape(release.name)}</span><time datetime="${escape(release.date)}">${escape(release.dateLabel)}</time></span>`
-		+ '<span class="advanced-disclosure-chevron icon-wrapper"><svg class="icon"><use href="#icon-chevron-down"></use></svg></span>'
-		+ '</button>'
-		+ `<div class="advanced-disclosure-content version-history-content" data-advanced-content="">${image}<p>${escape(release.summary)}</p><ul>${features}</ul>${format}</div>`
-		+ '</div>';
+const RELEASE_GROUPS = [['added', 'Added'], ['changed', 'Changed'], ['fixed', 'Fixed']];
+
+function escapeReleaseHtml(value) {
+	return String(value).replace(/[&<>"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[character]);
+}
+
+// A version as a label: the shared badge, monospaced so versions line up.
+function versionBadge(version) {
+	return `<span class="badge is-version">v${escapeReleaseHtml(version)}</span>`;
+}
+
+function releaseAnchor(release) {
+	return `v${String(release.version).replace(/\./gu, '-')}`;
+}
+
+// One release as HTML: a heading, the version and date, the summary, then the
+// changes grouped by type. The standalone Updates page (tools/build-pages.js)
+// and the editor's About and Welcome modals (js/editor/modals-wiring.js) both
+// render through this, so they can't drift. A feature's `guide` becomes a real
+// link to that Guide section; the editor opens the Guide modal on a plain
+// click instead. `headingLevel` is the release heading's level (its groups sit
+// one below); `anchor: false` omits the section id where two copies could
+// share a page.
+function renderUpdateReleaseHtml(release, { guideHref = 'guide/', headingLevel = 2, anchor = true } = {}) {
+	const escape = escapeReleaseHtml;
+	const features = release.features.map(normalizeReleaseFeature);
+	const parts = [
+		`<h${headingLevel}>${escape(release.name)}</h${headingLevel}>`,
+		`<p class="update-release-meta">${versionBadge(release.version)} <time datetime="${escape(release.date)}">${escape(release.dateLabel)}</time></p>`
+	];
+	if (release.image?.src) {
+		parts.push(`<figure class="update-release-image"><img src="${escape(release.image.src)}" alt="${escape(release.image.alt || '')}" loading="lazy" decoding="async"></figure>`);
+	}
+	parts.push(`<p>${escape(release.summary)}</p>`);
+	for (const [type, label] of RELEASE_GROUPS) {
+		const items = features.filter((feature) => feature.type === type).map((feature) => {
+			const { guide } = feature;
+			const link = guide
+				? ` <a class="version-history-guide-link" href="${escape(guideHref)}#${escape(guide)}" data-guide-anchor="${escape(guide)}">Show me</a>`
+				: '';
+			return `<li>${releaseFeatureTextHtml(feature, escape)}${link}</li>`;
+		});
+		if (items.length) parts.push(`<h${headingLevel + 1} class="update-release-group">${label}</h${headingLevel + 1}>\n<ul>\n${items.join('\n')}\n</ul>`);
+	}
+	if (release.projectFormat != null) {
+		parts.push(`<p class="version-history-format-note">Saves project files in format version ${escape(release.projectFormat)}.</p>`);
+	}
+	return `<section class="update-release"${anchor ? ` id="${releaseAnchor(release)}"` : ''}>\n${parts.join('\n')}\n</section>`;
 }

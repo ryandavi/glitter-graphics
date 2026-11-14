@@ -12,10 +12,7 @@
 		text-align: center;
 	}
 
-	.figure-wrapper+h2,
-	p+h2,
-	ol+h2,
-	ul+h2 { margin-top: var(--spacing-xl); }
+	:not(h1, h2, h3, h4, h5, h6)+h2 { margin-top: var(--spacing-xl); }
 
 	p+p { margin-top: var(--spacing-md); }
 
@@ -119,85 +116,23 @@
 	}
 }
 
-// Release notes use the same document hierarchy in Welcome and About. Each
-// entry is the app's shared "Advanced disclosure" primitive (see
-// .advanced-disclosure in _components.scss and disclosures.js) rather than a
-// bespoke accordion, so it collapses/expands, chevron included, for free.
+// Release notes in Welcome and About are the Updates page's release markup
+// (renderUpdateReleaseHtml in js/core/releases.js, styled in
+// pages/_updates-page.scss). Inside a modal the release is the first thing in
+// its slot, so it drops the page's separating rule.
+#welcomeModal,
+#aboutModal {
+	.update-release {
+		margin-top: 0;
+		padding-top: 0;
+		border-top: 0;
+	}
+}
+
 #welcomeModal,
 #aboutModal,
 .doc-page-about,
 .doc-page-updates {
-	.version-history {
-		display: flex;
-		flex-direction: column;
-	}
-
-	.version-history-entry {
-		margin-top: 0;
-
-		&:first-child { border-top: 0; }
-	}
-
-	.version-history-toggle {
-		padding: var(--spacing-md) 0;
-		align-items: baseline;
-		text-align: left;
-	}
-
-	.version-history-header {
-		display: flex;
-		align-items: baseline;
-		justify-content: space-between;
-		gap: var(--spacing-md);
-		flex: 1 1 auto;
-		min-width: 0;
-		flex-wrap: wrap;
-	}
-
-	.version-history-title {
-		color: var(--color-text-primary);
-		font-weight: var(--font-weight-semibold);
-	}
-
-	.version-history-header time {
-		color: var(--color-text-tertiary);
-		white-space: nowrap;
-	}
-
-	.version-history-content {
-		padding-bottom: var(--spacing-md);
-
-		>ul {
-			margin-top: var(--spacing-sm);
-		}
-	}
-
-	.version-history-current {
-		font-size: var(--font-size-sm);
-		color: var(--color-text-secondary);
-	}
-
-	.version-history-image {
-		margin-top: var(--spacing-md);
-		@include release-image;
-	}
-
-	.version-history-feature + .version-history-feature {
-		margin-top: var(--spacing-xs);
-	}
-
-	// Change-type badge. Built on the shared `.badge` primitive; only the
-	// status color varies, and it comes from the shared status tokens so the
-	// three types stay legible across every interface theme.
-	.version-history-badge {
-		margin-right: var(--spacing-xs);
-		vertical-align: baseline;
-
-		&.is-added { border-color: var(--color-success); color: var(--color-success); }
-		&.is-changed { border-color: var(--color-accent-border); color: var(--color-accent); }
-		&.is-fixed { border-color: var(--color-warning-border); color: var(--color-warning); }
-	}
-
 	.version-history-guide-link {
 		padding: 0;
 		border: 0;
@@ -216,13 +151,6 @@
 	.version-history-format-note {
 		font-size: var(--font-size-xs);
 		color: var(--color-text-tertiary);
-	}
-
-	.version-history-more-actions {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--spacing-lg);
-		margin-top: var(--spacing-md);
 	}
 }
 

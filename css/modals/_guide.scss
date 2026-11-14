@@ -45,18 +45,13 @@
 			flex-direction: column;
 			gap: var(--spacing-md);
 
-			>h2 {
-				display: flex;
-				align-items: center;
-				gap: var(--spacing-sm);
-			}
-
 			>.guide-subsection {
-				padding: var(--spacing-lg);
-				background-color: var(--color-bg-card);
-				border-radius: var(--spacing-md);
 				display: flex;
 				flex-direction: column;
+
+				+.guide-subsection {
+					margin-top: var(--spacing-md);
+				}
 
 
 				>h3 {
@@ -84,14 +79,14 @@
 							border-radius: var(--radius-md);
 						}
 
-						&.empty {
-							color: var(--color-text-tertiary);
-						}
-
 						.icon-wrapper {
 							width: 20px;
 							height: 20px;
 						}
+					}
+
+					&.is-iconless {
+						grid-template-columns: 1fr;
 					}
 
 					.guide-item-content {

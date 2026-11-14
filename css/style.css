@@ -11511,10 +11511,7 @@ body.modal-open {
   margin: 0 auto;
   text-align: center;
 }
-#welcomeModal .figure-wrapper + h2,
-#welcomeModal p + h2,
-#welcomeModal ol + h2,
-#welcomeModal ul + h2 {
+#welcomeModal :not(h1, h2, h3, h4, h5, h6) + h2 {
   margin-top: var(--spacing-xl);
 }
 #welcomeModal p + p {
@@ -11612,128 +11609,13 @@ body.modal-open {
   }
 }
 
-#welcomeModal .version-history,
-#aboutModal .version-history,
-.doc-page-about .version-history,
-.doc-page-updates .version-history {
-  display: flex;
-  flex-direction: column;
-}
-#welcomeModal .version-history-entry,
-#aboutModal .version-history-entry,
-.doc-page-about .version-history-entry,
-.doc-page-updates .version-history-entry {
+#welcomeModal .update-release,
+#aboutModal .update-release {
   margin-top: 0;
-}
-#welcomeModal .version-history-entry:first-child,
-#aboutModal .version-history-entry:first-child,
-.doc-page-about .version-history-entry:first-child,
-.doc-page-updates .version-history-entry:first-child {
+  padding-top: 0;
   border-top: 0;
 }
-#welcomeModal .version-history-toggle,
-#aboutModal .version-history-toggle,
-.doc-page-about .version-history-toggle,
-.doc-page-updates .version-history-toggle {
-  padding: var(--spacing-md) 0;
-  align-items: baseline;
-  text-align: left;
-}
-#welcomeModal .version-history-header,
-#aboutModal .version-history-header,
-.doc-page-about .version-history-header,
-.doc-page-updates .version-history-header {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--spacing-md);
-  flex: 1 1 auto;
-  min-width: 0;
-  flex-wrap: wrap;
-}
-#welcomeModal .version-history-title,
-#aboutModal .version-history-title,
-.doc-page-about .version-history-title,
-.doc-page-updates .version-history-title {
-  color: var(--color-text-primary);
-  font-weight: var(--font-weight-semibold);
-}
-#welcomeModal .version-history-header time,
-#aboutModal .version-history-header time,
-.doc-page-about .version-history-header time,
-.doc-page-updates .version-history-header time {
-  color: var(--color-text-tertiary);
-  white-space: nowrap;
-}
-#welcomeModal .version-history-content,
-#aboutModal .version-history-content,
-.doc-page-about .version-history-content,
-.doc-page-updates .version-history-content {
-  padding-bottom: var(--spacing-md);
-}
-#welcomeModal .version-history-content > ul,
-#aboutModal .version-history-content > ul,
-.doc-page-about .version-history-content > ul,
-.doc-page-updates .version-history-content > ul {
-  margin-top: var(--spacing-sm);
-}
-#welcomeModal .version-history-current,
-#aboutModal .version-history-current,
-.doc-page-about .version-history-current,
-.doc-page-updates .version-history-current {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-}
-#welcomeModal .version-history-image,
-#aboutModal .version-history-image,
-.doc-page-about .version-history-image,
-.doc-page-updates .version-history-image {
-  margin-top: var(--spacing-md);
-}
-#welcomeModal .version-history-image > img,
-#aboutModal .version-history-image > img,
-.doc-page-about .version-history-image > img,
-.doc-page-updates .version-history-image > img {
-  display: block;
-  max-width: 100%;
-  height: auto;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-}
-#welcomeModal .version-history-feature + .version-history-feature,
-#aboutModal .version-history-feature + .version-history-feature,
-.doc-page-about .version-history-feature + .version-history-feature,
-.doc-page-updates .version-history-feature + .version-history-feature {
-  margin-top: var(--spacing-xs);
-}
-#welcomeModal .version-history-badge,
-#aboutModal .version-history-badge,
-.doc-page-about .version-history-badge,
-.doc-page-updates .version-history-badge {
-  margin-right: var(--spacing-xs);
-  vertical-align: baseline;
-}
-#welcomeModal .version-history-badge.is-added,
-#aboutModal .version-history-badge.is-added,
-.doc-page-about .version-history-badge.is-added,
-.doc-page-updates .version-history-badge.is-added {
-  border-color: var(--color-success);
-  color: var(--color-success);
-}
-#welcomeModal .version-history-badge.is-changed,
-#aboutModal .version-history-badge.is-changed,
-.doc-page-about .version-history-badge.is-changed,
-.doc-page-updates .version-history-badge.is-changed {
-  border-color: var(--color-accent-border);
-  color: var(--color-accent);
-}
-#welcomeModal .version-history-badge.is-fixed,
-#aboutModal .version-history-badge.is-fixed,
-.doc-page-about .version-history-badge.is-fixed,
-.doc-page-updates .version-history-badge.is-fixed {
-  border-color: var(--color-warning-border);
-  color: var(--color-warning);
-}
+
 #welcomeModal .version-history-guide-link,
 #aboutModal .version-history-guide-link,
 .doc-page-about .version-history-guide-link,
@@ -11763,15 +11645,6 @@ body.modal-open {
 .doc-page-updates .version-history-format-note {
   font-size: var(--font-size-xs);
   color: var(--color-text-tertiary);
-}
-#welcomeModal .version-history-more-actions,
-#aboutModal .version-history-more-actions,
-.doc-page-about .version-history-more-actions,
-.doc-page-updates .version-history-more-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-lg);
-  margin-top: var(--spacing-md);
 }
 
 .modal-content h2,
@@ -12111,11 +11984,11 @@ body.modal-open {
   text-underline-offset: 3px;
 }
 
-/* ===== DOCUMENT MODALS (About, History, Personal Web, Preservation) =====
+/* ===== DOCUMENT MODALS (About, Guide, History, Personal Web, Preservation, Updates) =====
    These share one prose/timeline/reference stylesheet since all use the same
    "long-form document" shape; only the content differs. A modal opts in with
    the .document-modal class on its overlay (see index.html), so adding another
-   document needs no change here. The Guide keeps its own #guideModal rules.
+   document needs no change here. The Guide adds its own #guideModal rules.
    The standalone page of the same document (tools/build-pages.js) opts in
    with .doc-page-document on its <main>; .doc-content is the element that
    holds the fragment in both places. */
@@ -12378,24 +12251,14 @@ body.modal-open {
   color: var(--color-text-primary);
   font-variant-numeric: tabular-nums;
 }
-.modal-overlay.document-modal .figure-wrapper + h2,
-.modal-overlay.document-modal p + h2,
-.modal-overlay.document-modal ol + h2,
-.modal-overlay.document-modal ul + h2,
-.doc-page-document .figure-wrapper + h2,
-.doc-page-document p + h2,
-.doc-page-document ol + h2,
-.doc-page-document ul + h2 {
+.modal-overlay.document-modal :not(h1, h2, h3, h4, h5, h6) + h2,
+.doc-page-document :not(h1, h2, h3, h4, h5, h6) + h2 {
   margin-top: var(--spacing-xl);
 }
 .modal-overlay.document-modal p + p,
-.modal-overlay.document-modal p + h3,
-.modal-overlay.document-modal ol + h3,
-.modal-overlay.document-modal ul + h3,
+.modal-overlay.document-modal :not(h1, h2, h3, h4, h5, h6) + h3,
 .doc-page-document p + p,
-.doc-page-document p + h3,
-.doc-page-document ol + h3,
-.doc-page-document ul + h3 {
+.doc-page-document :not(h1, h2, h3, h4, h5, h6) + h3 {
   margin-top: var(--spacing-md);
 }
 .modal-overlay.document-modal h2 + p,
@@ -12407,9 +12270,7 @@ body.modal-open {
 .modal-overlay.document-modal p + ul,
 .modal-overlay.document-modal ol + ol,
 .modal-overlay.document-modal ul + ul,
-.modal-overlay.document-modal p + h4,
-.modal-overlay.document-modal ol + h4,
-.modal-overlay.document-modal ul + h4,
+.modal-overlay.document-modal :not(h1, h2, h3, h4, h5, h6) + h4,
 .modal-overlay.document-modal ol + ul,
 .modal-overlay.document-modal ul + ol,
 .doc-page-document h2 + p,
@@ -12421,9 +12282,7 @@ body.modal-open {
 .doc-page-document p + ul,
 .doc-page-document ol + ol,
 .doc-page-document ul + ul,
-.doc-page-document p + h4,
-.doc-page-document ol + h4,
-.doc-page-document ul + h4,
+.doc-page-document :not(h1, h2, h3, h4, h5, h6) + h4,
 .doc-page-document ol + ul,
 .doc-page-document ul + ol {
   margin-top: var(--spacing-sm);
@@ -12655,6 +12514,15 @@ body.modal-open {
 .doc-page-document .timeline-filter select:disabled {
   opacity: var(--opacity-disabled);
   cursor: not-allowed;
+}
+.modal-overlay.document-modal .timeline-filter-flag,
+.doc-page-document .timeline-filter-flag {
+  flex: 0 0 auto;
+  width: calc(var(--icon-size-xs) * 4 / 3);
+  height: var(--icon-size-xs);
+  border-radius: var(--radius-xs);
+  object-fit: cover;
+  box-shadow: 0 0 0 1px var(--color-border);
 }
 .modal-overlay.document-modal .timeline-filter-search,
 .doc-page-document .timeline-filter-search {
@@ -13054,19 +12922,14 @@ body.modal-open {
   flex-direction: column;
   gap: var(--spacing-md);
 }
-#guideModal .guide-content > .guide-section > h2,
-.doc-page-guide .guide-content > .guide-section > h2 {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-}
 #guideModal .guide-content > .guide-section > .guide-subsection,
 .doc-page-guide .guide-content > .guide-section > .guide-subsection {
-  padding: var(--spacing-lg);
-  background-color: var(--color-bg-card);
-  border-radius: var(--spacing-md);
   display: flex;
   flex-direction: column;
+}
+#guideModal .guide-content > .guide-section > .guide-subsection + .guide-subsection,
+.doc-page-guide .guide-content > .guide-section > .guide-subsection + .guide-subsection {
+  margin-top: var(--spacing-md);
 }
 #guideModal .guide-content > .guide-section > .guide-subsection > h3,
 .doc-page-guide .guide-content > .guide-section > .guide-subsection > h3 {
@@ -13093,14 +12956,14 @@ body.modal-open {
   background-color: var(--color-bg-tertiary);
   border-radius: var(--radius-md);
 }
-#guideModal .guide-content > .guide-section > .guide-subsection .guide-item .guide-item-icon.empty,
-.doc-page-guide .guide-content > .guide-section > .guide-subsection .guide-item .guide-item-icon.empty {
-  color: var(--color-text-tertiary);
-}
 #guideModal .guide-content > .guide-section > .guide-subsection .guide-item .guide-item-icon .icon-wrapper,
 .doc-page-guide .guide-content > .guide-section > .guide-subsection .guide-item .guide-item-icon .icon-wrapper {
   width: 20px;
   height: 20px;
+}
+#guideModal .guide-content > .guide-section > .guide-subsection .guide-item.is-iconless,
+.doc-page-guide .guide-content > .guide-section > .guide-subsection .guide-item.is-iconless {
+  grid-template-columns: 1fr;
 }
 #guideModal .guide-content > .guide-section > .guide-subsection .guide-item .guide-item-content,
 .doc-page-guide .guide-content > .guide-section > .guide-subsection .guide-item .guide-item-content {
@@ -13376,12 +13239,10 @@ body.modal-open {
     min-height: 24dvh;
     padding: var(--spacing-md);
   }
-  .modal-overlay.document-modal,
-  #guideModal {
+  .modal-overlay.document-modal {
     padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
   }
-  .modal-overlay.document-modal > .document-dialog,
-  #guideModal > .document-dialog {
+  .modal-overlay.document-modal > .document-dialog {
     width: 100%;
     height: 100%;
     max-width: 100%;
@@ -13727,8 +13588,7 @@ body.content-page .content-page-footer * {
   margin-inline: auto;
   overflow-wrap: break-word;
 }
-.doc-page-main > .doc-content .figure-gallery,
-.doc-page-main > .doc-content .guide-section > .guide-screenshot:not(.guide-screenshot-modal) {
+.doc-page-main > .doc-content .figure-wide {
   --breakout-width: min(var(--page-wide-width), 100cqi);
   width: var(--breakout-width);
   max-width: none;
@@ -13756,8 +13616,7 @@ body.content-page .content-page-footer * {
   grid-column: 2;
   width: 100%;
 }
-.doc-page-main.has-side-toc > .doc-content .figure-gallery,
-.doc-page-main.has-side-toc > .doc-content .guide-section > .guide-screenshot:not(.guide-screenshot-modal) {
+.doc-page-main.has-side-toc > .doc-content .figure-wide {
   --breakout-width: var(--side-breakout);
 }
 .doc-page-main.has-side-toc > .content-page-toc {

@@ -8,6 +8,7 @@
 			"source": "guide",
 			"modal": "guideModal",
 			"kinds": [
+				"document",
 				"guide"
 			],
 			"icon": "question-circle",
@@ -75,7 +76,7 @@
 				"js/core/format.js?v=e8e19ef6",
 				"js/ui/about-timeline-data.js?v=c875b6a5",
 				"js/core/preservation-group.js?v=6f1c5130",
-				"js/ui/about-timeline.js?v=99077cf8",
+				"js/ui/about-timeline.js?v=ceed4c47",
 				"js/ui/tooltip.js?v=305ed707",
 				"js/ui/doc-modal.js?v=f6a51f4c",
 				"js/ui/menu-popover.js?v=fdfbce8a",
@@ -134,7 +135,7 @@
 			]
 		}
 	],
-	"stylesheet": "css/style.css?v=a2e4be21",
+	"stylesheet": "css/style.css?v=1c0dc772",
 	"favicon": "images/etc/favicon.ico?v=bcdad78e",
 	"scripts": [
 		"js/ui/menu-popover.js?v=fdfbce8a",

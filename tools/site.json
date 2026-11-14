@@ -18,7 +18,7 @@
 			"slug": "guide",
 			"source": "guide",
 			"modal": "guideModal",
-			"kinds": ["guide"],
+			"kinds": ["document", "guide"],
 			"icon": "question-circle",
 			"title": "Guide",
 			"description": "How to use Glitter Editor: starting a project, the tools, layers, the Library, animation and export."

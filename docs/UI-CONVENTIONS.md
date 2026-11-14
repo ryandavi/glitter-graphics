@@ -206,6 +206,19 @@ New Canvas, Settings, Export Settings and Commands & Shortcuts are property pane
 
 Thumbnail hosts use `.is-pending`, `.is-ready` and `.is-failed` from `createLoadingImage`. Pending images show a slow pulse over `--tile-placeholder` (the heaviest glitter swatch, otherwise the tertiary background); failures show the unset hatch and hide the broken image. Paged batches reveal together after decoding or a 300 ms deadline, staggered by 18 ms with a 160 ms entrance and a 250 ms total cap. Cached images skip the entrance. Both system and app reduced-motion settings disable the pulse and entrance. Reconciled Quick picks and Favorites retain their existing tiles.
 
+## Content pages
+
+The documents in `tools/site.json` (About, Guide, History, Personal Web, Preservation, Updates) ship as an editor modal and a public page from one `content/src/*.src.html`. Both carry the document kind: `.document-modal` on the overlay, `.doc-page-document` on the page's `<main>`.
+
+- **Two page types, one shell.** Articles (About, History, Personal Web, Preservation) are read top to bottom. Reference pages (Guide, Updates) are scanned. Both share the hero, the contents list (a side column at 1360px and up), the 800px prose column, the wide-figure breakout, headings, version badges and key labels.
+- **Reference entries** lead with the name in bold, then the detail: `<strong>Name</strong>` then a sentence. A shortcut appears once, as a `<kbd>` after the name, never repeated in the text. An entry with no icon has no empty icon slot.
+- **`.figure-wide`** on a `.figure-wrapper` lets that figure grow past the prose column, up to `--page-wide-width` (less the contents column when it shows). Nothing else breaks out. `.figure-gallery` is only the grid; a gallery that should break out carries both classes.
+- **`.badge.is-version`** marks a version used as a label: release headers, About's current version. A version inside a sentence stays plain text.
+- **`.toc.is-unnumbered`** is the contents list for a reference page whose headings are names, not chapters (Updates).
+- **Release notes have one renderer**, in `js/core/releases.js`. The Updates page lists every release; the About and Welcome modals show the latest in the same form and link to the page.
+- **Preservation's timeline keeps its event-type colors**: dots on the type filters and a colored edge on each entry tell founded, acquired, shut down and other events apart at a glance. Its Topic, Country and Decade filters are the Library's `.preview-select` (`enableSelectPreviews`); Country rows carry a flag from `images/flags` (flag-icons, MIT).
+- **Guardrails.** None of these on any content page: cards or bento tiles, decorative timeline rails with dots (color that encodes data, like the Preservation event types, is fine), a colored pill on every bullet, tracked all-caps eyebrow labels, `01 / 02` numbering, monospace as decoration (version badges are alignment, not decoration), `A · B · C` meta strings, gradient text, fade-up on scroll, sparkle icons.
+
 ## Inspector, Library window and phone sheets
 
 - The Inspector has one selection header and one scrolling body. Tool settings and layer properties share a switch when both apply. Their hosts and control ids stay stable.
