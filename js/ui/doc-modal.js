@@ -261,15 +261,23 @@ const initDocumentModalNavigation = (modal) => {
 	});
 };
 
-// Wires up inline "jump to another document modal" links inside prose (a
-// button with data-open-modal, and optionally data-open-anchor). onOpen is
-// the caller's openDocumentAt(modalId, anchor), kept out of this file since
-// it lives on the modal manager's owner, not on doc-modal.js itself.
+// True for an unmodified primary-button click: the one click the editor may
+// turn into "open the modal" on a link whose href is the public page. Middle,
+// Ctrl/Cmd and Shift clicks keep the browser's own link behavior.
+const isPlainClick = (event) => event.button === 0
+	&& !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
+
+// Wires up inline "jump to another document" links inside prose (an <a> whose
+// href is the other document's page, with data-open-modal and optionally
+// data-open-anchor). A plain click opens the modal instead of leaving the
+// editor. onOpen is the caller's openDocumentAt(modalId, anchor), kept out of
+// this file since it lives on the modal manager's owner.
 const initModalCrossLinks = (modalBody, onOpen) => {
 	if (!modalBody) return;
 
 	modalBody.querySelectorAll('[data-open-modal]').forEach(link => {
 		link.addEventListener('click', (event) => {
+			if (!isPlainClick(event)) return;
 			event.preventDefault();
 			onOpen(link.dataset.openModal, link.dataset.openAnchor || null);
 		});

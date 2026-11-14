@@ -2,14 +2,14 @@
 
 /* ===== GUIDE MODAL ===== */
 
-#guideModal {
+#guideModal,
+.doc-page-guide {
 	.modal-hero-image {
 		//tiled background
 		background: var(--theme-glitter-image) repeat;
 
-		>h2 {
-			display: none;
-		}
+		// The hero image spells the title; the h1 stays for the outline and screen readers.
+		>h1 { @include visually-hidden; }
 	}
 
 
@@ -45,7 +45,7 @@
 			flex-direction: column;
 			gap: var(--spacing-md);
 
-			>h3 {
+			>h2 {
 				display: flex;
 				align-items: center;
 				gap: var(--spacing-sm);
@@ -59,7 +59,7 @@
 				flex-direction: column;
 
 
-				>h4 {
+				>h3 {
 					font-size: 1.1em;
 				}
 
@@ -104,7 +104,7 @@
 						margin-top: var(--spacing-base);
 					}
 
-					+h4 {
+					+h3 {
 						margin-top: var(--spacing-md);
 					}
 				}
@@ -120,13 +120,13 @@
 				}
 
 
-				h4+.guide-item,
+				h3+.guide-item,
 				ul+p,
 				p+p {
 					margin-top: var(--spacing-sm);
 				}
 
-				h4+p,
+				h3+p,
 				p+ul {
 					margin-top: var(--spacing-xs);
 				}

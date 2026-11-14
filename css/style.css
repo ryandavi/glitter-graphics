@@ -10454,9 +10454,9 @@ body.modal-open {
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
   color: var(--color-text-secondary);
   line-height: 1.55;
-  scroll-behavior: smooth;
 }
 .modal-overlay > .modal-content > .modal-body > .modal-hero-image {
   margin-bottom: var(--spacing-xl);
@@ -10490,7 +10490,7 @@ body.modal-open {
   display: inline-flex;
   flex-direction: column;
 }
-.modal-overlay > .modal-content > .modal-body .toc > h3 {
+.modal-overlay > .modal-content > .modal-body .toc > h2 {
   margin: 0 0 var(--spacing-md) 0;
   font-size: var(--font-size-md);
 }
@@ -11491,18 +11491,18 @@ body.modal-open {
   margin: 0 auto;
   text-align: center;
 }
-#welcomeModal .figure-wrapper + h3,
-#welcomeModal p + h3,
-#welcomeModal ol + h3,
-#welcomeModal ul + h3 {
+#welcomeModal .figure-wrapper + h2,
+#welcomeModal p + h2,
+#welcomeModal ol + h2,
+#welcomeModal ul + h2 {
   margin-top: var(--spacing-xl);
 }
 #welcomeModal p + p {
   margin-top: var(--spacing-md);
 }
-#welcomeModal h3 + p,
-#welcomeModal h3 + ol,
-#welcomeModal h3 + ul,
+#welcomeModal h2 + p,
+#welcomeModal h2 + ol,
+#welcomeModal h2 + ul,
 #welcomeModal ol + p,
 #welcomeModal ul + p,
 #welcomeModal p + ol,
@@ -11593,26 +11593,36 @@ body.modal-open {
 }
 
 #welcomeModal .version-history,
-#aboutModal .version-history {
+#aboutModal .version-history,
+.doc-page-about .version-history,
+.doc-page-updates .version-history {
   display: flex;
   flex-direction: column;
 }
 #welcomeModal .version-history-entry,
-#aboutModal .version-history-entry {
+#aboutModal .version-history-entry,
+.doc-page-about .version-history-entry,
+.doc-page-updates .version-history-entry {
   margin-top: 0;
 }
 #welcomeModal .version-history-entry:first-child,
-#aboutModal .version-history-entry:first-child {
+#aboutModal .version-history-entry:first-child,
+.doc-page-about .version-history-entry:first-child,
+.doc-page-updates .version-history-entry:first-child {
   border-top: 0;
 }
 #welcomeModal .version-history-toggle,
-#aboutModal .version-history-toggle {
+#aboutModal .version-history-toggle,
+.doc-page-about .version-history-toggle,
+.doc-page-updates .version-history-toggle {
   padding: var(--spacing-md) 0;
   align-items: baseline;
   text-align: left;
 }
 #welcomeModal .version-history-header,
-#aboutModal .version-history-header {
+#aboutModal .version-history-header,
+.doc-page-about .version-history-header,
+.doc-page-updates .version-history-header {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
@@ -11622,34 +11632,48 @@ body.modal-open {
   flex-wrap: wrap;
 }
 #welcomeModal .version-history-title,
-#aboutModal .version-history-title {
+#aboutModal .version-history-title,
+.doc-page-about .version-history-title,
+.doc-page-updates .version-history-title {
   color: var(--color-text-primary);
   font-weight: var(--font-weight-semibold);
 }
 #welcomeModal .version-history-header time,
-#aboutModal .version-history-header time {
+#aboutModal .version-history-header time,
+.doc-page-about .version-history-header time,
+.doc-page-updates .version-history-header time {
   color: var(--color-text-tertiary);
   white-space: nowrap;
 }
 #welcomeModal .version-history-content,
-#aboutModal .version-history-content {
+#aboutModal .version-history-content,
+.doc-page-about .version-history-content,
+.doc-page-updates .version-history-content {
   padding-bottom: var(--spacing-md);
 }
 #welcomeModal .version-history-content > ul,
-#aboutModal .version-history-content > ul {
+#aboutModal .version-history-content > ul,
+.doc-page-about .version-history-content > ul,
+.doc-page-updates .version-history-content > ul {
   margin-top: var(--spacing-sm);
 }
 #welcomeModal .version-history-current,
-#aboutModal .version-history-current {
+#aboutModal .version-history-current,
+.doc-page-about .version-history-current,
+.doc-page-updates .version-history-current {
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
 }
 #welcomeModal .version-history-image,
-#aboutModal .version-history-image {
+#aboutModal .version-history-image,
+.doc-page-about .version-history-image,
+.doc-page-updates .version-history-image {
   margin-top: var(--spacing-md);
 }
 #welcomeModal .version-history-image > img,
-#aboutModal .version-history-image > img {
+#aboutModal .version-history-image > img,
+.doc-page-about .version-history-image > img,
+.doc-page-updates .version-history-image > img {
   display: block;
   max-width: 100%;
   height: auto;
@@ -11657,31 +11681,43 @@ body.modal-open {
   border-radius: var(--radius-sm);
 }
 #welcomeModal .version-history-feature + .version-history-feature,
-#aboutModal .version-history-feature + .version-history-feature {
+#aboutModal .version-history-feature + .version-history-feature,
+.doc-page-about .version-history-feature + .version-history-feature,
+.doc-page-updates .version-history-feature + .version-history-feature {
   margin-top: var(--spacing-xs);
 }
 #welcomeModal .version-history-badge,
-#aboutModal .version-history-badge {
+#aboutModal .version-history-badge,
+.doc-page-about .version-history-badge,
+.doc-page-updates .version-history-badge {
   margin-right: var(--spacing-xs);
   vertical-align: baseline;
 }
 #welcomeModal .version-history-badge.is-added,
-#aboutModal .version-history-badge.is-added {
+#aboutModal .version-history-badge.is-added,
+.doc-page-about .version-history-badge.is-added,
+.doc-page-updates .version-history-badge.is-added {
   border-color: var(--color-success);
   color: var(--color-success);
 }
 #welcomeModal .version-history-badge.is-changed,
-#aboutModal .version-history-badge.is-changed {
+#aboutModal .version-history-badge.is-changed,
+.doc-page-about .version-history-badge.is-changed,
+.doc-page-updates .version-history-badge.is-changed {
   border-color: var(--color-accent-border);
   color: var(--color-accent);
 }
 #welcomeModal .version-history-badge.is-fixed,
-#aboutModal .version-history-badge.is-fixed {
+#aboutModal .version-history-badge.is-fixed,
+.doc-page-about .version-history-badge.is-fixed,
+.doc-page-updates .version-history-badge.is-fixed {
   border-color: var(--color-warning-border);
   color: var(--color-warning);
 }
 #welcomeModal .version-history-guide-link,
-#aboutModal .version-history-guide-link {
+#aboutModal .version-history-guide-link,
+.doc-page-about .version-history-guide-link,
+.doc-page-updates .version-history-guide-link {
   padding: 0;
   border: 0;
   background: none;
@@ -11694,45 +11730,60 @@ body.modal-open {
 }
 #welcomeModal .version-history-guide-link:hover, #welcomeModal .version-history-guide-link:focus-visible,
 #aboutModal .version-history-guide-link:hover,
-#aboutModal .version-history-guide-link:focus-visible {
+#aboutModal .version-history-guide-link:focus-visible,
+.doc-page-about .version-history-guide-link:hover,
+.doc-page-about .version-history-guide-link:focus-visible,
+.doc-page-updates .version-history-guide-link:hover,
+.doc-page-updates .version-history-guide-link:focus-visible {
   color: var(--color-text-primary);
 }
 #welcomeModal .version-history-format-note,
-#aboutModal .version-history-format-note {
+#aboutModal .version-history-format-note,
+.doc-page-about .version-history-format-note,
+.doc-page-updates .version-history-format-note {
   font-size: var(--font-size-xs);
   color: var(--color-text-tertiary);
 }
 #welcomeModal .version-history-more-actions,
-#aboutModal .version-history-more-actions {
+#aboutModal .version-history-more-actions,
+.doc-page-about .version-history-more-actions,
+.doc-page-updates .version-history-more-actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-lg);
   margin-top: var(--spacing-md);
 }
 
-.modal-content h2 {
+.modal-content h2,
+.doc-content h2 {
   font-size: var(--font-size-2xl);
 }
-.modal-content h3 {
+.modal-content h3,
+.doc-content h3 {
   font-size: var(--font-size-xl);
 }
-.modal-content h4 {
+.modal-content h4,
+.doc-content h4 {
   font-size: var(--font-size-lg);
 }
-.modal-content h5 {
+.modal-content h5,
+.doc-content h5 {
   font-size: var(--font-size-md);
 }
-.modal-content h6 {
+.modal-content h6,
+.doc-content h6 {
   font-size: var(--font-size-base);
 }
-.modal-content .figure-gallery {
+.modal-content .figure-gallery,
+.doc-content .figure-gallery {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
   grid-auto-rows: 1fr;
   gap: var(--spacing-md);
   margin: var(--spacing-lg) 0;
 }
-.modal-content .figure-gallery > figure {
+.modal-content .figure-gallery > figure,
+.doc-content .figure-gallery > figure {
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -11743,7 +11794,8 @@ body.modal-open {
   border-radius: var(--radius-sm);
   background: var(--color-bg-tertiary);
 }
-.modal-content .figure-gallery > figure > img {
+.modal-content .figure-gallery > figure > img,
+.doc-content .figure-gallery > figure > img {
   display: block;
   width: 100%;
   height: 100%;
@@ -11751,7 +11803,8 @@ body.modal-open {
   object-fit: contain;
   image-rendering: pixelated;
 }
-.modal-content .figure-gallery > figure > figcaption {
+.modal-content .figure-gallery > figure > figcaption,
+.doc-content .figure-gallery > figure > figcaption {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs);
@@ -11759,32 +11812,39 @@ body.modal-open {
   font-size: var(--font-size-sm);
   line-height: 1.4;
 }
-.modal-content .figure-gallery > figure > figcaption > cite {
+.modal-content .figure-gallery > figure > figcaption > cite,
+.doc-content .figure-gallery > figure > figcaption > cite {
   font-style: normal;
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0.01em;
 }
-.modal-content .figure-gallery > figure > figcaption > .figure-description {
+.modal-content .figure-gallery > figure > figcaption > .figure-description,
+.doc-content .figure-gallery > figure > figcaption > .figure-description {
   color: var(--color-text-secondary);
 }
-.modal-content .figure-gallery > figure > figcaption > .figure-credit {
+.modal-content .figure-gallery > figure > figcaption > .figure-credit,
+.doc-content .figure-gallery > figure > figcaption > .figure-credit {
   margin-top: var(--spacing-xs);
   color: var(--color-text-tertiary);
   font-size: var(--font-size-xs);
   opacity: 0.85;
 }
 @media (max-width: 1040px) {
-  .modal-content .figure-gallery {
+  .modal-content .figure-gallery,
+  .doc-content .figure-gallery {
     grid-template-columns: 1fr;
   }
-  .modal-content .figure-gallery > figure {
+  .modal-content .figure-gallery > figure,
+  .doc-content .figure-gallery > figure {
     padding: var(--spacing-sm);
   }
 }
-.modal-content .figure-gallery-userbars {
+.modal-content .figure-gallery-userbars,
+.doc-content .figure-gallery-userbars {
   grid-template-columns: 1fr;
 }
-.modal-content .figure-wrapper:not(.figure-gallery) {
+.modal-content .figure-wrapper:not(.figure-gallery),
+.doc-content .figure-wrapper:not(.figure-gallery) {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -11792,7 +11852,8 @@ body.modal-open {
   max-width: 100%;
   margin: var(--spacing-lg) 0;
 }
-.modal-content .figure-wrapper:not(.figure-gallery) > figure {
+.modal-content .figure-wrapper:not(.figure-gallery) > figure,
+.doc-content .figure-wrapper:not(.figure-gallery) > figure {
   display: inline-block;
   box-sizing: border-box;
   min-width: 0;
@@ -11803,14 +11864,16 @@ body.modal-open {
   border-radius: var(--radius-sm);
   background-color: var(--color-bg-tertiary);
 }
-.modal-content .figure-wrapper:not(.figure-gallery) > figure > img {
+.modal-content .figure-wrapper:not(.figure-gallery) > figure > img,
+.doc-content .figure-wrapper:not(.figure-gallery) > figure > img {
   display: block;
   width: 100%;
   max-width: 100%;
   height: auto;
   image-rendering: pixelated;
 }
-.modal-content .figure-wrapper:not(.figure-gallery) > figure > figcaption {
+.modal-content .figure-wrapper:not(.figure-gallery) > figure > figcaption,
+.doc-content .figure-wrapper:not(.figure-gallery) > figure > figcaption {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs);
@@ -11818,26 +11881,43 @@ body.modal-open {
   font-size: var(--font-size-sm);
   line-height: 1.4;
 }
-.modal-content .figure-wrapper:not(.figure-gallery) > figure > figcaption > cite {
+.modal-content .figure-wrapper:not(.figure-gallery) > figure > figcaption > cite,
+.doc-content .figure-wrapper:not(.figure-gallery) > figure > figcaption > cite {
   font-style: normal;
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0.01em;
 }
-.modal-content .figure-wrapper:not(.figure-gallery) > figure > figcaption > .figure-description {
+.modal-content .figure-wrapper:not(.figure-gallery) > figure > figcaption > .figure-description,
+.doc-content .figure-wrapper:not(.figure-gallery) > figure > figcaption > .figure-description {
   color: var(--color-text-secondary);
 }
-.modal-content .figure-wrapper:not(.figure-gallery) > figure > figcaption > .figure-credit {
+.modal-content .figure-wrapper:not(.figure-gallery) > figure > figcaption > .figure-credit,
+.doc-content .figure-wrapper:not(.figure-gallery) > figure > figcaption > .figure-credit {
   margin-top: var(--spacing-xs);
   color: var(--color-text-tertiary);
   font-size: var(--font-size-xs);
   opacity: 0.85;
 }
-.modal-content .figure-wrapper:not(.figure-gallery).figure-wrapper-contained > figure > img {
+.modal-content .figure-wrapper:not(.figure-gallery).figure-wrapper-contained > figure > img,
+.doc-content .figure-wrapper:not(.figure-gallery).figure-wrapper-contained > figure > img {
   width: 100%;
   height: 100%;
   max-height: 500px;
   object-fit: contain;
   margin-inline: auto;
+}
+
+.doc-content h2 {
+  font-size: var(--font-size-xl);
+}
+.doc-content h3 {
+  font-size: var(--font-size-lg);
+}
+.doc-content h4 {
+  font-size: var(--font-size-md);
+}
+.doc-content h5 {
+  font-size: var(--font-size-base);
 }
 
 .welcome-actions {
@@ -12015,13 +12095,19 @@ body.modal-open {
    These share one prose/timeline/reference stylesheet since all use the same
    "long-form document" shape; only the content differs. A modal opts in with
    the .document-modal class on its overlay (see index.html), so adding another
-   document needs no change here. The Guide keeps its own #guideModal rules. */
-.modal-overlay.document-modal .modal-body,
-.modal-overlay.document-modal .modal-body * {
+   document needs no change here. The Guide keeps its own #guideModal rules.
+   The standalone page of the same document (tools/build-pages.js) opts in
+   with .doc-page-document on its <main>; .doc-content is the element that
+   holds the fragment in both places. */
+.modal-overlay.document-modal .doc-content,
+.modal-overlay.document-modal .doc-content *,
+.doc-page-document .doc-content,
+.doc-page-document .doc-content * {
   -webkit-user-select: text;
   user-select: text;
 }
-.modal-overlay.document-modal .doc-inline-link {
+.modal-overlay.document-modal .doc-inline-link,
+.doc-page-document .doc-inline-link {
   padding: 0;
   border: 0;
   background: none;
@@ -12030,59 +12116,86 @@ body.modal-open {
   text-decoration: underline;
   cursor: pointer;
 }
-.modal-overlay.document-modal .doc-inline-link:hover, .modal-overlay.document-modal .doc-inline-link:focus-visible {
+.modal-overlay.document-modal .doc-inline-link:hover, .modal-overlay.document-modal .doc-inline-link:focus-visible,
+.doc-page-document .doc-inline-link:hover,
+.doc-page-document .doc-inline-link:focus-visible {
   color: var(--color-text-primary);
 }
-.modal-overlay.document-modal li:not(.toc li) > a.external:is([data-icon], .has-entity-icon) {
+.modal-overlay.document-modal li:not(.toc li) > a.external:is([data-icon], .has-entity-icon),
+.doc-page-document li:not(.toc li) > a.external:is([data-icon], .has-entity-icon) {
   padding-right: 0;
 }
-.modal-overlay.document-modal li:not(.toc li) > a.external:is([data-icon], .has-entity-icon)::after {
+.modal-overlay.document-modal li:not(.toc li) > a.external:is([data-icon], .has-entity-icon)::after,
+.doc-page-document li:not(.toc li) > a.external:is([data-icon], .has-entity-icon)::after {
   content: none;
 }
-.modal-overlay.document-modal ol a.external, .modal-overlay.document-modal ul a.external {
+.modal-overlay.document-modal ol a.external, .modal-overlay.document-modal ul a.external,
+.doc-page-document ol a.external,
+.doc-page-document ul a.external {
   white-space: unset !important;
 }
-.modal-overlay.document-modal .dead-link {
+.modal-overlay.document-modal .dead-link,
+.doc-page-document .dead-link {
   color: var(--color-text-tertiary);
   text-decoration-color: color-mix(in srgb, var(--color-text-tertiary) 60%, transparent);
 }
-.modal-overlay.document-modal .dead-link:visited {
+.modal-overlay.document-modal .dead-link:visited,
+.doc-page-document .dead-link:visited {
   color: var(--color-text-tertiary);
 }
-.modal-overlay.document-modal .dead-link::after {
+.modal-overlay.document-modal .dead-link::after,
+.doc-page-document .dead-link::after {
   background: currentColor;
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 8a5.5 5.5 0 1 0 1.6-3.9'/%3E%3Cpath d='M2.3 2.4v2.4h2.4'/%3E%3Cpath d='M8 5v3l2 1.3'/%3E%3C/svg%3E") center/contain no-repeat;
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 8a5.5 5.5 0 1 0 1.6-3.9'/%3E%3Cpath d='M2.3 2.4v2.4h2.4'/%3E%3Cpath d='M8 5v3l2 1.3'/%3E%3C/svg%3E") center/contain no-repeat;
 }
-.modal-overlay.document-modal .archive-link {
+.modal-overlay.document-modal .archive-link,
+.doc-page-document .archive-link {
   font-style: italic;
 }
-.modal-overlay.document-modal .archive-service {
+.modal-overlay.document-modal .archive-service,
+.doc-page-document .archive-service {
   font-style: italic;
 }
 .modal-overlay.document-modal .file-name,
-.modal-overlay.document-modal .usenet-address {
+.modal-overlay.document-modal .usenet-address,
+.doc-page-document .file-name,
+.doc-page-document .usenet-address {
   font-family: var(--font-mono);
   font-size: 0.92em;
 }
-.modal-overlay.document-modal .file-name {
+.modal-overlay.document-modal .file-name,
+.doc-page-document .file-name {
   white-space: nowrap;
 }
-.modal-overlay.document-modal .usenet-address {
+.modal-overlay.document-modal .usenet-address,
+.doc-page-document .usenet-address {
   overflow-wrap: anywhere;
 }
-.modal-overlay.document-modal .modal-hero-image {
+.modal-overlay.document-modal .modal-hero-image,
+.doc-page-document .modal-hero-image {
   background: url("../images/glitter/bring-on-the-glitter/green-010.gif") repeat;
 }
-.modal-overlay.document-modal .modal-hero-image > h2 {
-  display: none;
+.modal-overlay.document-modal .modal-hero-image > h1,
+.doc-page-document .modal-hero-image > h1 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
-.modal-overlay.document-modal .center {
+.modal-overlay.document-modal .center,
+.doc-page-document .center {
   display: block;
   margin: 0 auto;
   text-align: center;
 }
-.modal-overlay.document-modal .context {
+.modal-overlay.document-modal .context,
+.doc-page-document .context {
   font-weight: inherit;
   cursor: help;
   color: inherit;
@@ -12095,22 +12208,27 @@ body.modal-open {
   -webkit-text-decoration-skip: ink;
   text-decoration-skip-ink: auto;
 }
-.modal-overlay.document-modal .context:hover {
+.modal-overlay.document-modal .context:hover,
+.doc-page-document .context:hover {
   color: var(--color-text-primary);
 }
-.modal-overlay.document-modal blockquote {
+.modal-overlay.document-modal blockquote,
+.doc-page-document blockquote {
   margin: var(--spacing-lg) 0;
   padding: var(--spacing-sm) 0 var(--spacing-sm) var(--spacing-lg);
   border-left: 2px solid var(--color-border);
   color: var(--color-text-secondary);
 }
-.modal-overlay.document-modal blockquote > p {
+.modal-overlay.document-modal blockquote > p,
+.doc-page-document blockquote > p {
   margin: 0;
 }
-.modal-overlay.document-modal blockquote > p + p {
+.modal-overlay.document-modal blockquote > p + p,
+.doc-page-document blockquote > p + p {
   margin-top: var(--spacing-sm);
 }
-.modal-overlay.document-modal blockquote > cite {
+.modal-overlay.document-modal blockquote > cite,
+.doc-page-document blockquote > cite {
   display: block;
   margin-top: var(--spacing-sm);
   color: var(--color-text-tertiary);
@@ -12118,11 +12236,13 @@ body.modal-open {
   font-style: normal;
 }
 @media (max-width: 1040px) {
-  .modal-overlay.document-modal blockquote {
+  .modal-overlay.document-modal blockquote,
+  .doc-page-document blockquote {
     padding-left: var(--spacing-md);
   }
 }
-.modal-overlay.document-modal .table-wrapper {
+.modal-overlay.document-modal .table-wrapper,
+.doc-page-document .table-wrapper {
   max-width: 100%;
   margin: var(--spacing-lg) 0;
   overflow-x: auto;
@@ -12131,7 +12251,8 @@ body.modal-open {
   background: var(--color-bg-card);
   -webkit-overflow-scrolling: touch;
 }
-.modal-overlay.document-modal table {
+.modal-overlay.document-modal table,
+.doc-page-document table {
   width: 100%;
   min-width: 32rem;
   border-collapse: separate;
@@ -12141,13 +12262,16 @@ body.modal-open {
   line-height: var(--line-height-normal);
 }
 .modal-overlay.document-modal table th,
-.modal-overlay.document-modal table td {
+.modal-overlay.document-modal table td,
+.doc-page-document table th,
+.doc-page-document table td {
   padding: var(--spacing-md) var(--spacing-lg);
   border-bottom: 1px solid var(--color-border);
   text-align: left;
   vertical-align: top;
 }
-.modal-overlay.document-modal table th {
+.modal-overlay.document-modal table th,
+.doc-page-document table th {
   background-image: var(--bar-gradient, linear-gradient(to top, var(--bar-gradient-bottom) 50%, var(--bar-gradient-top) 100%));
   text-shadow: var(--bar-text-shadow);
   color: var(--bar-title-color);
@@ -12156,126 +12280,172 @@ body.modal-open {
   letter-spacing: 0.03em;
 }
 .modal-overlay.document-modal table th + th,
-.modal-overlay.document-modal table td + td {
+.modal-overlay.document-modal table td + td,
+.doc-page-document table th + th,
+.doc-page-document table td + td {
   border-left: 1px solid var(--color-border);
 }
-.modal-overlay.document-modal table tbody > tr:nth-child(even) {
+.modal-overlay.document-modal table tbody > tr:nth-child(even),
+.doc-page-document table tbody > tr:nth-child(even) {
   background: var(--color-bg-tertiary);
 }
-.modal-overlay.document-modal table tbody > tr:hover {
+.modal-overlay.document-modal table tbody > tr:hover,
+.doc-page-document table tbody > tr:hover {
   background: var(--color-bg-accent-tint);
 }
-.modal-overlay.document-modal table tbody > tr:last-child > td {
+.modal-overlay.document-modal table tbody > tr:last-child > td,
+.doc-page-document table tbody > tr:last-child > td {
   border-bottom: 0;
 }
-.modal-overlay.document-modal .dimensions-table {
+.modal-overlay.document-modal .dimensions-table,
+.doc-page-document .dimensions-table {
   min-width: 48rem;
   table-layout: fixed;
 }
-.modal-overlay.document-modal .dimensions-table th:first-child {
+.modal-overlay.document-modal .dimensions-table th:first-child,
+.doc-page-document .dimensions-table th:first-child {
   width: 24%;
 }
-.modal-overlay.document-modal .dimensions-table th:nth-child(2) {
+.modal-overlay.document-modal .dimensions-table th:nth-child(2),
+.doc-page-document .dimensions-table th:nth-child(2) {
   width: 25%;
 }
-.modal-overlay.document-modal .dimensions-table td:first-child {
+.modal-overlay.document-modal .dimensions-table td:first-child,
+.doc-page-document .dimensions-table td:first-child {
   color: var(--color-text-primary);
   font-weight: var(--font-weight-medium);
 }
 .modal-overlay.document-modal .dimensions-table th:nth-child(2),
-.modal-overlay.document-modal .dimensions-table td:nth-child(2) {
+.modal-overlay.document-modal .dimensions-table td:nth-child(2),
+.doc-page-document .dimensions-table th:nth-child(2),
+.doc-page-document .dimensions-table td:nth-child(2) {
   font-variant-numeric: tabular-nums;
 }
-.modal-overlay.document-modal .dimensions-table td:nth-child(2) {
+.modal-overlay.document-modal .dimensions-table td:nth-child(2),
+.doc-page-document .dimensions-table td:nth-child(2) {
   color: var(--color-text-primary);
   font-family: var(--font-mono);
   font-size: var(--font-size-sm);
 }
-.modal-overlay.document-modal .table-wrapper.fits-content {
+.modal-overlay.document-modal .table-wrapper.fits-content,
+.doc-page-document .table-wrapper.fits-content {
   width: fit-content;
 }
-.modal-overlay.document-modal .file-table {
+.modal-overlay.document-modal .file-table,
+.doc-page-document .file-table {
   width: auto;
   min-width: 0;
 }
-.modal-overlay.document-modal .file-table td:last-child {
+.modal-overlay.document-modal .file-table td:last-child,
+.doc-page-document .file-table td:last-child {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.modal-overlay.document-modal .chronology-table {
+.modal-overlay.document-modal .chronology-table,
+.doc-page-document .chronology-table {
   min-width: 40rem;
 }
-.modal-overlay.document-modal .chronology-table th:first-child {
+.modal-overlay.document-modal .chronology-table th:first-child,
+.doc-page-document .chronology-table th:first-child {
   width: 18%;
 }
-.modal-overlay.document-modal .chronology-table th:nth-child(2) {
+.modal-overlay.document-modal .chronology-table th:nth-child(2),
+.doc-page-document .chronology-table th:nth-child(2) {
   width: 30%;
 }
-.modal-overlay.document-modal .chronology-table td:first-child {
+.modal-overlay.document-modal .chronology-table td:first-child,
+.doc-page-document .chronology-table td:first-child {
   color: var(--color-text-primary);
   font-variant-numeric: tabular-nums;
 }
-.modal-overlay.document-modal .figure-wrapper + h3,
+.modal-overlay.document-modal .figure-wrapper + h2,
 .modal-overlay.document-modal p + h2,
 .modal-overlay.document-modal ol + h2,
 .modal-overlay.document-modal ul + h2,
-.modal-overlay.document-modal p + h3,
-.modal-overlay.document-modal ol + h3,
-.modal-overlay.document-modal ul + h3 {
+.doc-page-document .figure-wrapper + h2,
+.doc-page-document p + h2,
+.doc-page-document ol + h2,
+.doc-page-document ul + h2 {
   margin-top: var(--spacing-xl);
 }
 .modal-overlay.document-modal p + p,
-.modal-overlay.document-modal p + h4,
-.modal-overlay.document-modal ol + h4,
-.modal-overlay.document-modal ul + h4 {
+.modal-overlay.document-modal p + h3,
+.modal-overlay.document-modal ol + h3,
+.modal-overlay.document-modal ul + h3,
+.doc-page-document p + p,
+.doc-page-document p + h3,
+.doc-page-document ol + h3,
+.doc-page-document ul + h3 {
   margin-top: var(--spacing-md);
 }
 .modal-overlay.document-modal h2 + p,
 .modal-overlay.document-modal h2 + ol,
 .modal-overlay.document-modal h2 + ul,
-.modal-overlay.document-modal h3 + p,
-.modal-overlay.document-modal h3 + ol,
-.modal-overlay.document-modal h3 + ul,
 .modal-overlay.document-modal ol + p,
 .modal-overlay.document-modal ul + p,
 .modal-overlay.document-modal p + ol,
 .modal-overlay.document-modal p + ul,
 .modal-overlay.document-modal ol + ol,
 .modal-overlay.document-modal ul + ul,
-.modal-overlay.document-modal p + h5,
-.modal-overlay.document-modal ol + h5,
-.modal-overlay.document-modal ul + h5,
+.modal-overlay.document-modal p + h4,
+.modal-overlay.document-modal ol + h4,
+.modal-overlay.document-modal ul + h4,
 .modal-overlay.document-modal ol + ul,
-.modal-overlay.document-modal ul + ol {
+.modal-overlay.document-modal ul + ol,
+.doc-page-document h2 + p,
+.doc-page-document h2 + ol,
+.doc-page-document h2 + ul,
+.doc-page-document ol + p,
+.doc-page-document ul + p,
+.doc-page-document p + ol,
+.doc-page-document p + ul,
+.doc-page-document ol + ol,
+.doc-page-document ul + ul,
+.doc-page-document p + h4,
+.doc-page-document ol + h4,
+.doc-page-document ul + h4,
+.doc-page-document ol + ul,
+.doc-page-document ul + ol {
   margin-top: var(--spacing-sm);
 }
+.modal-overlay.document-modal h3 + ul,
+.modal-overlay.document-modal h3 + ol,
 .modal-overlay.document-modal h4 + ul,
 .modal-overlay.document-modal h4 + ol,
-.modal-overlay.document-modal h5 + ul,
-.modal-overlay.document-modal h5 + ol {
+.doc-page-document h3 + ul,
+.doc-page-document h3 + ol,
+.doc-page-document h4 + ul,
+.doc-page-document h4 + ol {
   margin-top: var(--spacing-xs);
 }
-.modal-overlay.document-modal {
+.modal-overlay.document-modal,
+.doc-page-document {
   /* Chronological reference list in the Timeline section — a plain ul so
-     it inherits the h3/ul spacing rules above instead of needing its own.
+     it inherits the h2/ul spacing rules above instead of needing its own.
      Event classes set --tl-color once; list borders and filter dots share it. */
 }
-.modal-overlay.document-modal .timeline-all {
+.modal-overlay.document-modal .timeline-all,
+.doc-page-document .timeline-all {
   --tl-color: var(--color-accent);
 }
-.modal-overlay.document-modal .timeline-start {
+.modal-overlay.document-modal .timeline-start,
+.doc-page-document .timeline-start {
   --tl-color: var(--color-success);
 }
-.modal-overlay.document-modal .timeline-acquisition {
+.modal-overlay.document-modal .timeline-acquisition,
+.doc-page-document .timeline-acquisition {
   --tl-color: var(--color-info);
 }
-.modal-overlay.document-modal .timeline-closure {
+.modal-overlay.document-modal .timeline-closure,
+.doc-page-document .timeline-closure {
   --tl-color: var(--color-danger);
 }
-.modal-overlay.document-modal .timeline-milestone {
+.modal-overlay.document-modal .timeline-milestone,
+.doc-page-document .timeline-milestone {
   --tl-color: var(--color-text-tertiary);
 }
-.modal-overlay.document-modal .timeline-legend {
+.modal-overlay.document-modal .timeline-legend,
+.doc-page-document .timeline-legend {
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
@@ -12283,12 +12453,14 @@ body.modal-open {
   color: var(--color-text-secondary);
   padding: var(--spacing-md);
 }
-.modal-overlay.document-modal .timeline-type-filters {
+.modal-overlay.document-modal .timeline-type-filters,
+.doc-page-document .timeline-type-filters {
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-sm);
 }
-.modal-overlay.document-modal .timeline-legend-item {
+.modal-overlay.document-modal .timeline-legend-item,
+.doc-page-document .timeline-legend-item {
   -webkit-appearance: none;
   appearance: none;
   display: inline-flex;
@@ -12306,36 +12478,43 @@ body.modal-open {
   cursor: pointer;
   transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), outline-color var(--transition-fast);
 }
-.modal-overlay.document-modal .timeline-legend-item:hover {
+.modal-overlay.document-modal .timeline-legend-item:hover,
+.doc-page-document .timeline-legend-item:hover {
   border-color: var(--color-border-hover);
   background: var(--color-bg-secondary);
 }
-.modal-overlay.document-modal .timeline-legend-item[aria-pressed=true] {
+.modal-overlay.document-modal .timeline-legend-item[aria-pressed=true],
+.doc-page-document .timeline-legend-item[aria-pressed=true] {
   border-color: var(--tl-color);
   background: var(--color-bg-secondary);
   color: var(--color-text-primary);
   font-weight: var(--font-weight-semibold);
 }
-.modal-overlay.document-modal .timeline-legend-item[aria-pressed=false] .timeline-dot {
+.modal-overlay.document-modal .timeline-legend-item[aria-pressed=false] .timeline-dot,
+.doc-page-document .timeline-legend-item[aria-pressed=false] .timeline-dot {
   background: transparent;
   box-shadow: inset 0 0 0 1.5px var(--tl-color);
 }
-.modal-overlay.document-modal .timeline-legend-item:focus-visible {
+.modal-overlay.document-modal .timeline-legend-item:focus-visible,
+.doc-page-document .timeline-legend-item:focus-visible {
   outline-color: var(--color-accent);
 }
-.modal-overlay.document-modal .timeline-updated {
+.modal-overlay.document-modal .timeline-updated,
+.doc-page-document .timeline-updated {
   margin-inline-start: auto;
   color: var(--color-text-tertiary);
   white-space: nowrap;
 }
-.modal-overlay.document-modal .timeline-dot {
+.modal-overlay.document-modal .timeline-dot,
+.doc-page-document .timeline-dot {
   width: 9px;
   height: 9px;
   border-radius: 50%;
   background: var(--tl-color, var(--color-text-tertiary));
   flex: 0 0 auto;
 }
-.modal-overlay.document-modal .timeline-panel {
+.modal-overlay.document-modal .timeline-panel,
+.doc-page-document .timeline-panel {
   padding: var(--spacing-md);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
@@ -12347,35 +12526,42 @@ body.modal-open {
   padding: 0;
   margin-bottom: 0;
 }
-.modal-overlay.document-modal .timeline-panel > * + * {
+.modal-overlay.document-modal .timeline-panel > * + *,
+.doc-page-document .timeline-panel > * + * {
   border-top: 1px solid var(--color-border);
 }
-.modal-overlay.document-modal .preservation-dialog .timeline-panel {
+.modal-overlay.document-modal .preservation-dialog .timeline-panel,
+.doc-page-document .preservation-dialog .timeline-panel {
   height: clamp(32rem, 78dvh, 46rem);
 }
-.modal-overlay.document-modal .preservation-dialog .timeline-panel .timeline-list {
+.modal-overlay.document-modal .preservation-dialog .timeline-panel .timeline-list,
+.doc-page-document .preservation-dialog .timeline-panel .timeline-list {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
   overflow-anchor: none;
   -webkit-overflow-scrolling: touch;
 }
-.modal-overlay.document-modal .timeline-list {
+.modal-overlay.document-modal .timeline-list,
+.doc-page-document .timeline-list {
   list-style: none;
   padding: 0;
   margin: 0;
 }
-.modal-overlay.document-modal .timeline-list li {
+.modal-overlay.document-modal .timeline-list li,
+.doc-page-document .timeline-list li {
   display: flex;
   gap: var(--spacing-md);
   padding: var(--spacing-md);
   border-bottom: 1px solid var(--color-border);
   border-left: 3px solid var(--tl-color, var(--color-border));
 }
-.modal-overlay.document-modal .timeline-list li:last-child {
+.modal-overlay.document-modal .timeline-list li:last-child,
+.doc-page-document .timeline-list li:last-child {
   border-bottom: none;
 }
-.modal-overlay.document-modal .timeline-list .timeline-date {
+.modal-overlay.document-modal .timeline-list .timeline-date,
+.doc-page-document .timeline-list .timeline-date {
   flex: 0 0 auto;
   width: 6.5rem;
   font-weight: 600;
@@ -12387,32 +12573,38 @@ body.modal-open {
   text-underline-offset: 3px;
 }
 @media (max-width: 480px) {
-  .modal-overlay.document-modal .timeline-list li {
+  .modal-overlay.document-modal .timeline-list li,
+  .doc-page-document .timeline-list li {
     flex-direction: column;
     gap: var(--spacing-xs);
   }
-  .modal-overlay.document-modal .timeline-list .timeline-date {
+  .modal-overlay.document-modal .timeline-list .timeline-date,
+  .doc-page-document .timeline-list .timeline-date {
     width: auto;
   }
 }
-.modal-overlay.document-modal .timeline-filters {
+.modal-overlay.document-modal .timeline-filters,
+.doc-page-document .timeline-filters {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
   gap: var(--spacing-sm) var(--spacing-md);
   padding: var(--spacing-md);
 }
-.modal-overlay.document-modal .timeline-filter {
+.modal-overlay.document-modal .timeline-filter,
+.doc-page-document .timeline-filter {
   display: flex;
   flex-direction: column;
   gap: 2px;
   min-width: 0;
 }
-.modal-overlay.document-modal .timeline-filter label {
+.modal-overlay.document-modal .timeline-filter label,
+.doc-page-document .timeline-filter label {
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
 }
-.modal-overlay.document-modal .timeline-filter select {
+.modal-overlay.document-modal .timeline-filter select,
+.doc-page-document .timeline-filter select {
   max-width: 100%;
   min-width: 0;
   min-height: var(--control-height);
@@ -12424,31 +12616,38 @@ body.modal-open {
   font-size: var(--font-size-sm);
   transition: background-color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
-.modal-overlay.document-modal .timeline-filter select::placeholder {
+.modal-overlay.document-modal .timeline-filter select::placeholder,
+.doc-page-document .timeline-filter select::placeholder {
   color: var(--color-text-tertiary);
   opacity: 1;
 }
-.modal-overlay.document-modal .timeline-filter select:hover:not(:disabled) {
+.modal-overlay.document-modal .timeline-filter select:hover:not(:disabled),
+.doc-page-document .timeline-filter select:hover:not(:disabled) {
   border-color: var(--color-border-hover);
 }
-.modal-overlay.document-modal .timeline-filter select:focus-visible {
+.modal-overlay.document-modal .timeline-filter select:focus-visible,
+.doc-page-document .timeline-filter select:focus-visible {
   outline: none;
   border-color: var(--color-accent);
   box-shadow: var(--control-focus-ring);
 }
-.modal-overlay.document-modal .timeline-filter select:disabled {
+.modal-overlay.document-modal .timeline-filter select:disabled,
+.doc-page-document .timeline-filter select:disabled {
   opacity: var(--opacity-disabled);
   cursor: not-allowed;
 }
-.modal-overlay.document-modal .timeline-filter-search {
+.modal-overlay.document-modal .timeline-filter-search,
+.doc-page-document .timeline-filter-search {
   flex: 1 1 220px;
 }
-.modal-overlay.document-modal .timeline-filter-search .search-input-wrapper {
+.modal-overlay.document-modal .timeline-filter-search .search-input-wrapper,
+.doc-page-document .timeline-filter-search .search-input-wrapper {
   position: relative;
   display: flex;
   min-width: 0;
 }
-.modal-overlay.document-modal .timeline-filter-search .search-input-wrapper .search-input-icon {
+.modal-overlay.document-modal .timeline-filter-search .search-input-wrapper .search-input-icon,
+.doc-page-document .timeline-filter-search .search-input-wrapper .search-input-icon {
   position: absolute;
   top: 50%;
   left: var(--spacing-sm);
@@ -12459,10 +12658,12 @@ body.modal-open {
   color: var(--color-text-tertiary);
   pointer-events: none;
 }
-.modal-overlay.document-modal .timeline-filter-search .search-input-wrapper .search-input-icon > svg.icon {
+.modal-overlay.document-modal .timeline-filter-search .search-input-wrapper .search-input-icon > svg.icon,
+.doc-page-document .timeline-filter-search .search-input-wrapper .search-input-icon > svg.icon {
   font-size: 1rem;
 }
-.modal-overlay.document-modal .timeline-filter-search .search-input-wrapper input {
+.modal-overlay.document-modal .timeline-filter-search .search-input-wrapper input,
+.doc-page-document .timeline-filter-search .search-input-wrapper input {
   min-width: 0;
   min-height: var(--control-height);
   padding: var(--spacing-sm) var(--control-padding-inline);
@@ -12473,58 +12674,73 @@ body.modal-open {
   font-size: var(--font-size-sm);
   transition: background-color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
-.modal-overlay.document-modal .timeline-filter-search .search-input-wrapper input::placeholder {
+.modal-overlay.document-modal .timeline-filter-search .search-input-wrapper input::placeholder,
+.doc-page-document .timeline-filter-search .search-input-wrapper input::placeholder {
   color: var(--color-text-tertiary);
   opacity: 1;
 }
-.modal-overlay.document-modal .timeline-filter-search .search-input-wrapper input:hover:not(:disabled) {
+.modal-overlay.document-modal .timeline-filter-search .search-input-wrapper input:hover:not(:disabled),
+.doc-page-document .timeline-filter-search .search-input-wrapper input:hover:not(:disabled) {
   border-color: var(--color-border-hover);
 }
-.modal-overlay.document-modal .timeline-filter-search .search-input-wrapper input:focus-visible {
+.modal-overlay.document-modal .timeline-filter-search .search-input-wrapper input:focus-visible,
+.doc-page-document .timeline-filter-search .search-input-wrapper input:focus-visible {
   outline: none;
   border-color: var(--color-accent);
   box-shadow: var(--control-focus-ring);
 }
-.modal-overlay.document-modal .timeline-filter-search .search-input-wrapper input:disabled {
+.modal-overlay.document-modal .timeline-filter-search .search-input-wrapper input:disabled,
+.doc-page-document .timeline-filter-search .search-input-wrapper input:disabled {
   opacity: var(--opacity-disabled);
   cursor: not-allowed;
 }
-.modal-overlay.document-modal .timeline-filter-search .search-input-wrapper input {
+.modal-overlay.document-modal .timeline-filter-search .search-input-wrapper input,
+.doc-page-document .timeline-filter-search .search-input-wrapper input {
   width: 100%;
   box-sizing: border-box;
   padding-left: calc(var(--spacing-sm) * 2 + 1rem);
 }
-.modal-overlay.document-modal .timeline-filter-search .search-input-wrapper input::-webkit-search-decoration, .modal-overlay.document-modal .timeline-filter-search .search-input-wrapper input::-webkit-search-results-button, .modal-overlay.document-modal .timeline-filter-search .search-input-wrapper input::-webkit-search-results-decoration {
+.modal-overlay.document-modal .timeline-filter-search .search-input-wrapper input::-webkit-search-decoration, .modal-overlay.document-modal .timeline-filter-search .search-input-wrapper input::-webkit-search-results-button, .modal-overlay.document-modal .timeline-filter-search .search-input-wrapper input::-webkit-search-results-decoration,
+.doc-page-document .timeline-filter-search .search-input-wrapper input::-webkit-search-decoration,
+.doc-page-document .timeline-filter-search .search-input-wrapper input::-webkit-search-results-button,
+.doc-page-document .timeline-filter-search .search-input-wrapper input::-webkit-search-results-decoration {
   display: none;
 }
-.modal-overlay.document-modal .timeline-filter-clear {
+.modal-overlay.document-modal .timeline-filter-clear,
+.doc-page-document .timeline-filter-clear {
   align-self: flex-end;
   min-height: var(--control-height);
 }
-.modal-overlay.document-modal .timeline-summary-bar {
+.modal-overlay.document-modal .timeline-summary-bar,
+.doc-page-document .timeline-summary-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--spacing-sm) var(--spacing-md);
   padding: var(--spacing-sm) var(--spacing-md);
 }
-.modal-overlay.document-modal .timeline-filters-toggle {
+.modal-overlay.document-modal .timeline-filters-toggle,
+.doc-page-document .timeline-filters-toggle {
   flex: 0 0 auto;
   min-height: var(--control-height);
 }
-.modal-overlay.document-modal .timeline-filters-toggle .timeline-filters-toggle-chevron {
+.modal-overlay.document-modal .timeline-filters-toggle .timeline-filters-toggle-chevron,
+.doc-page-document .timeline-filters-toggle .timeline-filters-toggle-chevron {
   transition: transform var(--transition-fast);
 }
-.modal-overlay.document-modal .timeline-filters-toggle[aria-expanded=true] .timeline-filters-toggle-chevron {
+.modal-overlay.document-modal .timeline-filters-toggle[aria-expanded=true] .timeline-filters-toggle-chevron,
+.doc-page-document .timeline-filters-toggle[aria-expanded=true] .timeline-filters-toggle-chevron {
   transform: rotate(180deg);
 }
 @media (max-width: 600px) {
-  .modal-overlay.document-modal .timeline-legend {
+  .modal-overlay.document-modal .timeline-legend,
+  .doc-page-document .timeline-legend {
     flex-wrap: wrap;
     gap: var(--spacing-xs);
     padding: var(--spacing-sm) var(--spacing-md);
   }
-  .modal-overlay.document-modal .timeline-type-filters {
+  .modal-overlay.document-modal .timeline-type-filters,
+  .doc-page-document .timeline-type-filters {
     flex-basis: 100%;
     flex-wrap: nowrap;
     overflow-x: auto;
@@ -12532,32 +12748,41 @@ body.modal-open {
     margin-inline: calc(-1 * var(--spacing-md));
     padding: var(--spacing-2xs) var(--spacing-md);
   }
-  .modal-overlay.document-modal .timeline-type-filters::-webkit-scrollbar {
+  .modal-overlay.document-modal .timeline-type-filters::-webkit-scrollbar,
+  .doc-page-document .timeline-type-filters::-webkit-scrollbar {
     display: none;
   }
-  .modal-overlay.document-modal .timeline-legend-item {
+  .modal-overlay.document-modal .timeline-legend-item,
+  .doc-page-document .timeline-legend-item {
     flex: 0 0 auto;
     white-space: nowrap;
   }
-  .modal-overlay.document-modal .timeline-updated {
+  .modal-overlay.document-modal .timeline-updated,
+  .doc-page-document .timeline-updated {
     flex-basis: 100%;
     margin-inline-start: 0;
   }
-  .modal-overlay.document-modal .timeline-filters {
+  .modal-overlay.document-modal .timeline-filters,
+  .doc-page-document .timeline-filters {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: end;
   }
-  .modal-overlay.document-modal .timeline-filters .timeline-filter {
+  .modal-overlay.document-modal .timeline-filters .timeline-filter,
+  .doc-page-document .timeline-filters .timeline-filter {
     width: 100%;
   }
-  .modal-overlay.document-modal .timeline-filters .timeline-filter:first-child, .modal-overlay.document-modal .timeline-filters .timeline-filter.timeline-filter-search {
+  .modal-overlay.document-modal .timeline-filters .timeline-filter:first-child, .modal-overlay.document-modal .timeline-filters .timeline-filter.timeline-filter-search,
+  .doc-page-document .timeline-filters .timeline-filter:first-child,
+  .doc-page-document .timeline-filters .timeline-filter.timeline-filter-search {
     grid-column: 1/-1;
   }
-  .modal-overlay.document-modal .timeline-filters .timeline-filter select {
+  .modal-overlay.document-modal .timeline-filters .timeline-filter select,
+  .doc-page-document .timeline-filters .timeline-filter select {
     width: 100%;
   }
-  .modal-overlay.document-modal .timeline-filters .timeline-filter-clear {
+  .modal-overlay.document-modal .timeline-filters .timeline-filter-clear,
+  .doc-page-document .timeline-filters .timeline-filter-clear {
     grid-column: 1/-1;
     width: 100%;
   }
@@ -12565,26 +12790,33 @@ body.modal-open {
 @media (pointer: coarse) {
   .modal-overlay.document-modal .timeline-filter select,
   .modal-overlay.document-modal .timeline-filter-search input,
-  .modal-overlay.document-modal .timeline-filter-clear {
+  .modal-overlay.document-modal .timeline-filter-clear,
+  .doc-page-document .timeline-filter select,
+  .doc-page-document .timeline-filter-search input,
+  .doc-page-document .timeline-filter-clear {
     min-height: var(--touch-target-min);
   }
 }
-.modal-overlay.document-modal .timeline-summary {
+.modal-overlay.document-modal .timeline-summary,
+.doc-page-document .timeline-summary {
   min-width: 0;
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
   margin: 0;
 }
-.modal-overlay.document-modal {
+.modal-overlay.document-modal,
+.doc-page-document {
   /* Highlight animation for references */
 }
-.modal-overlay.document-modal .highlight {
+.modal-overlay.document-modal .highlight,
+.doc-page-document .highlight {
   background: var(--theme-glitter-image) repeat;
   color: var(--color-accent);
   transition: background-color var(--transition-base) ease;
   border-radius: 2px;
 }
-.modal-overlay.document-modal sup {
+.modal-overlay.document-modal sup,
+.doc-page-document sup {
   margin-left: 2px;
   font-size: 0.7em;
   line-height: 1;
@@ -12592,17 +12824,21 @@ body.modal-open {
   position: relative;
   top: -0.5em;
 }
-.modal-overlay.document-modal sup .ref-num {
+.modal-overlay.document-modal sup .ref-num,
+.doc-page-document sup .ref-num {
   transition: color var(--transition-fast);
 }
-.modal-overlay.document-modal sup .ref-num:hover {
+.modal-overlay.document-modal sup .ref-num:hover,
+.doc-page-document sup .ref-num:hover {
   color: var(--color-accent-hover);
   text-decoration: underline;
 }
-.modal-overlay.document-modal > .modal-content > .modal-body ol li {
+.modal-overlay.document-modal .doc-content ol li,
+.doc-page-document .doc-content ol li {
   transition: background-color var(--transition-fast) ease;
 }
-.modal-overlay.document-modal > .modal-content > .modal-body ol li:hover {
+.modal-overlay.document-modal .doc-content ol li:hover,
+.doc-page-document .doc-content ol li:hover {
   background-color: rgba(0, 102, 204, 0.05);
 }
 
@@ -12655,7 +12891,9 @@ body.modal-open {
 #shortcutsModal .shortcut-sequence,
 #shortcutsModal .guide-shortcut,
 #guideModal .shortcut-sequence,
-#guideModal .guide-shortcut {
+#guideModal .guide-shortcut,
+.doc-page-guide .shortcut-sequence,
+.doc-page-guide .guide-shortcut {
   display: inline-flex;
   align-items: center;
   gap: 0.2em;
@@ -12669,7 +12907,11 @@ body.modal-open {
 #guideModal .shortcut-input-token,
 #guideModal .shortcut-gesture,
 #guideModal .kbd,
-#guideModal .guide-kbd {
+#guideModal .guide-kbd,
+.doc-page-guide .shortcut-input-token,
+.doc-page-guide .shortcut-gesture,
+.doc-page-guide .kbd,
+.doc-page-guide .guide-kbd {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -12693,15 +12935,19 @@ body.modal-open {
 #shortcutsModal .shortcut-sequence > .kbd,
 #shortcutsModal .guide-shortcut > .guide-kbd,
 #guideModal .shortcut-sequence > .kbd,
-#guideModal .guide-shortcut > .guide-kbd {
+#guideModal .guide-shortcut > .guide-kbd,
+.doc-page-guide .shortcut-sequence > .kbd,
+.doc-page-guide .guide-shortcut > .guide-kbd {
   vertical-align: baseline;
 }
 #shortcutsModal .guide-key-label,
-#guideModal .guide-key-label {
+#guideModal .guide-key-label,
+.doc-page-guide .guide-key-label {
   white-space: nowrap;
 }
 #shortcutsModal .shortcut-gesture,
-#guideModal .shortcut-gesture {
+#guideModal .shortcut-gesture,
+.doc-page-guide .shortcut-gesture {
   gap: 6px;
   min-width: 0;
   background: var(--color-bg-secondary);
@@ -12712,84 +12958,109 @@ body.modal-open {
   white-space: nowrap;
 }
 #shortcutsModal .shortcut-device-icon,
-#guideModal .shortcut-device-icon {
+#guideModal .shortcut-device-icon,
+.doc-page-guide .shortcut-device-icon {
   font-size: var(--font-size-xs);
   color: var(--color-text-tertiary);
 }
 #shortcutsModal .shortcut-binding,
-#guideModal .shortcut-binding {
+#guideModal .shortcut-binding,
+.doc-page-guide .shortcut-binding {
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-xs);
 }
 #shortcutsModal .shortcut-alternative,
-#guideModal .shortcut-alternative {
+#guideModal .shortcut-alternative,
+.doc-page-guide .shortcut-alternative {
   padding: 0 2px;
   color: var(--color-text-tertiary);
   font-size: var(--font-size-xs);
 }
 #shortcutsModal .shortcut-instruction,
-#guideModal .shortcut-instruction {
+#guideModal .shortcut-instruction,
+.doc-page-guide .shortcut-instruction {
   color: var(--color-text-tertiary);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-normal);
 }
 
 /* ===== GUIDE MODAL ===== */
-#guideModal .modal-hero-image {
+#guideModal .modal-hero-image,
+.doc-page-guide .modal-hero-image {
   background: var(--theme-glitter-image) repeat;
 }
-#guideModal .modal-hero-image > h2 {
-  display: none;
+#guideModal .modal-hero-image > h1,
+.doc-page-guide .modal-hero-image > h1 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
-#guideModal .guide-content {
+#guideModal .guide-content,
+.doc-page-guide .guide-content {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xl);
 }
-#guideModal .guide-content .guide-screenshot {
+#guideModal .guide-content .guide-screenshot,
+.doc-page-guide .guide-content .guide-screenshot {
   margin: var(--spacing-md) 0;
 }
-#guideModal .guide-content .guide-screenshot > figure {
+#guideModal .guide-content .guide-screenshot > figure,
+.doc-page-guide .guide-content .guide-screenshot > figure {
   width: 100%;
   max-width: 100%;
   padding: var(--spacing-sm);
   overflow: hidden;
 }
-#guideModal .guide-content .guide-screenshot > figure > img {
+#guideModal .guide-content .guide-screenshot > figure > img,
+.doc-page-guide .guide-content .guide-screenshot > figure > img {
   image-rendering: auto;
   border-radius: var(--radius-xs);
 }
-#guideModal .guide-content .guide-screenshot.guide-screenshot-modal > figure {
+#guideModal .guide-content .guide-screenshot.guide-screenshot-modal > figure,
+.doc-page-guide .guide-content .guide-screenshot.guide-screenshot-modal > figure {
   max-width: 720px;
 }
-#guideModal .guide-content > .guide-section {
+#guideModal .guide-content > .guide-section,
+.doc-page-guide .guide-content > .guide-section {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
 }
-#guideModal .guide-content > .guide-section > h3 {
+#guideModal .guide-content > .guide-section > h2,
+.doc-page-guide .guide-content > .guide-section > h2 {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
 }
-#guideModal .guide-content > .guide-section > .guide-subsection {
+#guideModal .guide-content > .guide-section > .guide-subsection,
+.doc-page-guide .guide-content > .guide-section > .guide-subsection {
   padding: var(--spacing-lg);
   background-color: var(--color-bg-card);
   border-radius: var(--spacing-md);
   display: flex;
   flex-direction: column;
 }
-#guideModal .guide-content > .guide-section > .guide-subsection > h4 {
+#guideModal .guide-content > .guide-section > .guide-subsection > h3,
+.doc-page-guide .guide-content > .guide-section > .guide-subsection > h3 {
   font-size: 1.1em;
 }
-#guideModal .guide-content > .guide-section > .guide-subsection .guide-item {
+#guideModal .guide-content > .guide-section > .guide-subsection .guide-item,
+.doc-page-guide .guide-content > .guide-section > .guide-subsection .guide-item {
   display: grid;
   grid-template-columns: 24px 1fr;
   gap: var(--spacing-sm);
   align-items: start;
 }
-#guideModal .guide-content > .guide-section > .guide-subsection .guide-item .guide-item-icon {
+#guideModal .guide-content > .guide-section > .guide-subsection .guide-item .guide-item-icon,
+.doc-page-guide .guide-content > .guide-section > .guide-subsection .guide-item .guide-item-icon {
   width: 24px;
   height: 24px;
   display: flex;
@@ -12797,36 +13068,48 @@ body.modal-open {
   justify-content: center;
   flex-shrink: 0;
 }
-#guideModal .guide-content > .guide-section > .guide-subsection .guide-item .guide-item-icon:not(.empty) {
+#guideModal .guide-content > .guide-section > .guide-subsection .guide-item .guide-item-icon:not(.empty),
+.doc-page-guide .guide-content > .guide-section > .guide-subsection .guide-item .guide-item-icon:not(.empty) {
   background-color: var(--color-bg-tertiary);
   border-radius: var(--radius-md);
 }
-#guideModal .guide-content > .guide-section > .guide-subsection .guide-item .guide-item-icon.empty {
+#guideModal .guide-content > .guide-section > .guide-subsection .guide-item .guide-item-icon.empty,
+.doc-page-guide .guide-content > .guide-section > .guide-subsection .guide-item .guide-item-icon.empty {
   color: var(--color-text-tertiary);
 }
-#guideModal .guide-content > .guide-section > .guide-subsection .guide-item .guide-item-icon .icon-wrapper {
+#guideModal .guide-content > .guide-section > .guide-subsection .guide-item .guide-item-icon .icon-wrapper,
+.doc-page-guide .guide-content > .guide-section > .guide-subsection .guide-item .guide-item-icon .icon-wrapper {
   width: 20px;
   height: 20px;
 }
-#guideModal .guide-content > .guide-section > .guide-subsection .guide-item .guide-item-content {
+#guideModal .guide-content > .guide-section > .guide-subsection .guide-item .guide-item-content,
+.doc-page-guide .guide-content > .guide-section > .guide-subsection .guide-item .guide-item-content {
   min-width: 0;
 }
-#guideModal .guide-content > .guide-section > .guide-subsection .guide-item + .guide-item {
+#guideModal .guide-content > .guide-section > .guide-subsection .guide-item + .guide-item,
+.doc-page-guide .guide-content > .guide-section > .guide-subsection .guide-item + .guide-item {
   margin-top: var(--spacing-base);
 }
-#guideModal .guide-content > .guide-section > .guide-subsection .guide-item + h4 {
+#guideModal .guide-content > .guide-section > .guide-subsection .guide-item + h3,
+.doc-page-guide .guide-content > .guide-section > .guide-subsection .guide-item + h3 {
   margin-top: var(--spacing-md);
 }
-#guideModal .guide-content > .guide-section > .guide-subsection p + .guide-item {
+#guideModal .guide-content > .guide-section > .guide-subsection p + .guide-item,
+.doc-page-guide .guide-content > .guide-section > .guide-subsection p + .guide-item {
   margin-top: var(--spacing-md);
 }
-#guideModal .guide-content > .guide-section > .guide-subsection h4 + .guide-item,
+#guideModal .guide-content > .guide-section > .guide-subsection h3 + .guide-item,
 #guideModal .guide-content > .guide-section > .guide-subsection ul + p,
-#guideModal .guide-content > .guide-section > .guide-subsection p + p {
+#guideModal .guide-content > .guide-section > .guide-subsection p + p,
+.doc-page-guide .guide-content > .guide-section > .guide-subsection h3 + .guide-item,
+.doc-page-guide .guide-content > .guide-section > .guide-subsection ul + p,
+.doc-page-guide .guide-content > .guide-section > .guide-subsection p + p {
   margin-top: var(--spacing-sm);
 }
-#guideModal .guide-content > .guide-section > .guide-subsection h4 + p,
-#guideModal .guide-content > .guide-section > .guide-subsection p + ul {
+#guideModal .guide-content > .guide-section > .guide-subsection h3 + p,
+#guideModal .guide-content > .guide-section > .guide-subsection p + ul,
+.doc-page-guide .guide-content > .guide-section > .guide-subsection h3 + p,
+.doc-page-guide .guide-content > .guide-section > .guide-subsection p + ul {
   margin-top: var(--spacing-xs);
 }
 
@@ -13198,6 +13481,254 @@ body.modal-open {
     width: 100%;
     min-height: 48px;
   }
+}
+
+/* ===== STANDALONE CONTENT PAGES =====
+   about/, guide/, history/ and the rest (tools/build-pages.js). Each is the
+   same fragment the editor shows in a modal, inside the editor's app-header,
+   a reading column and a footer. The document's own look comes from the modal
+   stylesheets through the shared hooks: `.doc-content` holds the fragment,
+   `.doc-page-<kind>` on <main> stands in for the modal's id or class. Pages
+   are always the default dark theme (data-theme="dark" in the HTML, and no
+   saved-theme script), whatever the editor is set to. */
+body.content-page {
+  --page-prose-width: 800px;
+  --page-wide-width: 1280px;
+  --page-gutter: max(var(--spacing-lg), env(safe-area-inset-left), env(safe-area-inset-right));
+  height: auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow: auto;
+  overscroll-behavior: auto;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-primary);
+}
+body.content-page main,
+body.content-page main *,
+body.content-page .content-page-footer,
+body.content-page .content-page-footer * {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* ----- Header: the editor's app-header with links in place of editor controls ----- */
+.app-header.content-page-header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-app-header-elevated);
+}
+.app-header.content-page-header > .app-header-left > .app-header-title {
+  text-decoration: none;
+}
+.app-header.content-page-header > .app-header-center > .app-header-page-title {
+  display: block;
+  color: var(--bar-title-color);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.app-header.content-page-header .content-page-editor-link {
+  text-decoration: none;
+}
+.app-header.content-page-header a.app-menu-item {
+  text-decoration: none;
+}
+@media (max-width: 1040px) {
+  .app-header.content-page-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .app-header.content-page-header > .app-header-center {
+    display: none;
+  }
+  .app-header.content-page-header > .app-header-right {
+    grid-column: 2;
+  }
+}
+
+/* ----- Reading column ----- */
+.doc-page-main {
+  container-type: inline-size;
+  flex: 1 0 auto;
+  width: 100%;
+  padding: var(--spacing-xl) var(--page-gutter) var(--spacing-2xl);
+}
+.doc-page-main > .doc-content {
+  color: var(--color-text-secondary);
+  line-height: 1.55;
+}
+.doc-page-main > .doc-content > .modal-hero-image {
+  margin-bottom: var(--spacing-xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30dvh;
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transform: translateZ(0);
+}
+.doc-page-main > .doc-content a:hover {
+  background: var(--theme-glitter-image) repeat;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.doc-page-main > .doc-content ol {
+  margin-left: 2.5em;
+}
+.doc-page-main > .doc-content ul:not([class]),
+.doc-page-main > .doc-content ul.general-references-list {
+  margin-left: 1.5em;
+}
+.doc-page-main > .doc-content .toc {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  padding: var(--spacing-lg);
+  margin: var(--spacing-xl) 0;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  flex-direction: column;
+}
+.doc-page-main > .doc-content .toc > h2 {
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: var(--font-size-md);
+}
+.doc-page-main > .doc-content .toc > ol {
+  list-style: none;
+  margin: 0;
+  padding-left: 0;
+  counter-reset: item;
+}
+.doc-page-main > .doc-content .toc > ol > li {
+  counter-increment: item;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  -moz-column-gap: 0.5em;
+  column-gap: 0.5em;
+  align-items: start;
+  padding: var(--spacing-2xs);
+}
+.doc-page-main > .doc-content .toc > ol > li a {
+  color: var(--color-text-secondary);
+  text-decoration: none;
+}
+.doc-page-main > .doc-content .toc > ol > li a:hover {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
+.doc-page-main > .doc-content .toc > ol > li::before {
+  content: counter(item) ".";
+  grid-column: 1;
+  align-self: start;
+}
+.doc-page-main > .doc-content .toc > ol > li {
+  /* main content (link) */
+}
+.doc-page-main > .doc-content .toc > ol > li > :not(ol) {
+  grid-column: 2;
+}
+.doc-page-main > .doc-content .toc > ol > li {
+  /* nested list should also align under content */
+}
+.doc-page-main > .doc-content .toc > ol > li > ol {
+  grid-column: 2;
+  margin-top: 0.25em;
+  margin-left: 0;
+  counter-reset: subitem;
+}
+.doc-page-main > .doc-content .toc > ol > li > ol > li {
+  counter-increment: subitem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  -moz-column-gap: 0.5em;
+  column-gap: 0.5em;
+  align-items: start;
+  padding: var(--spacing-2xs);
+}
+.doc-page-main > .doc-content .toc > ol > li > ol > li::before {
+  content: counter(item) "." counter(subitem);
+  grid-column: 1;
+  align-self: start;
+}
+.doc-page-main > .doc-content .toc > ol > li > ol > li > :not(ol) {
+  grid-column: 2;
+}
+.doc-page-main > .doc-content .toc > ol > li > ol > li {
+  /* third-level nested list (e.g. h5s under an h4) should also align under content */
+}
+.doc-page-main > .doc-content .toc > ol > li > ol > li > ol {
+  grid-column: 2;
+  margin-top: 0.25em;
+  margin-left: 0;
+  counter-reset: subsubitem;
+}
+.doc-page-main > .doc-content .toc > ol > li > ol > li > ol > li {
+  counter-increment: subsubitem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  -moz-column-gap: 0.5em;
+  column-gap: 0.5em;
+  align-items: start;
+  padding: var(--spacing-2xs);
+}
+.doc-page-main > .doc-content .toc > ol > li > ol > li > ol > li::before {
+  content: counter(item) "." counter(subitem) "." counter(subsubitem);
+  grid-column: 1;
+  align-self: start;
+}
+.doc-page-main > .doc-content .toc > ol > li > ol > li > ol > li > :not(ol) {
+  grid-column: 2;
+}
+.doc-page-main > .doc-content {
+  max-width: var(--page-prose-width);
+  margin-inline: auto;
+  overflow-wrap: break-word;
+}
+.doc-page-main > .doc-content .figure-gallery {
+  --breakout-width: min(var(--page-wide-width), 100cqi);
+  width: var(--breakout-width);
+  max-width: none;
+  margin-inline: calc((100% - var(--breakout-width)) / 2);
+}
+.doc-page-main > .doc-content img {
+  max-width: 100%;
+  height: auto;
+}
+
+.content-page-title {
+  margin-bottom: var(--spacing-md);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-2xl);
+}
+
+/* ----- Footer ----- */
+.content-page-footer {
+  width: 100%;
+  max-width: calc(var(--page-prose-width) + 2 * var(--page-gutter));
+  margin-inline: auto;
+  padding: var(--spacing-lg) var(--page-gutter) max(var(--spacing-lg), env(safe-area-inset-bottom));
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--spacing-sm) var(--spacing-lg);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+}
+.content-page-footer > .content-page-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs) var(--spacing-md);
+  list-style: none;
+}
+.content-page-footer > .content-page-footer-links a {
+  color: var(--color-text-secondary);
+}
+.content-page-footer > .content-page-footer-links a:hover, .content-page-footer > .content-page-footer-links a[aria-current=page] {
+  color: var(--color-text-primary);
 }
 
 @media (min-width: 1041px) {

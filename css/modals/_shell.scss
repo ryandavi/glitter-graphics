@@ -1,5 +1,163 @@
 @use '../mixins' as *;
 
+// The prose inside a modal body: text color, hero, links, list gutters and
+// the contents box. Shared with the standalone pages (css/pages/_content-page.scss)
+// so a document reads the same in both.
+@mixin body-content {
+	color: var(--color-text-secondary);
+	line-height: 1.55;
+
+	>.modal-hero-image {
+		margin-bottom: var(--spacing-xl);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 30dvh;
+		padding: var(--spacing-xl);
+
+		// ios fix for radius + hidden
+		border-radius: var(--radius-md);
+		overflow: hidden;
+		transform: translateZ(0);
+
+	}
+
+
+	a {
+		&:hover {
+			background: var(--theme-glitter-image) repeat;
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
+		}
+	}
+
+	// The global reset zeroes list padding, so prose lists need their
+	// own gutter or the markers hang past the body's edge. Classed
+	// lists (TOC, timeline) lay themselves out.
+	ol {
+		margin-left: 2.5em;
+	}
+
+	ul:not([class]),
+	ul.general-references-list {
+		margin-left: 1.5em;
+	}
+
+
+
+	.toc {
+		background: var(--color-bg-secondary);
+		border: 1px solid var(--color-border);
+		padding: var(--spacing-lg);
+		margin: var(--spacing-xl) 0;
+		border-radius: var(--radius-sm);
+		display: inline-flex;
+		flex-direction: column;
+
+
+		>h2 {
+			margin: 0 0 var(--spacing-md) 0;
+			font-size: var(--font-size-md);
+		}
+
+
+		>ol {
+			list-style: none;
+			margin: 0;
+			padding-left: 0;
+			counter-reset: item;
+
+			>li {
+				counter-increment: item;
+				display: grid;
+				grid-template-columns: auto 1fr;
+				-moz-column-gap: 0.5em;
+				column-gap: 0.5em;
+				align-items: start;
+				padding: var(--spacing-2xs);
+
+				a {
+					color: var(--color-text-secondary);
+					text-decoration: none;
+
+					&:hover {
+						color: var(--color-accent);
+						text-decoration: underline;
+					}
+				}
+
+				&::before {
+					content: counter(item) ".";
+					grid-column: 1;
+					align-self: start;
+				}
+
+				/* main content (link) */
+				> :not(ol) {
+					grid-column: 2;
+				}
+
+				/* nested list should also align under content */
+				>ol {
+					grid-column: 2;
+					margin-top: 0.25em;
+					margin-left: 0;
+					counter-reset: subitem;
+
+					>li {
+						counter-increment: subitem;
+						display: grid;
+						grid-template-columns: auto 1fr;
+						-moz-column-gap: 0.5em;
+						column-gap: 0.5em;
+						align-items: start;
+						padding: var(--spacing-2xs);
+
+						&::before {
+							content: counter(item) "." counter(subitem);
+							grid-column: 1;
+							align-self: start;
+						}
+
+						> :not(ol) {
+							grid-column: 2;
+						}
+
+						/* third-level nested list (e.g. h5s under an h4) should also align under content */
+						>ol {
+							grid-column: 2;
+							margin-top: 0.25em;
+							margin-left: 0;
+							counter-reset: subsubitem;
+
+							>li {
+								counter-increment: subsubitem;
+								display: grid;
+								grid-template-columns: auto 1fr;
+								-moz-column-gap: 0.5em;
+								column-gap: 0.5em;
+								align-items: start;
+								padding: var(--spacing-2xs);
+
+								&::before {
+									content: counter(item) "." counter(subitem) "." counter(subsubitem);
+									grid-column: 1;
+									align-self: start;
+								}
+
+								> :not(ol) {
+									grid-column: 2;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+	}
+}
+
 /* ===== MODAL ===== */
 body.modal-open {
 	overflow: hidden;
@@ -130,165 +288,9 @@ body.modal-open {
 			overflow-y: auto;
 			overscroll-behavior: contain;
 			-webkit-overflow-scrolling: touch;
-			color: var(--color-text-secondary);
-			line-height: 1.55;
 			scroll-behavior: smooth;
 
-			>.modal-hero-image {
-				margin-bottom: var(--spacing-xl);
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				min-height: 30dvh;
-				padding: var(--spacing-xl);
-
-				// ios fix for radius + hidden
-				border-radius: var(--radius-md);
-				overflow: hidden;
-				transform: translateZ(0);
-
-			}
-
-
-			a {
-				&:hover {
-					background: var(--theme-glitter-image) repeat;
-					-webkit-background-clip: text;
-					-webkit-text-fill-color: transparent;
-				}
-			}
-
-			// The global reset zeroes list padding, so prose lists need their
-			// own gutter or the markers hang past the body's edge. Classed
-			// lists (TOC, timeline) lay themselves out.
-			ol {
-				margin-left: 2.5em;
-			}
-
-			ul:not([class]),
-			ul.general-references-list {
-				margin-left: 1.5em;
-			}
-
-
-
-			.toc {
-				background: var(--color-bg-secondary);
-				border: 1px solid var(--color-border);
-				padding: var(--spacing-lg);
-				margin: var(--spacing-xl) 0;
-				border-radius: var(--radius-sm);
-				display: inline-flex;
-				flex-direction: column;
-
-
-				>h3 {
-					margin: 0 0 var(--spacing-md) 0;
-					font-size: var(--font-size-md);
-				}
-
-
-				>ol {
-					list-style: none;
-					margin: 0;
-					padding-left: 0;
-					counter-reset: item;
-
-					>li {
-						counter-increment: item;
-						display: grid;
-						grid-template-columns: auto 1fr;
-						-moz-column-gap: 0.5em;
-						column-gap: 0.5em;
-						align-items: start;
-						padding: var(--spacing-2xs);
-
-						a {
-							color: var(--color-text-secondary);
-							text-decoration: none;
-
-							&:hover {
-								color: var(--color-accent);
-								text-decoration: underline;
-							}
-						}
-
-						&::before {
-							content: counter(item) ".";
-							grid-column: 1;
-							align-self: start;
-						}
-
-						/* main content (link) */
-						> :not(ol) {
-							grid-column: 2;
-						}
-
-						/* nested list should also align under content */
-						>ol {
-							grid-column: 2;
-							margin-top: 0.25em;
-							margin-left: 0;
-							counter-reset: subitem;
-
-							>li {
-								counter-increment: subitem;
-								display: grid;
-								grid-template-columns: auto 1fr;
-								-moz-column-gap: 0.5em;
-								column-gap: 0.5em;
-								align-items: start;
-								padding: var(--spacing-2xs);
-
-								&::before {
-									content: counter(item) "." counter(subitem);
-									grid-column: 1;
-									align-self: start;
-								}
-
-								> :not(ol) {
-									grid-column: 2;
-								}
-
-								/* third-level nested list (e.g. h5s under an h4) should also align under content */
-								>ol {
-									grid-column: 2;
-									margin-top: 0.25em;
-									margin-left: 0;
-									counter-reset: subsubitem;
-
-									>li {
-										counter-increment: subsubitem;
-										display: grid;
-										grid-template-columns: auto 1fr;
-										-moz-column-gap: 0.5em;
-										column-gap: 0.5em;
-										align-items: start;
-										padding: var(--spacing-2xs);
-
-										&::before {
-											content: counter(item) "." counter(subitem) "." counter(subsubitem);
-											grid-column: 1;
-											align-self: start;
-										}
-
-										> :not(ol) {
-											grid-column: 2;
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-
-			}
-
-
-
-
-
-
+			@include body-content;
 		}
 
 		// Actions sit at the right, primary last. A reset or destructive action

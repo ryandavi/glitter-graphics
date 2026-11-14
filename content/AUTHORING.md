@@ -1,6 +1,6 @@
 # Writing modal pages
 
-Every modal (history, personal-web, aylana, preservation, about, welcome, guide) is written in `content/src/<page>.src.html` and built into `modals/<page>.html`. Never edit the built file. Voice, structure and citation style for the articles: `docs/local/HISTORY-PAGE-STYLE-GUIDE.md` (local-only), especially "Every sentence earns its place".
+Every modal (history, personal-web, aylana, preservation, about, welcome, guide) is written in `content/src/<page>.src.html`. Public articles build into `<page>/index.html`; the editor fetches that page and extracts `.doc-content` for its modal. Only pages without a standalone route (welcome and aylana) build into `modals/<page>.html`. Never edit built files. Voice, structure and citation style for the articles: `docs/local/HISTORY-PAGE-STYLE-GUIDE.md` (local-only), especially "Every sentence earns its place".
 
 ## Cheat sheet
 

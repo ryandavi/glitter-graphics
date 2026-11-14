@@ -90,10 +90,10 @@ updateOrientationButtons(width, height) {
 			document.getElementById('settingsBtn')?.click();
 		});
 
-		this.registerDocumentModal('historyModal', { url: 'modals/history.html', references: 'ol#HistoryReferencesList' });
-		this.registerDocumentModal('personalWebModal', { url: 'modals/personal-web.html', references: 'ol#PersonalWebReferencesList' });
+		this.registerDocumentModal('historyModal', { url: 'history/', references: 'ol#HistoryReferencesList' });
+		this.registerDocumentModal('personalWebModal', { url: 'personal-web/', references: 'ol#PersonalWebReferencesList' });
 		this.registerDocumentModal('preservationModal', {
-			url: 'modals/preservation.html',
+			url: 'preservation/',
 			onLoaded: async (body) => {
 				await loadScriptGroup('entities');
 				await loadScriptGroup('preservation');
@@ -101,10 +101,10 @@ updateOrientationButtons(width, height) {
 			}
 		});
 		this.registerDocumentModal('aboutModal', {
-			url: 'modals/about.html', references: 'ol#AboutReferencesList',
+			url: 'about/', references: 'ol#AboutReferencesList',
 			onLoaded: (body) => this.renderVersionHistory(body)
 		});
-		this.registerDocumentModal('guideModal', { url: 'modals/guide.html', onLoaded: (body) => localizeKeyLabels(body) });
+		this.registerDocumentModal('guideModal', { url: 'guide/', onLoaded: (body) => localizeKeyLabels(body) });
 
 		// Layer type picker modal (no open button - opened programmatically)
 		// Coarse pointers start on the title so the keyboard stays closed.
@@ -152,7 +152,7 @@ updateOrientationButtons(width, height) {
 		this.modalManager.register('welcomeModal', {
 			openBtnId: 'openWelcomeModal',
 			closeBtnId: 'closeWelcomeModal',
-			externalContentUrl: 'modals/welcome.html?v=779475a0',
+			externalContentUrl: 'modals/welcome.html?v=43c35dff',
 			cacheContent: true,
 			showWhileLoading: true,
 			loadingLabel: 'Preparing Glitter…',
@@ -275,108 +275,17 @@ renderVersionHistory(root, { limit = null, openCount = 0 } = {}) {
 	});
 
 	root.querySelectorAll('[data-version-history]').forEach((history) => {
-		history.replaceChildren(...releases.map((release, index) =>
-			this.buildVersionHistoryEntry(release, { open: index < openCount })));
+		history.innerHTML = releases.map((release, index) => renderReleaseEntryHtml(release, { open: index < openCount })).join('');
 		if (history.dataset.guideLinksBound !== 'true') {
 			history.dataset.guideLinksBound = 'true';
 			history.addEventListener('click', (event) => {
 				const link = event.target.closest?.('[data-guide-anchor]');
-				if (!link) return;
+				if (!link || !isPlainClick(event)) return;
 				event.preventDefault();
 				this.openGuideAt(link.dataset.guideAnchor);
 			});
 		}
 	});
-},
-
-// Each entry reuses the app's one "Advanced disclosure" primitive
-// (`.advanced-disclosure` / `data-advanced-toggle`, see disclosures.js) so
-// expand/collapse comes from the same delegated click handler every property
-// panel already uses, instead of a modal-specific accordion.
-buildVersionHistoryEntry(release, { open = false } = {}) {
-	const entry = document.createElement('div');
-	entry.className = 'advanced-disclosure version-history-entry';
-	entry.dataset.advanced = '';
-	if (open) entry.classList.add('is-open');
-
-	const toggle = document.createElement('button');
-	toggle.type = 'button';
-	toggle.className = 'advanced-disclosure-toggle version-history-toggle';
-	toggle.dataset.advancedToggle = '';
-	toggle.setAttribute('aria-expanded', String(open));
-
-	const header = document.createElement('span');
-	header.className = 'version-history-header';
-	const title = document.createElement('span');
-	title.className = 'version-history-title';
-	title.textContent = `v${release.version} — ${release.name}`;
-	const date = document.createElement('time');
-	date.dateTime = release.date;
-	date.textContent = release.dateLabel;
-	header.append(title, date);
-
-	const chevron = document.createElement('span');
-	chevron.className = 'advanced-disclosure-chevron icon-wrapper';
-	chevron.innerHTML = '<svg class="icon"><use href="#icon-chevron-down"></use></svg>';
-
-	toggle.append(header, chevron);
-	entry.append(toggle);
-
-	const content = document.createElement('div');
-	content.className = 'advanced-disclosure-content version-history-content';
-	content.dataset.advancedContent = '';
-
-	if (release.image?.src) {
-		const figure = document.createElement('figure');
-		figure.className = 'version-history-image';
-		const image = document.createElement('img');
-		image.src = release.image.src;
-		image.alt = release.image.alt || '';
-		image.loading = 'lazy';
-		image.decoding = 'async';
-		figure.append(image);
-		content.append(figure);
-	}
-
-	const summary = document.createElement('p');
-	summary.textContent = release.summary;
-	content.append(summary);
-
-	const features = document.createElement('ul');
-	features.append(...release.features.map((feature) => {
-		// Older entries stored features as plain strings; treat those as additions.
-		const { type = 'added', text = feature, guide = null } =
-			typeof feature === 'string' ? {} : feature;
-
-		const item = document.createElement('li');
-		item.className = 'version-history-feature';
-
-		const badge = document.createElement('span');
-		badge.className = `badge version-history-badge is-${type}`;
-		badge.textContent = type;
-		item.append(badge, document.createTextNode(` ${text} `));
-
-		if (guide) {
-			const link = document.createElement('button');
-			link.type = 'button';
-			link.className = 'version-history-guide-link';
-			link.dataset.guideAnchor = guide;
-			link.textContent = 'Show me';
-			item.append(link);
-		}
-		return item;
-	}));
-	content.append(features);
-
-	if (release.projectFormat != null) {
-		const note = document.createElement('p');
-		note.className = 'version-history-format-note';
-		note.textContent = `Saves project files in format version ${release.projectFormat}.`;
-		content.append(note);
-	}
-
-	entry.append(content);
-	return entry;
 },
 
 // Welcome keeps the latest release concise; the full history lives in About.
@@ -394,7 +303,7 @@ openModalFromHash() {
 	const params = new URLSearchParams(location.hash.slice(1));
 	const name = params.get('modal');
 	if (!name || !/^[a-z0-9-]+$/.test(name)) return false;
-	const config = [...this.modalManager.modals.values()].find(entry => entry.externalContentUrl?.startsWith(`modals/${name}.html`));
+	const config = [...this.modalManager.modals.values()].find(entry => entry.externalContentUrl?.startsWith(`modals/${name}.html`) || entry.externalContentUrl === `${name}/`);
 	if (!config) return false;
 	this.openDocumentAt(config.id, params.get('at'));
 	return true;
@@ -417,7 +326,7 @@ watchModalSources() {
 			const modalBody = config.modal.querySelector('.modal-body');
 			const scrollTop = modalBody.scrollTop;
 			config.cachedContent = html;
-			modalBody.innerHTML = html;
+			modalBody.innerHTML = this.modalManager.extractContent(config, html);
 			applyFeatureGates(modalBody);
 			// Navigation binds once per modal; a fresh copy lets it index the new headings.
 			const nav = config.modal.querySelector('.document-nav');
@@ -653,6 +562,8 @@ setupWelcomeModalListeners() {
 			openBtnId: `${name}Btn`,
 			closeBtnId: `close${id[0].toUpperCase()}${id.slice(1)}`,
 			externalContentUrl: url,
+			contentSelector: '.doc-content',
+			pageUrl: url,
 			resetScrollOnOpen: false,
 			rememberScroll: true,
 			onContentLoaded: async (body) => {

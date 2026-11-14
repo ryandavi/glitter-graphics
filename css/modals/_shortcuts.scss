@@ -38,7 +38,8 @@
 // Keep aliases for the guide's semantic <kbd> markup; both resolve to the
 // same component so size, alignment, and input-type treatment cannot drift.
 #shortcutsModal,
-#guideModal {
+#guideModal,
+.doc-page-guide {
 	.shortcut-sequence,
 	.guide-shortcut {
 		display: inline-flex;

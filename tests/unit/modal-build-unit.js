@@ -90,7 +90,8 @@ const tokenCases = [
 	['in-page anchor', '{goto:HistoryMakingGlitter}Making{/goto}', '<a href="#HistoryMakingGlitter">Making</a>'],
 	['anchor naming one entity is that entity', '{goto:HistoryDan}the {@sparkelies}{/goto}', '<a href="#HistoryDan" class="entity entity-site" data-entity="sparkelies" data-icon="tripod">the Sparkelies</a>'],
 	['link naming one entity is that entity', '{link:external|https://example.com}{@sparkelies|Dan\'s site}, glitter{/link}', '<a href="https://example.com" class="external entity entity-site" target="_blank" rel="noopener noreferrer" data-entity="sparkelies" data-icon="tripod">Dan\'s site, glitter</a>'],
-	['open modal button','{open:personalWebModal}Personal Web{/open}', '<button type="button" class="doc-inline-link" data-open-modal="personalWebModal">Personal Web</button>'],
+	['open link to a document page','{open:personalWebModal}Personal Web{/open}', '<a href="personal-web/" class="doc-inline-link" data-open-modal="personalWebModal">Personal Web</a>'],
+	['open modal button without a page','{open:shortcutsModal}Shortcuts{/open}', '<button type="button" class="doc-inline-link" data-open-modal="shortcutsModal">Shortcuts</button>'],
 	['host dead link opens its capture', '{dead:host-closed|host=tripod|href=http://example.com|archive=https://web.archive.org/web/20040624034824/http://example.com}Example{/dead}', '<a href="https://web.archive.org/web/20040624034824/http://example.com" class="external dead-link host-closed host-tripod" target="_blank" rel="noopener noreferrer" data-host="tripod" data-href="http://example.com" data-tooltip="Offline: Tripod has shut down. Opens the Wayback Machine copy from 24 June 2004.">Example</a>'],
 	['entity dead link without a capture opens the capture list', '{dead:page-offline|@sparkelies|href=http://example.com|tip=Offline: moved}Sparkelies{/dead}', '<a href="https://web.archive.org/web/*/http://example.com" class="external dead-link page-offline entity entity-site" target="_blank" rel="noopener noreferrer" data-entity="sparkelies" data-icon="tripod" data-href="http://example.com" data-tooltip="Offline: moved. Opens the list of Wayback Machine captures.">Sparkelies</a>']
 ];
@@ -334,14 +335,25 @@ const real = loadRegistry({ fresh: true });
 test('content/entities.json and content/sources.json are valid', () => {
 	assert(real.problems.length === 0, real.problems.slice(0, 5).join('\n'));
 });
+const fragments = new Map();
 for (const name of discoverNames()) {
-	test(`content/src/${name}.src.html builds with no errors and matches modals/${name}.html`, () => {
+	test(`content/src/${name}.src.html builds with no errors`, () => {
 		const result = buildOne(name, { check: true, stamp: false, registry: real });
 		const errors = result.diagnostics.filter(item => item.severity === 'error');
 		assert(!errors.length, JSON.stringify(errors.slice(0, 3)));
 		assert(result.ok, `modals/${name}.html is out of date: run node tools/build-modals.js`);
+		fragments.set(name, result.output);
 	});
 }
+test('public pages are current and have no duplicate modal fragments', () => {
+	const { buildPages, loadSite } = require('../../tools/build-pages');
+	const { getAppRegistries } = require('../../tools/build-modals');
+	const pages = buildPages({ fragments, registries: getAppRegistries(), check: true });
+	assert(!pages.stale.length && !pages.problems.length, JSON.stringify(pages));
+	for (const page of loadSite().pages.filter(page => page.modal)) {
+		assert(!fs.existsSync(path.join(root, 'modals', `${page.source}.html`)), `duplicate fragment for ${page.slug}`);
+	}
+});
 test('every Preservation timeline entity is in content/entities.json', () => {
 	const context = {};
 	vm.createContext(context);

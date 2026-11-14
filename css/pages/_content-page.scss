@@ -1,0 +1,141 @@
+@use '../mixins' as *;
+@use '../modals/shell' as modal-shell;
+
+/* ===== STANDALONE CONTENT PAGES =====
+   about/, guide/, history/ and the rest (tools/build-pages.js). Each is the
+   same fragment the editor shows in a modal, inside the editor's app-header,
+   a reading column and a footer. The document's own look comes from the modal
+   stylesheets through the shared hooks: `.doc-content` holds the fragment,
+   `.doc-page-<kind>` on <main> stands in for the modal's id or class. Pages
+   are always the default dark theme (data-theme="dark" in the HTML, and no
+   saved-theme script), whatever the editor is set to. */
+
+body.content-page {
+	--page-prose-width: 800px;
+	--page-wide-width: 1280px;
+	--page-gutter: max(var(--spacing-lg), env(safe-area-inset-left), env(safe-area-inset-right));
+
+	// Scroll the article below the header so its scrollbar cannot shift the menu.
+	height: 100vh;
+	height: 100dvh;
+	min-height: 100vh;
+	min-height: 100dvh;
+	overflow: hidden;
+	overscroll-behavior: auto;
+	display: flex;
+	flex-direction: column;
+	background: var(--color-bg-primary);
+
+	// The app-wide `* { user-select: none }` is for the editor's controls.
+	main,
+	main *,
+	.content-page-footer,
+	.content-page-footer * {
+		-webkit-user-select: text;
+		user-select: text;
+	}
+}
+
+.content-page-scroll {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
+}
+
+/* ----- Header: the editor's app-header with links in place of editor controls ----- */
+.app-header.content-page-header {
+	position: sticky;
+	top: 0;
+	z-index: var(--z-app-header-elevated);
+
+	>.app-header-left>.app-header-title { text-decoration: none; }
+
+	>.app-header-center>.app-header-page-title {
+		display: block;
+		color: var(--bar-title-color);
+		font-size: var(--font-size-base);
+		font-weight: var(--font-weight-semibold);
+		@include truncate;
+	}
+
+	.content-page-editor-link { text-decoration: none; }
+
+	a.app-menu-item { text-decoration: none; }
+
+	@include mobile {
+		grid-template-columns: minmax(0, 1fr) auto;
+
+		>.app-header-center { display: none; }
+		>.app-header-right { grid-column: 2; }
+	}
+}
+
+/* ----- Reading column ----- */
+.doc-page-main {
+	// Wide figures measure the page, not the 800px column (see .figure-gallery).
+	container-type: inline-size;
+	flex: 1 0 auto;
+	width: 100%;
+	padding: var(--spacing-xl) var(--page-gutter) var(--spacing-2xl);
+
+	>.doc-content {
+		@include modal-shell.body-content;
+		max-width: var(--page-prose-width);
+		margin-inline: auto;
+		// Long URLs and newsgroup names wrap instead of widening the page.
+		overflow-wrap: break-word;
+
+		// Galleries may grow past the prose column, up to --page-wide-width, and
+		// never past the page.
+		.figure-gallery {
+			--breakout-width: min(var(--page-wide-width), 100cqi);
+			width: var(--breakout-width);
+			max-width: none;
+			margin-inline: calc((100% - var(--breakout-width)) / 2);
+		}
+
+		img {
+			max-width: 100%;
+			height: auto;
+		}
+	}
+}
+
+// Updates has no hero image, so its title shows.
+.content-page-title {
+	margin-bottom: var(--spacing-md);
+	color: var(--color-text-primary);
+	font-size: var(--font-size-2xl);
+}
+
+/* ----- Footer ----- */
+.content-page-footer {
+	width: 100%;
+	max-width: calc(var(--page-prose-width) + 2 * var(--page-gutter));
+	margin-inline: auto;
+	padding: var(--spacing-lg) var(--page-gutter) max(var(--spacing-lg), env(safe-area-inset-bottom));
+	border-top: 1px solid var(--color-border);
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: var(--spacing-sm) var(--spacing-lg);
+	color: var(--color-text-tertiary);
+	font-size: var(--font-size-sm);
+
+	>.content-page-footer-links {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--spacing-xs) var(--spacing-md);
+		list-style: none;
+
+		a {
+			color: var(--color-text-secondary);
+
+			&:hover,
+			&[aria-current="page"] { color: var(--color-text-primary); }
+		}
+	}
+}

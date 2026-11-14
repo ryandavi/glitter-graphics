@@ -1,12 +1,133 @@
-<!-- GENERATED from content/src/guide.src.html by tools/build-modals.js. Do not edit. -->
+<!DOCTYPE html>
+<!-- GENERATED from content/src/guide.src.html by tools/build-pages.js (npm run build:modals). Do not edit. -->
+<html lang="en" data-theme="dark">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+	<title>Guide | Glitter Graphic Editor</title>
+	<meta name="description" content="How to use Glitter Editor: starting a project, the tools, layers, the Library, animation and export.">
+	<link rel="canonical" href="https://labs.ryandavi.com/glitter/guide/">
+	<meta property="og:site_name" content="Glitter Graphic Editor">
+	<meta property="og:title" content="Guide">
+	<meta property="og:description" content="How to use Glitter Editor: starting a project, the tools, layers, the Library, animation and export.">
+	<meta property="og:type" content="article">
+	<meta property="og:url" content="https://labs.ryandavi.com/glitter/guide/">
+	<meta property="og:image" content="https://labs.ryandavi.com/glitter/images/etc/preview-image.gif">
+	<meta name="twitter:card" content="summary_large_image">
+	<link rel="stylesheet" href="../css/style.css?v=2cf783ac">
+	<noscript><style>.advanced-disclosure > .advanced-disclosure-content { display: flex; }</style></noscript>
+	<link rel="icon" href="../images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
+</head>
+
+<body class="content-page">
+	<svg style="display: none;" xmlns="http://www.w3.org/2000/svg">
+		<symbol id="icon-archive" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 5h11v8.5h-11zM2 2.5h12v2.5H2z" /><path d="M6 8h4" /></symbol>
+		<symbol id="icon-area-select" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3.5" width="11" height="9" rx="0.5" stroke-dasharray="2.2 1.9" /></symbol>
+		<symbol id="icon-arrow-left" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8H3M7 4 3 8l4 4" /></symbol>
+		<symbol id="icon-arrows-left-right" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8h12M5 5 2 8l3 3M11 5l3 3-3 3" /></symbol>
+		<symbol id="icon-bounding-box" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="10" height="10" rx="0.5" stroke-dasharray="2.5 2" /><path fill="currentColor" stroke="none" d="M8 7.05a.95.95 0 1 1 0 1.9.95.95 0 0 1 0-1.9Z" /></symbol>
+		<symbol id="icon-brush" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.4 2.6c.6.6.6 1.5 0 2.1l-5.2 5.2-2.1-2.1 5.2-5.2c.6-.6 1.5-.6 2.1 0Z" /><path d="M6.1 9.8c-1.2-.2-2.4.6-2.7 1.8-.2.8-.6 1.2-1.2 1.5 1 .9 2.9 1 4-.1.8-.8.9-2 .3-2.9" /></symbol>
+		<symbol id="icon-check" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 8.5 3.2 3.2L13 4.8" /></symbol>
+		<symbol id="icon-checkerboard" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2.75" y="2.75" width="10.5" height="10.5" rx="1" /><path fill="currentColor" stroke="none" d="M3.5 3.5H8V8H3.5zM8 8h4.5v4.5H8z" /></symbol>
+		<symbol id="icon-circle-info" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6" /><path d="M8 7.3v3.4" /><path fill="currentColor" stroke="none" d="M8 4.4a.85.85 0 1 1 0 1.7.85.85 0 0 1 0-1.7Z" /></symbol>
+		<symbol id="icon-clock-history" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6" /><path d="M8 5v3l2.2 1.3" /></symbol>
+		<symbol id="icon-clone" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="8.5" height="8.5" rx="1.5" /><path d="M3 10.5A1.5 1.5 0 0 1 1.5 9V3A1.5 1.5 0 0 1 3 1.5h6A1.5 1.5 0 0 1 10.5 3" /></symbol>
+		<symbol id="icon-crop" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 1.5v10.5h10.5M1.5 4H12v10.5M4 4h8v8" /></symbol>
+		<symbol id="icon-ellipsis-vertical" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path fill="currentColor" d="M8 3a1.15 1.15 0 1 1 0 2.3A1.15 1.15 0 0 1 8 3Zm0 3.85a1.15 1.15 0 1 1 0 2.3 1.15 1.15 0 0 1 0-2.3Zm0 3.85a1.15 1.15 0 1 1 0 2.3 1.15 1.15 0 0 1 0-2.3Z" /></symbol>
+		<symbol id="icon-export" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5v7M5 6l3 3 3-3" /><path d="M2.75 10.5v1.75a1 1 0 0 0 1 1h8.5a1 1 0 0 0 1-1V10.5" /></symbol>
+		<symbol id="icon-eye" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8S3.9 3.75 8 3.75 14.5 8 14.5 8 12.1 12.25 8 12.25 1.5 8 1.5 8Z" /><circle cx="8" cy="8" r="2.1" /></symbol>
+		<symbol id="icon-filter" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 3.5h11l-4.3 5.1v4.2l-2.4 1.2V8.6z" /></symbol>
+		<symbol id="icon-frame" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="12" height="12" rx="1" /><rect x="5" y="5" width="6" height="6" rx="0.5" /></symbol>
+		<symbol id="icon-gear" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(0.5 0.5) scale(0.625)"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></g></symbol>
+		<symbol id="icon-glitter" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.2c.35 2.9 1.05 3.6 3.95 3.95C9.05 6.5 8.35 7.2 8 10.1 7.65 7.2 6.95 6.5 4.05 6.15 6.95 5.8 7.65 5.1 8 2.2Z" /><path d="M12.6 8.6c.15 1.25.5 1.6 1.75 1.75-1.25.15-1.6.5-1.75 1.75-.15-1.25-.5-1.6-1.75-1.75 1.25-.15 1.6-.5 1.75-1.75Z" /></symbol>
+		<symbol id="icon-hand" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 9V4.5a1 1 0 0 1 2 0v3M7.5 7.5V3.5a1 1 0 0 1 2 0V8M9.5 8V4a1 1 0 0 1 2 0v4.5M11.5 8.5a1 1 0 0 1 2 0v1.2a4.5 4.5 0 0 1-4.5 4.5A5 5 0 0 1 4 11.6l-1.4-2s-.5-1 .4-1.5 1.6.35 1.6.35l1 1.35" /></symbol>
+		<symbol id="icon-hand-pointer" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8V3.4a1.1 1.1 0 0 1 2.2 0v3.3" /><path d="M8.2 6.4a1.1 1.1 0 0 1 2.2 0V8" /><path d="M10.4 7.1a1.1 1.1 0 0 1 2.1 0v3.4A3.6 3.6 0 0 1 8.9 14h-.7a3.6 3.6 0 0 1-2.85-1.4L3 9.4s-.55-.95.25-1.55 1.7.2 1.7.2L6 9.6" /></symbol>
+		<symbol id="icon-heart" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path style="fill: var(--icon-heart-fill, none)" d="M8 13.5S2.5 10.3 2.5 6.4A2.9 2.9 0 0 1 8 4.9a2.9 2.9 0 0 1 5.5 1.5c0 3.9-5.5 7.1-5.5 7.1Z" /></symbol>
+		<symbol id="icon-image" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2.25" y="3" width="11.5" height="10" rx="1.5" /><circle cx="6" cy="6.25" r="1.1" /><path d="m2.75 11.5 3-3 2.5 2.5 3-3.5 2 2" /></symbol>
+		<symbol id="icon-keyboard" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="4" width="13" height="8" rx="1.5" /><path d="M4 7h0M6.5 7h0M9 7h0M11.5 7h0M4 9.5h0M11.5 9.5h0M6 9.5h4" /></symbol>
+		<symbol id="icon-layers" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m8 2 6 3-6 3-6-3 6-3Z" /><path d="m2 8 6 3 6-3M2 11l6 3 6-3" /></symbol>
+		<symbol id="icon-line" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.3 11.7 11.7 4.3" /><circle cx="3" cy="13" r="1.3" /><circle cx="13" cy="3" r="1.3" /></symbol>
+		<symbol id="icon-lock" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.25" y="7" width="9.5" height="6.75" rx="1.25" /><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" /></symbol>
+		<symbol id="icon-magic-wand" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13 9.5 6.5M8.5 4.5l3 3" /><path d="M12 1.8l.5 1.5 1.5.5-1.5.5L12 6l-.5-1.5L10 4l1.5-.5zM4 2.3l.4 1.1 1.1.4-1.1.4L4 5.6l-.4-1.1L2.5 4l1.1-.4z" /></symbol>
+		<symbol id="icon-magnifying-glass" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="4" /><path d="m13.5 13.5-3.6-3.6" /></symbol>
+		<symbol id="icon-minus" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10" /></symbol>
+		<symbol id="icon-motion-pause" viewBox="0 0 16 16" fill="currentColor"><rect x="3.5" y="2.5" width="3" height="11" rx=".75" /><rect x="9.5" y="2.5" width="3" height="11" rx=".75" /></symbol>
+		<symbol id="icon-move" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5v11M2.5 8h11M6 4.5 8 2.5l2 2M6 11.5 8 13.5l2-2M4.5 6 2.5 8l2 2M11.5 6 13.5 8l-2 2" /></symbol>
+		<symbol id="icon-paint-bucket" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7.3 2.2 12.8 7.7a1 1 0 0 1 0 1.4l-4 4a2 2 0 0 1-2.8 0L2.7 9.6a1 1 0 0 1 0-1.4l4.6-4.6ZM6.2 3.3 4 5.5" /><path d="M13.5 10.5s-1.3 1.7-1.3 2.6a1.3 1.3 0 0 0 2.6 0c0-.9-1.3-2.6-1.3-2.6Z" /></symbol>
+		<symbol id="icon-palette" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.25a5.75 5.75 0 0 0-.4 11.48c.9.06 1.5-.66 1.5-1.4 0-.36-.14-.68-.36-.92a1.35 1.35 0 0 1 1-2.24h1.42a3.2 3.2 0 0 0 3.19-3.34C14.6 4.4 11.66 2.25 8 2.25Z" /><path fill="currentColor" stroke="none" d="M5.4 6.1a.85.85 0 1 1 0 1.7.85.85 0 0 1 0-1.7Zm2.6-1.35a.85.85 0 1 1 0 1.7.85.85 0 0 1 0-1.7Zm2.9 1a.85.85 0 1 1 0 1.7.85.85 0 0 1 0-1.7Z" /></symbol>
+		<symbol id="icon-path-close" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 3.5h7l2 5.5L8 13 2.5 9Z" /></symbol>
+		<symbol id="icon-pen" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5 12 8.5 10 13.5H6L4 8.5Z" /><path d="M8 2.5v6" /><circle cx="8" cy="9.6" r="1" /></symbol>
+		<symbol id="icon-plus" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v10M3 8h10" /></symbol>
+		<symbol id="icon-point-corner" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 13 8 4.5 13.5 13" /><rect x="6.5" y="3" width="3" height="3" fill="currentColor" /></symbol>
+		<symbol id="icon-point-mirrored" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 13.5C4 9 6 7 8 7s4 2 5.5 6.5" /><path d="M2.5 4h11" /><circle cx="8" cy="4" r="1.5" fill="currentColor" /></symbol>
+		<symbol id="icon-point-smooth" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 13C4 7 6 4.5 8 4.5s4 2.5 5.5 8.5" /><circle cx="8" cy="4.5" r="1.5" fill="currentColor" /></symbol>
+		<symbol id="icon-pointer" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 2.5 12 6.2l-3.6 1.1-1.1 3.6z" /></symbol>
+		<symbol id="icon-question-circle" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6" /><path d="M6.2 6.1a1.9 1.9 0 1 1 2.7 1.75c-.55.3-.9.85-.9 1.5v.25" /><path fill="currentColor" stroke="none" d="M8 11.1a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5Z" /></symbol>
+		<symbol id="icon-sliders" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4.5h5.4M11.1 4.5h2.4M2.5 8h1.9M7.6 8h5.9M2.5 11.5h3.4M9.1 11.5h4.4" /><circle cx="9.5" cy="4.5" r="1.6" /><circle cx="6" cy="8" r="1.6" /><circle cx="7.5" cy="11.5" r="1.6" /></symbol>
+		<symbol id="icon-sparkles" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v4M4 4h4M11 6v3.5M9.25 7.75h3.5M5 10.5v3M3.5 12h3" /></symbol>
+		<symbol id="icon-square" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="10" height="10" rx="1.5" /></symbol>
+		<symbol id="icon-sticker" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 2.5H4A1.5 1.5 0 0 0 2.5 4v8A1.5 1.5 0 0 0 4 13.5h4l5.5-5.5V4A1.5 1.5 0 0 0 12 2.5Z" /><path d="M13.4 8H10a2 2 0 0 0-2 2v3.4" /></symbol>
+		<symbol id="icon-text" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 5V3.5h9V5M8 3.5v9M6 12.5h4" /></symbol>
+		<symbol id="icon-trash" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4.25h11M6 4.25 6.4 3a1.2 1.2 0 0 1 1.15-.8h.9A1.2 1.2 0 0 1 9.6 3l.4 1.25M4 4.25h8l-.75 8.6a1.4 1.4 0 0 1-1.4 1.3H6.15a1.4 1.4 0 0 1-1.4-1.3z" /></symbol>
+		<symbol id="icon-undo" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4 3 7l3 3" /><path d="M3 7h6.5a3.5 3.5 0 0 1 0 7H6" /></symbol>
+	</svg>
+	<header class="app-header content-page-header">
+		<div class="app-header-left">
+			<a href="https://ryandavi.com" class="app-header-logo" target="_blank" rel="noopener noreferrer" aria-label="Visit ryandavi.com">
+				<span class="logo" aria-hidden="true"></span>
+			</a>
+			<a class="app-header-title" href="../" title="Open the editor">RYBABY LABS</a>
+		</div>
+		<div class="app-header-center">
+			<span class="app-header-page-title">Guide</span>
+		</div>
+		<div class="app-header-right">
+			<a class="btn-text-with-icon primary content-page-editor-link" href="../">Open Editor</a>
+			<nav class="app-menu" id="appMenu" aria-label="Pages">
+				<button class="btn-icon-simple icon-wrapper app-menu-trigger" id="appMenuBtn" type="button" title="Menu" aria-label="Menu" aria-haspopup="menu" aria-expanded="false" aria-controls="appMenuPanel">
+					<svg class="icon"><use href="#icon-ellipsis-vertical"></use></svg>
+					<span class="name">Menu</span>
+				</button>
+				<div class="app-menu-panel" id="appMenuPanel" role="menu" aria-labelledby="appMenuBtn" hidden>
+					<a class="app-menu-item" role="menuitem" href="../guide/" aria-current="page">
+						<span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-question-circle"></use></svg></span>
+						<span class="app-menu-item-label">Guide</span>
+					</a>
+					<a class="app-menu-item" role="menuitem" href="../history/">
+						<span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-clock-history"></use></svg></span>
+						<span class="app-menu-item-label">History</span>
+					</a>
+					<a class="app-menu-item" role="menuitem" href="../personal-web/">
+						<span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-palette"></use></svg></span>
+						<span class="app-menu-item-label">Personal Web</span>
+					</a>
+					<a class="app-menu-item" role="menuitem" href="../preservation/">
+						<span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-archive"></use></svg></span>
+						<span class="app-menu-item-label">Preservation</span>
+					</a>
+					<a class="app-menu-item" role="menuitem" href="../about/">
+						<span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-circle-info"></use></svg></span>
+						<span class="app-menu-item-label">About</span>
+					</a>
+					<a class="app-menu-item" role="menuitem" href="../updates/">
+						<span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-glitter"></use></svg></span>
+						<span class="app-menu-item-label">Updates</span>
+					</a>
+				</div>
+			</nav>
+		</div>
+	</header>
+	<div class="content-page-scroll">
+	<main class="doc-page-main doc-page-guide" id="main">
+		<article class="doc-content">
 <div class="modal-hero-image">
-    <img src="images/modal/tutorials_flames.gif" data-pixel-scale="3" class="center" alt="Tutorials" width="585" height="171" loading="lazy" decoding="async"
->
-    <h2>Guide</h2>
+    <img src="../images/modal/tutorials_flames.gif" data-pixel-scale="3" class="center" alt="Tutorials" width="585" height="171" loading="lazy" decoding="async" style="width: 585px">
+    <h1>Guide</h1>
 </div>
 
 <div class="toc">
-    <h3>Contents</h3>
+    <h2>Contents</h2>
     <ol>
         <li>
             <a href="#getting-started">Getting Started</a>
@@ -124,17 +245,17 @@
 
     <!-- GETTING STARTED -->
     <div class="guide-section">
-        <h3 id="getting-started">
+        <h2 id="getting-started">
             <span class="icon-wrapper">
                 <svg class="icon">
                     <use href="#icon-image"></use>
                 </svg>
             </span>
             Getting Started
-        </h3>
+        </h2>
 
         <div class="guide-subsection">
-            <h4 id="uploading-images">Start a Project</h4>
+            <h3 id="uploading-images">Start a Project</h3>
             <p>Drop an SVG onto the workspace or choose it in Open Image or sticker upload to add editable Path layers. Supported outlines are grouped by paint. With no document open, it creates a transparent canvas. SVG stylesheets with ordinary class, id and element selectors are supported, along with solid strokes, opacity and pixel units. Unused filter, mask and clipping definitions do not block import. SVGs using images, text, filters, masks or clipping open as images, with the reason in the status line. Gradient and pattern paints currently use their first color. A file that exceeds the layer limit becomes one compound path using its first paint.</p>
 
             <div class="guide-item">
@@ -182,18 +303,18 @@
 
     <!-- BASICS -->
     <div class="guide-section">
-        <h3 id="basics">
+        <h2 id="basics">
             <span class="icon-wrapper">
                 <svg class="icon">
                     <use href="#icon-sliders"></use>
                 </svg>
             </span>
             Basics
-        </h3>
+        </h2>
 
         <div class="figure-wrapper guide-screenshot">
             <figure>
-                <img src="images/guide/editor-overview.png" alt="Glitter Editor workspace with the Layers panel on the left, artwork canvas in the center, Text Properties on the right, and editing tools around the workspace" width="1280" height="720" loading="lazy" decoding="async">
+                <img src="../images/guide/editor-overview.png" alt="Glitter Editor workspace with the Layers panel on the left, artwork canvas in the center, Text Properties on the right, and editing tools around the workspace" width="1280" height="720" loading="lazy" decoding="async">
                 <figcaption>
                     <cite>Editor workspace</cite>
                     <span class="figure-description">The Layers panel (left) manages stacking and selection. The canvas (center) shows the artwork. The properties panel (right) adjusts the selected layer. Tools and view controls surround the canvas.</span>
@@ -202,7 +323,7 @@
         </div>
 
         <div class="guide-subsection">
-            <h4 id="tools">Tools</h4>
+            <h3 id="tools">Tools</h3>
             <p>Each tool can show its own options in the context bar. Some options appear only when a certain layer is selected. Every tool has a shortcut key, listed in <a href="#keyboard-shortcuts">Keyboard Shortcuts &amp; Gestures</a>.</p>
 
             <div class="guide-item">
@@ -210,7 +331,7 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-hand-pointer"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Select Tool (<kbd class="guide-kbd">V</kbd>)</strong> – Press <kbd class="guide-kbd">V</kbd>. Pick layers and move stickers, text, shapes, and paths. Dragging out a Shape or Text box shows its size in document pixels; a Line shows length and angle. Turn off <strong>Auto-Select</strong> in the options to keep moving the layer selected in the Layers panel when you drag across other artwork.</p>
+                    <p><strong>Select Tool (<kbd class="guide-kbd" data-key="V">V</kbd>)</strong> – Press <kbd class="guide-kbd" data-key="V">V</kbd>. Pick layers and move stickers, text, shapes, and paths. Dragging out a Shape or Text box shows its size in document pixels; a Line shows length and angle. Turn off <strong>Auto-Select</strong> in the options to keep moving the layer selected in the Layers panel when you drag across other artwork.</p>
                     <ul>
                         <li>See <a href="#transform">Transform</a> for moving, resizing, and rotating.</li>
                         <li>See <a href="#selection-alignment">Selection &amp; Alignment</a> for selecting several layers and aligning them.</li>
@@ -223,7 +344,7 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-hand"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Hand Tool (<kbd class="guide-kbd">H</kbd>)</strong> – Press <kbd class="guide-kbd">H</kbd>, then drag to pan. Hold <kbd class="guide-kbd">Space</kbd> to use it temporarily from any tool. Double-click the Hand tool to fit the canvas.</p>
+                    <p><strong>Hand Tool (<kbd class="guide-kbd" data-key="H">H</kbd>)</strong> – Press <kbd class="guide-kbd" data-key="H">H</kbd>, then drag to pan. Hold <kbd class="guide-kbd" data-key="Space">Space</kbd> to use it temporarily from any tool. Double-click the Hand tool to fit the canvas.</p>
                     <ul>
                         <li><strong>Touch</strong> – Pan with one or two fingers from any tool. The Hand tool is hidden on touch screens.</li>
                         <li><strong>Mouse</strong> – Middle-button drag pans from any tool.</li>
@@ -238,7 +359,7 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-magnifying-glass"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Zoom Tool (<kbd class="guide-kbd">Z</kbd>)</strong> – Press <kbd class="guide-kbd">Z</kbd>. Click to zoom in, <kbd class="guide-kbd">Alt</kbd>-click to zoom out, or drag right/up and left/down to scrub the zoom. Double-click the Zoom tool to return to 100<span class="setting-unit">%</span>.</p>
+                    <p><strong>Zoom Tool (<kbd class="guide-kbd" data-key="Z">Z</kbd>)</strong> – Press <kbd class="guide-kbd" data-key="Z">Z</kbd>. Click to zoom in, <kbd class="guide-kbd" data-key="Alt">Alt</kbd>-click to zoom out, or drag right/up and left/down to scrub the zoom. Double-click the Zoom tool to return to 100<span class="setting-unit">%</span>.</p>
                     <ul>
                         <li><strong>Touch</strong> – Pinch with two fingers.</li>
                         <li><strong>Trackpad</strong> – Pinch to zoom around the gesture position.</li>
@@ -247,7 +368,7 @@
                     <ul>
                         <li><strong>Fit</strong> – Fit the whole image on screen.</li>
                         <li><strong>Fill</strong> – Fill the screen with the image.</li>
-                        <li><strong>Zoom to Selection</strong> – Press <span class="guide-shortcut"><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">2</kbd></span> to center and fit the selected layer or group.</li>
+                        <li><strong>Zoom to Selection</strong> – Press <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Shift">Shift</kbd><kbd class="guide-kbd" data-key="2">2</kbd></span> to center and fit the selected layer or group.</li>
                         <li><strong>Reset</strong> – Double-click the zoom percentage in the status bar to return to 100<span class="setting-unit">%</span>.</li>
                     </ul>
                 </div>
@@ -258,7 +379,7 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-crop"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Crop (<kbd class="guide-kbd">C</kbd>)</strong> – Press <kbd class="guide-kbd">C</kbd>. Edit the canvas bounds. See <a href="#crop-tool">Canvas Size &amp; Crop</a>.</p>
+                    <p><strong>Crop (<kbd class="guide-kbd" data-key="C">C</kbd>)</strong> – Press <kbd class="guide-kbd" data-key="C">C</kbd>. Edit the canvas bounds. See <a href="#crop-tool">Canvas Size &amp; Crop</a>.</p>
                 </div>
             </div>
 
@@ -267,7 +388,7 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-paint-bucket"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Glitter Fill (<kbd class="guide-kbd">I</kbd>)</strong> – Press <kbd class="guide-kbd">I</kbd>. With a glitter layer or the Base Image selected, click the canvas to select a color from the Base Image. See <a href="#select-colors">Select Colors</a>.</p>
+                    <p><strong>Glitter Fill (<kbd class="guide-kbd" data-key="I">I</kbd>)</strong> – Press <kbd class="guide-kbd" data-key="I">I</kbd>. With a glitter layer or the Base Image selected, click the canvas to select a color from the Base Image. See <a href="#select-colors">Select Colors</a>.</p>
                 </div>
             </div>
 
@@ -276,7 +397,7 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-brush"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Glitter Brush (<kbd class="guide-kbd">B</kbd>)</strong> – Press <kbd class="guide-kbd">B</kbd>. Paint or erase the mask of a Glitter Fill layer on the canvas. See <a href="#mask-brush">Glitter Brush</a>.</p>
+                    <p><strong>Glitter Brush (<kbd class="guide-kbd" data-key="B">B</kbd>)</strong> – Press <kbd class="guide-kbd" data-key="B">B</kbd>. Paint or erase the mask of a Glitter Fill layer on the canvas. See <a href="#mask-brush">Glitter Brush</a>.</p>
                 </div>
             </div>
 
@@ -285,13 +406,13 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-area-select"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p id="select-area-tool"><strong>Select Area Tool (<kbd class="guide-kbd">M</kbd>)</strong> – Press <kbd class="guide-kbd">M</kbd>. Drag a rectangle, ellipse, or freehand lasso; click corners for a polygon lasso and press Enter to close; or pick a color with the Magic Wand. Tolerance controls color matching and Contiguous limits it to the connected region. Ctrl/Cmd+click a layer thumbnail to select its pixels, including its outline. <strong>Fill</strong> (<kbd class="guide-kbd">Enter</kbd>) puts glitter in the area and <strong>Erase</strong> (<kbd class="guide-kbd">Delete</kbd>) removes it. The Glitter Brush and Glitter Fill work only inside the selected area. The <strong>Select</strong> menu offers Expand, Contract, Border and Smooth with a live Amount preview, Reselect, Crop Canvas to Area, and Area to Path Layer. Enter applies a Modify preview; Escape cancels. Area edits share Undo with document edits: Ctrl/Cmd+Z restores an accidentally deselected area, and Ctrl/Cmd+Shift+D reselects the last cleared area.</p>
+                    <p id="select-area-tool"><strong>Select Area Tool (<kbd class="guide-kbd" data-key="M">M</kbd>)</strong> – Press <kbd class="guide-kbd" data-key="M">M</kbd>. Drag a rectangle, ellipse, or freehand lasso; click corners for a polygon lasso and press Enter to close; or pick a color with the Magic Wand. Tolerance controls color matching and Contiguous limits it to the connected region. Ctrl/Cmd+click a layer thumbnail to select its pixels, including its outline. <strong>Fill</strong> (<kbd class="guide-kbd" data-key="Enter">Enter</kbd>) puts glitter in the area and <strong>Erase</strong> (<kbd class="guide-kbd" data-key="Delete">Delete</kbd>) removes it. The Glitter Brush and Glitter Fill work only inside the selected area. The <strong>Select</strong> menu offers Expand, Contract, Border and Smooth with a live Amount preview, Reselect, Crop Canvas to Area, and Area to Path Layer. Enter applies a Modify preview; Escape cancels. Area edits share Undo with document edits: Ctrl/Cmd+Z restores an accidentally deselected area, and Ctrl/Cmd+Shift+D reselects the last cleared area.</p>
                     <ul>
-                        <li><strong>Combine shapes</strong> – Hold <kbd class="guide-kbd">Shift</kbd> as you start a drag to add to the area, <kbd class="guide-kbd">Alt</kbd> to cut out of it, or both to keep only where the new shape overlaps it. The New, Add, Subtract, and Intersect buttons do the same on a phone.</li>
+                        <li><strong>Combine shapes</strong> – Hold <kbd class="guide-kbd" data-key="Shift">Shift</kbd> as you start a drag to add to the area, <kbd class="guide-kbd" data-key="Alt">Alt</kbd> to cut out of it, or both to keep only where the new shape overlaps it. The New, Add, Subtract, and Intersect buttons do the same on a phone.</li>
                         <li><strong>Magic Wand deselect</strong> – In New mode, click or tap inside the selection again to clear it. Add, Subtract, and Intersect keep their combining behavior.</li>
-                        <li><strong>Shape the drag</strong> – Press <kbd class="guide-kbd">Shift</kbd> during a rectangle or ellipse drag to keep it square or round, and <kbd class="guide-kbd">Alt</kbd> to draw it from its center. Hold <kbd class="guide-kbd">Space</kbd> to move the shape while you are still drawing it.</li>
-                        <li><strong>Move the area</strong> – In New mode, drag from inside the area to move it. <kbd class="guide-kbd">Shift</kbd> keeps the move straight, and the arrow keys move it a pixel at a time.</li>
-                        <li><strong>Invert and deselect</strong> – <strong>Invert</strong> selects everything outside the area. Click once, press <kbd class="guide-kbd">Esc</kbd> or <kbd class="guide-kbd">Ctrl</kbd>+<kbd class="guide-kbd">D</kbd>, or use <strong>Deselect</strong> to clear it. <kbd class="guide-kbd">Ctrl</kbd>+<kbd class="guide-kbd">A</kbd> selects the whole canvas.</li>
+                        <li><strong>Shape the drag</strong> – Press <kbd class="guide-kbd" data-key="Shift">Shift</kbd> during a rectangle or ellipse drag to keep it square or round, and <kbd class="guide-kbd" data-key="Alt">Alt</kbd> to draw it from its center. Hold <kbd class="guide-kbd" data-key="Space">Space</kbd> to move the shape while you are still drawing it.</li>
+                        <li><strong>Move the area</strong> – In New mode, drag from inside the area to move it. <kbd class="guide-kbd" data-key="Shift">Shift</kbd> keeps the move straight, and the arrow keys move it a pixel at a time.</li>
+                        <li><strong>Invert and deselect</strong> – <strong>Invert</strong> selects everything outside the area. Click once, press <kbd class="guide-kbd" data-key="Esc">Esc</kbd> or <kbd class="guide-kbd" data-key="Ctrl">Ctrl</kbd>+<kbd class="guide-kbd" data-key="D">D</kbd>, or use <strong>Deselect</strong> to clear it. <kbd class="guide-kbd" data-key="Ctrl">Ctrl</kbd>+<kbd class="guide-kbd" data-key="A">A</kbd> selects the whole canvas.</li>
                         <li><strong>Not saved</strong> – The area is a working aid. It is not part of the project file, and Undo steps through fills and strokes, not through the area itself.</li>
                     </ul>
                 </div>
@@ -302,7 +423,7 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-text"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Text Tool (<kbd class="guide-kbd">T</kbd>)</strong> – Press <kbd class="guide-kbd">T</kbd>. Click the canvas to place Point text, or drag to draw a Box that wraps text inside a resizable frame. See <a href="#text">Text</a>.</p>
+                    <p><strong>Text Tool (<kbd class="guide-kbd" data-key="T">T</kbd>)</strong> – Press <kbd class="guide-kbd" data-key="T">T</kbd>. Click the canvas to place Point text, or drag to draw a Box that wraps text inside a resizable frame. See <a href="#text">Text</a>.</p>
                 </div>
             </div>
 
@@ -311,7 +432,7 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-square"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Shape Tool (<kbd class="guide-kbd">U</kbd>)</strong> – Press <kbd class="guide-kbd">U</kbd>. Drag to draw a shape at that size (hold <kbd class="guide-kbd">Shift</kbd> for a square), or click for the default size. See <a href="#shapes">Shapes</a>.</p>
+                    <p><strong>Shape Tool (<kbd class="guide-kbd" data-key="U">U</kbd>)</strong> – Press <kbd class="guide-kbd" data-key="U">U</kbd>. Drag to draw a shape at that size (hold <kbd class="guide-kbd" data-key="Shift">Shift</kbd> for a square), or click for the default size. See <a href="#shapes">Shapes</a>.</p>
                 </div>
             </div>
 
@@ -320,7 +441,7 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-line"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Line Tool (<kbd class="guide-kbd">L</kbd>)</strong> – Press <kbd class="guide-kbd">L</kbd>. Drag to draw a straight line (hold <kbd class="guide-kbd">Shift</kbd> for 45° steps), or click for the default length. See <a href="#create-line">Draw a Line or an Arrow</a>.</p>
+                    <p><strong>Line Tool (<kbd class="guide-kbd" data-key="L">L</kbd>)</strong> – Press <kbd class="guide-kbd" data-key="L">L</kbd>. Drag to draw a straight line (hold <kbd class="guide-kbd" data-key="Shift">Shift</kbd> for 45° steps), or click for the default length. See <a href="#create-line">Draw a Line or an Arrow</a>.</p>
                 </div>
             </div>
 
@@ -329,13 +450,13 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-pen"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Pen Tool (<kbd class="guide-kbd">P</kbd>)</strong> – Press <kbd class="guide-kbd">P</kbd>. Click to place the points of a path, drag to pull a curve, and click the first point to close the path. On a selected path, the Pen edits its points. See <a href="#pen-tool">Draw with the Pen</a> and <a href="#edit-points">Edit Points</a>.</p>
+                    <p><strong>Pen Tool (<kbd class="guide-kbd" data-key="P">P</kbd>)</strong> – Press <kbd class="guide-kbd" data-key="P">P</kbd>. Click to place the points of a path, drag to pull a curve, and click the first point to close the path. On a selected path, the Pen edits its points. See <a href="#pen-tool">Draw with the Pen</a> and <a href="#edit-points">Edit Points</a>.</p>
                 </div>
             </div>
         </div>
 
         <div class="guide-subsection">
-            <h4 id="library">The Library</h4>
+            <h3 id="library">The Library</h3>
             <p>The <strong>Library</strong> window opens beside the Inspector on desktop and as a sheet on phones. It holds everything you can pick: glitter, stickers, shapes, brush tips, and fonts. It shows one kind at a time and switches to match what you are doing. For example, changing a shape opens Shapes, and choosing a glitter for its fill opens Glitter. Its header names what your pick will change. Press <strong>Close</strong> when you have what you want.</p>
 
             <div class="guide-item">
@@ -358,7 +479,7 @@
         </div>
 
         <div class="guide-subsection">
-            <h4 id="working-with-layers">Working with Layers</h4>
+            <h3 id="working-with-layers">Working with Layers</h3>
             <p>Double-click or double tap a layer with Select to open its source. Shapes open the Shapes Library; text and paths open their editors.</p>
             <p><strong>Clipping</strong> – Select a layer and use <strong>Clip to Layer Below</strong> beside Duplicate to show it only inside the nearest unclipped layer below. Its bent-arrow button releases the clip. The base's opacity and animation apply to the clipped artwork too. Shadows and sparkles do not define the clipping shape. Deleting the base releases its clips. SVG and HTML Scene exports leave clipped layers out.</p>
             <p>The <strong>Layers</strong> panel lists every layer. Layers at the top appear in front.</p>
@@ -404,7 +525,7 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-clone"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Duplicate</strong> – Click the duplicate icon to copy a layer with all its settings. You can also hold <kbd class="guide-kbd">Alt</kbd> while dragging on the canvas, or press <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">D</kbd></span>.</p>
+                    <p><strong>Duplicate</strong> – Click the duplicate icon to copy a layer with all its settings. You can also hold <kbd class="guide-kbd" data-key="Alt">Alt</kbd> while dragging on the canvas, or press <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd><kbd class="guide-kbd" data-key="D">D</kbd></span>.</p>
                 </div>
             </div>
 
@@ -437,7 +558,7 @@
         </div>
 
         <div class="guide-subsection">
-            <h4 id="transform">Transform</h4>
+            <h3 id="transform">Transform</h3>
             <p>Select a layer to show its bounding box on the canvas.</p>
 
             <div class="guide-item">
@@ -447,11 +568,11 @@
                 <div class="guide-item-content">
                     <p><strong>Move, resize, and rotate</strong> – Drag inside the box to move. Drag a corner handle to resize or scale. Drag along an edge to resize one axis. Drag just outside a corner to rotate.</p>
                     <ul>
-                        <li><kbd class="guide-kbd">Shift</kbd> while resizing – Temporarily inverts the aspect lock.</li>
-                        <li><kbd class="guide-kbd">Alt</kbd> while resizing – Resizes around the anchor.</li>
-                        <li><kbd class="guide-kbd">Ctrl</kbd>/<kbd class="guide-kbd">Cmd</kbd> while resizing – Bypasses snapping.</li>
-                        <li><kbd class="guide-kbd">Shift</kbd> while rotating (with the handle or the Rotation slider) – Snaps to 15<span class="setting-unit">°</span> steps.</li>
-                        <li><kbd class="guide-kbd">Shift</kbd> while moving – Constrains movement to one axis.</li>
+                        <li><kbd class="guide-kbd" data-key="Shift">Shift</kbd> while resizing – Temporarily inverts the aspect lock.</li>
+                        <li><kbd class="guide-kbd" data-key="Alt">Alt</kbd> while resizing – Resizes around the anchor.</li>
+                        <li><kbd class="guide-kbd" data-key="Ctrl">Ctrl</kbd>/<kbd class="guide-kbd" data-key="Cmd">Ctrl</kbd> while resizing – Bypasses snapping.</li>
+                        <li><kbd class="guide-kbd" data-key="Shift">Shift</kbd> while rotating (with the handle or the Rotation slider) – Snaps to 15<span class="setting-unit">°</span> steps.</li>
+                        <li><kbd class="guide-kbd" data-key="Shift">Shift</kbd> while moving – Constrains movement to one axis.</li>
                         <li><strong>Text</strong> – Point text scales with the handles. Box text resizes its frame without changing the type size.</li>
                     </ul>
                 </div>
@@ -462,7 +583,7 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Lock Aspect</strong> – When on, the corner handles and the circular middle-edge handles keep the layer's aspect ratio. Hold <kbd class="guide-kbd">Shift</kbd> to flip the lock for one drag. If that drag changes the proportions while the lock was on, the lock turns off.</p>
+                    <p><strong>Lock Aspect</strong> – When on, the corner handles and the circular middle-edge handles keep the layer's aspect ratio. Hold <kbd class="guide-kbd" data-key="Shift">Shift</kbd> to flip the lock for one drag. If that drag changes the proportions while the lock was on, the lock turns off.</p>
                 </div>
             </div>
 
@@ -474,8 +595,8 @@
                     <p><strong>Anchor</strong> – The crosshair in the middle of a selected layer. It is the point the layer rotates, flips, and animates around, and the point that <strong>X</strong> and <strong>Y</strong> report.</p>
                     <ul>
                         <li>Drag it to move it. It snaps to the layer's corners, edge midpoints, and center, and to the canvas center.</li>
-                        <li>Hold <kbd class="guide-kbd">Shift</kbd> to jump to the nearest corner, edge, or center. Hold <kbd class="guide-kbd">Ctrl</kbd>/<kbd class="guide-kbd">Cmd</kbd> to place it freely.</li>
-                        <li><kbd class="guide-kbd">Alt</kbd>-click inside the layer to put the anchor there. Double-click the anchor to reset it to the center.</li>
+                        <li>Hold <kbd class="guide-kbd" data-key="Shift">Shift</kbd> to jump to the nearest corner, edge, or center. Hold <kbd class="guide-kbd" data-key="Ctrl">Ctrl</kbd>/<kbd class="guide-kbd" data-key="Cmd">Ctrl</kbd> to place it freely.</li>
+                        <li><kbd class="guide-kbd" data-key="Alt">Alt</kbd>-click inside the layer to put the anchor there. Double-click the anchor to reset it to the center.</li>
                         <li>You can also pick a position from <strong>Anchor</strong>, under <strong>Advanced</strong> in Transform.</li>
                     </ul>
                 </div>
@@ -488,8 +609,8 @@
                 <div class="guide-item-content">
                     <p><strong>Transform card</strong> – Enter exact X/Y position, W/H size, rotation, and opacity. It also has alignment, flip, and reset controls.</p>
                     <ul>
-                        <li><strong>Nudge</strong> – Arrow keys move the selected layer 1<span class="setting-unit">px</span>. Hold <kbd class="guide-kbd">Shift</kbd> for 10<span class="setting-unit">px</span>.</li>
-                        <li><strong>Field stepping</strong> – In the X/Y/W/H fields, <kbd class="guide-kbd">↑</kbd>/<kbd class="guide-kbd">↓</kbd> step 1<span class="setting-unit">px</span>. Hold <kbd class="guide-kbd">Shift</kbd> for 10<span class="setting-unit">px</span>.</li>
+                        <li><strong>Nudge</strong> – Arrow keys move the selected layer 1<span class="setting-unit">px</span>. Hold <kbd class="guide-kbd" data-key="Shift">Shift</kbd> for 10<span class="setting-unit">px</span>.</li>
+                        <li><strong>Field stepping</strong> – In the X/Y/W/H fields, <kbd class="guide-kbd" data-key="↑">↑</kbd>/<kbd class="guide-kbd" data-key="↓">↓</kbd> step 1<span class="setting-unit">px</span>. Hold <kbd class="guide-kbd" data-key="Shift">Shift</kbd> for 10<span class="setting-unit">px</span>.</li>
                     </ul>
                 </div>
             </div>
@@ -508,7 +629,7 @@
         </div>
 
         <div class="guide-subsection">
-            <h4 id="selection-alignment">Selection &amp; Alignment</h4>
+            <h3 id="selection-alignment">Selection &amp; Alignment</h3>
             <p>Select several layers to move, align, or edit them together.</p>
 
             <div class="guide-item">
@@ -518,10 +639,10 @@
                 <div class="guide-item-content">
                     <p><strong>Select layers</strong></p>
                     <ul>
-                        <li><strong>Marquee</strong> – Drag on empty canvas to select the layers it touches. Hold <kbd class="guide-kbd">Shift</kbd> to add to the current selection.</li>
-                        <li><strong>On the canvas</strong> – <kbd class="guide-kbd">Shift</kbd>-click toggles the layer under the pointer. <kbd class="guide-kbd">Alt</kbd>-click cycles through overlapping layers.</li>
-                        <li><strong>In the Layers panel</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Shift</kbd><span class="shortcut-gesture">Click</span></span> selects a range. <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><span class="shortcut-gesture">Click</span></span> toggles a single layer, including locked, Base Image, and Glitter Fill layers.</li>
-                        <li><strong>Everything</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">A</kbd></span> selects every movable layer. <kbd class="guide-kbd">Escape</kbd> clears the selection.</li>
+                        <li><strong>Marquee</strong> – Drag on empty canvas to select the layers it touches. Hold <kbd class="guide-kbd" data-key="Shift">Shift</kbd> to add to the current selection.</li>
+                        <li><strong>On the canvas</strong> – <kbd class="guide-kbd" data-key="Shift">Shift</kbd>-click toggles the layer under the pointer. <kbd class="guide-kbd" data-key="Alt">Alt</kbd>-click cycles through overlapping layers.</li>
+                        <li><strong>In the Layers panel</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Shift">Shift</kbd><span class="shortcut-gesture">Click</span></span> selects a range. <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd><span class="shortcut-gesture">Click</span></span> toggles a single layer, including locked, Base Image, and Glitter Fill layers.</li>
+                        <li><strong>Everything</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd><kbd class="guide-kbd" data-key="A">A</kbd></span> selects every movable layer. <kbd class="guide-kbd" data-key="Escape">Escape</kbd> clears the selection.</li>
                     </ul>
                     <p>A selection that includes a protected or non-transformable layer (locked, pinned, the Base Image, or an empty Glitter Fill) can still be selected, but it cannot move as a group.</p>
                 </div>
@@ -552,8 +673,8 @@
                     <p><strong>Smart Guides and snapping</strong> – While you move a sticker, text, shape, or multi-layer selection, its edges and center snap to the canvas and to visible layers. Pink guide lines show the active alignment.</p>
                     <ul>
                         <li>Snapping is on by default. Use <strong>Snapping</strong> below the preview to turn it on or off.</li>
-                        <li>Hold <kbd class="guide-kbd">Ctrl</kbd> during a move to disable snapping temporarily.</li>
-                        <li>Smart Guides apply to moving only. Resizing and rotation are freeform, except for <kbd class="guide-kbd">Shift</kbd> rotation snapping and <kbd class="guide-kbd">Ctrl</kbd>/<kbd class="guide-kbd">Cmd</kbd> sticker resizing in whole steps.</li>
+                        <li>Hold <kbd class="guide-kbd" data-key="Ctrl">Ctrl</kbd> during a move to disable snapping temporarily.</li>
+                        <li>Smart Guides apply to moving only. Resizing and rotation are freeform, except for <kbd class="guide-kbd" data-key="Shift">Shift</kbd> rotation snapping and <kbd class="guide-kbd" data-key="Ctrl">Ctrl</kbd>/<kbd class="guide-kbd" data-key="Cmd">Ctrl</kbd> sticker resizing in whole steps.</li>
                     </ul>
                 </div>
             </div>
@@ -565,9 +686,9 @@
                 <div class="guide-item-content">
                     <p><strong>Commands &amp; Shortcuts</strong> – Open it from the header to browse every shortcut and gesture. Use the <strong>Keyboard</strong> and <strong>Canvas Gestures</strong> tabs, or search by command, key, device, gesture, or section. Key labels match your system (Mac or Windows). Searches treat <strong>Command</strong>/<strong>Control</strong> and <strong>Option</strong>/<strong>Alt</strong> as the same key. The full list is also in <a href="#keyboard-shortcuts">Keyboard Shortcuts &amp; Gestures</a>.</p>
                     <ul>
-                        <li><strong>Undo</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">Z</kbd></span>.</li>
-                        <li><strong>Redo</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">Y</kbd></span> or <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">Z</kbd></span>.</li>
-                        <li><strong>Copy and paste</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">C</kbd></span> copies the selected layers. <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">V</kbd></span> pastes copied layers or an image from the clipboard.</li>
+                        <li><strong>Undo</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd><kbd class="guide-kbd" data-key="Z">Z</kbd></span>.</li>
+                        <li><strong>Redo</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd><kbd class="guide-kbd" data-key="Y">Y</kbd></span> or <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd><kbd class="guide-kbd" data-key="Shift">Shift</kbd><kbd class="guide-kbd" data-key="Z">Z</kbd></span>.</li>
+                        <li><strong>Copy and paste</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd><kbd class="guide-kbd" data-key="C">C</kbd></span> copies the selected layers. <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd><kbd class="guide-kbd" data-key="V">V</kbd></span> pastes copied layers or an image from the clipboard.</li>
                         <li><strong>Escape</strong> – Closes an open picker or cancels a transform in progress. Press it again to clear the selection.</li>
                     </ul>
                 </div>
@@ -575,16 +696,16 @@
         </div>
 
         <div class="guide-subsection">
-            <h4 id="crop-tool">Canvas Size &amp; Crop</h4>
+            <h3 id="crop-tool">Canvas Size &amp; Crop</h3>
             <p>Crop opens Canvas in the Inspector. The panel switch keeps the selected layer's properties reachable and the header follows the open panel. The Canvas Size Anchor row uses the same nine-point select as layer anchors.</p>
-            <p>The canvas size is the size of the exported image. Change it with the Crop (<kbd class="guide-kbd">C</kbd>) tool or in the Base Image settings. Both change the canvas bounds without scaling your layers, except the <strong>Image</strong> option, which scales everything.</p>
+            <p>The canvas size is the size of the exported image. Change it with the Crop (<kbd class="guide-kbd" data-key="C">C</kbd>) tool or in the Base Image settings. Both change the canvas bounds without scaling your layers, except the <strong>Image</strong> option, which scales everything.</p>
 
             <div class="guide-item">
                 <div class="guide-item-icon">
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-crop"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Crop (<kbd class="guide-kbd">C</kbd>)</strong> – Press <kbd class="guide-kbd">C</kbd> to edit the canvas bounds. The bounds can extend beyond the current canvas.</p>
+                    <p><strong>Crop (<kbd class="guide-kbd" data-key="C">C</kbd>)</strong> – Press <kbd class="guide-kbd" data-key="C">C</kbd> to edit the canvas bounds. The bounds can extend beyond the current canvas.</p>
                     <ul>
                         <li><strong>Resize</strong> – Drag a handle.</li>
                         <li><strong>Move</strong> – Drag inside the bounds. Edges and center snap.</li>
@@ -592,9 +713,9 @@
                         <li><strong>Size panel</strong> – Shows the same rectangle and adds ratios, named sizes, the fits below, padding, and extension fill. <strong>Swap</strong> changes the orientation.</li>
                         <li><strong>Fit</strong> – <strong>Artwork</strong> fits every layer above the Base Image, and <strong>Artwork with Motion</strong> adds the room their animations travel; Marquee, Ricochet, and Wander keep the whole canvas. <strong>Selection</strong> and <strong>Selected Area</strong> fit the selected layers or the area. <strong>Trim Transparent</strong> removes empty edges without going past the canvas, <strong>Reveal All</strong> grows the canvas to show layers that hang off it, and <strong>Base Image</strong> returns to the image's own pixels. A fit needs at least one pixel to fit.</li>
                         <li><strong>Fit with a ratio</strong> – Pick a ratio with a fit and the bounds grow around it to that shape, so a 1:1 ratio on <strong>Selection</strong> makes a square around the selected layers.</li>
-                        <li><strong>Crop to layers</strong> – With the Select Tool (<kbd class="guide-kbd">V</kbd>) tool, <strong>Crop</strong> in the bar under the canvas opens the bounds fitted to the selected layers, or to all the artwork when nothing is selected.</li>
-                        <li><strong>Apply</strong> – Press <kbd class="guide-kbd">Enter</kbd> or double-click inside the bounds. Applying is one undo step.</li>
-                        <li><strong>Cancel</strong> – Press <kbd class="guide-kbd">Escape</kbd>.</li>
+                        <li><strong>Crop to layers</strong> – With the Select Tool (<kbd class="guide-kbd" data-key="V">V</kbd>) tool, <strong>Crop</strong> in the bar under the canvas opens the bounds fitted to the selected layers, or to all the artwork when nothing is selected.</li>
+                        <li><strong>Apply</strong> – Press <kbd class="guide-kbd" data-key="Enter">Enter</kbd> or double-click inside the bounds. Applying is one undo step.</li>
+                        <li><strong>Cancel</strong> – Press <kbd class="guide-kbd" data-key="Escape">Escape</kbd>.</li>
                     </ul>
                 </div>
             </div>
@@ -606,10 +727,10 @@
                 <div class="guide-item-content">
                     <p><strong>Crop modifiers</strong></p>
                     <ul>
-                        <li>A locked ratio wins. <kbd class="guide-kbd">Shift</kbd> toggles it for one drag.</li>
-                        <li><kbd class="guide-kbd">Alt</kbd> resizes from the center.</li>
-                        <li><kbd class="guide-kbd">Ctrl</kbd> bypasses snapping.</li>
-                        <li>Arrow keys move the bounds 1<span class="setting-unit">px</span>. Hold <kbd class="guide-kbd">Shift</kbd> for 10<span class="setting-unit">px</span>.</li>
+                        <li>A locked ratio wins. <kbd class="guide-kbd" data-key="Shift">Shift</kbd> toggles it for one drag.</li>
+                        <li><kbd class="guide-kbd" data-key="Alt">Alt</kbd> resizes from the center.</li>
+                        <li><kbd class="guide-kbd" data-key="Ctrl">Ctrl</kbd> bypasses snapping.</li>
+                        <li>Arrow keys move the bounds 1<span class="setting-unit">px</span>. Hold <kbd class="guide-kbd" data-key="Shift">Shift</kbd> for 10<span class="setting-unit">px</span>.</li>
                         <li><strong>Touch</strong> – Use one finger to edit and two to pan or zoom. Use <strong>Done</strong> and <strong>Cancel</strong> in the context bar.</li>
                     </ul>
                 </div>
@@ -633,7 +754,7 @@
         </div>
 
         <div class="guide-subsection">
-            <h4 id="canvas-view-options">Canvas View Options</h4>
+            <h3 id="canvas-view-options">Canvas View Options</h3>
             <p>These controls change what you see on the canvas. They do not change the export.</p>
 
             <div class="guide-item">
@@ -674,7 +795,7 @@
         </div>
 
         <div class="guide-subsection">
-            <h4 id="mobile">Mobile</h4>
+            <h3 id="mobile">Mobile</h3>
             <p>On phones and tablets, the start screen fills the workspace. Open an image, create a preset canvas, or open a project. After that, a scrolling property bar and sheets give you the same controls as the desktop Inspector.</p>
 
             <div class="guide-item">
@@ -731,17 +852,17 @@
 
     <!-- GLITTER -->
     <div class="guide-section">
-        <h3 id="glitter">
+        <h2 id="glitter">
             <span class="icon-wrapper">
                 <svg class="icon">
                     <use href="#icon-glitter"></use>
                 </svg>
             </span>
             Glitter
-        </h3>
+        </h2>
 
         <div class="guide-subsection">
-            <h4 id="create-glitter">Create a Glitter Layer</h4>
+            <h3 id="create-glitter">Create a Glitter Layer</h3>
             <p>A Glitter Fill layer fills parts of the Base Image with glitter. It is empty until you select colors or paint a mask.</p>
 
             <div class="guide-item">
@@ -755,7 +876,7 @@
         </div>
 
         <div class="guide-subsection">
-            <h4 id="choose-glitter">Choose a Glitter</h4>
+            <h3 id="choose-glitter">Choose a Glitter</h3>
 
             <div class="guide-item">
                 <div class="guide-item-icon">
@@ -768,7 +889,7 @@
         </div>
 
         <div class="guide-subsection">
-            <h4 id="select-colors">Select Colors</h4>
+            <h3 id="select-colors">Select Colors</h3>
             <p>The glitter layer fills only the colors you select from the Base Image.</p>
 
             <div class="guide-item">
@@ -776,7 +897,7 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-paint-bucket"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p>Use the <strong>Glitter Fill</strong> tool (<kbd class="guide-kbd">I</kbd>) and click a color in the Base Image.</p>
+                    <p>Use the <strong>Glitter Fill</strong> tool (<kbd class="guide-kbd" data-key="I">I</kbd>) and click a color in the Base Image.</p>
                     <ul>
                         <li>The glitter layer stays empty until you make a selection.</li>
                         <li>The selected area is outlined in blue in the preview. The outline is not exported. It is desktop only, because it is too resource-intensive on mobile.</li>
@@ -786,7 +907,7 @@
         </div>
 
         <div class="guide-subsection">
-            <h4 id="select-options">Selection Options</h4>
+            <h3 id="select-options">Selection Options</h3>
 
             <div class="guide-item">
                 <div class="guide-item-icon empty">
@@ -839,7 +960,7 @@
         </div>
 
         <div class="guide-subsection">
-            <h4 id="glitter-settings">Adjust Fill Properties</h4>
+            <h3 id="glitter-settings">Adjust Fill Properties</h3>
             <p>Select a glitter layer to open <strong>Fill Properties</strong>. Texture Scale (under Advanced → Texture), Opacity, Threshold, and Feather are set separately for each glitter fill layer.</p>
 
             <div class="guide-item">
@@ -879,8 +1000,8 @@
                     <p><strong>Gradient editor</strong></p>
                     <ul>
                         <li>Click the bar to add a stop.</li>
-                        <li>Drag a stop to move it. Hold <kbd class="guide-kbd">Shift</kbd> to snap to 5<span class="setting-unit">%</span> steps. Hold <kbd class="guide-kbd">Alt</kbd> while dragging to duplicate it. Stops also catch at 0, 25, 50, 75, and 100<span class="setting-unit">%</span>.</li>
-                        <li>Focus a stop and press the arrow keys to move it 1<span class="setting-unit">%</span>, or <kbd class="guide-kbd">Shift</kbd> + arrow keys to move it 5<span class="setting-unit">%</span>. Press Delete or Backspace to remove it.</li>
+                        <li>Drag a stop to move it. Hold <kbd class="guide-kbd" data-key="Shift">Shift</kbd> to snap to 5<span class="setting-unit">%</span> steps. Hold <kbd class="guide-kbd" data-key="Alt">Alt</kbd> while dragging to duplicate it. Stops also catch at 0, 25, 50, 75, and 100<span class="setting-unit">%</span>.</li>
+                        <li>Focus a stop and press the arrow keys to move it 1<span class="setting-unit">%</span>, or <kbd class="guide-kbd" data-key="Shift">Shift</kbd> + arrow keys to move it 5<span class="setting-unit">%</span>. Press Delete or Backspace to remove it.</li>
                     </ul>
                 </div>
             </div>
@@ -896,12 +1017,12 @@
         </div>
 
         <div class="guide-subsection">
-            <h4 id="mask-brush">Glitter Brush</h4>
+            <h3 id="mask-brush">Glitter Brush</h3>
             <p>Use the <strong>Glitter Brush</strong> to paint or erase exactly where a Glitter Fill layer appears, in addition to color selections. Text and Shape layers use their own rendered outlines and cannot hold painted masks.</p>
 
             <div class="figure-wrapper guide-screenshot">
                 <figure>
-                    <img src="images/guide/mask-brush.png" alt="Glitter Brush active with a Glitter Fill layer selected in the Layers panel and Brush Settings visible in the properties panel" width="1280" height="720" loading="lazy" decoding="async">
+                    <img src="../images/guide/mask-brush.png" alt="Glitter Brush active with a Glitter Fill layer selected in the Layers panel and Brush Settings visible in the properties panel" width="1280" height="720" loading="lazy" decoding="async">
                     <figcaption>
                         <cite>Glitter Brush setup</cite>
                         <span class="figure-description">Select a Glitter Fill layer, activate the Glitter Brush, then adjust its tip and stroke controls in Brush Settings.</span>
@@ -914,7 +1035,7 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-brush"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Start painting</strong> – Click the <strong>Glitter Brush</strong> in the toolbar, or press <kbd class="guide-kbd">B</kbd>. With a Glitter Fill layer selected, strokes edit that layer. Otherwise the first stroke creates a new Glitter Fill layer. Erasing needs an existing Glitter Fill layer.</p>
+                    <p><strong>Start painting</strong> – Click the <strong>Glitter Brush</strong> in the toolbar, or press <kbd class="guide-kbd" data-key="B">B</kbd>. With a Glitter Fill layer selected, strokes edit that layer. Otherwise the first stroke creates a new Glitter Fill layer. Erasing needs an existing Glitter Fill layer.</p>
                 </div>
             </div>
 
@@ -923,7 +1044,7 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Paint / Erase</strong> – Switch to <strong>Erase</strong> in the context bar below the canvas to remove glitter instead of adding it. This includes areas added by color selection. Press <kbd class="guide-kbd">E</kbd> for Erase, or <kbd class="guide-kbd">X</kbd> to swap between Paint and Erase. On a pen tablet, the pen's eraser end erases for that stroke.</p>
+                    <p><strong>Paint / Erase</strong> – Switch to <strong>Erase</strong> in the context bar below the canvas to remove glitter instead of adding it. This includes areas added by color selection. Press <kbd class="guide-kbd" data-key="E">E</kbd> for Erase, or <kbd class="guide-kbd" data-key="X">X</kbd> to swap between Paint and Erase. On a pen tablet, the pen's eraser end erases for that stroke.</p>
                 </div>
             </div>
 
@@ -934,7 +1055,7 @@
                 <div class="guide-item-content">
                     <p><strong>Brush settings</strong> – Pick the tip (round, square, calligraphy, star, or heart), then set:</p>
                     <ul>
-                        <li><strong>Size</strong> – The brush diameter. Press <kbd class="guide-kbd">[</kbd> and <kbd class="guide-kbd">]</kbd> to change it, or hold <kbd class="guide-kbd">Shift</kbd> for larger steps.</li>
+                        <li><strong>Size</strong> – The brush diameter. Press <kbd class="guide-kbd" data-key="[">[</kbd> and <kbd class="guide-kbd" data-key="]">]</kbd> to change it, or hold <kbd class="guide-kbd" data-key="Shift">Shift</kbd> for larger steps.</li>
                         <li><strong>Softness</strong> – Edge feathering.</li>
                         <li><strong>Flow</strong> – How much glitter builds up per stroke.</li>
                         <li><strong>Spacing</strong> – How far apart the stamps sit along the stroke.</li>
@@ -958,7 +1079,7 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Straight lines</strong> – Hold <kbd class="guide-kbd">Shift</kbd> while dragging to constrain the stroke to a straight line at 0<span class="setting-unit">°</span>, 45<span class="setting-unit">°</span>, or 90<span class="setting-unit">°</span>.</p>
+                    <p><strong>Straight lines</strong> – Hold <kbd class="guide-kbd" data-key="Shift">Shift</kbd> while dragging to constrain the stroke to a straight line at 0<span class="setting-unit">°</span>, 45<span class="setting-unit">°</span>, or 90<span class="setting-unit">°</span>.</p>
                 </div>
             </div>
 
@@ -992,7 +1113,7 @@
         </div>
 
         <div class="guide-subsection">
-            <h4 id="auto-glitter">Auto Glitter <span class="feature-badge feature-badge-beta">Beta</span></h4>
+            <h3 id="auto-glitter">Auto Glitter <span class="feature-badge feature-badge-beta">Beta</span></h3>
             <p><strong>Auto Glitter</strong> scans the Base Image and turns its colors into animated Glitter Fill layers. It is available when <strong>Canvas Background</strong> is set to <strong>Image</strong> and the image is not a playing animation. It opens the <strong>Auto Glitter</strong> panel and previews the glitter live on the canvas. It is in <strong>Beta</strong> and still being refined.</p>
 
             <div class="guide-item">
@@ -1002,7 +1123,7 @@
                 <div class="guide-item-content">
                     <p><strong>Temporary mode</strong> – While Auto Glitter is active, an <strong>Auto Glitter Mode</strong> strip appears above the navigation controls. It shows status only while analyzing, updating, or reporting an error. Choose <strong>Exit</strong> to discard the session.</p>
                     <ul>
-                        <li><strong>Navigation</strong> – The tool switches to <strong>Hand</strong>. Hand, Zoom, the mouse wheel, <kbd class="guide-kbd">Space</kbd>-drag, and touch pan and pinch all work.</li>
+                        <li><strong>Navigation</strong> – The tool switches to <strong>Hand</strong>. Hand, Zoom, the mouse wheel, <kbd class="guide-kbd" data-key="Space">Space</kbd>-drag, and touch pan and pinch all work.</li>
                         <li><strong>Select a match</strong> – Switch to <strong>Select</strong>, then click visible glitter on the canvas to open that Color Match in the Library.</li>
                         <li><strong>Editing is locked</strong> – Layer selection, undo and redo, and the editing tools stay locked until you create or discard the preview.</li>
                     </ul>
@@ -1076,7 +1197,7 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Discard</strong> – <strong>Cancel</strong>, <strong>Exit</strong>, <kbd class="guide-kbd">Escape</kbd>, replacing the Base Image, or leaving the panel discards the preview. Before the layers are created, Glitter asks you to confirm.</p>
+                    <p><strong>Discard</strong> – <strong>Cancel</strong>, <strong>Exit</strong>, <kbd class="guide-kbd" data-key="Escape">Escape</kbd>, replacing the Base Image, or leaving the panel discards the preview. Before the layers are created, Glitter asks you to confirm.</p>
                 </div>
             </div>
         </div>
@@ -1084,17 +1205,17 @@
 
     <!-- STICKERS -->
     <div class="guide-section">
-        <h3 id="stickers">
+        <h2 id="stickers">
             <span class="icon-wrapper">
                 <svg class="icon">
                     <use href="#icon-sticker"></use>
                 </svg>
             </span>
             Stickers
-        </h3>
+        </h2>
 
         <div class="guide-subsection">
-            <h4 id="add-stickers">Add a Sticker</h4>
+            <h3 id="add-stickers">Add a Sticker</h3>
             <p>A Sticker layer places a decorative image on top of the layers below it.</p>
 
             <div class="guide-item">
@@ -1120,13 +1241,13 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-hand-pointer"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Position it</strong> – Use the <strong>Select</strong> tool (<kbd class="guide-kbd">V</kbd>) to drag the sticker.</p>
+                    <p><strong>Position it</strong> – Use the <strong>Select</strong> tool (<kbd class="guide-kbd" data-key="V">V</kbd>) to drag the sticker.</p>
                 </div>
             </div>
         </div>
 
         <div class="guide-subsection">
-            <h4 id="sticker-settings">Sticker Properties</h4>
+            <h3 id="sticker-settings">Sticker Properties</h3>
 
             <div class="guide-item">
                 <div class="guide-item-icon">
@@ -1152,7 +1273,7 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-arrows-left-right"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Handles</strong> – Drag a corner handle to scale proportionally, or a side handle to resize one axis. Stickers always land on whole pixels. Hold <kbd class="guide-kbd">Ctrl</kbd>/<kbd class="guide-kbd">Cmd</kbd> while resizing to step through 100<span class="setting-unit">%</span>, 200<span class="setting-unit">%</span>, 300<span class="setting-unit">%</span>, and so on. Pixel art keeps every pixel the same size at these steps.</p>
+                    <p><strong>Handles</strong> – Drag a corner handle to scale proportionally, or a side handle to resize one axis. Stickers always land on whole pixels. Hold <kbd class="guide-kbd" data-key="Ctrl">Ctrl</kbd>/<kbd class="guide-kbd" data-key="Cmd">Ctrl</kbd> while resizing to step through 100<span class="setting-unit">%</span>, 200<span class="setting-unit">%</span>, 300<span class="setting-unit">%</span>, and so on. Pixel art keeps every pixel the same size at these steps.</p>
                 </div>
             </div>
 
@@ -1203,7 +1324,7 @@
         </div>
 
         <div class="guide-subsection">
-            <h4 id="stretchable-assets">Stretchable Stickers &amp; Frames</h4>
+            <h3 id="stretchable-assets">Stretchable Stickers &amp; Frames</h3>
             <p>Assets marked <strong>Stretchable</strong> keep their corners when you resize one axis. They use nine-slice geometry: four independent insets protect the corners, and the edges and center stretch or repeat. A banner can protect only its left and right caps. Use the <strong>Stretchable</strong> library filter to find these assets.</p>
 
             <div class="guide-item">
@@ -1217,7 +1338,7 @@
         </div>
 
         <div class="guide-subsection">
-            <h4 id="manage-stickers">Remove Backgrounds &amp; Uploads</h4>
+            <h3 id="manage-stickers">Remove Backgrounds &amp; Uploads</h3>
 
             <div class="guide-item">
                 <div class="guide-item-icon">
@@ -1250,24 +1371,24 @@
 
     <!-- TEXT -->
     <div class="guide-section">
-        <h3 id="text">
+        <h2 id="text">
             <span class="icon-wrapper">
                 <svg class="icon">
                     <use href="#icon-text"></use>
                 </svg>
             </span>
             Text
-        </h3>
+        </h2>
 
         <div class="guide-subsection">
-            <h4 id="create-text">Create a Text Layer</h4>
+            <h3 id="create-text">Create a Text Layer</h3>
 
             <div class="guide-item">
                 <div class="guide-item-icon">
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-plus"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Add the layer</strong> – Click <strong>+</strong> in the Layers panel and choose <strong>Text</strong>, or press <kbd class="guide-kbd">T</kbd> and click or drag on the canvas.</p>
+                    <p><strong>Add the layer</strong> – Click <strong>+</strong> in the Layers panel and choose <strong>Text</strong>, or press <kbd class="guide-kbd" data-key="T">T</kbd> and click or drag on the canvas.</p>
                     <ul>
                         <li><strong>Click</strong> – Places <strong>Point</strong> text, which fits tightly around the glyphs.</li>
                         <li><strong>Drag</strong> – Draws a <strong>Box</strong>, which wraps text inside a resizable frame.</li>
@@ -1286,7 +1407,7 @@
         </div>
 
         <div class="guide-subsection">
-            <h4 id="text-typography">Typography &amp; Layout</h4>
+            <h3 id="text-typography">Typography &amp; Layout</h3>
             <p>Select a text layer to open <strong>Text Properties</strong>. There you edit the copy, choose a non-destructive letter case, and set the layout.</p>
 
             <div class="guide-item">
@@ -1299,7 +1420,7 @@
                         <li>With the Text tool, click text to place the caret, drag to select, or double-click a word.</li>
                         <li>With the Select tool, drag text to move it. Double-click or double-tap it to switch to the Text tool and edit.</li>
                         <li>The panel's text field shows the same copy and shares the caret.</li>
-                        <li>Press <kbd class="guide-kbd">Enter</kbd> for a new line. Press <kbd class="guide-kbd">Escape</kbd> or click off the text to commit the edit and return to Select. Empty text is removed when editing ends.</li>
+                        <li>Press <kbd class="guide-kbd" data-key="Enter">Enter</kbd> for a new line. Press <kbd class="guide-kbd" data-key="Escape">Escape</kbd> or click off the text to commit the edit and return to Select. Empty text is removed when editing ends.</li>
                         <li>Pasting plain text outside a field creates a text layer at the canvas center.</li>
                     </ul>
                 </div>
@@ -1369,7 +1490,7 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Orientation</strong> – Choose Stacked to put each character on its own centered row. <kbd class="guide-kbd">Enter</kbd> starts a new column to the right. Line Height sets the spacing between rows and Letter Spacing sets the spacing between columns. The WordArt style gallery includes five stacked looks and the original Office paper and stone textures.</p>
+                    <p><strong>Orientation</strong> – Choose Stacked to put each character on its own centered row. <kbd class="guide-kbd" data-key="Enter">Enter</kbd> starts a new column to the right. Line Height sets the spacing between rows and Letter Spacing sets the spacing between columns. The WordArt style gallery includes five stacked looks and the original Office paper and stone textures.</p>
                 </div>
             </div>
 
@@ -1388,7 +1509,7 @@
         </div>
 
         <div class="guide-subsection">
-            <h4 id="text-effects">Fill, Background, Outline &amp; Shadow</h4>
+            <h3 id="text-effects">Fill, Background, Outline &amp; Shadow</h3>
             <p>Fill, Outline, and Shadow each keep their own source: glitter, solid color, or gradient. Fill can also be None. Background uses its own glitter or solid source.</p>
 
             <div class="guide-item">
@@ -1451,17 +1572,17 @@
 
     <!-- SHAPES -->
     <div class="guide-section">
-        <h3 id="shapes">
+        <h2 id="shapes">
             <span class="icon-wrapper">
                 <svg class="icon">
                     <use href="#icon-square"></use>
                 </svg>
             </span>
             Shapes
-        </h3>
+        </h2>
 
         <div class="guide-subsection">
-            <h4 id="create-shape">Draw a Shape</h4>
+            <h3 id="create-shape">Draw a Shape</h3>
             <p>Shapes are vector layers that you fill with glitter, a solid color, or a gradient. The Library's <strong>Shapes</strong> lists every shape under these headings: <strong>Basic Shapes</strong>, <strong>Stars &amp; Bursts</strong>, <strong>Hearts &amp; Flowers</strong>, <strong>Nature &amp; Weather</strong>, <strong>Arrows &amp; Banners</strong>, <strong>Speech &amp; Music</strong>, and <strong>Symbols &amp; Signs</strong>.</p>
 
             <div class="guide-item">
@@ -1469,7 +1590,7 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-square"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Draw</strong> – Click the <strong>Shape</strong> tool in the toolbar, or press <kbd class="guide-kbd">U</kbd>. <strong>Drag</strong> on the canvas to draw the shape at that size (hold <kbd class="guide-kbd">Shift</kbd> to keep it square or circular). <strong>Click</strong> for a default-size shape.</p>
+                    <p><strong>Draw</strong> – Click the <strong>Shape</strong> tool in the toolbar, or press <kbd class="guide-kbd" data-key="U">U</kbd>. <strong>Drag</strong> on the canvas to draw the shape at that size (hold <kbd class="guide-kbd" data-key="Shift">Shift</kbd> to keep it square or circular). <strong>Click</strong> for a default-size shape.</p>
                 </div>
             </div>
 
@@ -1493,7 +1614,7 @@
         </div>
 
         <div class="guide-subsection">
-            <h4 id="shape-fill">Fill, Outline &amp; Shadow</h4>
+            <h3 id="shape-fill">Fill, Outline &amp; Shadow</h3>
             <p>Each shape has a Fill, plus an optional Outline and Shadow. Fill can be an image, glitter, a solid color, or a gradient. Outline and Shadow can be glitter, a solid color, or a gradient.</p>
 
             <div class="guide-item">
@@ -1526,17 +1647,17 @@
 
     <!-- LINES & PATHS -->
     <div class="guide-section">
-        <h3 id="paths">
+        <h2 id="paths">
             <span class="icon-wrapper">
                 <svg class="icon">
                     <use href="#icon-pen"></use>
                 </svg>
             </span>
             Lines &amp; Paths
-        </h3>
+        </h2>
 
         <div class="guide-subsection">
-            <h4 id="create-line">Draw a Line or an Arrow</h4>
+            <h3 id="create-line">Draw a Line or an Arrow</h3>
             <p>A path is a layer made of points joined by straight or curved segments. A line is the simplest path: two points. A path has a <strong>Stroke</strong> (the line itself) and a <strong>Fill</strong> (the area inside), each in glitter or a color.</p>
 
             <div class="guide-item">
@@ -1544,7 +1665,7 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-line"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Draw</strong> – Click the <strong>Line</strong> tool in the toolbar, or press <kbd class="guide-kbd">L</kbd>. <strong>Drag</strong> from the start to the end (hold <kbd class="guide-kbd">Shift</kbd> for horizontal, vertical, and 45° lines). <strong>Click</strong> for a line of the default length. You can also click <strong>+</strong> in the Layers panel and choose <strong>Line</strong>.</p>
+                    <p><strong>Draw</strong> – Click the <strong>Line</strong> tool in the toolbar, or press <kbd class="guide-kbd" data-key="L">L</kbd>. <strong>Drag</strong> from the start to the end (hold <kbd class="guide-kbd" data-key="Shift">Shift</kbd> for horizontal, vertical, and 45° lines). <strong>Click</strong> for a line of the default length. You can also click <strong>+</strong> in the Layers panel and choose <strong>Line</strong>.</p>
                 </div>
             </div>
 
@@ -1568,7 +1689,7 @@
         </div>
 
         <div class="guide-subsection">
-            <h4 id="pen-tool">Draw with the Pen</h4>
+            <h3 id="pen-tool">Draw with the Pen</h3>
             <p>The Pen draws any outline, one point at a time. Trace part of the picture and close the path to get a glitter region with exactly the edge you drew.</p>
 
             <div class="guide-item">
@@ -1576,12 +1697,12 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-pen"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Place points</strong> – Click the <strong>Pen</strong> tool, or press <kbd class="guide-kbd">P</kbd>.</p>
+                    <p><strong>Place points</strong> – Click the <strong>Pen</strong> tool, or press <kbd class="guide-kbd" data-key="P">P</kbd>.</p>
                     <ul>
                         <li><strong>Click</strong> – Places a corner point.</li>
                         <li><strong>Click and drag</strong> – Places a smooth point and pulls its handles, which bend the path on both sides.</li>
-                        <li><kbd class="guide-kbd">Shift</kbd> – Keeps a segment or handle on 45° steps.</li>
-                        <li><kbd class="guide-kbd">Alt</kbd> while dragging – Moves one handle without the other.</li>
+                        <li><kbd class="guide-kbd" data-key="Shift">Shift</kbd> – Keeps a segment or handle on 45° steps.</li>
+                        <li><kbd class="guide-kbd" data-key="Alt">Alt</kbd> while dragging – Moves one handle without the other.</li>
                     </ul>
                 </div>
             </div>
@@ -1600,7 +1721,7 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-path-close"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Close or finish</strong> – Click the first point to close the path. A closed path you just drew switches to a glitter <strong>Fill</strong> with no Stroke. An open path keeps its Stroke and has no Fill. Press <kbd class="guide-kbd">Enter</kbd> or <kbd class="guide-kbd">Esc</kbd> to finish a path and leave it open.</p>
+                    <p><strong>Close or finish</strong> – Click the first point to close the path. A closed path you just drew switches to a glitter <strong>Fill</strong> with no Stroke. An open path keeps its Stroke and has no Fill. Press <kbd class="guide-kbd" data-key="Enter">Enter</kbd> or <kbd class="guide-kbd" data-key="Esc">Esc</kbd> to finish a path and leave it open.</p>
                 </div>
             </div>
 
@@ -1609,7 +1730,7 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-undo"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Undo a point</strong> – Every point is its own undo step. Press <kbd class="guide-kbd">Ctrl/Cmd</kbd> + <kbd class="guide-kbd">Z</kbd> or <kbd class="guide-kbd">Backspace</kbd> to remove the last point and keep drawing. Hold <kbd class="guide-kbd">Space</kbd> to pan, or scroll and pinch to zoom, without ending the path. A path left with a single point is removed.</p>
+                    <p><strong>Undo a point</strong> – Every point is its own undo step. Press <kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd> + <kbd class="guide-kbd" data-key="Z">Z</kbd> or <kbd class="guide-kbd" data-key="Backspace">Backspace</kbd> to remove the last point and keep drawing. Hold <kbd class="guide-kbd" data-key="Space">Space</kbd> to pan, or scroll and pinch to zoom, without ending the path. A path left with a single point is removed.</p>
                 </div>
             </div>
 
@@ -1624,15 +1745,15 @@
         </div>
 
         <div class="guide-subsection">
-            <h4 id="edit-points">Edit Points</h4>
-            <p>The Pen also reshapes existing paths. With the <strong>Select</strong> tool, double-click a path to switch to the Pen with its points showing. You can also select the path and press <kbd class="guide-kbd">Enter</kbd>, or use <strong>Edit points</strong> in Path Properties.</p>
+            <h3 id="edit-points">Edit Points</h3>
+            <p>The Pen also reshapes existing paths. With the <strong>Select</strong> tool, double-click a path to switch to the Pen with its points showing. You can also select the path and press <kbd class="guide-kbd" data-key="Enter">Enter</kbd>, or use <strong>Edit points</strong> in Path Properties.</p>
 
             <div class="guide-item">
                 <div class="guide-item-icon">
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-point-corner"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Points</strong> – Click a point to select it. <kbd class="guide-kbd">Shift</kbd>-click adds to the selection. Drag across empty canvas to select every point in a box. Drag a point to move it with the rest of the selection, or nudge with the arrow keys (<kbd class="guide-kbd">Shift</kbd> for 10<span class="setting-unit">px</span>). Points land on whole pixels and snap to the canvas, to other layers, and into line with the path's other points.</p>
+                    <p><strong>Points</strong> – Click a point to select it. <kbd class="guide-kbd" data-key="Shift">Shift</kbd>-click adds to the selection. Drag across empty canvas to select every point in a box. Drag a point to move it with the rest of the selection, or nudge with the arrow keys (<kbd class="guide-kbd" data-key="Shift">Shift</kbd> for 10<span class="setting-unit">px</span>). Points land on whole pixels and snap to the canvas, to other layers, and into line with the path's other points.</p>
                 </div>
             </div>
 
@@ -1656,7 +1777,7 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-plus"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Segments</strong> – Click a segment to add a point there without changing the outline. Drag a segment to bend it. A straight segment becomes a curve. Press <kbd class="guide-kbd">Delete</kbd> to remove the selected points. The path closes up around them and keeps as much of its outline as it can.</p>
+                    <p><strong>Segments</strong> – Click a segment to add a point there without changing the outline. Drag a segment to bend it. A straight segment becomes a curve. Press <kbd class="guide-kbd" data-key="Delete">Delete</kbd> to remove the selected points. The path closes up around them and keeps as much of its outline as it can.</p>
                 </div>
             </div>
 
@@ -1670,7 +1791,7 @@
                         <li><strong>Close path</strong> – Joins the two ends.</li>
                         <li><strong>Reverse</strong> – Swaps which end is the start.</li>
                         <li><strong>Swap ends</strong> – Trades the shapes on the two ends.</li>
-                        <li><kbd class="guide-kbd">Esc</kbd> clears the point selection, then leaves the editor. <kbd class="guide-kbd">Enter</kbd> or <strong>Done</strong> leaves it immediately.</li>
+                        <li><kbd class="guide-kbd" data-key="Esc">Esc</kbd> clears the point selection, then leaves the editor. <kbd class="guide-kbd" data-key="Enter">Enter</kbd> or <strong>Done</strong> leaves it immediately.</li>
                     </ul>
                 </div>
             </div>
@@ -1686,7 +1807,7 @@
         </div>
 
         <div class="guide-subsection">
-            <h4 id="path-stroke">Fill, Stroke &amp; Outline</h4>
+            <h3 id="path-stroke">Fill, Stroke &amp; Outline</h3>
             <p><strong>Stroke</strong> is the line the Pen draws. <strong>Outline</strong> is an effect around the whole object, as on text and shapes. A line can have an outline of its own.</p>
 
             <div class="guide-item">
@@ -1725,17 +1846,17 @@
 
     <!-- FRAMES -->
     <div class="guide-section">
-        <h3 id="frames">
+        <h2 id="frames">
             <span class="icon-wrapper">
                 <svg class="icon">
                     <use href="#icon-frame"></use>
                 </svg>
             </span>
             Frames
-        </h3>
+        </h2>
 
         <div class="guide-subsection">
-            <h4 id="create-frame">Add a Frame</h4>
+            <h3 id="create-frame">Add a Frame</h3>
             <p>A frame is its own layer: a border around the whole picture, painted with glitter, a solid color, or a gradient, or built from an ornate frame image.</p>
 
             <div class="guide-item">
@@ -1779,17 +1900,17 @@
 
     <!-- FILTERS -->
     <div class="guide-section">
-        <h3 id="filters">
+        <h2 id="filters">
             <span class="icon-wrapper">
                 <svg class="icon">
                     <use href="#icon-filter"></use>
                 </svg>
             </span>
             Filters
-        </h3>
+        </h2>
 
         <div class="guide-subsection">
-            <h4 id="create-filter">Add a Filter Layer</h4>
+            <h3 id="create-filter">Add a Filter Layer</h3>
             <p>A new filter is position-locked over the whole canvas, while its look remains editable. Unlock it in Layers to select it on the canvas and move or resize a rectangular region. It affects only that region. Reset Transform returns it to the whole canvas; regional filters cannot rotate.</p>
             <p>A filter layer draws nothing of its own. It re-processes everything composited below it, live on the canvas and in the export.</p>
 
@@ -1822,7 +1943,7 @@
         </div>
 
         <div class="guide-subsection">
-            <h4 id="filter-types">Filter Types</h4>
+            <h3 id="filter-types">Filter Types</h3>
             <p>Pick a type from the picker at the top of Filter Properties. Each type has its own controls. <strong>Opacity</strong> fades the whole filter layer, as on every other layer type.</p>
 
             <div class="guide-item">
@@ -1890,14 +2011,14 @@
         </div>
 
         <div class="guide-subsection">
-            <h4 id="animated-filters">Animated Filters and Loops</h4>
+            <h3 id="animated-filters">Animated Filters and Loops</h3>
             <p><strong>Scanlines</strong> offers Crawl: Off, Slow, Medium, or Fast. The lines move down at a constant speed and wrap after one stripe spacing. Slow uses quarter-pixel steps; Medium uses half-pixel steps. <strong>Hue Cycle</strong> rotates the colors of everything below it. Cycle sets the seconds per cycle; the step count follows automatically. More steps can make larger GIFs because the whole picture changes.</p>
             <p>Hue Cycle uses Pixel Filter Preview. Still shows the starting frame; Animated or Preview animation plays the cycle. Pause motion freezes the preview and leaves exports animated.</p>
             <p>With nothing selected, open <strong>Animation loop</strong> for playback controls, loop length and export analysis. <strong>Automatic</strong> follows the animation sources; choosing a length sets the document loop while keeping authored cycles and finite runs. <strong>Fit animations to loop</strong> applies the suggested speed changes separately. The source table shows Cycle in seconds, with Before added when an earlier timing is saved; select a source name to edit its layer. <strong>Restore previous timing</strong> returns editable animations to that saved timing, including after reopening a project. Fit and Restore each take one Undo step when timing changes. Locked sources and finite motions keep their timing. <strong>Set loop to include content</strong> extends the loop without trimming or stretching the motions.</p>
         </div>
 
         <div class="guide-subsection">
-            <h4 id="pixel-filters">Pixel Filters</h4>
+            <h3 id="pixel-filters">Pixel Filters</h3>
             <p>The <strong>Pixel &amp; Damage</strong> category holds the retro color and mosaic looks. Like every filter, they process everything beneath them. To treat only the Base Image, put one directly above it.</p>
 
             <div class="guide-item">
@@ -1961,23 +2082,23 @@
 
     <!-- EFFECTS -->
     <div class="guide-section">
-        <h3 id="effects">
+        <h2 id="effects">
             <span class="icon-wrapper">
                 <svg class="icon">
                     <use href="#icon-magic-wand"></use>
                 </svg>
             </span>
             Effects
-        </h3>
+        </h2>
 
         <div class="guide-subsection">
-            <h4 id="layer-effects">Layer Effects</h4>
+            <h3 id="layer-effects">Layer Effects</h3>
             <p><strong>Layer effects</strong> apply to a single layer. They are <strong>Outline</strong>, <strong>Shadow</strong>, <strong>Bevel &amp; Gloss</strong>, and <strong>Sparkles</strong>, on Sticker, Text, and Shape layers. Outline and Shadow are described in each layer type's section. Each effect card has its own <strong>Enabled</strong> toggle. Turning an effect off keeps its settings.</p>
             <p><strong>Reset effects</strong> disables every effect on the selected layer and clears the saved settings. It does not reset Animation, which has its own <strong>Motion</strong> group. To pixelate, posterize, or dither the picture, add a <a href="#pixel-filters">pixel filter</a> layer.</p>
         </div>
 
         <div class="guide-subsection">
-            <h4 id="sparkles">Sparkles</h4>
+            <h3 id="sparkles">Sparkles</h3>
             <p>Sparkles scatter small animated glints, stars, hearts, or snowflakes over a layer. They move with the layer and loop seamlessly in exported GIFs.</p>
 
             <div class="guide-item">
@@ -2005,7 +2126,7 @@
         </div>
 
         <div class="guide-subsection">
-            <h4 id="layer-animation">Animation <span class="feature-badge feature-badge-beta">Beta</span></h4>
+            <h3 id="layer-animation">Animation <span class="feature-badge feature-badge-beta">Beta</span></h3>
             <p><strong>Animation</strong> adds one or more looping motions or transitions to any Glitter Fill, Sticker, Text, or Shape layer. Its card is at the bottom of the selected layer's properties. It is in <strong>Beta</strong> and still being refined.</p>
             <p>Animated stickers, frame images, glitter textures and the Base Image keep their own GIF timing. Under the section's Advanced, <strong>Cycle</strong> sets how long one pass takes and <strong>Start at</strong> sets the frame it starts on, so two copies of one GIF no longer blink together.</p>
 
@@ -2029,15 +2150,15 @@
                 <div class="guide-item-content">
                     <p><strong>Tune the result</strong> – <strong>Starts at</strong> places the motion in document time. <strong>Cycle</strong> is one pass in seconds; a shorter cycle plays faster. <strong>Repeats</strong> chooses Forever or a finite count. Under <strong>Advanced</strong>, <strong>Trim end</strong> changes when the motion ends at the same cycle speed; leave it empty for Forever. <strong>Stretch duration</strong> changes speed while keeping repeats and offset. Presets that travel also show their speed in pixels per second. Easing and Steps sit with Timing. Advanced contains direction, Start offset, fill, pivot and sampling. A finite Start offset edit keeps its start and end by adjusting Repeats. Changing presets keeps timing.</p>
                     <p><strong>Playback</strong> – The <strong>Scene preview</strong> card groups Play/Pause, the loop-start and frame buttons, and one <strong>Scene time</strong> slider. The text below explains when the selected motion starts and ends. Preview export and Loop settings are separate from playback. It works in Animation and Animation loop, including with the timeline closed. Loop length stays visible in Animation loop; its source table, Fit/Restore and frame options are under Advanced. Pause holds the current time. Space also plays or pauses, comma and period step a frame, and Home returns to the loop start. Navigation creates no Undo step. Escape cancels an unfinished seek and restores the previous preview.</p>
-                    <p data-feature="timeline" hidden><strong>Preview export</strong> – On desktop, this prepares and plays the current output frames. Its pressed button shows that mode. Editing returns to authored preview. Export analysis may suggest different cycle speeds; authored keys and timing fields keep their coordinates until you deliberately apply Fit.</p>
+                    <p><strong>Preview export</strong> – On desktop, this prepares and plays the current output frames. Its pressed button shows that mode. Editing returns to authored preview. Export analysis may suggest different cycle speeds; authored keys and timing fields keep their coordinates until you deliberately apply Fit.</p>
                     <p><strong>Show a layer for part of the scene</strong> ? Open <strong>Layer</strong>, then <strong>Advanced</strong>. Set <strong>Appears</strong> and <strong>Disappears</strong> in seconds, or leave Disappears empty to stay until the loop ends. <strong>Always visible</strong> clears the window. This works on static layers too. Playback and paused frames respect the window; the rest view shows every visible layer for editing. Still images ignore these windows. With only visibility timing, Automatic adds half a second after the last edge; use Custom length in Animation loop to choose another duration.</p>
-                    <p data-feature="customMotion" hidden><strong>Custom motion</strong> – Choose <strong>Custom</strong> in Type to edit keys, or use <strong>Convert to custom</strong> under Advanced to keep a preset's motion as keys. Scene preview shows keys over one cycle of the selected motion; its playback slider still seeks the whole scene. Edit key times and values in the Inspector. On desktop, Pose keys lets you move, rotate and scale a key on the canvas. These controls work with the timeline closed.</p>
-                    <p data-feature="timeline" hidden><strong>Timeline bars</strong> – Drag a motion's right edge to set how long it lasts while keeping its repeat count and Start offset. The repeats spread through that length by changing the cycle speed. Hold <kbd class="guide-kbd">Shift</kbd> to change the repeat count at the same speed. A motion that repeats forever takes a whole repeat count from the visible loop on its first duration drag. The edge stops at the available cycle-speed limits. Cycle notches and GIF edges change the cycle length directly. Hold <kbd class="guide-kbd">Alt</kbd> to bypass snapping, or press <kbd class="guide-kbd">Escape</kbd> to cancel a drag. Focus a bar and press <kbd class="guide-kbd">Enter</kbd> to select it. A Custom motion opens its keys below the bar. Right-click, press the context-menu key, or press <kbd class="guide-kbd">Shift+F10</kbd> for its timing menu. Space plays or pauses.</p>
-					<p data-feature="timeline" hidden><strong>Coordinate animations</strong> – Click a bar to select it, Ctrl/Cmd-click to toggle another, or Shift-click to select a range of visible bars. Drag a selected body to move the whole selection with its spacing intact. Right-click a selected bar, or press Shift+F10, for <strong>Move selected bars</strong>, <strong>Align starts</strong>, <strong>Align ends</strong> and <strong>Stagger selected bars</strong>. Move and Stagger accept seconds and preview the resulting start times before Apply. Stagger follows the visible layer and motion order. Alignment moves whole runs without changing their speed or played length; Align ends needs a finite end for every bar. A locked or fixed source refuses the whole group action. Escape cancels a drag, and Undo recovers a committed group action in one step. Timeline options provides Select all eligible timing bars and Clear timing bar selection; Ctrl/Cmd+A and Escape also work while a bar has keyboard focus.</p>
-					<p data-feature="timeline" hidden><strong>Fit, Reset and Paste together</strong> – The selected-bar menu can Fit repeating cycles to the current loop, Reset timing or Paste copied timing. Fit waits for current loop analysis and requires an editable repeating cycle for every bar. Reset restores remembered cycles, starts, repeats, offsets and directions, and clears visibility windows. Paste applies the dimensions each source supports; its note explains what will be applied or omitted and shows any accepted cycle rounding. Copying a visibility window copies its start/end only. Each group action applies once or explains why the whole selection cannot accept it. Undo restores the group in one step.</p>
-                    <p data-feature="timeline" hidden><strong>Timeline ruler</strong> – The short ticks divide the labeled times evenly. Moving a bar or dragging its start or duration edge snaps to the playhead, bars in expanded groups, the loop boundaries, and ruler ticks. Bar edges and the playhead take priority. Turn on <strong>Output frames</strong> in Timeline options to show export frames as alternating cells beneath the ruler and to snap bars to their starts. Closely packed frames merge into a plain strip. Scrubbing always picks an output frame, whether that option is on or off.</p>
-                    <p data-feature="timeline" hidden><strong>Preview range</strong> – Right-click the ruler and choose <strong>Set preview range start here</strong> or <strong>Set preview range end here</strong>, or enter times under Timeline options, <strong>Preview range</strong>. Play then loops inside that stretch, starting at its beginning if the playhead was outside. Drag either end of the shaded band to adjust it. The range only affects preview playback: the loop, its analysis, Preview export and the exported file are unchanged, and it is not saved or undone. <strong>Go to preview range start</strong> and <strong>Go to loop start</strong> are separate actions. <strong>Reset preview range to full loop</strong> removes it, and opening another document clears it.</p>
-                    <p data-feature="timeline" hidden><strong>Markers</strong> – Right-click the ruler and choose <strong>Add marker here</strong>, or use Timeline options, <strong>Markers</strong>, to add one at the playhead and edit names and times. Click a marker to move the playhead there, drag it to move it, or focus it and press the arrow keys to nudge it by a frame. Bars snap to markers. Markers are saved with the project and each edit is one Undo step. They never change the loop length or the export. A marker past the loop end stays visible but cannot be played.</p>
+                    <p><strong>Custom motion</strong> – Choose <strong>Custom</strong> in Type to edit keys, or use <strong>Convert to custom</strong> under Advanced to keep a preset's motion as keys. Scene preview shows keys over one cycle of the selected motion; its playback slider still seeks the whole scene. Edit key times and values in the Inspector. On desktop, Pose keys lets you move, rotate and scale a key on the canvas. These controls work with the timeline closed.</p>
+                    <p><strong>Timeline bars</strong> – Drag a motion's right edge to set how long it lasts while keeping its repeat count and Start offset. The repeats spread through that length by changing the cycle speed. Hold <kbd class="guide-kbd" data-key="Shift">Shift</kbd> to change the repeat count at the same speed. A motion that repeats forever takes a whole repeat count from the visible loop on its first duration drag. The edge stops at the available cycle-speed limits. Cycle notches and GIF edges change the cycle length directly. Hold <kbd class="guide-kbd" data-key="Alt">Alt</kbd> to bypass snapping, or press <kbd class="guide-kbd" data-key="Escape">Escape</kbd> to cancel a drag. Focus a bar and press <kbd class="guide-kbd" data-key="Enter">Enter</kbd> to select it. A Custom motion opens its keys below the bar. Right-click, press the context-menu key, or press <kbd class="guide-kbd" data-key="Shift+F10">Shift+F10</kbd> for its timing menu. Space plays or pauses.</p>
+					<p><strong>Coordinate animations</strong> – Click a bar to select it, Ctrl/Cmd-click to toggle another, or Shift-click to select a range of visible bars. Drag a selected body to move the whole selection with its spacing intact. Right-click a selected bar, or press Shift+F10, for <strong>Move selected bars</strong>, <strong>Align starts</strong>, <strong>Align ends</strong> and <strong>Stagger selected bars</strong>. Move and Stagger accept seconds and preview the resulting start times before Apply. Stagger follows the visible layer and motion order. Alignment moves whole runs without changing their speed or played length; Align ends needs a finite end for every bar. A locked or fixed source refuses the whole group action. Escape cancels a drag, and Undo recovers a committed group action in one step. Timeline options provides Select all eligible timing bars and Clear timing bar selection; Ctrl/Cmd+A and Escape also work while a bar has keyboard focus.</p>
+					<p><strong>Fit, Reset and Paste together</strong> – The selected-bar menu can Fit repeating cycles to the current loop, Reset timing or Paste copied timing. Fit waits for current loop analysis and requires an editable repeating cycle for every bar. Reset restores remembered cycles, starts, repeats, offsets and directions, and clears visibility windows. Paste applies the dimensions each source supports; its note explains what will be applied or omitted and shows any accepted cycle rounding. Copying a visibility window copies its start/end only. Each group action applies once or explains why the whole selection cannot accept it. Undo restores the group in one step.</p>
+                    <p><strong>Timeline ruler</strong> – The short ticks divide the labeled times evenly. Moving a bar or dragging its start or duration edge snaps to the playhead, bars in expanded groups, the loop boundaries, and ruler ticks. Bar edges and the playhead take priority. Turn on <strong>Output frames</strong> in Timeline options to show export frames as alternating cells beneath the ruler and to snap bars to their starts. Closely packed frames merge into a plain strip. Scrubbing always picks an output frame, whether that option is on or off.</p>
+                    <p><strong>Preview range</strong> – Right-click the ruler and choose <strong>Set preview range start here</strong> or <strong>Set preview range end here</strong>, or enter times under Timeline options, <strong>Preview range</strong>. Play then loops inside that stretch, starting at its beginning if the playhead was outside. Drag either end of the shaded band to adjust it. The range only affects preview playback: the loop, its analysis, Preview export and the exported file are unchanged, and it is not saved or undone. <strong>Go to preview range start</strong> and <strong>Go to loop start</strong> are separate actions. <strong>Reset preview range to full loop</strong> removes it, and opening another document clears it.</p>
+                    <p><strong>Markers</strong> – Right-click the ruler and choose <strong>Add marker here</strong>, or use Timeline options, <strong>Markers</strong>, to add one at the playhead and edit names and times. Click a marker to move the playhead there, drag it to move it, or focus it and press the arrow keys to nudge it by a frame. Bars snap to markers. Markers are saved with the project and each edit is one Undo step. They never change the loop length or the export. A marker past the loop end stays visible but cannot be played.</p>
                     <ul>
                         <li><strong>Timeline</strong> – Layer animations share one canvas timeline by default. <strong>Start offset</strong> shifts one layer around its loop by a percentage.</li>
                         <li><strong>Iterations</strong> – Finite iterations play the effect a set number of times. Continuous motion loops while the layer is visible.</li>
@@ -2073,22 +2194,22 @@
 
     <!-- SETTINGS -->
     <div class="guide-section">
-        <h3 id="settings">
+        <h2 id="settings">
             <span class="icon-wrapper">
                 <svg class="icon">
                     <use href="#icon-gear"></use>
                 </svg>
             </span>
             Settings
-        </h3>
+        </h2>
 
         <div class="guide-subsection">
-            <h4 id="app-settings">App Settings</h4>
+            <h3 id="app-settings">App Settings</h3>
             <p>Click the <strong>gear button</strong> in the main toolbar to change editor-wide preferences. Search by setting name or description to jump to a control.</p>
 
             <div class="figure-wrapper guide-screenshot guide-screenshot-modal">
                 <figure>
-                    <img src="images/guide/app-settings.png" alt="App Settings dialog showing the searchable Interface and Tools and Workspace groups" width="1280" height="720" loading="lazy" decoding="async">
+                    <img src="../images/guide/app-settings.png" alt="App Settings dialog showing the searchable Interface and Tools and Workspace groups" width="1280" height="720" loading="lazy" decoding="async">
                     <figcaption>
                         <cite>App Settings</cite>
                         <span class="figure-description">Interface preferences and editing behavior are in separate groups, each with its own Reset action.</span>
@@ -2116,7 +2237,7 @@
         </div>
 
         <div class="guide-subsection">
-            <h4 id="editing-settings">Editing &amp; Workspace</h4>
+            <h3 id="editing-settings">Editing &amp; Workspace</h3>
 
             <div class="guide-item">
                 <div class="guide-item-icon empty">
@@ -2159,17 +2280,17 @@
 
     <!-- EXPORT -->
     <div class="guide-section">
-        <h3 id="export">
+        <h2 id="export">
             <span class="icon-wrapper">
                 <svg class="icon">
                     <use href="#icon-export"></use>
                 </svg>
             </span>
             Export
-        </h3>
+        </h2>
 
         <div class="guide-subsection">
-            <h4 id="exporting-process">Exporting</h4>
+            <h3 id="exporting-process">Exporting</h3>
             <p>Choose Still Image and SVG in Export Settings for shapes, paths, painted fills, style frames and non-image backgrounds at canvas size. SVG keeps gradients, patterns, strokes, arrowheads, outlines, shadows and bevels. Glitter becomes its dominant color. Images, pixel filters, sparkles and animation are left out; the dialog counts included and omitted layers.</p>
             <p>SVG Text defaults to Convert to paths, preserving the lettering without requiring its font on another computer. Text paths, backing shapes and effects follow the rendered contours; soft effects use opacity bands. These approximate the rendered edges. Choose Editable text to revise the wording in another editor; it needs the font installed. Warped text always uses paths.</p>
 
@@ -2205,18 +2326,18 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-export"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Save Project</strong> – Click <strong>Save Project</strong> or press <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">S</kbd></span> to download a <strong>.glitter.json</strong> file. You can reopen it later with all layers, masks, text, shapes, and uploaded stickers intact.</p>
+                    <p><strong>Save Project</strong> – Click <strong>Save Project</strong> or press <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd><kbd class="guide-kbd" data-key="S">S</kbd></span> to download a <strong>.glitter.json</strong> file. You can reopen it later with all layers, masks, text, shapes, and uploaded stickers intact.</p>
                 </div>
             </div>
         </div>
 
         <div class="guide-subsection">
-            <h4 id="export-settings">Export Settings</h4>
+            <h3 id="export-settings">Export Settings</h3>
             <p>Search by setting name or description, or scan the <strong>Format</strong>, <strong>Size</strong>, <strong>Contents</strong>, <strong>Quality</strong>, and <strong>Animation</strong> groups. Quality and Animation show their main choices first. Use <strong>Customize</strong> for GIF colors and texture, and <strong>Advanced</strong> for animation controls. GIF and MP4 controls appear only when that format is active.</p>
 
             <div class="figure-wrapper guide-screenshot guide-screenshot-modal">
                 <figure>
-                    <img src="images/guide/export-settings.png" alt="Export Settings dialog with searchable format, size, contents, quality and animation controls" width="1280" height="720" loading="lazy" decoding="async">
+                    <img src="../images/guide/export-settings.png" alt="Export Settings dialog with searchable format, size, contents, quality and animation controls" width="1280" height="720" loading="lazy" decoding="async">
                     <figcaption>
                         <cite>Export Settings</cite>
                         <span class="figure-description">Start with Format, then work down through Size, Contents, Quality, and Animation. Search filters all five groups.</span>
@@ -2270,7 +2391,7 @@
         </div>
 
         <div class="guide-subsection">
-            <h4 id="instagram-story">Use an Export in an Instagram Story</h4>
+            <h3 id="instagram-story">Use an Export in an Instagram Story</h3>
             <p>There are two methods. The video method is simpler when the device supports MP4. The GIF method works on any device.</p>
 
             <div class="guide-item">
@@ -2314,17 +2435,17 @@
 
     <!-- TIPS -->
     <div class="guide-section">
-        <h3 id="tips">
+        <h2 id="tips">
             <span class="icon-wrapper">
                 <svg class="icon">
                     <use href="#icon-question-circle"></use>
                 </svg>
             </span>
             Tips &amp; Performance
-        </h3>
+        </h2>
 
         <div class="guide-subsection">
-            <h4 id="quick-tips">Quick Tips</h4>
+            <h3 id="quick-tips">Quick Tips</h3>
 
             <div class="guide-item">
                 <div class="guide-item-icon empty">
@@ -2369,7 +2490,7 @@
         </div>
 
         <div class="guide-subsection">
-            <h4 id="keyboard-shortcuts">Keyboard Shortcuts &amp; Gestures</h4>
+            <h3 id="keyboard-shortcuts">Keyboard Shortcuts &amp; Gestures</h3>
             <p>This list is generated from the editor's command list. To search it, open <strong>Commands &amp; Shortcuts</strong> from the toolbar.</p>
 
             <div class="guide-item">
@@ -2383,11 +2504,11 @@
                 <div class="guide-item-content">
                     <p><strong>Essentials</strong></p>
                     <ul>
-                        <li><strong>Copy Selected Layer(s)</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">C</kbd></span></li>
-                        <li><strong>Paste Image, Layer(s) or Text</strong> – Paste <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">V</kbd></span></li>
-                        <li><strong>Save Project</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">S</kbd></span></li>
-                        <li><strong>Undo</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">Z</kbd></span></li>
-                        <li><strong>Redo</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">Z</kbd></span> or <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">Y</kbd></span></li>
+                        <li><strong>Copy Selected Layer(s)</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd><kbd class="guide-kbd" data-key="C">C</kbd></span></li>
+                        <li><strong>Paste Image, Layer(s) or Text</strong> – Paste <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd><kbd class="guide-kbd" data-key="V">V</kbd></span></li>
+                        <li><strong>Save Project</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd><kbd class="guide-kbd" data-key="S">S</kbd></span></li>
+                        <li><strong>Undo</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd><kbd class="guide-kbd" data-key="Z">Z</kbd></span></li>
+                        <li><strong>Redo</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd><kbd class="guide-kbd" data-key="Shift">Shift</kbd><kbd class="guide-kbd" data-key="Z">Z</kbd></span> or <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd><kbd class="guide-kbd" data-key="Y">Y</kbd></span></li>
                     </ul>
                 </div>
             </div>
@@ -2403,18 +2524,18 @@
                 <div class="guide-item-content">
                     <p><strong>Tools</strong></p>
                     <ul>
-                        <li><strong>Select Tool</strong> – <kbd class="guide-kbd">V</kbd></li>
-                        <li><strong>Hand Tool</strong> – <kbd class="guide-kbd">H</kbd></li>
-                        <li><strong>Zoom Tool</strong> – <kbd class="guide-kbd">Z</kbd></li>
-                        <li><strong>Glitter Fill Tool</strong> – <kbd class="guide-kbd">I</kbd></li>
-                        <li><strong>Glitter Brush Tool</strong> – <kbd class="guide-kbd">B</kbd></li>
-                        <li><strong>Mask Eraser Tool</strong> – <kbd class="guide-kbd">E</kbd></li>
-                        <li><strong>Select Area Tool</strong> – <kbd class="guide-kbd">M</kbd></li>
-                        <li><strong>Text Tool</strong> – <kbd class="guide-kbd">T</kbd></li>
-                        <li><strong>Shape Tool</strong> – <kbd class="guide-kbd">U</kbd></li>
-                        <li><strong>Line Tool</strong> – <kbd class="guide-kbd">L</kbd></li>
-                        <li><strong>Crop Tool</strong> – <kbd class="guide-kbd">C</kbd></li>
-                        <li><strong>Pen Tool</strong> – <kbd class="guide-kbd">P</kbd></li>
+                        <li><strong>Select Tool</strong> – <kbd class="guide-kbd" data-key="V">V</kbd></li>
+                        <li><strong>Hand Tool</strong> – <kbd class="guide-kbd" data-key="H">H</kbd></li>
+                        <li><strong>Zoom Tool</strong> – <kbd class="guide-kbd" data-key="Z">Z</kbd></li>
+                        <li><strong>Glitter Fill Tool</strong> – <kbd class="guide-kbd" data-key="I">I</kbd></li>
+                        <li><strong>Glitter Brush Tool</strong> – <kbd class="guide-kbd" data-key="B">B</kbd></li>
+                        <li><strong>Mask Eraser Tool</strong> – <kbd class="guide-kbd" data-key="E">E</kbd></li>
+                        <li><strong>Select Area Tool</strong> – <kbd class="guide-kbd" data-key="M">M</kbd></li>
+                        <li><strong>Text Tool</strong> – <kbd class="guide-kbd" data-key="T">T</kbd></li>
+                        <li><strong>Shape Tool</strong> – <kbd class="guide-kbd" data-key="U">U</kbd></li>
+                        <li><strong>Line Tool</strong> – <kbd class="guide-kbd" data-key="L">L</kbd></li>
+                        <li><strong>Crop Tool</strong> – <kbd class="guide-kbd" data-key="C">C</kbd></li>
+                        <li><strong>Pen Tool</strong> – <kbd class="guide-kbd" data-key="P">P</kbd></li>
                     </ul>
                 </div>
             </div>
@@ -2430,15 +2551,15 @@
                 <div class="guide-item-content">
                     <p><strong>Canvas &amp; View</strong></p>
                     <ul>
-                        <li data-feature="docks" hidden><strong>Show or Hide All Panels</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">\</kbd></span></li>
-                        <li><strong>Zoom In</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">+</kbd></span></li>
-                        <li><strong>Zoom Out</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">-</kbd></span></li>
-                        <li><strong>Reset Zoom (100%)</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">1</kbd></span></li>
-                        <li><strong>Fit Screen</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">0</kbd></span></li>
-                        <li data-feature="memoryOverlay" hidden><strong>Toggle Memory Overlay</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">Alt</kbd><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">M</kbd></span></li>
-                        <li><strong>Zoom to Selection</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">2</kbd></span></li>
-                        <li><strong>Search the Library</strong> – <kbd class="guide-kbd">/</kbd></li>
-                        <li><strong>Temporarily Use Hand Tool</strong> – Hold <kbd class="guide-kbd">Space</kbd></li>
+                        <li><strong>Show or Hide All Panels</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd><kbd class="guide-kbd" data-key="\">\</kbd></span></li>
+                        <li><strong>Zoom In</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd><kbd class="guide-kbd" data-key="+">+</kbd></span></li>
+                        <li><strong>Zoom Out</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd><kbd class="guide-kbd" data-key="-">-</kbd></span></li>
+                        <li><strong>Reset Zoom (100%)</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd><kbd class="guide-kbd" data-key="1">1</kbd></span></li>
+                        <li><strong>Fit Screen</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd><kbd class="guide-kbd" data-key="0">0</kbd></span></li>
+                        
+                        <li><strong>Zoom to Selection</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Shift">Shift</kbd><kbd class="guide-kbd" data-key="2">2</kbd></span></li>
+                        <li><strong>Search the Library</strong> – <kbd class="guide-kbd" data-key="/">/</kbd></li>
+                        <li><strong>Temporarily Use Hand Tool</strong> – Hold <kbd class="guide-kbd" data-key="Space">Space</kbd></li>
                     </ul>
                 </div>
             </div>
@@ -2454,8 +2575,8 @@
                 <div class="guide-item-content">
                     <p><strong>Selection</strong></p>
                     <ul>
-                        <li><strong>Select All Movable Layers</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">A</kbd></span></li>
-                        <li><strong>Cancel Current Action / Clear Selection</strong> – <kbd class="guide-kbd">Escape</kbd></li>
+                        <li><strong>Select All Movable Layers</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd><kbd class="guide-kbd" data-key="A">A</kbd></span></li>
+                        <li><strong>Cancel Current Action / Clear Selection</strong> – <kbd class="guide-kbd" data-key="Escape">Escape</kbd></li>
                     </ul>
                 </div>
             </div>
@@ -2471,18 +2592,18 @@
                 <div class="guide-item-content">
                     <p><strong>Transform</strong></p>
                     <ul>
-                        <li><strong>Duplicate Selected Layer(s)</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">D</kbd></span></li>
-                        <li><strong>Clip to Layer Below / Release Clip</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">Alt</kbd><kbd class="guide-kbd">G</kbd></span></li>
-                        <li><strong>Bring Forward</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">]</kbd></span></li>
-                        <li><strong>Send Backward</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">[</kbd></span></li>
-                        <li><strong>Bring to Front</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">]</kbd></span></li>
-                        <li><strong>Send to Back</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">[</kbd></span></li>
-                        <li><strong>Flip Horizontal</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">H</kbd></span></li>
-                        <li><strong>Flip Vertical</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">V</kbd></span></li>
-                        <li><strong>Delete Selected Layer(s)</strong> – <kbd class="guide-kbd">Delete</kbd> or <kbd class="guide-kbd">Backspace</kbd></li>
-                        <li><strong>Nudge Selected Layer</strong> – <kbd class="guide-kbd">Arrow Keys</kbd></li>
-                        <li><strong>Nudge Selected Layer 10px</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">Arrow Keys</kbd></span></li>
-                        <li><strong>Reorder Focused Layer or Animation Row</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Alt</kbd><kbd class="guide-kbd">Up</kbd></span> or <kbd class="guide-kbd">Down</kbd></li>
+                        <li><strong>Duplicate Selected Layer(s)</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd><kbd class="guide-kbd" data-key="D">D</kbd></span></li>
+                        <li><strong>Clip to Layer Below / Release Clip</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd><kbd class="guide-kbd" data-key="Alt">Alt</kbd><kbd class="guide-kbd" data-key="G">G</kbd></span></li>
+                        <li><strong>Bring Forward</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd><kbd class="guide-kbd" data-key="]">]</kbd></span></li>
+                        <li><strong>Send Backward</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd><kbd class="guide-kbd" data-key="[">[</kbd></span></li>
+                        <li><strong>Bring to Front</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd><kbd class="guide-kbd" data-key="Shift">Shift</kbd><kbd class="guide-kbd" data-key="]">]</kbd></span></li>
+                        <li><strong>Send to Back</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd><kbd class="guide-kbd" data-key="Shift">Shift</kbd><kbd class="guide-kbd" data-key="[">[</kbd></span></li>
+                        <li><strong>Flip Horizontal</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Shift">Shift</kbd><kbd class="guide-kbd" data-key="H">H</kbd></span></li>
+                        <li><strong>Flip Vertical</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Shift">Shift</kbd><kbd class="guide-kbd" data-key="V">V</kbd></span></li>
+                        <li><strong>Delete Selected Layer(s)</strong> – <kbd class="guide-kbd" data-key="Delete">Delete</kbd> or <kbd class="guide-kbd" data-key="Backspace">Backspace</kbd></li>
+                        <li><strong>Nudge Selected Layer</strong> – <kbd class="guide-kbd" data-key="Arrow Keys">Arrow Keys</kbd></li>
+                        <li><strong>Nudge Selected Layer 10px</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Shift">Shift</kbd><kbd class="guide-kbd" data-key="Arrow Keys">Arrow Keys</kbd></span></li>
+                        <li><strong>Reorder Focused Layer or Animation Row</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Alt">Alt</kbd><kbd class="guide-kbd" data-key="Up">Up</kbd></span> or <kbd class="guide-kbd" data-key="Down">Down</kbd></li>
                     </ul>
                 </div>
             </div>
@@ -2498,9 +2619,9 @@
                 <div class="guide-item-content">
                     <p><strong>Brush</strong></p>
                     <ul>
-                        <li><strong>Swap Paint/Erase (Glitter Brush)</strong> – <kbd class="guide-kbd">X</kbd></li>
-                        <li><strong>Decrease Brush Size</strong> – <kbd class="guide-kbd">[</kbd> or <span class="guide-shortcut"><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">[</kbd></span></li>
-                        <li><strong>Increase Brush Size</strong> – <kbd class="guide-kbd">]</kbd> or <span class="guide-shortcut"><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">]</kbd></span></li>
+                        <li><strong>Swap Paint/Erase (Glitter Brush)</strong> – <kbd class="guide-kbd" data-key="X">X</kbd></li>
+                        <li><strong>Decrease Brush Size</strong> – <kbd class="guide-kbd" data-key="[">[</kbd> or <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Shift">Shift</kbd><kbd class="guide-kbd" data-key="[">[</kbd></span></li>
+                        <li><strong>Increase Brush Size</strong> – <kbd class="guide-kbd" data-key="]">]</kbd> or <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Shift">Shift</kbd><kbd class="guide-kbd" data-key="]">]</kbd></span></li>
                     </ul>
                 </div>
             </div>
@@ -2516,20 +2637,20 @@
                 <div class="guide-item-content">
                     <p><strong>Select Area</strong></p>
                     <ul>
-                        <li><strong>Deselect the Area</strong> – <kbd class="guide-kbd">Escape</kbd> or <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">D</kbd></span></li>
-                        <li><strong>Select the Whole Canvas</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">A</kbd></span></li>
-                        <li><strong>Reselect the Last Area</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">D</kbd></span></li>
-                        <li><strong>Invert the Area</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">I</kbd></span></li>
-                        <li><strong>Close Polygon Lasso</strong> – <kbd class="guide-kbd">Enter</kbd> or <kbd class="guide-kbd">Double-click</kbd></li>
-                        <li><strong>Remove Last Corner</strong> – <kbd class="guide-kbd">Delete</kbd> or <kbd class="guide-kbd">Backspace</kbd></li>
-                        <li><strong>Cancel Polygon Lasso</strong> – <kbd class="guide-kbd">Escape</kbd></li>
-                        <li><strong>Apply Area Modification</strong> – <kbd class="guide-kbd">Enter</kbd></li>
-                        <li><strong>Cancel Area Modification</strong> – <kbd class="guide-kbd">Escape</kbd></li>
-                        <li><strong>Adjust Area Amount</strong> – <kbd class="guide-kbd">Arrow Keys</kbd></li>
-                        <li><strong>Adjust Area Amount by 10</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">Arrow Keys</kbd></span></li>
-                        <li><strong>Fill the Area with Glitter</strong> – <kbd class="guide-kbd">Enter</kbd></li>
-                        <li><strong>Erase Glitter in the Area</strong> – <kbd class="guide-kbd">Delete</kbd> or <kbd class="guide-kbd">Backspace</kbd></li>
-                        <li><strong>Move the Area</strong> – <kbd class="guide-kbd">Arrow Keys</kbd></li>
+                        <li><strong>Deselect the Area</strong> – <kbd class="guide-kbd" data-key="Escape">Escape</kbd> or <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd><kbd class="guide-kbd" data-key="D">D</kbd></span></li>
+                        <li><strong>Select the Whole Canvas</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd><kbd class="guide-kbd" data-key="A">A</kbd></span></li>
+                        <li><strong>Reselect the Last Area</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd><kbd class="guide-kbd" data-key="Shift">Shift</kbd><kbd class="guide-kbd" data-key="D">D</kbd></span></li>
+                        <li><strong>Invert the Area</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd><kbd class="guide-kbd" data-key="Shift">Shift</kbd><kbd class="guide-kbd" data-key="I">I</kbd></span></li>
+                        <li><strong>Close Polygon Lasso</strong> – <kbd class="guide-kbd" data-key="Enter">Enter</kbd> or <kbd class="guide-kbd" data-key="Double-click">Double-click</kbd></li>
+                        <li><strong>Remove Last Corner</strong> – <kbd class="guide-kbd" data-key="Delete">Delete</kbd> or <kbd class="guide-kbd" data-key="Backspace">Backspace</kbd></li>
+                        <li><strong>Cancel Polygon Lasso</strong> – <kbd class="guide-kbd" data-key="Escape">Escape</kbd></li>
+                        <li><strong>Apply Area Modification</strong> – <kbd class="guide-kbd" data-key="Enter">Enter</kbd></li>
+                        <li><strong>Cancel Area Modification</strong> – <kbd class="guide-kbd" data-key="Escape">Escape</kbd></li>
+                        <li><strong>Adjust Area Amount</strong> – <kbd class="guide-kbd" data-key="Arrow Keys">Arrow Keys</kbd></li>
+                        <li><strong>Adjust Area Amount by 10</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Shift">Shift</kbd><kbd class="guide-kbd" data-key="Arrow Keys">Arrow Keys</kbd></span></li>
+                        <li><strong>Fill the Area with Glitter</strong> – <kbd class="guide-kbd" data-key="Enter">Enter</kbd></li>
+                        <li><strong>Erase Glitter in the Area</strong> – <kbd class="guide-kbd" data-key="Delete">Delete</kbd> or <kbd class="guide-kbd" data-key="Backspace">Backspace</kbd></li>
+                        <li><strong>Move the Area</strong> – <kbd class="guide-kbd" data-key="Arrow Keys">Arrow Keys</kbd></li>
                     </ul>
                 </div>
             </div>
@@ -2545,11 +2666,11 @@
                 <div class="guide-item-content">
                     <p><strong>Pen</strong></p>
                     <ul>
-                        <li><strong>Delete Selected Points / Last Point While Drawing</strong> – <kbd class="guide-kbd">Delete</kbd> or <kbd class="guide-kbd">Backspace</kbd></li>
-                        <li><strong>Nudge Selected Points</strong> – <kbd class="guide-kbd">Arrow Keys</kbd></li>
-                        <li><strong>Nudge Selected Points 10px</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">Arrow Keys</kbd></span></li>
-                        <li><strong>Finish Path / Edit Selected Path</strong> – <kbd class="guide-kbd">Enter</kbd></li>
-                        <li><strong>Finish Path / Clear Point Selection</strong> – <kbd class="guide-kbd">Escape</kbd></li>
+                        <li><strong>Delete Selected Points / Last Point While Drawing</strong> – <kbd class="guide-kbd" data-key="Delete">Delete</kbd> or <kbd class="guide-kbd" data-key="Backspace">Backspace</kbd></li>
+                        <li><strong>Nudge Selected Points</strong> – <kbd class="guide-kbd" data-key="Arrow Keys">Arrow Keys</kbd></li>
+                        <li><strong>Nudge Selected Points 10px</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Shift">Shift</kbd><kbd class="guide-kbd" data-key="Arrow Keys">Arrow Keys</kbd></span></li>
+                        <li><strong>Finish Path / Edit Selected Path</strong> – <kbd class="guide-kbd" data-key="Enter">Enter</kbd></li>
+                        <li><strong>Finish Path / Clear Point Selection</strong> – <kbd class="guide-kbd" data-key="Escape">Escape</kbd></li>
                     </ul>
                 </div>
             </div>
@@ -2565,9 +2686,9 @@
                 <div class="guide-item-content">
                     <p><strong>Gradient</strong></p>
                     <ul>
-                        <li><strong>Move Focused Gradient Stop 1%</strong> – <kbd class="guide-kbd">Arrow Keys</kbd></li>
-                        <li><strong>Move Focused Gradient Stop 5%</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">Arrow Keys</kbd></span></li>
-                        <li><strong>Delete Focused Gradient Stop</strong> – <kbd class="guide-kbd">Delete</kbd> or <kbd class="guide-kbd">Backspace</kbd></li>
+                        <li><strong>Move Focused Gradient Stop 1%</strong> – <kbd class="guide-kbd" data-key="Arrow Keys">Arrow Keys</kbd></li>
+                        <li><strong>Move Focused Gradient Stop 5%</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Shift">Shift</kbd><kbd class="guide-kbd" data-key="Arrow Keys">Arrow Keys</kbd></span></li>
+                        <li><strong>Delete Focused Gradient Stop</strong> – <kbd class="guide-kbd" data-key="Delete">Delete</kbd> or <kbd class="guide-kbd" data-key="Backspace">Backspace</kbd></li>
                     </ul>
                 </div>
             </div>
@@ -2583,10 +2704,10 @@
                 <div class="guide-item-content">
                     <p><strong>Animation</strong></p>
                     <ul>
-                        <li><strong>Play / Pause Motion</strong> – <kbd class="guide-kbd">Space (tap)</kbd></li>
-                        <li><strong>Previous Frame</strong> – <kbd class="guide-kbd">,</kbd></li>
-                        <li><strong>Next Frame</strong> – <kbd class="guide-kbd">.</kbd></li>
-                        <li><strong>Go to Loop Start</strong> – <kbd class="guide-kbd">Home</kbd></li>
+                        <li><strong>Play / Pause Motion</strong> – <kbd class="guide-kbd" data-key="Space (tap)">Space (tap)</kbd></li>
+                        <li><strong>Previous Frame</strong> – <kbd class="guide-kbd" data-key=",">,</kbd></li>
+                        <li><strong>Next Frame</strong> – <kbd class="guide-kbd" data-key=".">.</kbd></li>
+                        <li><strong>Go to Loop Start</strong> – <kbd class="guide-kbd" data-key="Home">Home</kbd></li>
                     </ul>
                 </div>
             </div>
@@ -2602,9 +2723,9 @@
                 <div class="guide-item-content">
                     <p><strong>Text</strong></p>
                     <ul>
-                        <li><strong>Toggle Bold</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">B</kbd></span></li>
-                        <li><strong>Toggle Italic</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">I</kbd></span></li>
-                        <li><strong>Toggle Underline</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">U</kbd></span></li>
+                        <li><strong>Toggle Bold</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd><kbd class="guide-kbd" data-key="B">B</kbd></span></li>
+                        <li><strong>Toggle Italic</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd><kbd class="guide-kbd" data-key="I">I</kbd></span></li>
+                        <li><strong>Toggle Underline</strong> – <span class="guide-shortcut"><kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd><kbd class="guide-kbd" data-key="U">U</kbd></span></li>
                     </ul>
                 </div>
             </div>
@@ -2643,13 +2764,13 @@
                     <p><strong>Move &amp; Transform</strong></p>
                     <ul>
                         <li><strong>Move, Scale, and Rotate Selection</strong> – Touch: two-finger transform</li>
-                        <li><strong>Duplicate Layer(s) While Dragging</strong> – Mouse: <kbd class="guide-kbd">Alt</kbd>-drag</li>
-                        <li><strong>Duplicate Gradient Stop While Dragging</strong> – Mouse: <kbd class="guide-kbd">Alt</kbd>-drag gradient stop</li>
-                        <li><strong>Snap Gradient Stop to 5% Steps</strong> – Mouse: <kbd class="guide-kbd">Shift</kbd>-drag gradient stop</li>
-                        <li><strong>Axis-lock Selected Layer Move</strong> – Mouse: <kbd class="guide-kbd">Shift</kbd>-drag</li>
-                        <li><strong>Temporarily Disable Snapping</strong> – Hold Mouse: <kbd class="guide-kbd">Ctrl</kbd>-drag</li>
-                        <li><strong>Snap Rotation to 15deg</strong> – Mouse: <kbd class="guide-kbd">Shift</kbd>-rotate</li>
-                        <li><strong>Resize Layer(s) from Center</strong> – Mouse: <kbd class="guide-kbd">Alt</kbd>-resize</li>
+                        <li><strong>Duplicate Layer(s) While Dragging</strong> – Mouse: <kbd class="guide-kbd" data-key="Alt">Alt</kbd>-drag</li>
+                        <li><strong>Duplicate Gradient Stop While Dragging</strong> – Mouse: <kbd class="guide-kbd" data-key="Alt">Alt</kbd>-drag gradient stop</li>
+                        <li><strong>Snap Gradient Stop to 5% Steps</strong> – Mouse: <kbd class="guide-kbd" data-key="Shift">Shift</kbd>-drag gradient stop</li>
+                        <li><strong>Axis-lock Selected Layer Move</strong> – Mouse: <kbd class="guide-kbd" data-key="Shift">Shift</kbd>-drag</li>
+                        <li><strong>Temporarily Disable Snapping</strong> – Hold Mouse: <kbd class="guide-kbd" data-key="Ctrl">Ctrl</kbd>-drag</li>
+                        <li><strong>Snap Rotation to 15deg</strong> – Mouse: <kbd class="guide-kbd" data-key="Shift">Shift</kbd>-rotate</li>
+                        <li><strong>Resize Layer(s) from Center</strong> – Mouse: <kbd class="guide-kbd" data-key="Alt">Alt</kbd>-resize</li>
                     </ul>
                 </div>
             </div>
@@ -2665,8 +2786,8 @@
                 <div class="guide-item-content">
                     <p><strong>Pen</strong></p>
                     <ul>
-                        <li><strong>Constrain Segment or Handle to 45deg</strong> – Mouse: <kbd class="guide-kbd">Shift</kbd>-draw or drag a handle</li>
-                        <li><strong>Break a Handle Pair</strong> – Mouse: <kbd class="guide-kbd">Alt</kbd>-drag a handle</li>
+                        <li><strong>Constrain Segment or Handle to 45deg</strong> – Mouse: <kbd class="guide-kbd" data-key="Shift">Shift</kbd>-draw or drag a handle</li>
+                        <li><strong>Break a Handle Pair</strong> – Mouse: <kbd class="guide-kbd" data-key="Alt">Alt</kbd>-drag a handle</li>
                         <li><strong>Add a Point</strong> – Mouse: click a segment</li>
                         <li><strong>Bend a Segment</strong> – Mouse: drag a segment</li>
                         <li><strong>Switch a Point Between Corner and Smooth</strong> – Mouse: double-click a point</li>
@@ -2685,10 +2806,10 @@
                 <div class="guide-item-content">
                     <p><strong>Select Area</strong></p>
                     <ul>
-                        <li><strong>Select Layer Pixels from Thumbnail</strong> – Mouse: <kbd class="guide-kbd">Ctrl/Cmd</kbd>-click a layer thumbnail</li>
-                        <li><strong>Add to the Area</strong> – Mouse: <kbd class="guide-kbd">Shift</kbd>-drag</li>
-                        <li><strong>Subtract from the Area</strong> – Mouse: <kbd class="guide-kbd">Alt</kbd>-drag</li>
-                        <li><strong>Keep Only the Overlap with the Area</strong> – Mouse: <kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">Alt</kbd>-drag</li>
+                        <li><strong>Select Layer Pixels from Thumbnail</strong> – Mouse: <kbd class="guide-kbd" data-key="Ctrl/Cmd">Ctrl</kbd>-click a layer thumbnail</li>
+                        <li><strong>Add to the Area</strong> – Mouse: <kbd class="guide-kbd" data-key="Shift">Shift</kbd>-drag</li>
+                        <li><strong>Subtract from the Area</strong> – Mouse: <kbd class="guide-kbd" data-key="Alt">Alt</kbd>-drag</li>
+                        <li><strong>Keep Only the Overlap with the Area</strong> – Mouse: <kbd class="guide-kbd" data-key="Shift">Shift</kbd><kbd class="guide-kbd" data-key="Alt">Alt</kbd>-drag</li>
                         <li><strong>Move the Area</strong> – Mouse: drag inside the area</li>
                         <li><strong>Move the Shape Being Drawn</strong> – Mouse: hold space during a drag</li>
                     </ul>
@@ -2698,3 +2819,33 @@
 
     </div>
 </div>
+		</article>
+	</main>
+	<footer class="content-page-footer">
+		<ul class="content-page-footer-links">
+			<li><a href="../">Editor</a></li>
+			<li><a href="../guide/" aria-current="page">Guide</a></li>
+			<li><a href="../history/">History</a></li>
+			<li><a href="../personal-web/">Personal Web</a></li>
+			<li><a href="../preservation/">Preservation</a></li>
+			<li><a href="../about/">About</a></li>
+			<li><a href="../updates/">Updates</a></li>
+		</ul>
+		<p class="content-page-copyright">© Ryan Davi 2026</p>
+	</footer>
+	</div>
+	<script src="../js/ui/menu-popover.js?v=fdfbce8a"></script>
+	<script src="../js/core/key-labels.js?v=80b61ded"></script>
+	<script src="../js/site/content-page.js?v=28085a47"></script>
+
+	<!-- site:analytics:start -->
+	<!-- Analytics: GoatCounter. Cookieless and no persistent identifier, so it needs
+	no consent banner. Loaded last and async so it can never delay the editor.
+	The script skips counting on localhost, so local development stays out of the stats.
+	tools/build-site.js removes this region for environments with analytics off. -->
+	<script data-goatcounter="https://ryandavi-glitter.goatcounter.com/count"
+	async src="//gc.zgo.at/count.js"></script>
+	<!-- site:analytics:end -->
+</body>
+
+</html>

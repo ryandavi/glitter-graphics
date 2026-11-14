@@ -1,7 +1,8 @@
 'use strict';
 
 // Assembles the folder a deploy uploads: the tracked files under the paths in
-// tools/site.json, with per-environment changes applied to index.html. Only
+// tools/site.json, with per-environment changes applied to index.html and the
+// generated content pages (every published .html outside modals/). Only
 // tracked files are copied, so local-only pages never reach a server.
 
 const fs = require('fs');
@@ -22,7 +23,7 @@ function trackedFiles(entry) {
 
 function removeRegion(source, name) {
 	const pattern = new RegExp(`^[\\t ]*<!-- site:${name}:start -->[\\s\\S]*?^[\\t ]*<!-- site:${name}:end -->\\n?`, 'mu');
-	if (!pattern.test(source)) throw new Error(`Missing site:${name} marker pair in index.html`);
+	if (!pattern.test(source)) throw new Error(`Missing site:${name} marker pair`);
 	return source.replace(pattern, '');
 }
 
@@ -47,7 +48,7 @@ function main(args = process.argv.slice(2)) {
 		for (const file of files) {
 			const target = path.join(out, file);
 			fs.mkdirSync(path.dirname(target), { recursive: true });
-			if (file === 'index.html') {
+			if (file.endsWith('.html') && !file.startsWith('modals/')) {
 				fs.writeFileSync(target, applyEnvironment(fs.readFileSync(path.join(root, file), 'utf8'), environment));
 			} else {
 				fs.copyFileSync(path.join(root, file), target);

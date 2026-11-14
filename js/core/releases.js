@@ -245,3 +245,34 @@ const RELEASES = [
 ];
 
 const PUBLISHED_RELEASES = RELEASES.filter((release) => !release.unreleased);
+
+// One version-history entry as HTML: the editor's About and Welcome modals
+// (js/editor/modals-wiring.js) and the standalone About and Updates pages
+// (tools/build-pages.js) all render through this, so they can't drift. Each
+// entry is the shared "Advanced disclosure" primitive (.advanced-disclosure,
+// see disclosures.js). A feature's `guide` becomes a real link to that Guide
+// section; the editor opens the Guide modal on a plain click instead.
+function renderReleaseEntryHtml(release, { open = false, guideHref = 'guide/' } = {}) {
+	const escape = (value) => String(value).replace(/[&<>"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[character]);
+	const image = release.image?.src
+		? `<figure class="version-history-image"><img src="${escape(release.image.src)}" alt="${escape(release.image.alt || '')}" loading="lazy" decoding="async"></figure>`
+		: '';
+	const features = release.features.map((feature) => {
+		// Older entries stored features as plain strings; treat those as additions.
+		const { type = 'added', text = feature, guide = null } = typeof feature === 'string' ? {} : feature;
+		const link = guide
+			? `<a class="version-history-guide-link" href="${escape(guideHref)}#${escape(guide)}" data-guide-anchor="${escape(guide)}">Show me</a>`
+			: '';
+		return `<li class="version-history-feature"><span class="badge version-history-badge is-${escape(type)}">${escape(type)}</span> ${escape(text)} ${link}</li>`;
+	}).join('');
+	const format = release.projectFormat != null
+		? `<p class="version-history-format-note">Saves project files in format version ${escape(release.projectFormat)}.</p>`
+		: '';
+	return `<div class="advanced-disclosure version-history-entry${open ? ' is-open' : ''}" data-advanced="">`
+		+ `<button type="button" class="advanced-disclosure-toggle version-history-toggle" data-advanced-toggle="" aria-expanded="${open}">`
+		+ `<span class="version-history-header"><span class="version-history-title">v${escape(release.version)} — ${escape(release.name)}</span><time datetime="${escape(release.date)}">${escape(release.dateLabel)}</time></span>`
+		+ '<span class="advanced-disclosure-chevron icon-wrapper"><svg class="icon"><use href="#icon-chevron-down"></use></svg></span>'
+		+ '</button>'
+		+ `<div class="advanced-disclosure-content version-history-content" data-advanced-content="">${image}<p>${escape(release.summary)}</p><ul>${features}</ul>${format}</div>`
+		+ '</div>';
+}

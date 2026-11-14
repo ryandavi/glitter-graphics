@@ -26,7 +26,9 @@ On the server, `/root/bin/deploy-glitter.sh`:
 2. Copies only the paths listed under `publish` in `tools/site.json` into `/var/www/labs.ryandavi.com/glitter/`. This is the same set `tools/build-site.js` builds for `production`, with `index.html` unchanged. `admin/`, `tests/`, `tools/`, `docs/`, `content/` and the SCSS sources are never published.
 3. Removes anything on the server that is no longer in that set.
 
-The server has no Node.js, so nothing is built there. The committed `css/style.css` and `js/dist/boot.js` are what get published: run `node tools/build.js` and compile the SCSS before committing.
+The server has no Node.js, so nothing is built there. The committed `css/style.css`, `js/dist/boot.js`, the content pages (`about/`, `guide/`, `history/`, `personal-web/`, `preservation/`, `updates/`) and `sitemap.xml` are what get published. Compile the SCSS, then run `node tools/build.js` before committing: it rebuilds the modals and pages too, and the pages carry the stylesheet hash. The page list, titles, descriptions and the canonical `origin` are in `tools/site.json`.
+
+Each public article has one generated HTML document. The editor fetches its `.doc-content` for the modal and updates the URL to the article path; refreshing loads that standalone document. Apache serves the directory's `index.html` directly, with no rewrite rules or PHP required. The article scrolls below the header so its scrollbar does not move the menu button.
 
 Because the server folder is overwritten from git, never edit files there directly. The change would be lost on the next deploy.
 

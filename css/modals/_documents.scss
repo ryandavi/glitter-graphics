@@ -4,14 +4,18 @@
    These share one prose/timeline/reference stylesheet since all use the same
    "long-form document" shape; only the content differs. A modal opts in with
    the .document-modal class on its overlay (see index.html), so adding another
-   document needs no change here. The Guide keeps its own #guideModal rules. */
-.modal-overlay.document-modal {
+   document needs no change here. The Guide keeps its own #guideModal rules.
+   The standalone page of the same document (tools/build-pages.js) opts in
+   with .doc-page-document on its <main>; .doc-content is the element that
+   holds the fragment in both places. */
+.modal-overlay.document-modal,
+.doc-page-document {
 
 	// The app-wide `* { user-select: none }` only re-enables p and span, which
 	// leaves dates, links, bold text, list items and table cells unselectable.
 	// A document is for reading and quoting, so all of its text selects.
-	.modal-body,
-	.modal-body * {
+	.doc-content,
+	.doc-content * {
 		-webkit-user-select: text;
 		user-select: text;
 	}
@@ -105,9 +109,8 @@
 		//tiled background
 		background: url("../images/glitter/bring-on-the-glitter/green-010.gif") repeat;
 
-		>h2 {
-			display: none;
-		}
+		// The hero image spells the title; the h1 stays for the outline and screen readers.
+		>h1 { @include visually-hidden; }
 	}
 
 	.center {
@@ -266,23 +269,19 @@
 
 
 
-	.figure-wrapper+h3,
+	.figure-wrapper+h2,
 
 	p+h2,
 	ol+h2,
-	ul+h2,
-
-	p+h3,
-	ol+h3,
-	ul+h3 {
+	ul+h2 {
 		margin-top: var(--spacing-xl);
 
 	}
 
 	p+p,
-	p+h4,
-	ol+h4,
-	ul+h4 {
+	p+h3,
+	ol+h3,
+	ul+h3 {
 		margin-top: var(--spacing-md);
 	}
 
@@ -290,10 +289,6 @@
 	h2+p,
 	h2+ol,
 	h2+ul,
-
-	h3+p,
-	h3+ol,
-	h3+ul,
 
 	ol+p,
 	ul+p,
@@ -306,9 +301,9 @@
 
 
 
-	p+h5,
-	ol+h5,
-	ul+h5,
+	p+h4,
+	ol+h4,
+	ul+h4,
 
 	ol+ul,
 	ul+ol {
@@ -316,16 +311,16 @@
 	}
 
 
-	h4+ul,
-	h4+ol,
+	h3+ul,
+	h3+ol,
 
-	h5+ul,
-	h5+ol {
+	h4+ul,
+	h4+ol {
 		margin-top: var(--spacing-xs);
 	}
 
 	/* Chronological reference list in the Timeline section — a plain ul so
-	   it inherits the h3/ul spacing rules above instead of needing its own.
+	   it inherits the h2/ul spacing rules above instead of needing its own.
 	   Event classes set --tl-color once; list borders and filter dots share it. */
 	.timeline-all { --tl-color: var(--color-accent); }
 	.timeline-start { --tl-color: var(--color-success); }
@@ -671,7 +666,7 @@
 		}
 	}
 
-	>.modal-content>.modal-body ol li {
+	.doc-content ol li {
 		transition: background-color var(--transition-fast) ease;
 
 		&:hover {

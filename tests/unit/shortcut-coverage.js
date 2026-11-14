@@ -22,8 +22,13 @@ Object.entries(context.__commands).forEach(([id, command]) => {
 // The guide's shortcut list, tool headings and panel titles are generated from
 // COMMANDS, TOOLS and PANEL_SCHEMAS by tools/build-modals.js. Fail when the
 // committed guide is stale, so a new or renamed command is always documented.
-const guideBuild = require(path.join(root, 'tools/build-modals.js')).buildOne('guide', { check: true, stamp: false });
-assert(guideBuild.ok, 'modals/guide.html is out of date: run node tools/build-modals.js guide');
+const { buildOne, getAppRegistries } = require(path.join(root, 'tools/build-modals.js'));
+const guideBuild = buildOne('guide', { check: true, stamp: false });
+const pages = require(path.join(root, 'tools/build-pages.js')).buildPages({
+	fragments: new Map([['guide', guideBuild.output]]), registries: getAppRegistries(), check: true,
+	compileFragment: name => buildOne(name, { check: true, stamp: false }).output
+});
+assert(guideBuild.ok && !pages.stale.includes('guide/index.html'), 'guide/index.html is out of date: run node tools/build-modals.js guide');
 
 [
 	'trackpadPan',

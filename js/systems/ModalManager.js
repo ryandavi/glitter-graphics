@@ -8,6 +8,11 @@ class ModalManager {
 		this.stack = [];
 		this.backgroundState = [];
 		this.historyStateKey = 'glitterModal';
+		this.editorUrl = location.href;
+		// Keep asset requests rooted at the editor when a document changes the path.
+		const base = document.querySelector('base') || document.createElement('base');
+		base.href = document.baseURI;
+		if (!base.isConnected) document.head.prepend(base);
 		this.setupGlobalListeners();
 	}
 
@@ -64,6 +69,8 @@ class ModalManager {
 			closeOnOutsideClick: options.closeOnOutsideClick !== false,
 			closeOnEscape: options.closeOnEscape !== false,
 			externalContentUrl: options.externalContentUrl || null,
+			contentSelector: options.contentSelector || null,
+			pageUrl: options.pageUrl ? new URL(options.pageUrl, document.baseURI).href : null,
 			cacheContent: options.cacheContent !== false,
 			showWhileLoading: options.showWhileLoading === true,
 			loadingLabel: options.loadingLabel || 'Loading\u2026',
@@ -294,13 +301,32 @@ class ModalManager {
 				config.contentLoaded = true;
 			}
 
-			modalBody.innerHTML = html;
+			modalBody.innerHTML = this.extractContent(config, html);
 			applyFeatureGates(modalBody);
 			if (config.onContentLoaded) await config.onContentLoaded(modalBody);
 		} catch (error) {
 			console.error(`Error loading modal content for ${config.id}:`, error);
 			modalBody.innerHTML = `<div class="modal-error">Failed to load content. Please try again.</div>`;
 		}
+	}
+
+	extractContent(config, html) {
+		if (!config.contentSelector) return html;
+		const page = new DOMParser().parseFromString(html, 'text/html');
+		const article = page.querySelector(config.contentSelector);
+		if (!article) throw new Error(`Missing ${config.contentSelector} in ${config.externalContentUrl}`);
+		article.querySelectorAll('template[data-modal-only]').forEach(template => template.replaceWith(template.content));
+		const pageUrl = new URL(config.externalContentUrl, document.baseURI);
+		// Page assets are relative to its folder; fragment links stay in this modal.
+		for (const element of article.querySelectorAll('[src], [href], [poster], [srcset]')) {
+			for (const attr of ['src', 'href', 'poster']) {
+				const value = element.getAttribute(attr);
+				if (value && !value.startsWith('#')) element.setAttribute(attr, new URL(value, pageUrl).href);
+			}
+			const srcset = element.getAttribute('srcset');
+			if (srcset) element.setAttribute('srcset', srcset.replace(/(^|,)(\s*)(\S+)/gu, (_match, separator, space, url) => `${separator}${space}${new URL(url, pageUrl).href}`));
+		}
+		return article.innerHTML;
 	}
 
 	resetScroll(config) {
@@ -472,10 +498,11 @@ class ModalManager {
 		const currentState = history.state && typeof history.state === 'object' ? history.state : {};
 		const ids = this.stack.map(config => config.id);
 		const nextState = { ...currentState, [this.historyStateKey]: ids };
+		const url = this.stack.find(config => config.pageUrl)?.pageUrl || this.editorUrl;
 		if (currentState[this.historyStateKey]?.length === ids.length) {
-			history.replaceState(nextState, '', location.href);
+			history.replaceState(nextState, '', url);
 		} else {
-			history.pushState(nextState, '', location.href);
+			history.pushState(nextState, '', url);
 		}
 	}
 

@@ -12,16 +12,16 @@
 		text-align: center;
 	}
 
-	.figure-wrapper+h3,
-	p+h3,
-	ol+h3,
-	ul+h3 { margin-top: var(--spacing-xl); }
+	.figure-wrapper+h2,
+	p+h2,
+	ol+h2,
+	ul+h2 { margin-top: var(--spacing-xl); }
 
 	p+p { margin-top: var(--spacing-md); }
 
-	h3+p,
-	h3+ol,
-	h3+ul,
+	h2+p,
+	h2+ol,
+	h2+ul,
 	ol+p,
 	ul+p,
 	p+ol,
@@ -124,7 +124,9 @@
 // .advanced-disclosure in _components.scss and disclosures.js) rather than a
 // bespoke accordion, so it collapses/expands, chevron included, for free.
 #welcomeModal,
-#aboutModal {
+#aboutModal,
+.doc-page-about,
+.doc-page-updates {
 	.version-history {
 		display: flex;
 		flex-direction: column;
@@ -231,7 +233,8 @@
 	}
 }
 
-.modal-content {
+.modal-content,
+.doc-content {
 	h2 { font-size: var(--font-size-2xl); }
 	h3 { font-size: var(--font-size-xl); }
 	h4 { font-size: var(--font-size-lg); }
@@ -363,6 +366,15 @@
 			margin-inline: auto;
 		}
 	}
+}
+
+// A document opens with its title as h1 (in the hero), so its sections are
+// h2 and run one size smaller than an h2 elsewhere in a modal.
+.doc-content {
+	h2 { font-size: var(--font-size-xl); }
+	h3 { font-size: var(--font-size-lg); }
+	h4 { font-size: var(--font-size-md); }
+	h5 { font-size: var(--font-size-base); }
 }
 
 .welcome-actions {

@@ -5,6 +5,7 @@ const { spawnSync } = require('child_process');
 const { tokenize, buildTree, walk } = require('./modal-tokenize');
 const { lintSource } = require('./modal-lint');
 const registry = require('./content-registry');
+const { buildPages } = require('./build-pages');
 
 const root = registry.root;
 const defaultSourceDir = path.join(root, 'content', 'src');
@@ -38,12 +39,22 @@ function getAppRegistries() {
 	vm.createContext(context);
 	[
 		'js/core/math.js', 'js/core/color.js', 'js/core/releases.js', 'js/core/fields.js', 'js/core/area.js', 'js/core/config.js', 'js/core/tools.js', 'js/core/sessions.js',
-		'js/core/layer-types.js', 'js/core/options.js', 'js/core/key-labels.js', 'js/core/commands.js',
+		'js/core/layer-types.js', 'js/core/options.js', 'js/core/key-labels.js', 'js/core/commands.js', 'js/core/features.js',
 		'js/effects/animation.js', 'js/systems/CanvasBounds.js', 'js/ui/panel-schemas.js'
 	].forEach(file => vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), context, { filename: file }));
-	vm.runInContext('globalThis.__registries = { CONFIG, ToolType, TOOLS, TOOL_ORDER, COMMANDS, PANEL_SCHEMAS, getShortcutGroups };', context);
+	vm.runInContext('globalThis.__registries = { CONFIG, ToolType, TOOLS, TOOL_ORDER, COMMANDS, PANEL_SCHEMAS, getShortcutGroups, FEATURES, KEY_LABELS_PC, formatKeyLabel, renderReleaseEntryHtml };', context);
 	appRegistries = context.__registries;
 	return appRegistries;
+}
+
+// The modal id -> page slug map from tools/site.json, read once per process.
+let pageSlugs = null;
+function pageSlugForModal(modalId) {
+	if (!pageSlugs) {
+		const site = JSON.parse(fs.readFileSync(path.join(root, 'tools', 'site.json'), 'utf8'));
+		pageSlugs = new Map(site.pages.filter(page => page.modal).map(page => [page.modal, page.slug]));
+	}
+	return pageSlugs.get(modalId) || null;
 }
 
 function escapeHtml(value) {
@@ -359,10 +370,17 @@ function expandHelper(remaining, offset, ctx, flags) {
 		};
 	}
 
-	// In-page anchor and "open another modal" links, both inline in prose.
+	// In-page anchor and "open another document" links, both inline in prose.
+	// A document with a standalone page (tools/site.json) links to that page;
+	// the editor opens the modal on a plain click (initModalCrossLinks).
 	for (const [name, build] of [
 		['goto', id => `<a href="#${id}">`],
-		['open', id => `<button type="button" class="doc-inline-link" data-open-modal="${id}">`]
+		['open', id => {
+			const slug = pageSlugForModal(id);
+			return slug
+				? `<a href="${slug}/" class="doc-inline-link" data-open-modal="${id}">`
+				: `<button type="button" class="doc-inline-link" data-open-modal="${id}">`;
+		}]
 	]) {
 		if (!remaining.startsWith(`{${name}:`)) continue;
 		const headerEnd = remaining.indexOf('}');
@@ -374,7 +392,7 @@ function expandHelper(remaining, offset, ctx, flags) {
 		let body = remaining.slice(openLength, close);
 		if (!body || /[<\r\n]/u.test(body)) return null;
 		// An in-page link to an entity's heading is that entity (see soleEntity).
-		// The open-modal button stays a plain button.
+		// An open-document link stays a plain link.
 		const hoisted = name === 'goto' ? soleEntity(body, ctx) : null;
 		let attributes = '';
 		if (hoisted) {
@@ -385,7 +403,7 @@ function expandHelper(remaining, offset, ctx, flags) {
 		}
 		const expanded = expandText(body, offset + openLength, ctx, { ...flags, noGloss: true, noCard: true });
 		const open = hoisted ? build(id).replace(/>$/u, `${attributes}>`) : build(id);
-		return { value: `${open}${expanded}${name === 'goto' ? '</a>' : '</button>'}`, length: close + closeTag.length };
+		return { value: `${open}${expanded}${open.startsWith('<a ') ? '</a>' : '</button>'}`, length: close + closeTag.length };
 	}
 
 	// A page that's gone. It still links somewhere useful: the Wayback capture
@@ -736,7 +754,7 @@ function renderTocItems(items, depth) {
 function renderToc(id, items, indentation = '') {
 	return [
 		`${indentation}<div class="toc" id="${id}">`,
-		`${indentation}    <h3>Contents</h3>`,
+		`${indentation}    <h2>Contents</h2>`,
 		...renderTocItems(items, 1).map(line => `${indentation}${line}`),
 		`${indentation}</div>`
 	].join('\n');
@@ -1118,6 +1136,7 @@ function parseArgs(args) {
 		else if (argument === '--icons=all') options.iconsAll = true;
 		else if (argument === '--no-lint') options.lint = false;
 		else if (argument === '--no-stamp') options.stamp = false;
+		else if (argument === '--no-pages') options.pages = false;
 		else if (argument === '--out-dir') options.outDir = path.resolve(root, args[++index]);
 		else if (argument === '--wiring') options.wiringPath = path.resolve(root, args[++index]);
 		else if (argument.startsWith('--')) throw new Error(`Unknown option "${argument}".`);
@@ -1155,6 +1174,17 @@ function buildOne(name, options = {}) {
 	}
 	const result = { name, sourceFile, outputPath, output: compiled.output, diagnostics, todos: compiled.todos, duration: 0 };
 	if (hasErrors(diagnostics)) return { ...result, ok: false, duration: Date.now() - started };
+	// Public articles are persisted only as full pages by buildPages below.
+	// Keep fragments in memory; fixture builds still write their own outputs.
+	const pageSource = sourceDir === defaultSourceDir && path.resolve(outDir) === defaultOutputDir
+		&& require('./site.json').pages.some(page => page.source === name);
+	if (pageSource) {
+		if (fs.existsSync(outputPath)) {
+			if (options.check) return { ...result, ok: false, mismatch: true, duration: Date.now() - started };
+			fs.rmSync(outputPath);
+		}
+		return { ...result, ok: true, duration: Date.now() - started };
+	}
 	if (options.check) {
 		const matches = fs.existsSync(outputPath) && fs.readFileSync(outputPath, 'utf8') === compiled.output;
 		return { ...result, ok: matches, mismatch: !matches, duration: Date.now() - started };
@@ -1189,13 +1219,30 @@ function runBuild(options) {
 	const names = explicit ? options.names : discoverNames(sourceDir);
 	const loaded = loadRegistry({ fresh: true });
 	let failed = printRegistryProblems(loaded);
+	const fragments = new Map();
 	for (const name of names) {
 		const result = buildOne(name, { ...options, sourceDir, registry: loaded });
 		if (result.missing && !explicit) continue;
 		printResult(result);
 		if (!result.ok) failed = true;
+		if (result.output && !hasErrors(result.diagnostics)) fragments.set(name, result.output);
 	}
 	const stale = writeGenerated(loaded, options.check);
+	// The standalone pages are built from the real modals only, never from a
+	// test's temporary source or output folder.
+	if (options.pages !== false && sourceDir === defaultSourceDir && path.resolve(options.outDir || defaultOutputDir) === defaultOutputDir) {
+		const pages = buildPages({ fragments, registries: getAppRegistries(), check: options.check,
+			compileFragment: name => {
+				const result = buildOne(name, { ...options, sourceDir, registry: loaded, check: true });
+				if (hasErrors(result.diagnostics)) throw new Error(`Cannot build page ${name}: source has errors`);
+				return result.output;
+			}
+		});
+		for (const problem of pages.problems) process.stdout.write(`tools/site.json(1,1): error pages: ${problem}\n`);
+		if (options.check) stale.push(...pages.stale);
+		else for (const file of pages.written) process.stdout.write(`wrote ${file}\n`);
+		if (pages.problems.length) failed = true;
+	}
 	for (const file of stale) process.stdout.write(`${file} is out of date: run node tools/build-modals.js\n`);
 	if (stale.length) failed = true;
 	return failed ? 1 : 0;

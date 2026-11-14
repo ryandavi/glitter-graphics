@@ -1,5 +1,20 @@
 'use strict';
 
+// One timeline entry as HTML. The editor renders the filtered list through it,
+// and tools/build-pages.js renders the full list into the Preservation page so
+// it reads without JavaScript. `item.html` is authored markup (see
+// about-timeline-data.js); the tooltip names its topics and country.
+function renderTimelineItemHtml(item, tagLabels, countryLabels) {
+	const escape = (value) => String(value).replace(/[&<>"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[character]);
+	const topicLabels = item.tags.map(tag => tagLabels[tag]).filter(Boolean);
+	const countryLabel = countryLabels[item.country] || item.country;
+	const tooltipParts = [];
+	if (topicLabels.length) tooltipParts.push(topicLabels.join(', '));
+	if (countryLabel) tooltipParts.push(countryLabel);
+	const tooltip = tooltipParts.length ? ` data-tooltip="${escape(tooltipParts.join(' · '))}"` : '';
+	return `<li class="timeline-${escape(item.type)}"><span class="timeline-date"${tooltip}>${escape(item.date)}</span><span>${item.html}</span></li>`;
+}
+
 /**
  * Renders the Preservation modal's Timeline section from ABOUT_TIMELINE (see
  * js/ui/about-timeline-data.js; entity names from js/generated/entities-data.js)
@@ -135,28 +150,6 @@ function initPreservationTimeline(modalBody) {
 		setFiltersExpanded(filtersToggle.getAttribute('aria-expanded') !== 'true');
 	});
 
-	const buildTimelineItem = (item) => {
-		const li = document.createElement('li');
-		li.className = `timeline-${item.type}`;
-
-		const topicLabels = item.tags.map(tag => ABOUT_TIMELINE_TAG_LABELS[tag]).filter(Boolean);
-		const countryLabel = ABOUT_TIMELINE_COUNTRY_LABELS[item.country] || item.country;
-		const tooltipParts = [];
-		if (topicLabels.length) tooltipParts.push(topicLabels.join(', '));
-		if (countryLabel) tooltipParts.push(countryLabel);
-
-		const dateSpan = document.createElement('span');
-		dateSpan.className = 'timeline-date';
-		dateSpan.textContent = item.date;
-		if (tooltipParts.length) dateSpan.dataset.tooltip = tooltipParts.join(' · ');
-
-		const textSpan = document.createElement('span');
-		textSpan.innerHTML = item.html;
-
-		li.append(dateSpan, textSpan);
-		return li;
-	};
-
 	const render = () => {
 		const query = state.entity.trim().toLowerCase();
 		const matches = ABOUT_TIMELINE.filter(item => {
@@ -172,8 +165,7 @@ function initPreservationTimeline(modalBody) {
 			return true;
 		});
 
-		listEl.replaceChildren();
-		matches.forEach(item => listEl.appendChild(buildTimelineItem(item)));
+		listEl.innerHTML = matches.map(item => renderTimelineItemHtml(item, ABOUT_TIMELINE_TAG_LABELS, ABOUT_TIMELINE_COUNTRY_LABELS)).join('');
 		listEl.scrollTop = 0;
 		initTooltipsInContainer(listEl);
 
