@@ -5,8 +5,26 @@
 // replacing the base image and history follow the existing image path. The
 // stream stops whenever the modal closes, the photo is used, or the page hides.
 class CameraCapture {
+	// False once enumerateDevices reports no camera. Before permission, browsers
+	// still list one empty-labelled videoinput when a camera exists, so this
+	// needs no prompt. Unknown or unlistable counts as available, since a
+	// hidden button is worse than one that fails with a clear message.
+	static hasCamera = null;
+
 	static isSupported() {
-		return Boolean(navigator.mediaDevices?.getUserMedia);
+		return Boolean(navigator.mediaDevices?.getUserMedia) && CameraCapture.hasCamera !== false;
+	}
+
+	// Calls onChange now and whenever a camera is plugged in or removed.
+	static watchAvailability(onChange) {
+		const media = navigator.mediaDevices;
+		if (!media?.getUserMedia || !media.enumerateDevices) { onChange(); return; }
+		const check = () => media.enumerateDevices()
+			.then(devices => { CameraCapture.hasCamera = devices.some(device => device.kind === 'videoinput'); })
+			.catch(() => { CameraCapture.hasCamera = null; })
+			.then(onChange);
+		media.addEventListener?.('devicechange', check);
+		check();
 	}
 
 	constructor(editor) {

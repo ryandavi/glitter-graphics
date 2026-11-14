@@ -194,7 +194,6 @@ textarea {
 // and the text tiers. Owners (Add menu, Quick add, New Canvas presets, start
 // card tiles) add only grid placement and media sizing.
 //   .is-horizontal  media beside the text instead of above it
-//   .is-quiet       no surface or border until hover
 // A .choice-card picks a value and stays selected; an action card does something.
 // ===========================================================================
 .action-card {
@@ -248,11 +247,6 @@ textarea {
 		border-color: var(--color-accent);
 		background: var(--color-bg-tertiary);
 		box-shadow: 0 0 0 1px var(--color-accent);
-	}
-
-	&.is-quiet:not(:hover, :focus-visible, .active) {
-		border-color: transparent;
-		background: none;
 	}
 
 	&.is-horizontal {

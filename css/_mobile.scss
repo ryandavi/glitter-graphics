@@ -36,12 +36,11 @@
 			position: relative;
 			z-index: var(--z-app-header-elevated);
 
-			// The logo alone is the brand here; undo and redo sit beside it,
-			// quiet like the bar's other marks, leaving Export the one heavy button.
+			// The logo and title (the way back to the homepage) lead; undo and
+			// redo sit beside them, quiet like the bar's other marks, leaving
+			// Export the one heavy button.
 			>.app-header-left {
 				gap: var(--spacing-sm);
-
-				>.app-header-title { display: none; }
 
 				// With no chrome to fill, a full square leaves the two glyphs far
 				// apart: no gap, and each box is only a little wider than its glyph.
@@ -562,11 +561,6 @@
 	.workspace-start-preset {
 		min-height: var(--row-height);
 		@include action-card-horizontal;
-
-		&.action-card.is-quiet:not(:hover, :focus-visible, .active) {
-			border-color: var(--color-border);
-			background: var(--color-bg-secondary);
-		}
 	}
 
 	.workspace-start-preset-preview {
@@ -591,14 +585,14 @@
 		white-space: nowrap;
 	}
 
+	// Three buttons don't fit one row at phone width without cutting their
+	// labels, so a row wraps before any label is cut.
 	.workspace-start-actions {
 		order: 1;
 		width: 100%;
-		flex-wrap: nowrap;
 
 		>button {
-			flex: 1 1 0;
-			min-width: 0;
+			flex: 1 1 auto;
 			justify-content: center;
 			min-height: var(--touch-target-min);
 			white-space: nowrap;

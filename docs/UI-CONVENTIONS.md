@@ -374,7 +374,7 @@ The action → key registry lives in `content/icon-registry.json`; add a row the
 - **`.btn-text-with-icon`** is the chrome text button: a modal footer, the start card. Gloss, at `--row-height`; `.primary` is full strength and `.secondary` or default is dimmed. `.btn-icon` is the square chrome icon button (tools, bar actions, a modal's close).
 - **`.btn-text`** is a plain text button, for the secondary link, reset or destructive action at the left of a footer.
 - **`.btn-icon-simple`** is a chromeless glyph on a panel surface: list row actions, the layers bottom bar, a stepper.
-- **`.action-card`** is the one card-that-is-a-button: media (`.action-card-media`, an icon or preview), `.action-card-title`, `.action-card-detail`. `css/_components.scss` owns its surface, border, hover, focus, pressed and selected (`.active`) states and the text tiers; owners add only grid placement and media sizing. `.is-horizontal` puts the media beside the text (Add menu) and `.is-quiet` drops the surface and border until hover (start card tiles). A card that picks a value is a `.choice-card` instead.
+- **`.action-card`** is the one card-that-is-a-button: media (`.action-card-media`, an icon or preview), `.action-card-title`, `.action-card-detail`. `css/_components.scss` owns its surface, border, hover, focus, pressed and selected (`.active`) states and the text tiers; owners add only grid placement and media sizing. `.is-horizontal` puts the media beside the text (Add menu). A card that picks a value is a `.choice-card` instead.
 - There is no other button class. Don't add one.
 
 ## SCSS

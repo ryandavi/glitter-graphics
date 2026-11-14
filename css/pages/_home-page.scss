@@ -178,6 +178,10 @@ body.home-page {
 
 .home-swatch {
 	@include tile-fill;
+	// One tile at --tile-scale is wider and taller than the swatch, so it is
+	// drawn once, not tiled: Safari on iOS can smooth a repeated background
+	// even when it is pixelated, and a single image stays sharp.
+	background-repeat: no-repeat;
 	width: 36px;
 	height: 36px;
 	padding: 0;
@@ -264,10 +268,13 @@ body.home-page {
 
 	&:visited { color: var(--color-text-secondary); }
 
+	// Centred on the title's line, not the whole row: a box one line tall at
+	// the top of the row, the glyph centred in it.
 	>.home-reading-icon {
-		align-self: center;
+		align-self: start;
+		height: 1lh;
+		aspect-ratio: auto;
 		color: var(--color-text-tertiary);
-		font-size: var(--font-size-lg);
 	}
 
 	>.home-reading-title {

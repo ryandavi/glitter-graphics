@@ -46,7 +46,7 @@ $updates = array_values(array_filter($site['pages'], function ($item) { return $
 
 			<section class="home-intro">
 				<p class="home-lead">Glitter Editor makes glitter graphics: sparkly text, stickers and animated GIFs, built from the glitter tiles people made and traded online around the turn of the millennium.</p>
-				<p>The Library holds <?= number_format($page['counts']['glitter']) ?> glitter tiles and <?= number_format($page['counts']['stickers']) ?> stickers. The archival sets are credited to the people who made them, like the tile above. Everything runs in your browser, and the images you load or export stay there.</p>
+				<p>The Library holds <?= number_format($page['counts']['glitter']) ?> glitter tiles and <?= number_format($page['counts']['stickers']) ?> stickers. The archival sets are credited to the people who made them, like the glitter fill tiles above. Everything runs in your browser, and the images you load or export stay there.</p>
 				<div class="home-actions">
 					<a class="btn-text-with-icon primary" href="<?= page_escape($base) ?>studio/">Open the Editor</a>
 					<a class="btn-text-with-icon" href="<?= page_escape($base) ?>guide/">Read the Guide</a>

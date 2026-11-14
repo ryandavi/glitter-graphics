@@ -197,28 +197,10 @@ body.no-document .app-header {
 .app-menu-item-current { visibility: hidden; }
 .app-menu-item[aria-current="true"] .app-menu-item-current { visibility: visible; }
 
-// A split button where there is room; at phone width the menu half alone is
-// the Export button, labelled.
+// A split button at every width: Export GIF as an icon, then the menu half.
 .export-split-control {
-	@media (min-width: ($mobile-breakpoint + 1px)) {
-		> #exportGif { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
-		> #exportMenuBtn { width: var(--spacing-xl); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
-	}
-
-	@include mobile {
-		> #exportGif { display: none; }
-
-		> #exportMenuBtn {
-			flex-direction: row-reverse;
-			gap: var(--spacing-xs);
-			width: auto;
-			padding: 0 var(--spacing-md);
-			aspect-ratio: auto;
-
-			> svg.icon { font-size: var(--font-size-md); }
-			> .name { display: block; }
-		}
-	}
+	> #exportGif { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
+	> #exportMenuBtn { width: var(--spacing-xl); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
 }
 
 .app-menu-item {

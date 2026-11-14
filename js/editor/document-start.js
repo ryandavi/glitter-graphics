@@ -29,10 +29,12 @@ setupImageListeners() {
 		});
 
 		openImageBtn?.addEventListener('click', () => imageUpload?.click());
-		document.querySelectorAll('#takePhotoBtn, #takePhotoMenuItem').forEach((button) => {
-			button.hidden = !CameraCapture.isSupported();
+		const takePhotoButtons = document.querySelectorAll('#takePhotoBtn, #takePhotoMenuItem');
+		takePhotoButtons.forEach((button) => {
+			button.hidden = true;
 			button.addEventListener('click', () => COMMANDS.takePhoto.run(this));
 		});
+		CameraCapture.watchAvailability(() => takePhotoButtons.forEach((button) => { button.hidden = !CameraCapture.isSupported(); }));
 
 		if (imageUpload) {
 			imageUpload.addEventListener('change', async (e) => {
@@ -134,7 +136,7 @@ setupImageListeners() {
 		}
 		const size = `${width} × ${height} px`;
 		const card = buildActionCard({
-			className: 'is-quiet workspace-start-preset workspace-start-resume-card',
+			className: 'workspace-start-preset workspace-start-resume-card',
 			dataset: {},
 			ariaLabel: `Resume ${name}, ${width} by ${height} pixels, edited ${edited}${summary.fileSaved ? '' : ', not saved to a file'}`,
 			media,
