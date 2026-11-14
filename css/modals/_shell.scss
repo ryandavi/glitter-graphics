@@ -60,6 +60,19 @@
 			font-size: var(--font-size-md);
 		}
 
+		// A flat list whose entries carry their own label (the Updates page's
+		// versions): no counters, no weight step.
+		&.is-unnumbered>ol>li {
+			display: block;
+
+			&::before { content: none; }
+
+			>a {
+				color: var(--color-text-secondary);
+				font-weight: normal;
+			}
+		}
+
 
 		>ol {
 			list-style: none;

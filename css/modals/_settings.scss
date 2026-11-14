@@ -16,6 +16,11 @@
 	background: var(--color-bg-secondary);
 	color: var(--color-text-tertiary);
 
+	// A version number as a label (v0.6.0). Monospaced so versions line up.
+	&.is-version {
+		font-family: var(--font-mono);
+	}
+
 	&.is-accent {
 		border-color: var(--color-accent-border);
 		background: var(--color-accent-surface);
