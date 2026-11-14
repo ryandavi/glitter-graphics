@@ -213,7 +213,7 @@ function releaseAnchor(release) {
 	return `v${String(release.version).replace(/\./gu, '-')}`;
 }
 
-function renderUpdateReleaseHtml(release, { normalizeReleaseFeature }) {
+function renderUpdateReleaseHtml(release, { normalizeReleaseFeature, releaseFeatureTextHtml }) {
 	const features = release.features.map(normalizeReleaseFeature);
 	const parts = [
 		`<h2>${escapeHtml(release.name)}</h2>`,
@@ -224,11 +224,12 @@ function renderUpdateReleaseHtml(release, { normalizeReleaseFeature }) {
 	}
 	parts.push(`<p>${escapeHtml(release.summary)}</p>`);
 	for (const [type, label] of releaseGroups) {
-		const items = features.filter(feature => feature.type === type).map(({ text, guide }) => {
+		const items = features.filter(feature => feature.type === type).map(feature => {
+			const { guide } = feature;
 			const link = guide
 				? ` <a class="version-history-guide-link" href="guide/#${escapeHtml(guide)}" data-guide-anchor="${escapeHtml(guide)}">Show me</a>`
 				: '';
-			return `<li>${escapeHtml(text)}${link}</li>`;
+			return `<li>${releaseFeatureTextHtml(feature, escapeHtml)}${link}</li>`;
 		});
 		if (items.length) parts.push(`<h3 class="update-release-group">${label}</h3>\n<ul>\n${items.join('\n')}\n</ul>`);
 	}

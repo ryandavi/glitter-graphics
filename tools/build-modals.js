@@ -42,7 +42,7 @@ function getAppRegistries() {
 		'js/core/layer-types.js', 'js/core/options.js', 'js/core/key-labels.js', 'js/core/commands.js', 'js/core/features.js',
 		'js/effects/animation.js', 'js/systems/CanvasBounds.js', 'js/ui/panel-schemas.js'
 	].forEach(file => vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), context, { filename: file }));
-	vm.runInContext('globalThis.__registries = { CONFIG, ToolType, TOOLS, TOOL_ORDER, COMMANDS, PANEL_SCHEMAS, getShortcutGroups, FEATURES, KEY_LABELS_PC, formatKeyLabel, renderReleaseEntryHtml, normalizeReleaseFeature };', context);
+	vm.runInContext('globalThis.__registries = { CONFIG, ToolType, TOOLS, TOOL_ORDER, COMMANDS, PANEL_SCHEMAS, getShortcutGroups, FEATURES, KEY_LABELS_PC, formatKeyLabel, renderReleaseEntryHtml, normalizeReleaseFeature, releaseFeatureTextHtml };', context);
 	appRegistries = context.__registries;
 	return appRegistries;
 }

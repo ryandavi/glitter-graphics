@@ -13030,7 +13030,7 @@ body.modal-open {
 }
 #guideModal .guide-content .guide-screenshot,
 .doc-page-guide .guide-content .guide-screenshot {
-  margin: var(--spacing-md) 0;
+  margin: var(--spacing-xl) 0;
 }
 #guideModal .guide-content .guide-screenshot > figure,
 .doc-page-guide .guide-content .guide-screenshot > figure {
@@ -13727,7 +13727,8 @@ body.content-page .content-page-footer * {
   margin-inline: auto;
   overflow-wrap: break-word;
 }
-.doc-page-main > .doc-content .figure-gallery {
+.doc-page-main > .doc-content .figure-gallery,
+.doc-page-main > .doc-content .guide-section > .guide-screenshot:not(.guide-screenshot-modal) {
   --breakout-width: min(var(--page-wide-width), 100cqi);
   width: var(--breakout-width);
   max-width: none;
@@ -13755,7 +13756,8 @@ body.content-page .content-page-footer * {
   grid-column: 2;
   width: 100%;
 }
-.doc-page-main.has-side-toc > .doc-content .figure-gallery {
+.doc-page-main.has-side-toc > .doc-content .figure-gallery,
+.doc-page-main.has-side-toc > .doc-content .guide-section > .guide-screenshot:not(.guide-screenshot-modal) {
   --breakout-width: var(--side-breakout);
 }
 .doc-page-main.has-side-toc > .content-page-toc {

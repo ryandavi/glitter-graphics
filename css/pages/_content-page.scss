@@ -84,9 +84,10 @@ body.content-page {
 		// Long URLs and newsgroup names wrap instead of widening the page.
 		overflow-wrap: break-word;
 
-		// Galleries may grow past the prose column, up to --page-wide-width, and
-		// never past the page.
-		.figure-gallery {
+		// Galleries and full-editor Guide screenshots (outside the subsection
+		// cards) may grow past the prose column, up to --page-wide-width, and never past the page.
+		.figure-gallery,
+		.guide-section>.guide-screenshot:not(.guide-screenshot-modal) {
 			--breakout-width: min(var(--page-wide-width), 100cqi);
 			width: var(--breakout-width);
 			max-width: none;
@@ -120,7 +121,8 @@ body.content-page {
 		width: 100%;
 
 		// Galleries stop short of the contents column.
-		.figure-gallery {
+		.figure-gallery,
+		.guide-section>.guide-screenshot:not(.guide-screenshot-modal) {
 			--breakout-width: var(--side-breakout);
 		}
 	}
