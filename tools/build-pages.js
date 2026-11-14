@@ -199,15 +199,51 @@ function prefixRelativeUrls(html, prefix) {
 		}).join(',')}"`);
 }
 
+// The Updates page reads as one document: a contents list, then each release
+// as a plain section with its changes grouped by type. The editor's About modal
+// keeps the collapsible renderReleaseEntryHtml list.
+const releaseGroups = [['added', 'Added'], ['changed', 'Changed'], ['fixed', 'Fixed']];
+
+function releaseAnchor(release) {
+	return `v${String(release.version).replace(/\./gu, '-')}`;
+}
+
+function renderUpdateReleaseHtml(release, { normalizeReleaseFeature }) {
+	const features = release.features.map(normalizeReleaseFeature);
+	const parts = [
+		`<h2>${escapeHtml(release.name)}</h2>`,
+		`<p class="update-release-meta">Version ${escapeHtml(release.version)}, <time datetime="${escapeHtml(release.date)}">${escapeHtml(release.dateLabel)}</time></p>`
+	];
+	if (release.image?.src) {
+		parts.push(`<figure class="update-release-image"><img src="${escapeHtml(release.image.src)}" alt="${escapeHtml(release.image.alt || '')}" loading="lazy" decoding="async"></figure>`);
+	}
+	parts.push(`<p>${escapeHtml(release.summary)}</p>`);
+	for (const [type, label] of releaseGroups) {
+		const items = features.filter(feature => feature.type === type).map(({ text, guide }) => {
+			const link = guide
+				? ` <a class="version-history-guide-link" href="guide/#${escapeHtml(guide)}" data-guide-anchor="${escapeHtml(guide)}">Show me</a>`
+				: '';
+			return `<li>${escapeHtml(text)}${link}</li>`;
+		});
+		if (items.length) parts.push(`<h3 class="update-release-group">${label}</h3>\n<ul>\n${items.join('\n')}\n</ul>`);
+	}
+	if (release.projectFormat != null) {
+		parts.push(`<p class="version-history-format-note">Saves project files in format version ${escapeHtml(release.projectFormat)}.</p>`);
+	}
+	return `<section class="update-release" id="${releaseAnchor(release)}">\n${parts.join('\n')}\n</section>`;
+}
+
 function pageBody(page, fragment, context) {
 	if (page.source === 'releases') {
-		const { CONFIG, renderReleaseEntryHtml } = context.registries;
-		const entries = CONFIG.app.releases.map(release => renderReleaseEntryHtml(release, { open: true })).join('\n');
+		const { CONFIG } = context.registries;
+		const releases = CONFIG.app.releases.filter(release => !release.unreleased);
+		const toc = releases.map(release => `<li><a href="#${releaseAnchor(release)}">${escapeHtml(release.version)} ${escapeHtml(release.name)}</a></li>`).join('\n');
 		return [
 			// The same hero the article pages open with.
 			`<div class="modal-hero-image">\n<img src="images/modal/glitter-text.gif" data-pixel-scale="3" class="center" alt="${escapeHtml(page.title)}" width="1200" height="900" loading="lazy" decoding="async" style="width: 1200px">\n<h1>${escapeHtml(page.title)}</h1>\n</div>`,
 			`<p>Every Glitter Editor release, newest first. You're reading about version <strong>${escapeHtml(CONFIG.app.version)}</strong>.</p>`,
-			`<div class="version-history">\n${entries}\n</div>`
+			`<div class="toc" id="UpdatesTOC">\n<h2>Contents</h2>\n<ol>\n${toc}\n</ol>\n</div>`,
+			...releases.map(release => renderUpdateReleaseHtml(release, context.registries))
 		].join('\n');
 	}
 	let html = fragment.replace(/^<!-- GENERATED[^\n]*-->\n/u, '');

@@ -179,14 +179,7 @@
 
 	.version-history-image {
 		margin-top: var(--spacing-md);
-
-		>img {
-			display: block;
-			max-width: 100%;
-			height: auto;
-			border: 1px solid var(--color-border);
-			border-radius: var(--radius-sm);
-		}
+		@include release-image;
 	}
 
 	.version-history-feature + .version-history-feature {

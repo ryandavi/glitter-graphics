@@ -140,6 +140,77 @@
 					"message": 6
 				}
 			}
+		},
+		{
+			"label": "compile scss",
+			"detail": "Editor and admin stylesheets, same output CI checks",
+			"type": "shell",
+			"command": "npx sass css/style.scss css/style.css --no-source-map && npx sass admin/css/swatch_admin.scss admin/css/swatch_admin.css --no-source-map && echo 'CSS compiled.'",
+			"options": { "shell": { "executable": "C:\\Program Files\\Git\\bin\\bash.exe", "args": ["-c"] } },
+			"problemMatcher": []
+		},
+		{
+			"label": "build pages",
+			"detail": "Article pages with their references, then the bundle and cache stamps",
+			"type": "shell",
+			"command": "node tools/build.js",
+			"problemMatcher": {
+				"owner": "modal-lint",
+				"fileLocation": ["relative", "${workspaceFolder}"],
+				"pattern": {
+					"regexp": "^(.+)\\((\\d+),(\\d+)\\): (error|warning) ([\\w-]+): (.*)$",
+					"file": 1,
+					"line": 2,
+					"column": 3,
+					"severity": 4,
+					"code": 5,
+					"message": 6
+				}
+			}
+		},
+		{
+			"label": "build all",
+			"detail": "Compile SCSS, then build pages (Ctrl+Shift+B)",
+			"dependsOrder": "sequence",
+			"dependsOn": ["compile scss", "build pages"],
+			"group": { "kind": "build", "isDefault": true },
+			"problemMatcher": []
+		},
+		{
+			"label": "check before push",
+			"detail": "What CI checks first: lint, stale builds, stale CSS (no browser tests)",
+			"type": "shell",
+			"command": "npm run lint && node tools/build.js --check && npx sass css/style.scss /tmp/style.css --no-source-map && printf '%s\\n' \"$(cat css/style.css)\" | diff -q - /tmp/style.css && echo 'All checks passed.'",
+			"options": { "shell": { "executable": "C:\\Program Files\\Git\\bin\\bash.exe", "args": ["-c"] } },
+			"presentation": { "reveal": "always", "clear": true },
+			"problemMatcher": []
+		},
+		{
+			"label": "deploy site",
+			"detail": "Push public-pages and publish it to glitter.ryandavi.com (committed work only)",
+			"type": "shell",
+			"command": "[ \"${input:confirmDeploy}\" = \"Deploy\" ] || { echo 'Cancelled.'; exit 0; }; git push origin public-pages && ssh ryandavi-web /root/bin/deploy-glitter.sh",
+			"options": { "shell": { "executable": "C:\\Program Files\\Git\\bin\\bash.exe", "args": ["-c"] } },
+			"presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+			"problemMatcher": []
+		},
+		{
+			"label": "deploy staging",
+			"detail": "Push the current branch and publish it to the password-protected /glitter-staging/",
+			"type": "shell",
+			"command": "b=$(git branch --show-current) && git push origin \"$b\" && ssh ryandavi-web /root/bin/deploy-glitter.sh --staging \"$b\"",
+			"options": { "shell": { "executable": "C:\\Program Files\\Git\\bin\\bash.exe", "args": ["-c"] } },
+			"presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+			"problemMatcher": []
+		},
+		{
+			"label": "preview deploy",
+			"detail": "List what a site deploy would change, without changing anything",
+			"type": "shell",
+			"command": "ssh ryandavi-web /root/bin/deploy-glitter.sh --dry-run -v",
+			"options": { "shell": { "executable": "C:\\Program Files\\Git\\bin\\bash.exe", "args": ["-c"] } },
+			"presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+			"problemMatcher": []
 		}
 	],
 	"inputs": [
@@ -158,6 +229,13 @@
 			"id": "sourceUrl",
 			"type": "promptString",
 			"description": "URL of the source (a Wayback capture URL works too)"
+		},
+		{
+			"id": "confirmDeploy",
+			"type": "pickString",
+			"description": "Publish public-pages to glitter.ryandavi.com?",
+			"options": ["Deploy", "Cancel"],
+			"default": "Cancel"
 		}
 	]
 }

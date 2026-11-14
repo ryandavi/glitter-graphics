@@ -246,6 +246,13 @@ const RELEASES = [
 
 const PUBLISHED_RELEASES = RELEASES.filter((release) => !release.unreleased);
 
+// One feature as { type, text, guide }. Older entries stored features as plain
+// strings; those count as additions. Every release renderer reads through this.
+function normalizeReleaseFeature(feature) {
+	const { type = 'added', text = feature, guide = null } = typeof feature === 'string' ? {} : feature;
+	return { type, text, guide };
+}
+
 // One version-history entry as HTML: the editor's About and Welcome modals
 // (js/editor/modals-wiring.js) and the standalone About and Updates pages
 // (tools/build-pages.js) all render through this, so they can't drift. Each
@@ -258,8 +265,7 @@ function renderReleaseEntryHtml(release, { open = false, guideHref = 'guide/' } 
 		? `<figure class="version-history-image"><img src="${escape(release.image.src)}" alt="${escape(release.image.alt || '')}" loading="lazy" decoding="async"></figure>`
 		: '';
 	const features = release.features.map((feature) => {
-		// Older entries stored features as plain strings; treat those as additions.
-		const { type = 'added', text = feature, guide = null } = typeof feature === 'string' ? {} : feature;
+		const { type, text, guide } = normalizeReleaseFeature(feature);
 		const link = guide
 			? `<a class="version-history-guide-link" href="${escape(guideHref)}#${escape(guide)}" data-guide-anchor="${escape(guide)}">Show me</a>`
 			: '';

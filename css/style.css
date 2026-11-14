@@ -13930,6 +13930,43 @@ body.content-page .content-page-footer * {
   color: var(--color-text-primary);
 }
 
+.update-release {
+  margin-top: var(--spacing-2xl);
+  padding-top: var(--spacing-xl);
+  border-top: 1px solid var(--color-border);
+}
+.update-release > h2 {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.update-release .update-release-meta {
+  margin-top: var(--spacing-xs);
+  color: var(--color-text-tertiary);
+}
+.update-release .update-release-image {
+  margin: var(--spacing-lg) 0 0;
+}
+.update-release .update-release-image > img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+.update-release .update-release-group {
+  margin-top: var(--spacing-xl);
+  margin-bottom: var(--spacing-xs);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+}
+.update-release .update-release-group + ul {
+  margin-top: 0;
+}
+.update-release li + li {
+  margin-top: var(--spacing-xs);
+}
+
 /* ===== HOMEPAGE =====
    site/home.php, inside the content-page shell (header, scroll, footer). The
    one loud thing is the hero: the word "Glitter" as a selected text layer on

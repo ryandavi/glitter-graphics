@@ -647,3 +647,15 @@ $modal-compact-breakpoint: 600px;
 	padding: $padding;
 	background: var(--color-bg-tertiary);
 }
+
+// A release screenshot inside a <figure>: the About modal's version history
+// and the Updates page share it.
+@mixin release-image {
+	>img {
+		display: block;
+		max-width: 100%;
+		height: auto;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+	}
+}

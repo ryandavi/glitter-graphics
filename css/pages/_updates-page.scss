@@ -1,0 +1,41 @@
+@use '../mixins' as *;
+
+// The Updates page (/updates/, built by tools/build-pages.js): every release as
+// a plain section of one long document, like the History article. No cards,
+// rails or badges; a single border marks where a release starts.
+.update-release {
+	margin-top: var(--spacing-2xl);
+	padding-top: var(--spacing-xl);
+	border-top: 1px solid var(--color-border);
+
+	>h2 {
+		margin-top: 0;
+		margin-bottom: 0;
+	}
+
+	.update-release-meta {
+		margin-top: var(--spacing-xs);
+		color: var(--color-text-tertiary);
+	}
+
+	.update-release-image {
+		margin: var(--spacing-lg) 0 0;
+		@include release-image;
+	}
+
+	.update-release-group {
+		margin-top: var(--spacing-xl);
+		margin-bottom: var(--spacing-xs);
+		font-size: var(--font-size-md);
+		font-weight: var(--font-weight-semibold);
+		color: var(--color-text-secondary);
+
+		+ul {
+			margin-top: 0;
+		}
+	}
+
+	li + li {
+		margin-top: var(--spacing-xs);
+	}
+}
