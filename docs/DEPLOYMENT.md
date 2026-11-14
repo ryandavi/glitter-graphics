@@ -12,7 +12,9 @@ The editor is a static site. It is online in two places, built from two branches
 ## Keeping them separate
 
 - Editor fixes go on the main branch, then get merged **into** `public-pages`. Never merge `public-pages` into the main branch: everything on the main branch goes live on GitHub Pages.
-- The branches differ on purpose in the `og:url`, `og:image` and `twitter:image` lines of `index.html`, which point at each site's own address. If a merge from main conflicts there, keep the `public-pages` side.
+- The branches differ on purpose in two places. If a merge from main conflicts in either, keep the `public-pages` side:
+  - the `og:url`, `og:image` and `twitter:image` lines of `index.html`, which point at each site's own address;
+  - the `history` and `personalWeb` stages in `js/core/features.js`: `on` on `public-pages` (public with the new site), `local` on main, so GitHub Pages keeps them hidden. After resolving, run `node tools/build.js`.
 - The labs deploy only ever reads `public-pages`, and GitHub Pages only ever reads the main branch, so deploying one never changes the other.
 - CI runs the checks on every push to every branch. Neither site waits for it, so check the Actions tab before deploying labs.
 
@@ -28,9 +30,20 @@ The server has no Node.js, so nothing is built there. The committed `css/style.c
 
 Because the server folder is overwritten from git, never edit files there directly. The change would be lost on the next deploy.
 
+## Staging
+
+`https://labs.ryandavi.com/glitter-staging/` is a password-protected copy for checking work before it goes to `/glitter/`.
+
+- `/root/bin/deploy-glitter.sh --staging [branch]` publishes the same paths into `/var/www/labs.ryandavi.com/glitter-staging/`. The branch defaults to `public-pages`; any pushed branch works.
+- The staging deploy deletes every `site:analytics` region from the published `.html` files, so staging visits are never counted.
+- The password, `X-Robots-Tag: noindex, nofollow` and `Cache-Control: private, no-store` are set in a `<Directory>` block in `/etc/apache2/sites-available/labs.ryandavi.com.conf`, not in the folder, so deploys never remove them. The no-store header keeps Cloudflare from caching staging files and serving them without the password.
+- The password file is `/etc/apache2/.htpasswd-glitter-staging` (user `ryan`). Change the password with `htpasswd /etc/apache2/.htpasswd-glitter-staging ryan`.
+- Generated pages always carry production canonical URLs. Staging is never indexed, so that is harmless.
+
 ## Daily use
 
 - **Publish to labs:** push `public-pages`, then on the server run `/root/bin/deploy-glitter.sh`. It prints the deployed commit.
+- **Publish to staging:** push the branch, then run `/root/bin/deploy-glitter.sh --staging [branch]`.
 - **Preview a deploy:** `/root/bin/deploy-glitter.sh --dry-run -v` lists what would change.
 - **Roll back:** push the last good version to `public-pages` (for example with `git revert`), then deploy again.
 - **Update GitHub Pages:** push the main branch. GitHub publishes it within a minute or two.
