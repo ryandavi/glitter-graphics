@@ -67,13 +67,15 @@ const CONFIG = deepFreeze({
 			autoSelect: true,
 			autoCreateGlitterLayer: true
 		},
-		// The recovery copy of the open document (js/editor/document-recovery.js):
-		// written this long after the last edit, never later than maxWaitMs into
-		// a run of edits, with a start card thumbnail this many px on its long side.
+		// Recovery drafts (js/editor/document-recovery.js): each written this long
+		// after the last edit, never later than maxWaitMs into a run of edits,
+		// with a start card thumbnail this many px on its long side. The newest
+		// keepDrafts documents are kept; older ones age out.
 		recovery: {
 			debounceMs: 2000,
 			maxWaitMs: 30000,
-			thumbnailSize: 160
+			thumbnailSize: 160,
+			keepDrafts: 3
 		},
 		assets: {
 			manifestVersion: '2026-10-10-timing'
@@ -174,21 +176,46 @@ const CONFIG = deepFreeze({
 			// Shot modes, in segmented-control order. `layout` composes the shots
 			// into one image; `animated` encodes them as a GIF instead.
 			modes: {
+				// Grid and Strip count down before every shot; with Countdown off,
+				// shots are `intervalMs` apart.
 				photo: { label: 'Photo', shots: 1 },
 				grid: { label: 'Grid', shots: 4, intervalMs: 1000, layout: { columns: 2, rows: 2 } },
 				strip: { label: 'Strip', shots: 4, intervalMs: 1000, layout: { columns: 1, rows: 4 } },
-				gif: { label: 'GIF', shots: 8, intervalMs: 150, animated: true }
+				// `capture` is the gap between frames (a stop-motion frame beeps and
+				// flashes first); `speeds` is the review-time playback delay.
+				gif: {
+					label: 'GIF', shots: 8, animated: true,
+					capture: {
+						burst: { label: 'Burst', intervalMs: 150 },
+						stopMotion: { label: 'Stop motion', intervalMs: 1000, cue: true }
+					},
+					speeds: { slow: { label: 'Slow', delayMs: 300 }, normal: { label: 'Normal', delayMs: 150 }, fast: { label: 'Fast', delayMs: 80 } },
+					defaultSpeed: 'normal'
+				}
 			},
+			// Width over height; Original keeps the camera's own shape. Photo and
+			// GIF crop by canvas size on Use; Grid and Strip crop each cell.
+			aspects: {
+				original: { label: 'Original', ratio: null },
+				square: { label: 'Square', ratio: 1 },
+				portrait: { label: '4:5', ratio: 4 / 5 }
+			},
+			// The roll under the stage keeps `size` takes and empties on close;
+			// thumbnails are drawn `thumbPx` tall.
+			roll: { size: 12, thumbPx: 96 },
 			// Grid and Strip: gutter as a share of a cell's shorter side.
 			grid: { gutter: 0.04, background: '#ffffff' },
 			// The white flash holds this long, then fades.
 			flashMs: 120,
-			sound: { volume: 0.25, shutterMs: 60, beepMs: 30, beepHz: 880, lastBeepHz: 1320 },
+			// A stop-motion frame beeps `cueLeadMs` before the shutter.
+			sound: { volume: 0.25, shutterMs: 60, beepMs: 30, beepHz: 880, lastBeepHz: 1320, cueLeadMs: 250 },
 			// Effects: filter look ids, shown around None in a 3×3 grid. Sizes and
 			// rates come from the WP-0 timing spike (2026-11-14): at 160 px every
 			// look renders in under 13 ms, at 400 px the slowest (Dither) in ~40 ms.
 			effects: {
 				looks: ['warp:bulge', 'warp:twirl', 'warp:pinch', 'sepia', 'grayscale', 'dreamy-glow', 'dither', 'deep-fry'],
+				// The Webcam toggle stacks this look under the chosen effect.
+				webcamLook: 'webcam',
 				cellWidth: 160, cellIntervalMs: 200, stageWidth: 400, stageIntervalMs: 66
 			}
 		},

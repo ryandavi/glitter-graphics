@@ -35,6 +35,13 @@
 	const autoPalette = (values) => values.palette == null || values.palette === 'auto';
 	const patterned = (values) => ['bayer', 'halftone'].includes(values.algorithm);
 	const warpOptions = [{ value: 'bulge', label: 'Bulge' }, { value: 'pinch', label: 'Pinch' }, { value: 'twirl', label: 'Twirl' }];
+	const balanceRanges = [{ value: 'shadows', label: 'Shadows' }, { value: 'midtones', label: 'Midtones' }, { value: 'highlights', label: 'Highlights' }];
+	const balanceChannels = [['Red', 'filterBalanceRed'], ['Green', 'filterBalanceGreen'], ['Blue', 'filterBalanceBlue']];
+	// Nine stored shifts (range × channel); the Range select shows one range's three.
+	const balanceFields = Object.fromEntries(balanceRanges.flatMap(({ value: range }) => balanceChannels.map(([channel, specId]) => [
+		`${range}${channel}`, numeric(specId, `filterBalance${range[0].toUpperCase()}${range.slice(1)}${channel}`, { when: (values) => values.range === range })
+	])));
+	const balanceShifts = (values, range) => balanceChannels.map(([channel]) => values[`${range}${channel}`] / 100);
 	const deepFryOptions = [{ value: 'light', label: 'Light' }, { value: 'crispy', label: 'Crispy' }, { value: 'nuclear', label: 'Nuclear' }];
 	const gradientOptions = () => (root.GRADIENT_PRESETS?.entries || [
 		{ id: 'pink-blue', label: 'Pink / Blue' }, { id: 'purple-gold', label: 'Purple / Gold' }, { id: 'spectrum', label: 'Spectrum' }
@@ -67,6 +74,24 @@
 			step('tone', { tone: { saturate: level.saturation, contrast: level.contrast, brightness: level.brightness, sepia: 0.12 } }),
 			step('sharpen', { amount: level.sharpen }), step('noise', { amount: level.noise }),
 			step('jpeg', { quality: level.quality, generations: level.generations, blockSize: 1, chromaBleed: 0.35 })
+		];
+	}
+
+	// Early-2010s laptop webcam: soft and low-detail, waxy noise reduction,
+	// crunchy sharpening, washed-out color with green-yellow shadows and
+	// magenta mids, clipped ends, grain in the shadows, then compression.
+	function webcamRecipe(values) {
+		const strength = values.strength / 100;
+		if (!strength) return [];
+		const mix = (identity, full) => identity + (full - identity) * strength;
+		return [
+			step('resample', { scale: mix(1, 0.5) }),
+			step('blur', { radius: 1 * strength, mode: 'normal', opacity: 1 }),
+			step('sharpen', { amount: 1.1 * strength }),
+			step('tone', { tone: { contrast: mix(1, 1.28), brightness: mix(1, 1.07), saturate: mix(1, 0.82) } }),
+			step('colorBalance', { shadows: [-0.05 * strength, 0.28 * strength, -0.3 * strength], midtones: [0.18 * strength, -0.2 * strength, 0.08 * strength], highlights: [0, 0, 0] }),
+			step('noise', { amount: 0.14 * strength, shadows: 0.85 }),
+			step('jpeg', { quality: Math.round(mix(92, 60)), generations: 1, blockSize: 1, chromaBleed: 0.25 * strength })
 		];
 	}
 
@@ -117,6 +142,12 @@
 		invert: Object.freeze({ id: 'invert', label: 'Invert', group: 'adjust', fields: Object.freeze({ amount: numeric('filterInvertAmount', 'filterInvertAmount') }), recipe: (values) => [step('tone', { tone: { invert: values.amount / 100 } })] }),
 		grayscale: Object.freeze({ id: 'grayscale', label: 'Grayscale', group: 'adjust', fields: Object.freeze({ amount: numeric('filterGrayscaleAmount', 'filterGrayscaleAmount') }), recipe: (values) => [step('tone', { tone: { grayscale: values.amount / 100 } })] }),
 		sepia: Object.freeze({ id: 'sepia', label: 'Sepia', group: 'adjust', fields: Object.freeze({ amount: numeric('filterSepiaAmount', 'filterSepiaAmount') }), recipe: (values) => [step('tone', { tone: { sepia: values.amount / 100 } })] }),
+		// Photoshop-style Color Balance; Range picks which three shifts show.
+		'color-balance': Object.freeze({ id: 'color-balance', label: 'Color Balance', group: 'adjust', tags: ['split toning', 'tint', 'shadows', 'highlights'], fields: Object.freeze({
+			range: select('midtones', 'filterBalanceRange', 'Range', balanceRanges), ...balanceFields
+		}), recipe: (values) => [step('colorBalance', {
+			shadows: balanceShifts(values, 'shadows'), midtones: balanceShifts(values, 'midtones'), highlights: balanceShifts(values, 'highlights')
+		})] }),
 		tint: Object.freeze({ id: 'tint', label: 'Tint', group: 'stylize', fields: Object.freeze({
 			presetId: select('warming-85', 'filterTintPreset', 'Preset', tintOptions), color: color('#ec8a00', 'filterTintColor'), amount: numeric('filterTintAmount', 'filterTintAmount')
 		}), normalize(values, source) {
@@ -177,6 +208,9 @@
 		'dreamy-glow': Object.freeze({ id: 'dreamy-glow', label: 'Dreamy Glow', group: 'web', tags: ['soft', 'glow'], fields: Object.freeze({
 			strength: numeric('filterLookStrength', 'filterLookStrength'), radius: numeric('filterDreamyGlowRadius', 'filterDreamyGlowRadius')
 		}), recipe: (values) => [step('blur', { radius: values.radius, mode: 'normal', opacity: 0.62 * values.strength / 100, composite: true })] }),
+		webcam: Object.freeze({ id: 'webcam', label: 'Webcam', group: 'web', tags: ['camera', 'lofi', '2010s', 'grain'], fields: Object.freeze({
+			strength: numeric('filterLookStrength', 'filterWebcamStrength')
+		}), recipe: webcamRecipe }),
 		'jpeg-crunch': Object.freeze({ id: 'jpeg-crunch', label: 'JPEG Crunch', group: 'pixel', tags: ['compression', 'artifact'], fields: Object.freeze({
 			quality: numeric('filterJpegQuality', 'filterJpegQuality'), generations: numeric('filterJpegGenerations', 'filterJpegGenerations'),
 			blockSize: numeric('filterJpegBlockSize', 'filterJpegBlockSize'), chromaBleed: numeric('filterChromaBleed', 'filterChromaBleed')

@@ -102,12 +102,20 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 	background: var(--new-canvas-preview-bg);
 }
 
-// Resume: the recovery copy of the last document, a full-width row ahead of
-// the preset tiles with its Discard button in the top right corner. Scoped
-// under the row so the phone's preset tile rules do not reach it.
+// Resume: one tile per recovery draft, in a full-width row ahead of the
+// preset tiles. One draft fills the row; more share it and wrap on narrow
+// cards. Each has its Discard button in the top right corner. Scoped under
+// the row so the phone's preset tile rules do not reach it.
+.workspace-start-resume-list {
+	grid-column: 1 / -1;
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: var(--spacing-sm);
+}
+
 .workspace-start-resume {
 	position: relative;
-	grid-column: 1 / -1;
+	min-width: 0;
 
 	> .workspace-start-resume-card {
 		width: 100%;

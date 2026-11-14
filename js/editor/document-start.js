@@ -108,19 +108,25 @@ setupImageListeners() {
 		if (noDocument && this.recovery) this.refreshWorkspaceStartResume();
 	},
 
-	// The Resume tile leads the start card while a recovery copy exists
-	// (js/editor/document-recovery.js). It reads only the copy's summary.
+	// Resume tiles lead the start card, one per recovery draft, newest first
+	// (js/editor/document-recovery.js). They read only the drafts' summaries.
 	async refreshWorkspaceStartResume() {
-		const summary = this.isRecoveryEnabled() && !this.originalImage ? await RECOVERY_STORE.readSummary() : null;
-		if (!this.originalImage) this.renderWorkspaceStartResume(summary);
+		const summaries = this.isRecoveryEnabled() && !this.originalImage ? await RECOVERY_STORE.listSummaries() : [];
+		if (!this.originalImage) this.renderWorkspaceStartResume(summaries || []);
 	},
 
-	renderWorkspaceStartResume(summary) {
+	renderWorkspaceStartResume(summaries) {
 		const host = document.getElementById('workspaceStartPresets');
-		const previous = host?.querySelector('.workspace-start-resume');
-		if (previous?.dataset.thumbnailUrl) URL.revokeObjectURL(previous.dataset.thumbnailUrl);
+		const previous = host?.querySelector('.workspace-start-resume-list');
+		previous?.querySelectorAll('[data-thumbnail-url]').forEach(tile => URL.revokeObjectURL(tile.dataset.thumbnailUrl));
 		previous?.remove();
-		if (!host || !summary) return;
+		if (!host || !summaries.length) return;
+		const list = buildElement('workspace-start-resume-list');
+		list.append(...summaries.map(summary => this.buildWorkspaceStartResumeTile(summary)));
+		host.prepend(list);
+	},
+
+	buildWorkspaceStartResumeTile(summary) {
 		const name = summary.name || CONFIG.project.name.placeholder;
 		const { width, height } = summary.canvas;
 		const edited = formatRelativeTime(summary.savedAt);
@@ -146,15 +152,15 @@ setupImageListeners() {
 				summary.fileSaved ? { text: size } : { text: `${size} · Not saved to a file`, className: 'is-warning' }
 			]
 		});
-		card.addEventListener('click', () => this.resumeRecovery());
+		card.addEventListener('click', () => this.resumeRecovery(summary.id));
 		const discard = buildIconButton({
 			className: 'btn-icon-simple icon-wrapper sm workspace-start-resume-discard',
-			label: 'Discard recovered work',
+			label: `Discard ${name}`,
 			icon: 'x-mark',
-			onClick: () => this.discardRecovery()
+			onClick: () => this.discardRecovery(summary.id)
 		});
 		tile.append(card, discard);
-		host.prepend(tile);
+		return tile;
 	},
 
 	// One-click blank canvases on the start card. Each tile uses the default

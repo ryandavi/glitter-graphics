@@ -79,9 +79,9 @@ class ProjectSerializer {
 	}
 
 	// `saved` is whether the loaded document counts as saved to a file: true
-	// for a file, the recovery copy's own flag for a resume. `recovered` marks
-	// that resume, which replaces nothing.
-	async load(data, { saved = true, recovered = false } = {}) {
+	// for a file, the recovery draft's own flag for a resume. `draftId` marks
+	// that resume, which keeps writing to the draft it came from.
+	async load(data, { saved = true, draftId = null } = {}) {
 		this.validateProjectData(data);
 		const migrated = this.runMigrations(data);
 		const report = await this.preflight(migrated);
@@ -102,7 +102,6 @@ class ProjectSerializer {
 			this.applyPreflightSubstitutions(migrated, report);
 		}
 
-		if (!recovered && !await this.editor.confirmReplaceRecovery()) return false;
 		if ((this.editor.originalImage || this.editor.historyManager.canUndo()) && !this.editor.isSaved) {
 			const action = await this.editor.chooseAction({
 				title: 'Replace Current Project',
@@ -149,7 +148,7 @@ class ProjectSerializer {
 		this.editor.layerManager.restoreSelectionState(activeLayer ? activeLayer.id : null);
 		this.editor.setProjectName(migrated.name || '', { markDirty: false });
 		this.editor.openedFromNewerProjectVersion = migrated.version > ProjectSerializer.FORMAT_VERSION;
-		this.editor.finishDocumentReplace({ saved, loop: migrated.loop, markers: migrated.markers });
+		this.editor.finishDocumentReplace({ saved, loop: migrated.loop, markers: migrated.markers, draftId });
 		this.editor.updateSelectedColorsDisplay();
 		this.editor.updateStatus('Project loaded');
 		return true;

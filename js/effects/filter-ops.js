@@ -23,17 +23,87 @@
 		return imageData;
 	}
 
-	function noise(imageData, amount = 0, seed = '') {
+	const luminance = (data, offset) => (0.2126 * data[offset] + 0.7152 * data[offset + 1] + 0.0722 * data[offset + 2]) / 255;
+
+	// `shadows` (0 to 1) moves the grain out of the highlights and into the
+	// shadows, the way a small sensor's noise sits in the dark areas. Frames
+	// after the first fold their index into the seed, so animated grain moves
+	// while a still keeps its pattern.
+	function noise(imageData, amount = 0, seed = '', { shadows = 0, frameIndex = 0 } = {}) {
 		let state = 2166136261;
-		for (const character of String(seed)) state = Math.imul(state ^ character.charCodeAt(0), 16777619);
+		for (const character of String(frameIndex ? `${seed}:${frameIndex}` : seed)) state = Math.imul(state ^ character.charCodeAt(0), 16777619);
 		const scale = Math.max(0, Number(amount) || 0) * 255;
-		for (let offset = 0; offset < imageData.data.length; offset += 4) {
+		const shadowWeight = Math.max(0, Math.min(1, Number(shadows) || 0));
+		const data = imageData.data;
+		for (let offset = 0; offset < data.length; offset += 4) {
 			state ^= state << 13; state ^= state >>> 17; state ^= state << 5;
-			const delta = ((state >>> 0) / 4294967295 - 0.5) * scale;
-			for (let channel = 0; channel < 3; channel++) imageData.data[offset + channel] = clampByte(imageData.data[offset + channel] + delta);
+			const weight = shadowWeight ? 1 - shadowWeight * luminance(data, offset) : 1;
+			const delta = ((state >>> 0) / 4294967295 - 0.5) * scale * weight;
+			for (let channel = 0; channel < 3; channel++) data[offset + channel] = clampByte(data[offset + channel] + delta);
 		}
 		return imageData;
 	}
+
+	// Softens by resolution: averages down to `scale` of the size, then
+	// stretches back bilinearly. Unlike Pixelate's blocks, this loses detail
+	// the way a low-resolution sensor does.
+	function resample(imageData, scale = 1) {
+		const width = imageData.width;
+		const height = imageData.height;
+		const factor = Math.max(0.05, Math.min(1, Number(scale) || 1));
+		const smallWidth = Math.max(1, Math.round(width * factor));
+		const smallHeight = Math.max(1, Math.round(height * factor));
+		if (smallWidth >= width && smallHeight >= height) return imageData;
+		const data = imageData.data;
+		const small = new Float32Array(smallWidth * smallHeight * 4);
+		const counts = new Float32Array(smallWidth * smallHeight);
+		for (let y = 0; y < height; y++) {
+			const row = Math.min(smallHeight - 1, Math.floor(y * smallHeight / height)) * smallWidth;
+			for (let x = 0; x < width; x++) {
+				const cell = row + Math.min(smallWidth - 1, Math.floor(x * smallWidth / width));
+				const offset = (y * width + x) * 4;
+				for (let channel = 0; channel < 4; channel++) small[cell * 4 + channel] += data[offset + channel];
+				counts[cell]++;
+			}
+		}
+		for (let cell = 0; cell < counts.length; cell++) for (let channel = 0; channel < 4; channel++) small[cell * 4 + channel] /= counts[cell] || 1;
+		for (let y = 0; y < height; y++) {
+			const sy = Math.max(0, Math.min(smallHeight - 1, (y + 0.5) * smallHeight / height - 0.5));
+			const top = Math.floor(sy), bottom = Math.min(smallHeight - 1, top + 1), fy = sy - top;
+			for (let x = 0; x < width; x++) {
+				const sx = Math.max(0, Math.min(smallWidth - 1, (x + 0.5) * smallWidth / width - 0.5));
+				const left = Math.floor(sx), right = Math.min(smallWidth - 1, left + 1), fx = sx - left;
+				const a = (top * smallWidth + left) * 4, b = (top * smallWidth + right) * 4, c = (bottom * smallWidth + left) * 4, d = (bottom * smallWidth + right) * 4;
+				const offset = (y * width + x) * 4;
+				for (let channel = 0; channel < 4; channel++) {
+					const upper = small[a + channel] + (small[b + channel] - small[a + channel]) * fx;
+					const lower = small[c + channel] + (small[d + channel] - small[c + channel]) * fx;
+					data[offset + channel] = clampByte(upper + (lower - upper) * fy);
+				}
+			}
+		}
+		return imageData;
+	}
+
+	// Photoshop's Color Balance: each tonal range gets its own shift along
+	// Cyan–Red, Magenta–Green and Yellow–Blue (-1 to 1 per channel). The
+	// ranges overlap smoothly, weighted by luminance.
+	const COLOR_BALANCE_LEVELS = 96;
+	function colorBalance(imageData, { shadows = [0, 0, 0], midtones = [0, 0, 0], highlights = [0, 0, 0] } = {}) {
+		const data = imageData.data;
+		const shift = (values, channel) => Number(values?.[channel]) || 0;
+		for (let offset = 0; offset < data.length; offset += 4) {
+			const light = luminance(data, offset);
+			const shadowWeight = (1 - light) ** 2, highlightWeight = light ** 2, midWeight = 1 - shadowWeight - highlightWeight;
+			for (let channel = 0; channel < 3; channel++) {
+				const amount = shadowWeight * shift(shadows, channel) + midWeight * shift(midtones, channel) + highlightWeight * shift(highlights, channel);
+				data[offset + channel] = clampByte(data[offset + channel] + amount * COLOR_BALANCE_LEVELS);
+			}
+		}
+		return imageData;
+	}
+
+	const isBalanced = (params) => ['shadows', 'midtones', 'highlights'].every((range) => (params[range] || []).every((value) => !Number(value)));
 
 	function rgbSplit(imageData, offsetValue = 0) {
 		const source = new Uint8ClampedArray(imageData.data);
@@ -217,7 +287,17 @@
 			isActive: () => true
 		}),
 		sharpen: Object.freeze({ id: 'sharpen', params: Object.freeze({ amount: Object.freeze({ min: 0, max: 2 }) }), pixel: (imageData, params) => sharpen(imageData, params.amount), isActive: (params) => Number(params.amount) > 0 }),
-		noise: Object.freeze({ id: 'noise', params: Object.freeze({ amount: Object.freeze({ min: 0, max: 1 }) }), pixel: (imageData, params, context = {}) => noise(imageData, params.amount, context.seed), isActive: (params) => Number(params.amount) > 0 }),
+		noise: Object.freeze({
+			id: 'noise', params: Object.freeze({ amount: Object.freeze({ min: 0, max: 1 }), shadows: Object.freeze({ min: 0, max: 1 }) }),
+			pixel: (imageData, params, context = {}) => noise(imageData, params.amount, context.seed, { shadows: params.shadows, frameIndex: context.frameIndex }),
+			isActive: (params) => Number(params.amount) > 0
+		}),
+		resample: Object.freeze({ id: 'resample', params: Object.freeze({ scale: Object.freeze({ min: 0.05, max: 1 }) }), pixel: (imageData, params) => resample(imageData, params.scale), isActive: (params) => Number(params.scale) < 1 }),
+		colorBalance: Object.freeze({
+			id: 'colorBalance', params: Object.freeze({ shadows: Object.freeze({ kind: 'channels' }), midtones: Object.freeze({ kind: 'channels' }), highlights: Object.freeze({ kind: 'channels' }) }),
+			pixel: (imageData, params) => colorBalance(imageData, params),
+			isActive: (params) => !isBalanced(params)
+		}),
 		pixelate: Object.freeze({ id: 'pixelate', params: Object.freeze({ size: Object.freeze({ min: 1, max: 8 }) }), pixel: (imageData, params, context = {}) => runPixelEffects(imageData, { ...context.pixelDefaults, pixelateEnabled: true, paletteEnabled: false, pixelSize: params.size }, context), isActive: (params) => Number(params.size) > 1 }),
 		posterize: Object.freeze({
 			id: 'posterize',

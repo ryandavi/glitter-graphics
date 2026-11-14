@@ -70,14 +70,15 @@ class RecoveryScheduler {
 	}
 }
 
-// The recovery copy of the open document (docs/plans/SESSION-RECOVERY-PLAN.md):
-// one IndexedDB slot (RECOVERY_STORE) that the start card offers to resume.
-// It never touches `isSaved`, which keeps meaning "saved to a file".
+// Recovery drafts (docs/plans/SESSION-RECOVERY-PLAN.md): every document
+// writes to its own draft in RECOVERY_STORE, and the start card offers the
+// newest few to resume. Starting something new never asks and never replaces
+// another draft; the oldest drafts past CONFIG.app.recovery.keepDrafts age
+// out. Recovery never touches `isSaved`, which keeps meaning "saved to a file".
 const EDITOR_RECOVERY_METHODS = {
 	setupRecovery() {
 		const { debounceMs, maxWaitMs } = CONFIG.app.recovery;
-		this.recoveryTabId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
-		this.lastRecoveryEditAt = 0;
+		this.recoveryDraftId = null;
 		this.recovery = new RecoveryScheduler({
 			write: () => this.writeRecovery(),
 			canWrite: () => this.canWriteRecovery(),
@@ -92,9 +93,18 @@ const EDITOR_RECOVERY_METHODS = {
 		window.addEventListener('pagehide', () => this.flushRecoveryOnLeave());
 		PREFERENCES.onChange('recoverUnsavedWork', (enabled) => {
 			if (enabled) this.writeRecoveryNow();
-			else this.discardRecovery();
+			else this.discardAllRecovery();
 		});
 		this.refreshWorkspaceStartResume();
+	},
+
+	// Each opened document gets its own draft; a resume keeps the draft it came
+	// from. A document that brings content of its own (a photo, an image) is
+	// written at once; a blank canvas or a project already in a file waits for
+	// its first edit, so opening and closing one never ages out real work.
+	startRecoveryDraft({ draftId = null, saved = false } = {}) {
+		this.recoveryDraftId = draftId || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+		if (draftId || (!saved && this.baseImageSource?.kind !== 'preset')) this.writeRecoveryNow();
 	},
 
 	isRecoveryEnabled() {
@@ -104,11 +114,9 @@ const EDITOR_RECOVERY_METHODS = {
 	// Called whenever the document becomes unsaved (the `isSaved` setter).
 	scheduleRecoveryWrite() {
 		if (!this.recovery || !this.originalImage || !this.isRecoveryEnabled()) return;
-		this.lastRecoveryEditAt = Date.now();
 		this.recovery.schedule();
 	},
 
-	// A newly opened document takes the slot at once.
 	writeRecoveryNow() {
 		if (!this.recovery || !this.originalImage || !this.isRecoveryEnabled()) return Promise.resolve();
 		this.recovery.schedule();
@@ -121,20 +129,14 @@ const EDITOR_RECOVERY_METHODS = {
 		return !this.exportInProgress && !this.maskEditor.strokeActive && !getSessionDefinition(this)?.holdsEdits;
 	},
 
-	// Two tabs share the slot and the last writer wins, but a tab leaving does
-	// not overwrite a copy another tab wrote after this tab's last edit.
-	async flushRecoveryOnLeave() {
-		if (!this.recovery?.pending) return;
-		const summary = await RECOVERY_STORE.readSummary();
-		if (summary && summary.tabId !== this.recoveryTabId && summary.savedAt > this.lastRecoveryEditAt) {
-			this.recovery.cancel();
-			return;
-		}
-		await this.recovery.flush();
+	// Tabs write separate drafts, so a tab leaving only finishes its own.
+	flushRecoveryOnLeave() {
+		if (this.recovery?.pending) this.recovery.flush();
 	},
 
 	async writeRecovery() {
-		if (!this.originalImage || !this.isRecoveryEnabled()) return;
+		if (!this.originalImage || !this.recoveryDraftId || !this.isRecoveryEnabled()) return;
+		const id = this.recoveryDraftId;
 		const fileSaved = this.isSaved;
 		const project = await this.projectSerializer.serialize();
 		const thumbnail = await this.captureRecoveryThumbnail().catch((error) => {
@@ -143,23 +145,23 @@ const EDITOR_RECOVERY_METHODS = {
 		});
 		if (!this.isRecoveryEnabled()) return;
 		await RECOVERY_STORE.write({
+			id,
 			project,
 			thumbnail,
 			name: project.name,
 			canvas: { ...project.canvas },
 			appVersion: project.appVersion,
 			savedAt: Date.now(),
-			fileSaved,
-			tabId: this.recoveryTabId
-		});
+			fileSaved
+		}, { keep: CONFIG.app.recovery.keepDrafts });
 	},
 
-	// After a file save the copy stays (Resume is still the quickest way
+	// After a file save the draft stays (Resume is still the quickest way
 	// back) but no longer reads "Not saved to a file".
 	async noteRecoveryFileSaved() {
-		if (!this.recovery || !this.isRecoveryEnabled()) return;
+		if (!this.recovery || !this.recoveryDraftId || !this.isRecoveryEnabled()) return;
 		await this.recovery.idle();
-		if (this.isSaved && !this.recovery.pending) await RECOVERY_STORE.patch({ fileSaved: true });
+		if (this.isSaved && !this.recovery.pending) await RECOVERY_STORE.patch(this.recoveryDraftId, { fileSaved: true });
 	},
 
 	// The scene at rest, scaled to fit CONFIG.app.recovery.thumbnailSize. Its
@@ -182,56 +184,44 @@ const EDITOR_RECOVERY_METHODS = {
 		return webp?.type === 'image/webp' ? webp : encode('image/png');
 	},
 
-	// Opening another document from the start card replaces the recovery
-	// copy, so a copy that was never saved to a file is not lost without
-	// asking. Resolves true when the caller may go ahead.
-	async confirmReplaceRecovery() {
-		if (this.originalImage || !this.isRecoveryEnabled()) return true;
-		const summary = await RECOVERY_STORE.readSummary();
-		if (!summary || summary.fileSaved) return true;
-		const action = await this.chooseAction({
-			title: 'Discard Recovered Work?',
-			message: `${summary.name || CONFIG.project.name.placeholder} was never saved to a file. Opening another document replaces it.`,
-			tone: 'danger',
-			actions: [
-				{ id: 'discard', label: 'Discard', tone: 'danger' },
-				{ id: 'cancel', label: 'Cancel' },
-				{ id: 'resume', label: 'Resume It', primary: true }
-			]
-		});
-		if (action === 'resume') this.resumeRecovery();
-		if (action !== 'discard') return false;
-		await this.discardRecovery();
-		return true;
-	},
-
-	async resumeRecovery() {
-		const record = await RECOVERY_STORE.read();
+	async resumeRecovery(id) {
+		const record = await RECOVERY_STORE.read(id);
 		if (!record?.project) {
-			this.renderWorkspaceStartResume(null);
+			this.refreshWorkspaceStartResume();
 			return false;
 		}
 		const done = this.beginActivity('resume-project', 'Opening recovered work');
 		try {
 			await this.whenBooted('library');
-			const loaded = await this.projectSerializer.load(record.project, { saved: record.fileSaved === true, recovered: true });
+			const loaded = await this.projectSerializer.load(record.project, { saved: record.fileSaved === true, draftId: id });
 			if (loaded) this.updateStatus('Recovered work opened');
 			return loaded;
 		} catch (error) {
 			console.error('Recovery load failed:', error);
 			this.showError(error.message || 'Failed to open project.');
-			await this.discardRecovery();
+			await this.discardRecovery(id);
 			return false;
 		} finally {
 			done();
 		}
 	},
 
-	async discardRecovery() {
+	// A write still pending for this draft is dropped first, so it cannot
+	// bring the draft back.
+	async discardRecovery(id) {
+		if (id === this.recoveryDraftId) {
+			this.recovery?.cancel();
+			await this.recovery?.idle();
+		}
+		await RECOVERY_STORE.remove(id);
+		this.refreshWorkspaceStartResume();
+	},
+
+	async discardAllRecovery() {
 		this.recovery?.cancel();
 		await this.recovery?.idle();
 		await RECOVERY_STORE.clear();
-		this.renderWorkspaceStartResume(null);
+		this.renderWorkspaceStartResume([]);
 	}
 };
 

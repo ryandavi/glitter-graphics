@@ -91,6 +91,10 @@ const FIELDS = Object.freeze({
 	// Warp radius is a share of half the shorter side of the canvas or region.
 	filterWarpAmount: { label: 'Amount', unit: '%', min: 0, max: 100, step: 1, value: 60 },
 	filterWarpRadius: { label: 'Radius', unit: '%', min: 10, max: 150, step: 1, value: 80 },
+	// Color Balance: one shift per channel for the chosen tonal range.
+	filterBalanceRed: { label: 'Cyan / Red', unit: '', min: -100, max: 100, step: 1, value: 0 },
+	filterBalanceGreen: { label: 'Magenta / Green', unit: '', min: -100, max: 100, step: 1, value: 0 },
+	filterBalanceBlue: { label: 'Yellow / Blue', unit: '', min: -100, max: 100, step: 1, value: 0 },
 	paletteColorCount: { label: 'Colors', unit: '', min: 2, max: 12, step: 1, value: 5 },
 	paletteMerge: { label: 'Combine similar', unit: '', min: 0.01, max: 0.12, step: 0.005, value: 0.045 },
 	paletteHueLimit: { label: 'Hue correction', unit: '?', min: 0, max: 180, step: 1, value: 20 },

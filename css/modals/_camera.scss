@@ -1,13 +1,27 @@
 @use '../mixins' as *;
 
 /* ===== TAKE PHOTO MODAL (photo booth) ===== */
-// The live video, the view canvas (an effect preview or the review), the
+// The live video, the view canvas (looks or the review), the crop guide, the
 // flash, the countdown and the Effects grid all stack on one stage. The video
-// stays rendered under the canvas so it keeps playing.
+// keeps playing under a review but is hidden, so the margins around a Grid or
+// Strip show the stage background. The stage takes the camera's shape
+// (--camera-aspect, set from the video); on desktop it is sized from the
+// viewport height and the dialog fits it, leaving room for the roll and the
+// fixed footer.
 #cameraModal {
+	--camera-stage-height: min(70dvh, calc(90dvh - 14rem));
+
+	> .modal-content {
+		--modal-width: fit-content;
+		min-width: min(640px, calc(100dvw - 32px));
+	}
+
 	.camera-stage {
 		position: relative;
-		aspect-ratio: 16 / 9;
+		width: calc(var(--camera-stage-height) * var(--camera-aspect, 1.7778));
+		max-width: 100%;
+		margin-inline: auto;
+		aspect-ratio: var(--camera-aspect, 1.7778);
 		border-radius: var(--radius-lg);
 		overflow: hidden;
 		background: var(--color-checkerboard);
@@ -24,20 +38,45 @@
 		> [hidden] { display: none; }
 
 		&.is-mirrored > video { transform: scaleX(-1); }
+		&.is-review > video { opacity: 0; }
 	}
 
+	// Dims everything outside the chosen aspect; JS places it in percentages.
+	.camera-crop {
+		position: absolute;
+		box-shadow: 0 0 0 100vmax rgb(0 0 0 / 55%);
+		outline: 1px solid rgb(255 255 255 / 70%);
+		pointer-events: none;
+	}
+
+	// A big count over an optional caption ("2 of 4"); a caption alone
+	// (`is-count`) reads at the count's smaller size.
 	.camera-countdown {
 		position: absolute;
 		inset: 0;
-		display: grid;
-		place-items: center;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: var(--spacing-xs);
 		color: #fff;
-		font-size: calc(var(--font-size-2xl) * 3);
-		font-weight: var(--font-weight-bold);
 		text-shadow: 0 2px 12px rgb(0 0 0 / 60%);
 		pointer-events: none;
 
-		&.is-count { font-size: var(--font-size-2xl); }
+		> strong {
+			font-size: calc(var(--font-size-2xl) * 3);
+			font-weight: var(--font-weight-bold);
+			line-height: 1;
+		}
+
+		> small {
+			font-size: var(--font-size-lg);
+			font-weight: var(--font-weight-semibold);
+		}
+
+		> :empty { display: none; }
+
+		&.is-count > small { font-size: var(--font-size-2xl); }
 
 		&[hidden] { display: none; }
 	}
@@ -110,16 +149,85 @@
 		&.active { border-color: var(--color-accent); }
 	}
 
-	// Modes on the left, the shutter centred, Effects on the right.
-	.camera-booth-bar {
+	// The roll: every take as a thumbnail, newest last. It keeps its height
+	// while empty so nothing below it moves on the first take.
+	.camera-roll {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-xs);
+		min-height: calc(48px + 2 * var(--spacing-xs));
+		margin-top: var(--spacing-sm);
+		padding-block: var(--spacing-xs);
+		overflow-x: auto;
+		overscroll-behavior-x: contain;
+
+		> .camera-roll-empty {
+			color: var(--color-text-tertiary);
+			font-size: var(--font-size-sm);
+		}
+
+		&:not(.is-empty) > .camera-roll-empty { display: none; }
+	}
+
+	.camera-take {
+		position: relative;
+		flex: none;
+		height: 48px;
+		padding: 0;
+		border: 2px solid transparent;
+		border-radius: var(--radius-control);
+		overflow: hidden;
+		background: #000;
+		cursor: pointer;
+
+		> canvas {
+			display: block;
+			width: auto;
+			height: 100%;
+		}
+
+		// GIF takes carry their mode as a small badge.
+		> span {
+			position: absolute;
+			inset: auto auto 2px 2px;
+			padding: 0 3px;
+			border-radius: var(--radius-sm);
+			background: rgb(0 0 0 / 65%);
+			color: #fff;
+			font-size: var(--font-size-xs);
+			font-weight: var(--font-weight-semibold);
+			line-height: 1.4;
+		}
+
+		&:hover:not(:disabled) { border-color: var(--color-border-hover); }
+
+		&:focus-visible {
+			outline: none;
+			border-color: var(--color-accent);
+			box-shadow: var(--control-focus-ring);
+		}
+
+		&.active { border-color: var(--color-accent); }
+		&.is-pending { opacity: 0.75; }
+		&:disabled { cursor: default; }
+	}
+
+	// The fixed footer: modes on the left, the shutter centred, Effects and
+	// Use on the right. Nothing in it hides, so it never reflows.
+	> .modal-content > .modal-footer.camera-booth-bar {
 		display: grid;
 		grid-template-columns: 1fr auto 1fr;
 		align-items: center;
 		gap: var(--spacing-md);
-		margin-top: var(--spacing-md);
 
 		> .camera-modes { justify-self: start; }
-		> .camera-effects-toggle { justify-self: end; }
+	}
+
+	.camera-booth-actions {
+		display: flex;
+		align-items: center;
+		justify-self: end;
+		gap: var(--spacing-base);
 	}
 
 	.camera-modes > .segmented-option { padding-inline: var(--spacing-md); }
@@ -152,13 +260,14 @@
 		&[hidden] { display: none; }
 	}
 
-	.modal-footer > .camera-sound { margin-inline-end: auto; }
+	.modal-form { margin-top: var(--spacing-sm); }
 
-	.modal-form { margin-top: var(--spacing-md); }
-
-	// Phone width: the modes get their own row above the shutter.
+	// Phone width: the stage spans the sheet and the modes get their own row
+	// above the shutter.
 	@media (max-width: 480px) {
-		.camera-booth-bar > .camera-modes { grid-column: 1 / -1; justify-self: stretch; }
+		> .modal-content { min-width: 0; }
+		.camera-stage { width: 100%; }
+		> .modal-content > .modal-footer.camera-booth-bar > .camera-modes { grid-column: 1 / -1; justify-self: stretch; }
 	}
 }
 

@@ -26,7 +26,13 @@ const RELEASES = [
 		features: [
 			{ type: 'added', name: 'Photo booth modes', text: 'Take Photo can shoot one photo, a 2×2 grid, a four-photo strip, or an eight-frame GIF that opens as an animated base image, with Bounce to play it forward and back.', guide: 'getting-started' },
 			{ type: 'added', name: 'Photo booth effects', text: 'Preview filter looks live on the camera, then keep the one you pick as a Filter layer you can still change.', guide: 'getting-started' },
-			{ type: 'added', name: 'Shutter sound and flash', text: 'Take Photo beeps through the countdown and flashes with a shutter sound for each shot. Turn the sound off from the speaker button.', guide: 'getting-started' },
+			{ type: 'added', name: 'Shutter sound and flash', text: 'Take Photo beeps through the countdown and flashes with a shutter sound for each shot. Turn the sound off in the booth settings.', guide: 'getting-started' },
+			{ type: 'added', name: 'Roll of takes', text: 'Every take lands in a strip under the camera, up to 12. Press the shutter again for another, pick any take to review it, and Use the one you like. The booth is bigger on desktop, and its buttons stay put.', guide: 'getting-started' },
+			{ type: 'added', name: 'Booth pacing', text: 'Grid and Strip count down before every shot. GIFs can capture as a quick burst or as stop motion, one frame a second, and play back Slow, Normal, or Fast.', guide: 'getting-started' },
+			{ type: 'added', name: 'Booth aspect', text: 'Shoot Original, Square, or 4:5 with a crop guide on the camera. A photo or GIF is cropped by canvas size, so Undo brings back the full frame.', guide: 'getting-started' },
+			{ type: 'added', name: 'Webcam look', text: 'A soft, grainy, early-2010s laptop webcam look for any image, and a Webcam toggle in Take Photo that stacks under the effect you pick.', guide: 'filters' },
+			{ type: 'added', name: 'Color Balance filter', text: 'Shift shadows, midtones, and highlights toward red, green, or blue separately.', guide: 'filters' },
+			{ type: 'fixed', name: 'Camera behind a grid review', text: 'Reviewing a Grid or Strip no longer shows the live camera in the margins.' },
 			{ type: 'added', name: 'Warp filter', text: 'Bulge, Pinch, and Twirl looks in a new Distort group. Give the filter a region to place the warp over a face.', guide: 'filters' },
 			{ type: 'fixed', name: 'Take Photo without a camera', text: 'Take Photo hides when the listed camera cannot be opened, and camera errors now show as a message instead of only in the status line.' }
 		]

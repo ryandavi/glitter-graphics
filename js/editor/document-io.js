@@ -44,7 +44,7 @@ const EDITOR_DOCUMENT_IO_METHODS = {
 		this.updateHelpfulMessage();
 		this.syncTransformHandlesForActiveLayer();
 	},
-	finishDocumentReplace({ saved = false, loop = CONFIG.project.loop, markers = [] } = {}) {
+	finishDocumentReplace({ saved = false, loop = CONFIG.project.loop, markers = [], draftId = null } = {}) {
 		this.setDocumentLoop(loop, { commit: false });
 		this.setTimelineMarkers(markers, null, { commit: false });
 		this.historyManager.reset(this.originalImage ? this.historyManager.createStateSnapshot() : null);
@@ -52,7 +52,7 @@ const EDITOR_DOCUMENT_IO_METHODS = {
 		this.refreshDocumentUI();
 		TOOLS[this.currentTool]?.onActivate?.(this);
 		this.requestPreviewUpdate();
-		this.writeRecoveryNow();
+		this.startRecoveryDraft({ draftId, saved });
 	},
 	getBaseLayer() { return this.layerManager.getBaseLayer(); },
 	getConstrainedCanvasSize(width, height) {
@@ -253,12 +253,6 @@ const EDITOR_DOCUMENT_IO_METHODS = {
 				URL.revokeObjectURL(objectUrl);
 				return false;
 			}
-		}
-
-		// A project load asks for itself; its base image arrives with deferFinish.
-		if (!deferFinish && !await this.confirmReplaceRecovery()) {
-			URL.revokeObjectURL(objectUrl);
-			return false;
 		}
 
 		const file = blob instanceof File ? blob : new File([blob], fileName, { type: blob.type || 'image/png' });
