@@ -11,7 +11,8 @@ const { openApp } = require('../lib/app');
 		for (const width of [1440, 390]) {
 			const { page, context, errors } = await openApp({ browser, viewport: { width, height: 900 }, touch: width === 390 });
 			const editorUrl = page.url();
-			const root = new URL('.', editorUrl).href;
+			// The editor lives at <root>/studio/ where the homepage owns the root.
+			const root = new URL(new URL(editorUrl).pathname.endsWith('/studio/') ? '../' : '.', editorUrl).href;
 			const errorResponse = await page.request.get(`${root}404.php`);
 			assert.strictEqual(errorResponse.status(), 404);
 			const errorHtml = await errorResponse.text();

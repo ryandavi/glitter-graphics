@@ -7,8 +7,10 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     env:
-      GLITTER_URL: http://127.0.0.1:8000/
+      # public-pages: the root is the homepage; the editor lives at /studio/.
+      GLITTER_URL: http://127.0.0.1:8000/studio/
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

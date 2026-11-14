@@ -189,16 +189,16 @@ function assert(condition, message) {
 		const animatedLayer = {
 			id: 'motion', type: LayerType.STICKER, name: 'Motion', stickerData: {},
 			animations: [
-				{ type: 'rotate', periodMs: 1000, phase: 0 },
-				{ type: 'rainbow', periodMs: 1600, phase: 0 }
+				{ id: 'spin', type: 'rotate', periodMs: 1000, phase: 0 },
+				{ id: 'hue', type: 'rainbow', periodMs: 1600, phase: 0 }
 			]
 		};
 		const procedural = compositor._collectProceduralSources([animatedLayer], { includeBaseImage: false });
-		check(procedural.map((source) => source.key).join(',') === '__anim_motion_0,__anim_motion_1'
+		check(procedural.map((source) => source.key).join(',') === '__anim_motion_spin,__anim_motion_hue'
 			&& compositor._createProceduralTimelines(procedural)[0].key === procedural[0].key,
 			'Procedural animation discovery diverged from timeline normalization');
 		const selectedProcedural = compositor._resolveSelectedAuthored({ authoredSources: [], proceduralSources: procedural }, resolver.createSession(), 250, 100);
-		check(selectedProcedural.sourceSelectionMap.has('__anim_motion_0') && selectedProcedural.sourceSelectionMap.has('__anim_motion_1'), 'Still sampling did not use every animation descriptor');
+		check(selectedProcedural.sourceSelectionMap.has('__anim_motion_spin') && selectedProcedural.sourceSelectionMap.has('__anim_motion_hue'), 'Still sampling did not use every animation descriptor');
 
 		const baseCanvasData = {
 			width: 2,

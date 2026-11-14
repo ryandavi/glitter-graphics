@@ -1015,7 +1015,7 @@
 			"url": "https://web.archive.org/web/20090422194012/http://www.thedollpalace.com/",
 			"date": "2009-04-22"
 		},
-		"note": "The site closed in {y:2016}. A fuller reconstruction is maintained by {link:archive-mirror|https://emeraldpink.com/TDP-archive/testindex}EmeraldPink{/link}."
+		"note": "The homepage was redirecting to a database error by {date:2016-08|August 2016}. A fuller reconstruction is maintained by {link:archive-mirror|https://emeraldpink.com/TDP-archive/testindex}EmeraldPink{/link}."
 	},
 	"the-neopets-html-guide": {
 		"title": "The {@neopets} HTML Guide",
@@ -1161,5 +1161,155 @@
 		"archive": {
 			"url": "https://web.archive.org/web/20050213063346/http://zadg.tripod.com:80/"
 		}
+	},
+	"mica-2004-stardrops": {
+		"author": "@mica",
+		"title": "Stardrops",
+		"url": "http://wtv-zone.com/Stardrops/",
+		"status": "dead",
+		"archive": {
+			"url": "https://web.archive.org/web/20040303061730/http://wtv-zone.com/Stardrops/",
+			"date": "2004-03-03"
+		},
+		"note": "Nearly empty homepage with a greeting signed Stardrops and a {y:2001} copyright line."
+	},
+	"ladywolfette-2026-group-history": {
+		"author": "@ladywolfette",
+		"title": "Gypsy Jewels: The Beginning",
+		"url": "http://d21c.com/LadyWolfette/GJ_info.html",
+		"status": "dead",
+		"archive": {
+			"url": "https://web.archive.org/web/20260113215046/http://d21c.com/LadyWolfette/GJ_info.html",
+			"date": "2026-01-13"
+		},
+		"note": "Preserves the founding date and the farewell and successor-group announcements from {date:2002-02|February 2002}."
+	},
+	"ladywolfette-2021-animated-name": {
+		"author": "Kelli",
+		"title": "Animated Name from a Bar",
+		"url": "http://d21c.com/LadyWolfette/nametute.html",
+		"status": "dead",
+		"archive": {
+			"url": "https://web.archive.org/web/20210211054345/http://d21c.com/LadyWolfette/nametute.html",
+			"date": "2021-02-11"
+		},
+		"note": "Tutorial reposted by {@ladywolfette} from {@gypsy-jewels}, with an output-loop correction dated {date:2001-07|July 2001}."
+	},
+	"ladywolfette-2021-name-corrections": {
+		"author": "~Ginger~",
+		"title": "Animated Name from a Bar: corrections",
+		"url": "http://d21c.com/LadyWolfette/nametute2.html",
+		"status": "dead",
+		"archive": {
+			"url": "https://web.archive.org/web/20210212013431/http://d21c.com/LadyWolfette/nametute2.html",
+			"date": "2021-02-12"
+		},
+		"note": "Reposted clarification dated {date:2001-05-20|20 May 2001}, explaining how to fill a name by moving the bar in five-pixel steps."
+	},
+	"moondogee-2001-wizard": {
+		"author": "@moondogee",
+		"title": "Wizard",
+		"url": "http://d21c.com/LadyWolfette/wizard.html",
+		"status": "dead",
+		"archive": {
+			"url": "https://web.archive.org/web/20260113220124/http://d21c.com/LadyWolfette/wizard.html",
+			"date": "2026-01-13"
+		},
+		"note": "Reposts instructions dated {date:2001-10-26|26 October 2001} from {@gypsy-jewels} for making parts of a still image animate."
+	},
+	"dan-2001-color-photo": {
+		"author": "@dan",
+		"title": "How to Color a Black and White Photograph",
+		"url": "http://d21c.com/LadyWolfette/color_photo.html",
+		"status": "dead",
+		"archive": {
+			"url": "https://web.archive.org/web/20260113220241/http://d21c.com/LadyWolfette/color_photo.html",
+			"date": "2026-01-13"
+		},
+		"note": "Post signed = DAN =, dated {date:2001-07-30|30 July 2001}, preserved by {@ladywolfette}."
+	},
+	"doll-palace-2004-candybar-beta": {
+		"title": "The Doll Palace: CandyBar Doll Maker beta",
+		"url": "http://www.thedollpalace.com/",
+		"status": "dead",
+		"archive": {
+			"url": "https://web.archive.org/web/20040905091142/http://www.thedollpalace.com/",
+			"date": "2004-09-05"
+		},
+		"note": "The homepage update dated 09/05 announces the maker for all registered users, including free accounts; navigation calls it a beta."
+	},
+	"doll-palace-2004-candy-maker": {
+		"title": "The Doll Palace: Candy Doll Maker",
+		"url": "http://www.thedollpalace.com/",
+		"status": "dead",
+		"archive": {
+			"url": "https://web.archive.org/web/20040928073557/http://www.thedollpalace.com/",
+			"date": "2004-09-28"
+		},
+		"note": "The navigation calls it Candy Doll Maker (Candybar Doll Maker), without the earlier beta label."
+	},
+	"doll-palace-2016-homepage": {
+		"title": "The Doll Palace",
+		"url": "http://www.thedollpalace.com/",
+		"status": "dead",
+		"archive": {
+			"url": "https://web.archive.org/web/20160808132018/http://www.thedollpalace.com/",
+			"date": "2016-08-08"
+		},
+		"note": "The Cartoon Dolls update counter reads 2,991 days. This dates that section approximately, not the last activity on the whole site."
+	},
+	"doll-palace-2016-database-error": {
+		"title": "The Doll Palace: database maintenance",
+		"url": "http://www.thedollpalace.com/db_unavailable.php",
+		"status": "dead",
+		"archive": {
+			"url": "https://web.archive.org/web/20160829181354/http://www.thedollpalace.com/db_unavailable.php",
+			"date": "2016-08-29"
+		},
+		"note": "The homepage redirects to this error page in the corresponding {date:2016-08-29|29 August 2016} capture."
+	},
+	"elliott-2007-doll-palace-privacy": {
+		"author": "Elliott, Janet",
+		"title": "AG's office says two Web sites invade privacy",
+		"url": "https://www.chron.com/business/technology/article/ag-s-office-says-two-web-sites-invade-privacy-1534421.php",
+		"publisher": "Houston Chronicle",
+		"note": "Published {date:2007-12-06|6 December 2007}. Contemporary reporting on the complaints against The Doll Palace and Gamesradar.com."
+	},
+	"proskauer-2008-doll-palace-settlement": {
+		"author": "Proskauer Rose",
+		"title": "Texas Attorney General Settles One of First State COPPA Enforcement Actions",
+		"url": "https://privacylaw.proskauer.com/2008/05/articles/childrens-online-privacy-prote/texas-attorney-general-settles-one-of-first-state-coppa-enforcement-actions/",
+		"publisher": "Proskauer on Privacy",
+		"note": "Published {date:2008-05-28|28 May 2008}. Contemporary legal analysis of the {date:2008-03|March 2008} agreed judgment, its $11,500 in penalties and fees, and its restrictions on collection and display of information."
+	},
+	"neonaut-2019-kaoani": {
+		"author": "neonaut",
+		"title": "The Wonderful World of Kaoani",
+		"url": "https://neonaut.neocities.org/microblog/2019/11/the-wonderful-world-of-kaoani",
+		"note": "Published {date:2019-11-13|13 November 2019}. Describes kaoani, their relationship to kaomoji and sozai, and an attempt to trace a cactus graphic to its maker."
+	},
+	"internet-watch-1999-kaomoji": {
+		"title": "Kaomoji turned into daifuku-mochi-style GIF characters",
+		"url": "https://internet.watch.impress.co.jp/www/article/1999/0818/kaomoji.htm",
+		"publisher": "INTERNET Watch",
+		"note": "Published {date:1999-08-18|18 August 1999}. English translation of the Japanese title. Reports eighteen creators making floating animated faces for bulletin boards, chats, and HTML email."
+	},
+	"flight-rising-adoptables": {
+		"title": "Adoptables",
+		"url": "https://www1.flightrising.com/forums/adopt",
+		"publisher": "@flight-rising",
+		"note": "Forum for player-made adoptables, including custom creature drawings and character sales."
+	},
+	"flight-rising-art-sales": {
+		"title": "Art Sales",
+		"url": "https://www1.flightrising.com/forums/art",
+		"publisher": "@flight-rising",
+		"note": "Forum for commissions and flat sales, organized as player-run threads."
+	},
+	"microsoft-2003-messenger-customization": {
+		"author": "@microsoft",
+		"title": "MSN Messenger 6 Allows IM Lovers to Express Themselves With Style",
+		"url": "https://news.microsoft.com/source/2003/06/18/msn-messenger-6-allows-im-lovers-to-express-themselves-with-style/",
+		"note": "Published {date:2003-06-18|18 June 2003}. Announces the public preview, animated emoticons, custom emoticons made from user images, and a group for sharing customization resources."
 	}
 }

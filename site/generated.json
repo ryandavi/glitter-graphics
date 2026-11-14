@@ -33,7 +33,7 @@
 			"description": "A history of glitter graphics: where the sparkle tiles came from, who made them, and the personal-web culture that passed them around.",
 			"scripts": [
 				"js/core/dom.js?v=3531b1f4",
-				"js/generated/entities-data.js?v=b8b7d1f7",
+				"js/generated/entities-data.js?v=666c6697",
 				"js/core/entities-group.js?v=b984c1dd",
 				"js/ui/tooltip.js?v=305ed707",
 				"js/ui/doc-modal.js?v=f6a51f4c",
@@ -55,7 +55,7 @@
 			"description": "The personal web aesthetic of the 1990s and 2000s: tiled backgrounds, buttons, adoptables, dolls and the pages made to hold them.",
 			"scripts": [
 				"js/core/dom.js?v=3531b1f4",
-				"js/generated/entities-data.js?v=b8b7d1f7",
+				"js/generated/entities-data.js?v=666c6697",
 				"js/core/entities-group.js?v=b984c1dd",
 				"js/ui/tooltip.js?v=305ed707",
 				"js/ui/doc-modal.js?v=f6a51f4c",
@@ -70,7 +70,7 @@
 			"modal": "preservationModal",
 			"scripts": [
 				"js/core/dom.js?v=3531b1f4",
-				"js/generated/entities-data.js?v=b8b7d1f7",
+				"js/generated/entities-data.js?v=666c6697",
 				"js/core/entities-group.js?v=b984c1dd",
 				"js/core/format.js?v=e8e19ef6",
 				"js/ui/about-timeline-data.js?v=c875b6a5",
@@ -107,7 +107,7 @@
 			"description": "What Glitter Editor is, what it makes, how it handles your files, and its version history.",
 			"scripts": [
 				"js/core/dom.js?v=3531b1f4",
-				"js/generated/entities-data.js?v=b8b7d1f7",
+				"js/generated/entities-data.js?v=666c6697",
 				"js/core/entities-group.js?v=b984c1dd",
 				"js/ui/tooltip.js?v=305ed707",
 				"js/ui/doc-modal.js?v=f6a51f4c",
@@ -134,7 +134,7 @@
 			]
 		}
 	],
-	"stylesheet": "css/style.css?v=ad7f6c88",
+	"stylesheet": "css/style.css?v=12605dbe",
 	"favicon": "images/etc/favicon.ico?v=bcdad78e",
 	"scripts": [
 		"js/ui/menu-popover.js?v=fdfbce8a",

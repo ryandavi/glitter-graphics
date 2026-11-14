@@ -1,3 +1,6 @@
+node tools/build-modals.js --watch
+
+
 https://web.archive.org/web/20040905091142/http://www.thedollpalace.com/
 
 On September 05, 2004 they add a Candybar Doll Maker Beta

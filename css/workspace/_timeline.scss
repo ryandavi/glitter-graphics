@@ -605,6 +605,9 @@
 		.timeline-row-info { display: none; }
 		.timeline-stage { --timeline-label-column: var(--timeline-label-min); }
 		.timeline-group-label > .layer-drag-handle, .timeline-group-label > .timeline-group-chevron { display: none; }
+		// Add animation would take the whole name on the selected row (a double-click
+		// to rename then lands on it); the Inspector keeps the same action.
+		.timeline-group-label .timeline-add-animation { display: none; }
 		// The bar drops its name and the export's format first.
 		> .timeline-section > .section-header {
 			gap: var(--spacing-sm);

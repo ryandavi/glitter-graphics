@@ -249,8 +249,9 @@ TextLayout.layout = function(ctx, text, data, options) {
 		const lineBlockHeight = ascent + descent + rows * lineHeightPx;
 		// Font metrics hold the baseline still as ascenders and descenders change.
 		// Only a box smaller than that line block needs an ink-based fit correction.
-		offsetY = this.getVerticalAlignOffset(data.verticalAlign, innerHeight, lineBlockHeight);
-		offsetY = padY + Math.max(-top, Math.min(offsetY, innerHeight - bottom));
+		// (Cap-height trim leaves descenders out of the block on purpose, so they hang.)
+		const aligned = this.getVerticalAlignOffset(data.verticalAlign, innerHeight, lineBlockHeight);
+		offsetY = padY + (innerHeight >= lineBlockHeight ? aligned : Math.max(-top, Math.min(aligned, innerHeight - bottom)));
 	}
 	const glyphs = [];
 	const runs = [];

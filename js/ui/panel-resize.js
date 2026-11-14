@@ -31,6 +31,13 @@ function getCanvasMinWidth() {
 	return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--canvas-min-width')) || 0;
 }
 
+// The inset dock layout (--dock-gap) keeps one gap after the rail, after each
+// side column and at the right edge; flush docks and phones have none.
+function getDockGapsWidth(sideColumns) {
+	const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--dock-gap')) || 0;
+	return gap * (sideColumns + 2);
+}
+
 function readPanelWidths() {
 	return readStored(PANEL_RESIZE_STORAGE_KEY, {});
 }
@@ -55,7 +62,8 @@ function getPanelResizeMax(key) {
 	const otherWidth = Object.keys(PANEL_RESIZE_TARGETS)
 		.filter((name) => name !== key)
 		.reduce((total, name) => total + getPanelFlowWidth(name), 0);
-	let available = window.innerWidth - otherWidth - getCanvasMinWidth();
+	const sideColumns = ['layers', 'inspector'].filter((name) => name === key || getPanelFlowWidth(name) > 0).length;
+	let available = window.innerWidth - otherWidth - getDockGapsWidth(sideColumns) - getCanvasMinWidth();
 	if ((key === 'toolbar' || key === 'layers') && PREFERENCES.get('balanceSidebars')) {
 		const matchingColumns = Number(getPanelFlowWidth('inspector') > 0);
 		const leftLimit = Math.min(PANEL_RESIZE_TARGETS.inspector.max,
@@ -484,7 +492,8 @@ function wantsLeftDockOverlay() {
 	const dock = document.querySelector(DOCK_TARGETS.layers.selector);
 	const area = document.querySelector('.main-area');
 	if (!dock || !area || window.innerWidth <= CONFIG.ui.mobile.breakpoint) return false;
-	const columns = getPanelFlowWidth('toolbar') + getPanelFlowWidth('inspector') + parseFloat(getComputedStyle(dock).width);
+	const inspector = getPanelFlowWidth('inspector');
+	const columns = getPanelFlowWidth('toolbar') + inspector + parseFloat(getComputedStyle(dock).width) + getDockGapsWidth(1 + Number(inspector > 0));
 	return area.clientWidth - columns < getCanvasMinWidth();
 }
 

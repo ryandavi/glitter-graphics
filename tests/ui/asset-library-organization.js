@@ -744,6 +744,8 @@ async function main() {
 		assert.strictEqual(await page.evaluate(() => window.editor.glitterLibrary.browser.rail.selection.root), '__all', 'Library must reopen on All styles');
 		await page.evaluate(async () => {
 			const e = window.editor;
+			// Not a recovery test: after the reload the earlier work would raise "Discard Recovered Work?".
+			PREFERENCES.set('recoverUnsavedWork', false);
 			await e.loadBlankImage(240, 180, '#ffffff');
 			e.layerManager.insertLayer(e.glitterManager.createLayer());
 			e.layerManager.setActiveLayer(e.layers.at(-1).id);

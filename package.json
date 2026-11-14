@@ -13,7 +13,8 @@
 		"test:export": "node tests/run.js --tag export",
 		"test:touch": "node tests/ui/touch-smoke.js",
 		"test:export-timeline": "node tests/unit/export-timeline-unit.js",
-		"build:css": "sass css/style.scss css/style.css --no-source-map"
+		"build:css": "sass css/style.scss css/style.css --no-source-map",
+		"hooks:install": "git config core.hooksPath .githooks"
 	},
 	"devDependencies": {
 		"esbuild": "0.25.12",

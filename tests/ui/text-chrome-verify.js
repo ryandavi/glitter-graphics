@@ -35,9 +35,10 @@ const { chromium } = require('playwright');
 				await manager.refreshLayer(layer, { saveHistory: false });
 				const entry = manager.getMeasurementEntry(layer);
 				const ink = entry.textInkRect;
-				results.push(entry.layout.visibleLines[0].baseline === entry.ascent && ink.height > 0);
+				// Box padding (and vertical alignment) shift the first baseline by contentOffsetY.
+				results.push(entry.layout.visibleLines[0].baseline === entry.contentOffsetY + entry.ascent && ink.height > 0);
 			}
-			layer.textData.boxHeight = Math.ceil(manager.getMeasurementEntry(layer).textInkRect.height);
+			layer.textData.boxHeight = Math.ceil(manager.getMeasurementEntry(layer).textInkRect.height) + getTextBoxPadding(layer.textData).y * 2;
 			layer.textData.boxMode = 'fixed';
 			await manager.refreshLayer(layer, { saveHistory: true });
 			results.push(!manager.getMeasurementEntry(layer).hasOverflow);
@@ -145,7 +146,8 @@ const { chromium } = require('playwright');
 				library.apply(library.get('subtitle'), { layer, context: {
 					getSlotDefaults: key => getSlotDefaults(layer.type, key), glitterAvailable: () => true
 				} });
-				Object.assign(layer.textData, { text: 'aaa', boxMode, boxWidth: 220, boxHeight: 40, fontSize: 32, verticalAlign: 'top', align: 'left' });
+				// 40px of room inside the preset's box padding.
+				Object.assign(layer.textData, { text: 'aaa', boxMode, boxWidth: 220, boxHeight: 40 + getTextBoxPadding(layer.textData).y * 2, fontSize: 32, verticalAlign: 'top', align: 'left' });
 				Object.assign(layer.transform, { position: { x: 250, y: 250 }, rotation: 0, scale: { x: 100, y: 100 }, flipX: false });
 				editor.layerManager.setActiveLayer(id);
 				await manager.refreshLayer(layer, { saveHistory: false });

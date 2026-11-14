@@ -354,11 +354,18 @@ async function capture(browser) {
 				document.getElementById('imagePanelHeader')?.click();
 			});
 			snapshot.structure = await captureStructure(page);
-			await page.evaluate(() => {
+			// The Change button points the Library at the selected glitter fill, so one must exist.
+			await LAYER_SETUPS.GLITTER_FILL(page);
+			await page.evaluate(async () => {
 				const glitter = window.editor.glitterLibrary?.getAllContent?.()[0];
 				if (!glitter) throw new Error('No glitter asset available for Change-button verification');
-				document.getElementById('glitterFillGlitterChange')?.click();
-				if (!document.getElementById('designGallerySection')?.classList.contains('is-open')) {
+				const change = document.getElementById('glitterFillGlitterChange');
+				if (!change) throw new Error('Glitter Fill is missing its Change button');
+				change.click();
+				// The Library window opens once its content is ready, not in the click.
+				const window_ = document.getElementById('libraryWindow');
+				for (let tries = 0; tries < 50 && !window_?.classList.contains('is-open'); tries++) await new Promise(resolve => setTimeout(resolve, 20));
+				if (!window_?.classList.contains('is-open')) {
 					throw new Error('Glitter Fill Change button did not open the Design Gallery');
 				}
 				const sticker = window.editor.stickerLibrary?.getAllContent?.()[0];

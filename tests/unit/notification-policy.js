@@ -7,7 +7,7 @@ const root = path.join(__dirname, '..', '..');
 const index = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const notify = fs.readFileSync(path.join(root, 'js/ui/notify.js'), 'utf8');
 const sources = fs.readdirSync(path.join(root, 'js'), { recursive: true })
-	.filter((entry) => entry.endsWith('.js') && !entry.includes('vendor'))
+	.filter((entry) => entry.endsWith('.js') && !entry.includes('vendor') && !entry.startsWith('dist'))
 	.map((entry) => ({
 		file: entry,
 		source: fs.readFileSync(path.join(root, 'js', entry), 'utf8')

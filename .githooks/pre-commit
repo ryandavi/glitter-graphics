@@ -1,0 +1,4 @@
+#!/bin/sh
+# Regenerates and stages build outputs so CI's freshness checks pass. See tools/pre-commit.js.
+# Skip once with: git commit --no-verify
+exec node tools/pre-commit.js

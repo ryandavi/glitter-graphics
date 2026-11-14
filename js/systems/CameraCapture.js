@@ -44,7 +44,7 @@ class CameraCapture {
 	isOpen() { return this.editor.modalManager.stack.some(config => config.id === 'cameraModal'); }
 
 	open() {
-		if (!CameraCapture.isSupported()) { this.editor.updateStatus('This browser cannot use a camera.'); return; }
+		if (!CameraCapture.isSupported()) { this.editor.showError('This browser cannot use a camera.'); return; }
 		this.editor.modalManager.open('cameraModal');
 	}
 

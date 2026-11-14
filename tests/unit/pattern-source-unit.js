@@ -170,7 +170,7 @@ const { chromium } = require('playwright');
 			assert(procedural.length === 1 && procedural[0].naturalPeriod === defaults.scrollCycleMs, 'Pattern scroll is absent from the timeline');
 			assert(procedural[0].sampleAt(1000, 4000).time === 500, 'Fitted pattern clock did not map to its own cycle');
 			shape.locked = true;
-			assert(editor.sceneCompositor._collectProceduralSources([shape])[0].setPeriod === null, 'Locked pattern cycle can be refitted');
+			assert(editor.sceneCompositor._collectProceduralSources([shape])[0].adjustable === false, 'Locked pattern cycle can be refitted');
 			shape.locked = false;
 			const before = editor.historyManager.history.length;
 			const size = document.getElementById('shapeFillPatternShapeSize');

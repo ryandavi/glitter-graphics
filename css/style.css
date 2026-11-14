@@ -3449,7 +3449,7 @@ body.is-resizing-panel canvas {
     --layer-panel-default-width: 300px;
   }
 }
-@media (max-width: 1200px) {
+@media (max-width: 1220px) {
   :root {
     --layer-panel-default-width: 250px;
   }
@@ -5832,6 +5832,9 @@ body.tool-select .preview-container.is-over-picked-layer {
     --timeline-label-column: var(--timeline-label-min);
   }
   .timeline-dock .timeline-group-label > .layer-drag-handle, .timeline-dock .timeline-group-label > .timeline-group-chevron {
+    display: none;
+  }
+  .timeline-dock .timeline-group-label .timeline-add-animation {
     display: none;
   }
   .timeline-dock > .timeline-section > .section-header {
@@ -14022,7 +14025,6 @@ body.home-page {
 }
 
 .home-wordmark {
-  margin: 0;
   font-family: "Comic Sans MS", "Comic Sans", "Chalkboard SE", "Comic Neue", var(--font-ui);
   font-size: 1em;
   font-weight: bold;

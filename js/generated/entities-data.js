@@ -1992,5 +1992,28 @@ const ENTITY_DATA = {
 		"kind": "handle",
 		"host": "deviantart",
 		"icon": "deviantart"
+	},
+	"webjewel": {
+		"name": "webjewel",
+		"kind": "handle",
+		"aliases": [
+			"Nicolé"
+		],
+		"host": "webtv",
+		"icon": "wtv-zone"
+	},
+	"mslauralou": {
+		"name": "~mslauralou~",
+		"kind": "handle",
+		"host": "webtv",
+		"icon": "wtv-zone"
+	},
+	"gifworks": {
+		"name": "GifWorks",
+		"kind": "site"
+	},
+	"flight-rising": {
+		"name": "Flight Rising",
+		"kind": "site"
 	}
 };

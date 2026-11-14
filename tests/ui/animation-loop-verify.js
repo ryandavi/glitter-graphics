@@ -4,11 +4,20 @@ const fs = require('fs');
 const path = require('path');
 
 // Serves the local app under a non-local host name.
+// The fake deployed host proxies to the app under test (CI serves it at 127.0.0.1:8000, not localhost).
+const LOCAL_APP = new URL(process.env.GLITTER_URL || 'http://localhost/glitter/');
+function localAppUrl(deployedUrl) {
+	const source = new URL(deployedUrl), target = new URL(LOCAL_APP);
+	target.pathname = source.pathname.startsWith('/glitter/') ? LOCAL_APP.pathname + source.pathname.slice('/glitter/'.length) : source.pathname;
+	target.search = source.search;
+	return target.href;
+}
+
 async function routeDeployedHost(page) {
 	await page.route('https://*.goatcounter.com/**', route => route.fulfill({ status: 204, body: '' }));
 	await page.route('http://timeline.test/**', async route => {
 		if (process.env.GLITTER_TEST_CSS && route.request().url().includes('/css/style.css')) { await route.fallback(); return; }
-		const response = await route.fetch({ url: route.request().url().replace('timeline.test', 'localhost') });
+		const response = await route.fetch({ url: localAppUrl(route.request().url()) });
 		await route.fulfill({ response });
 	});
 }
@@ -209,7 +218,7 @@ async function verifyTimelineDock() {
 			dock.open();
 			return result;
 		});
-		assert.deepEqual(minimized, { same: true, pending: true, readout: '83 frames · GIF', ticks: 0, expanded: true, closedTicks: 0 }, 'Minimized estimates update the header, defer rows until expand, and release the display clock');
+		assert.deepEqual(minimized, { same: true, pending: true, readout: '83 frames · GIF', ticks: 1, expanded: true, closedTicks: 0 }, 'Minimized estimates update the header, defer rows until expand, keep the transport clock, and release it on close');
 		const resizing = await page.evaluate(async () => {
 			const dock = editor.timelineDock, sync = dock.sync;
 			let calls = 0; dock.sync = function (...args) { calls++; return sync.apply(this, args); };
@@ -305,7 +314,8 @@ async function verifyTimelineDock() {
 				if (url.includes('timeline.test')) await routeDeployedHost(page);
 			} });
 			try {
-				const allowed = url.includes('localhost') || url.includes('features=timeline');
+				const released = await fixture.page.evaluate(() => FEATURES.timeline.stage === 'on');
+				const allowed = released || url.includes('localhost') || url.includes('features=timeline');
 				if (allowed) await fixture.page.waitForFunction(() => editor.timelineDock?.isOpen);
 				assert.strictEqual(await fixture.page.locator('#timelineDock').isVisible(), allowed);
 				assert.strictEqual(requested.some(request => /js\/ui\/timeline-(view|dock|group)\.js/.test(request)), allowed);

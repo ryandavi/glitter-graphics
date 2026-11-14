@@ -507,7 +507,10 @@ body.is-resizing-panel {
 	}
 }
 
-@media (max-width: 1200px) {
+// The wider defaults (300 dock + 350 balanced Inspector) need rail 58 + four
+// 8px dock gaps + the 480px canvas minimum = 1220px; narrower windows would
+// float the dock again just above this breakpoint.
+@media (max-width: 1220px) {
 	:root {
 		--layer-panel-default-width: 250px;
 	}

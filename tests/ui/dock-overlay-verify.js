@@ -32,7 +32,7 @@ async function main() {
 				visible: getComputedStyle(dock).visibility === 'visible' && dock.getBoundingClientRect().right > document.querySelector('.toolbar').getBoundingClientRect().right,
 				canvas: box('previewContainer'), timeline: box('timelineDock'), dock: box('layersPanel'),
 				inspector: box('designPanel'), rail: document.querySelector('.toolbar').getBoundingClientRect().right,
-				min: getCanvasMinWidth(), railButton: !document.getElementById('toolbarLayersBtn').hidden
+				min: getCanvasMinWidth(), gap: parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--dock-gap')) || 0, railButton: !document.getElementById('toolbarLayersBtn').hidden
 			};
 		});
 		const same = (a, b, message) => { assert.equal(Math.round(a.canvas.w), Math.round(b.canvas.w), `${message}: canvas width`); assert.equal(Math.round(a.canvas.x), Math.round(b.canvas.x), `${message}: canvas x`); assert.equal(Math.round(a.timeline.w), Math.round(b.timeline.w), `${message}: timeline width`); };
@@ -48,7 +48,8 @@ async function main() {
 			assert(sample.canvas.w >= sample.min - 1 || sample.overlay === false, `${sample.width}: overlay mode is for windows whose docks would starve the canvas`);
 			if (sample.overlay) {
 				assert(!sample.open && !sample.visible, `${sample.width}: the overlay starts closed`);
-				assert(Math.abs(sample.timeline.x - sample.rail) <= 1 && Math.abs(sample.timeline.x + sample.timeline.w - sample.inspector.x) <= 1, `${sample.width}: the timeline spans from the rail to the Inspector`);
+				// The inset layout keeps one --dock-gap between the cards (0 for flush docks).
+				assert(Math.abs(sample.timeline.x - sample.gap - sample.rail) <= 1 && Math.abs(sample.timeline.x + sample.timeline.w + sample.gap - sample.inspector.x) <= 1, `${sample.width}: the timeline spans from the rail to the Inspector`);
 			} else {
 				assert(sample.canvas.w >= sample.min - 1, `${sample.width}: docked canvas keeps its minimum`);
 			}

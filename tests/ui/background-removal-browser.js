@@ -144,7 +144,8 @@ async function exportBytes(page, target = 'still:png') {
 				else await page.locator(`#${control}`).click();
 				assert(await page.evaluate(() => editor.stickerManager.pickerSession?.kind === 'asset'), 'Sticker control did not arm the asset picker');
 				await page.waitForSelector(`.asset-option[data-id="${kept.id}"]`, { state: 'visible' });
-				await page.locator('#libraryWindowClose').click();
+				// Docked desktop shows the Library as a dock tab (the Layers tab ends the pick); the phone sheet has a close button.
+				await page.locator('#libraryWindowClose:visible, #layersPanel [data-dock-tab="layers"]:visible').first().click();
 				await page.waitForFunction(() => !editor.mobileManager.sheetRelease);
 				assert(!await page.evaluate(() => editor.stickerManager.pickerSession), 'Close did not close the picker');
 			}

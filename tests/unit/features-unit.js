@@ -39,8 +39,10 @@ assert.throws(() => app.run("isFeatureEnabled('toString')"), /Unknown feature/);
 assert.strictEqual(app.run('Object.keys(FEATURES).join()'), 'customMotion,timeline,docks,loopLength,gifCycle,history,personalWeb,htmlScene,stylePresetCopy,memoryOverlay,welcomeOnStartup');
 assert(fixture().run("isFeatureEnabled('customMotion')"));
 for (const id of ['history', 'personalWeb', 'htmlScene']) {
+	// public-pages ships history and personalWeb as 'on'; the editor branch keeps them 'local'.
+	const shipped = app.run(`FEATURES.${id}.stage`) === 'on';
 	assert(app.run(`isFeatureEnabled('${id}')`));
-	assert(!fixture().run(`isFeatureEnabled('${id}')`));
+	assert.strictEqual(fixture().run(`isFeatureEnabled('${id}')`), shipped);
 	assert(fixture({ search: `?features=${id}` }).run(`isFeatureEnabled('${id}')`));
 }
 for (const id of ['stylePresetCopy', 'memoryOverlay']) {

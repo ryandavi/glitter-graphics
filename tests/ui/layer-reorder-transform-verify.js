@@ -83,6 +83,9 @@ async function verifyReorderControls(page) {
 	assert(await page.evaluate(() => CONFIG.ui.gestures.dragThresholdPx > 0), 'Drag threshold must allow clicks');
 	for (const label of ['One', 'Two', 'Three', 'Four', 'Five', 'Six']) await createStickerLayer(page, label);
 	await page.evaluate(async () => {
+		// A still document's timeline shows only its prompt; one moving layer brings every row.
+		const first = editor.layers.find(layer => layer.name === 'One');
+		first.animations = [GlitterAnimation.normalizeAnimation({ id: editor.layerManager.generateLayerId(), type: 'pulse' })];
 		await editor.ensureTimelineDock(); PREFERENCES.set('timelineOpen', true); PREFERENCES.set('timelineHeight', 450);
 		await editor.updateExportDuration();
 	});

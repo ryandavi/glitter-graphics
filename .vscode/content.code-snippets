@@ -3347,6 +3347,39 @@
 		"body": "{@zilla774}",
 		"description": "zilla774 (handle)"
 	},
+	"@webjewel": {
+		"scope": "html",
+		"prefix": [
+			"@webjewel",
+			"@nicole"
+		],
+		"body": "{@webjewel}",
+		"description": "webjewel (handle)"
+	},
+	"@mslauralou": {
+		"scope": "html",
+		"prefix": [
+			"@mslauralou"
+		],
+		"body": "{@mslauralou}",
+		"description": "~mslauralou~ (handle)"
+	},
+	"@gifworks": {
+		"scope": "html",
+		"prefix": [
+			"@gifworks"
+		],
+		"body": "{@gifworks}",
+		"description": "GifWorks (site)"
+	},
+	"@flight-rising": {
+		"scope": "html",
+		"prefix": [
+			"@flight-rising"
+		],
+		"body": "{@flight-rising}",
+		"description": "Flight Rising (site)"
+	},
 	"[@1991-kiss-gs": {
 		"scope": "html",
 		"prefix": "[@1991-kiss-gs",
@@ -4372,5 +4405,107 @@
 		"prefix": "[@zak-a-doodle-graphics-calling-cards",
 		"body": "[@zak-a-doodle-graphics-calling-cards]",
 		"description": "Calling Cards"
+	},
+	"[@mica-2004-stardrops": {
+		"scope": "html",
+		"prefix": "[@mica-2004-stardrops",
+		"body": "[@mica-2004-stardrops]",
+		"description": "Stardrops"
+	},
+	"[@ladywolfette-2026-group-history": {
+		"scope": "html",
+		"prefix": "[@ladywolfette-2026-group-history",
+		"body": "[@ladywolfette-2026-group-history]",
+		"description": "Gypsy Jewels: The Beginning"
+	},
+	"[@ladywolfette-2021-animated-name": {
+		"scope": "html",
+		"prefix": "[@ladywolfette-2021-animated-name",
+		"body": "[@ladywolfette-2021-animated-name]",
+		"description": "Animated Name from a Bar"
+	},
+	"[@ladywolfette-2021-name-corrections": {
+		"scope": "html",
+		"prefix": "[@ladywolfette-2021-name-corrections",
+		"body": "[@ladywolfette-2021-name-corrections]",
+		"description": "Animated Name from a Bar: corrections"
+	},
+	"[@moondogee-2001-wizard": {
+		"scope": "html",
+		"prefix": "[@moondogee-2001-wizard",
+		"body": "[@moondogee-2001-wizard]",
+		"description": "Wizard"
+	},
+	"[@dan-2001-color-photo": {
+		"scope": "html",
+		"prefix": "[@dan-2001-color-photo",
+		"body": "[@dan-2001-color-photo]",
+		"description": "How to Color a Black and White Photograph"
+	},
+	"[@doll-palace-2004-candybar-beta": {
+		"scope": "html",
+		"prefix": "[@doll-palace-2004-candybar-beta",
+		"body": "[@doll-palace-2004-candybar-beta]",
+		"description": "The Doll Palace: CandyBar Doll Maker beta"
+	},
+	"[@doll-palace-2004-candy-maker": {
+		"scope": "html",
+		"prefix": "[@doll-palace-2004-candy-maker",
+		"body": "[@doll-palace-2004-candy-maker]",
+		"description": "The Doll Palace: Candy Doll Maker"
+	},
+	"[@doll-palace-2016-homepage": {
+		"scope": "html",
+		"prefix": "[@doll-palace-2016-homepage",
+		"body": "[@doll-palace-2016-homepage]",
+		"description": "The Doll Palace"
+	},
+	"[@doll-palace-2016-database-error": {
+		"scope": "html",
+		"prefix": "[@doll-palace-2016-database-error",
+		"body": "[@doll-palace-2016-database-error]",
+		"description": "The Doll Palace: database maintenance"
+	},
+	"[@elliott-2007-doll-palace-privacy": {
+		"scope": "html",
+		"prefix": "[@elliott-2007-doll-palace-privacy",
+		"body": "[@elliott-2007-doll-palace-privacy]",
+		"description": "AG's office says two Web sites invade privacy"
+	},
+	"[@proskauer-2008-doll-palace-settlement": {
+		"scope": "html",
+		"prefix": "[@proskauer-2008-doll-palace-settlement",
+		"body": "[@proskauer-2008-doll-palace-settlement]",
+		"description": "Texas Attorney General Settles One of First State COPPA Enforcement Actions"
+	},
+	"[@neonaut-2019-kaoani": {
+		"scope": "html",
+		"prefix": "[@neonaut-2019-kaoani",
+		"body": "[@neonaut-2019-kaoani]",
+		"description": "The Wonderful World of Kaoani"
+	},
+	"[@internet-watch-1999-kaomoji": {
+		"scope": "html",
+		"prefix": "[@internet-watch-1999-kaomoji",
+		"body": "[@internet-watch-1999-kaomoji]",
+		"description": "Kaomoji turned into daifuku-mochi-style GIF characters"
+	},
+	"[@flight-rising-adoptables": {
+		"scope": "html",
+		"prefix": "[@flight-rising-adoptables",
+		"body": "[@flight-rising-adoptables]",
+		"description": "Adoptables"
+	},
+	"[@flight-rising-art-sales": {
+		"scope": "html",
+		"prefix": "[@flight-rising-art-sales",
+		"body": "[@flight-rising-art-sales]",
+		"description": "Art Sales"
+	},
+	"[@microsoft-2003-messenger-customization": {
+		"scope": "html",
+		"prefix": "[@microsoft-2003-messenger-customization",
+		"body": "[@microsoft-2003-messenger-customization]",
+		"description": "MSN Messenger 6 Allows IM Lovers to Express Themselves With Style"
 	}
 }

@@ -14,7 +14,8 @@ async function main() {
 		const errors = []; page.on('pageerror', error => errors.push(error.message));
 		await page.goto(APP_URL);
 		await page.waitForFunction(() => window.editor?.glitterLibrary?.browser && document.querySelector('#recolorGlitterBtn'));
-		await page.evaluate(() => editor.modalManager.closeAll());
+		// Not a recovery test: without this, reopening a document later waits on the "Discard Recovered Work?" prompt forever.
+		await page.evaluate(() => { PREFERENCES.set('recoverUnsavedWork', false); editor.modalManager.closeAll(); });
 		await page.evaluate(() => editor.loadBlankImage(100, 80, '#ffffff'));
 		await page.waitForFunction(() => Boolean(editor.originalImage));
 		await page.evaluate(() => {

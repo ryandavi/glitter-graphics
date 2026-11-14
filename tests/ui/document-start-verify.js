@@ -139,7 +139,7 @@ async function main() {
 		const presetBox = await desktop.page.locator('#newCanvasPresets').boundingBox();
 		await desktop.page.mouse.move(presetBox.x + presetBox.width / 2, presetBox.y + 70);
 		await desktop.page.waitForSelector('.scroll-region-track.is-visible');
-		const thumbBox = await desktop.page.locator('.scroll-region-thumb').boundingBox();
+		const thumbBox = await desktop.page.locator('.scroll-region-track.is-visible .scroll-region-thumb').boundingBox();
 		await desktop.page.mouse.move(thumbBox.x + thumbBox.width / 2, thumbBox.y + thumbBox.height / 2);
 		await desktop.page.mouse.down();
 		await desktop.page.mouse.move(thumbBox.x + thumbBox.width / 2, thumbBox.y + thumbBox.height / 2 + 40);

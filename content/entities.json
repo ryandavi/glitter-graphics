@@ -2204,5 +2204,33 @@
 		"kind": "handle",
 		"name": "zilla774",
 		"host": "deviantart"
+	},
+	"webjewel": {
+		"kind": "handle",
+		"name": "webjewel",
+		"aliases": [
+			"Nicolé"
+		],
+		"host": "webtv",
+		"status": "draft"
+	},
+	"mslauralou": {
+		"kind": "handle",
+		"name": "~mslauralou~",
+		"host": "webtv",
+		"status": "draft"
+	},
+	"gifworks": {
+		"kind": "site",
+		"name": "GifWorks",
+		"status": "draft"
+	},
+	"flight-rising": {
+		"kind": "site",
+		"name": "Flight Rising",
+		"domains": [
+			"flightrising.com"
+		],
+		"status": "draft"
 	}
 }

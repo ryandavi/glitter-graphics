@@ -379,8 +379,8 @@ async function setTransform(page, layerId, updates) {
 			editor.glitterManager.resetTransform(id);
 			editor.applyTransformEditWithAnchor(layer, editor.glitterManager, () => editor.glitterManager.updateTransform(id, { scale: { x: 60, y: 60 }, rotation: 30 }));
 			layer.animations = GlitterAnimation.normalizeAnimations([
-				{ type: 'move', distance: 40, angle: 0, periodMs: 1000 },
-				{ type: 'pulse', amount: 30, periodMs: 1000 }
+				{ id: 'slide', type: 'move', distance: 40, angle: 0, periodMs: 1000 },
+				{ id: 'beat', type: 'pulse', amount: 30, periodMs: 1000 }
 			]);
 			editor.glitterManager.renderLayer(layer);
 			editor.animationTicker.setPaused(true);
