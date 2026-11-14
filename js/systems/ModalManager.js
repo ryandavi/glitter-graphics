@@ -115,9 +115,13 @@ class ModalManager {
 		const { modal, openButtons, closeButtons, closeOnOutsideClick } = config;
 
 		openButtons.forEach(openButton => {
-			openButton.addEventListener('click', () => this.open(config.id, {
-				restoreFocusTarget: openButton
-			}));
+			openButton.addEventListener('click', (event) => {
+				if (openButton.matches('a[href]')) {
+					if (!isPlainClick(event)) return;
+					event.preventDefault();
+				}
+				this.open(config.id, { restoreFocusTarget: openButton });
+			});
 		});
 
 		closeButtons.forEach(closeButton => {

@@ -1174,7 +1174,7 @@ function buildOne(name, options = {}) {
 	}
 	const result = { name, sourceFile, outputPath, output: compiled.output, diagnostics, todos: compiled.todos, duration: 0 };
 	if (hasErrors(diagnostics)) return { ...result, ok: false, duration: Date.now() - started };
-	// Public articles are persisted only as full pages by buildPages below.
+	// Public articles are persisted by buildPages below.
 	// Keep fragments in memory; fixture builds still write their own outputs.
 	const pageSource = sourceDir === defaultSourceDir && path.resolve(outDir) === defaultOutputDir
 		&& require('./site.json').pages.some(page => page.source === name);

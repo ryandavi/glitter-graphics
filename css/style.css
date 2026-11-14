@@ -13495,10 +13495,11 @@ body.content-page {
   --page-prose-width: 800px;
   --page-wide-width: 1280px;
   --page-gutter: max(var(--spacing-lg), env(safe-area-inset-left), env(safe-area-inset-right));
-  height: auto;
+  height: 100vh;
+  height: 100dvh;
   min-height: 100vh;
   min-height: 100dvh;
-  overflow: auto;
+  overflow: hidden;
   overscroll-behavior: auto;
   display: flex;
   flex-direction: column;
@@ -13510,6 +13511,14 @@ body.content-page .content-page-footer,
 body.content-page .content-page-footer * {
   -webkit-user-select: text;
   user-select: text;
+}
+
+.content-page-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ----- Header: the editor's app-header with links in place of editor controls ----- */

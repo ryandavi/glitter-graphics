@@ -107,6 +107,7 @@ const { openApp } = require('../lib/app');
 					const events = [];
 					const owner = {
 						originalImage: true, isSaved: false,
+						confirmReplaceRecovery: async () => true,
 						pickers: { closeAll() {} },
 						chooseAction: async () => action,
 						saveProjectFile: async function () { events.push('save'); this.isSaved = saves; }

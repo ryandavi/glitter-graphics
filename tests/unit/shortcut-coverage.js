@@ -28,7 +28,7 @@ const pages = require(path.join(root, 'tools/build-pages.js')).buildPages({
 	fragments: new Map([['guide', guideBuild.output]]), registries: getAppRegistries(), check: true,
 	compileFragment: name => buildOne(name, { check: true, stamp: false }).output
 });
-assert(guideBuild.ok && !pages.stale.includes('guide/index.html'), 'guide/index.html is out of date: run node tools/build-modals.js guide');
+assert(guideBuild.ok && !pages.stale.some(file => file.startsWith('guide/')), 'guide content is out of date: run node tools/build-modals.js guide');
 
 [
 	'trackpadPan',

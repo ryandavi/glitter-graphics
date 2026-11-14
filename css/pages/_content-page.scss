@@ -62,7 +62,6 @@ body.content-page {
 
 	.content-page-editor-link { text-decoration: none; }
 
-	a.app-menu-item { text-decoration: none; }
 
 	@include mobile {
 		grid-template-columns: minmax(0, 1fr) auto;

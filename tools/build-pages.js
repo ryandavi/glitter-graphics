@@ -1,10 +1,8 @@
 'use strict';
 
-// Public pages (<slug>/index.html), also fetched by the editor's modals, and
+// Public article fragments and PHP entries, also fetched by editor modals, and
 // sitemap.xml. tools/build-modals.js passes compiled fragments in memory.
-// The page
-// list, titles, descriptions and the one canonical origin live in
-// tools/site.json.
+// Page metadata and the canonical origin live in tools/site.json.
 //
 // A page is a document like any other: article text, headings and links are
 // all in the HTML. Scripts only add the header menu, Mac key labels and the
@@ -205,110 +203,10 @@ function pageBody(page, fragment, context) {
 	return html.trim();
 }
 
-// ---------- page shell ----------
+// ---------- shared PHP page data ----------
 
-function menuItem(page, prefix, current) {
-	return [
-		`\t\t\t\t\t<a class="app-menu-item" role="menuitem" href="${prefix}${page.slug}/"${current ? ' aria-current="page"' : ''}>`,
-		`\t\t\t\t\t\t<span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-${page.icon}"></use></svg></span>`,
-		`\t\t\t\t\t\t<span class="app-menu-item-label">${escapeHtml(page.title)}</span>`,
-		'\t\t\t\t\t</a>'
-	].join('\n');
-}
-
-function headerHtml(page, pages, prefix) {
-	return [
-		'\t<header class="app-header content-page-header">',
-		'\t\t<div class="app-header-left">',
-		'\t\t\t<a href="https://ryandavi.com" class="app-header-logo" target="_blank" rel="noopener noreferrer" aria-label="Visit ryandavi.com">',
-		'\t\t\t\t<span class="logo" aria-hidden="true"></span>',
-		'\t\t\t</a>',
-		`\t\t\t<a class="app-header-title" href="${prefix}" title="Open the editor">RYBABY LABS</a>`,
-		'\t\t</div>',
-		'\t\t<div class="app-header-center">',
-		`\t\t\t<span class="app-header-page-title">${escapeHtml(page.title)}</span>`,
-		'\t\t</div>',
-		'\t\t<div class="app-header-right">',
-		`\t\t\t<a class="btn-text-with-icon primary content-page-editor-link" href="${prefix}">Open Editor</a>`,
-		'\t\t\t<nav class="app-menu" id="appMenu" aria-label="Pages">',
-		'\t\t\t\t<button class="btn-icon-simple icon-wrapper app-menu-trigger" id="appMenuBtn" type="button" title="Menu" aria-label="Menu" aria-haspopup="menu" aria-expanded="false" aria-controls="appMenuPanel">',
-		'\t\t\t\t\t<svg class="icon"><use href="#icon-ellipsis-vertical"></use></svg>',
-		'\t\t\t\t\t<span class="name">Menu</span>',
-		'\t\t\t\t</button>',
-		'\t\t\t\t<div class="app-menu-panel" id="appMenuPanel" role="menu" aria-labelledby="appMenuBtn" hidden>',
-		...pages.map(item => menuItem(item, prefix, item.slug === page.slug)),
-		'\t\t\t\t</div>',
-		'\t\t\t</nav>',
-		'\t\t</div>',
-		'\t</header>'
-	].join('\n');
-}
-
-function footerHtml(page, pages, prefix, site) {
-	const links = pages.map(item => `\t\t\t<li><a href="${prefix}${item.slug}/"${item.slug === page.slug ? ' aria-current="page"' : ''}>${escapeHtml(item.title)}</a></li>`);
-	return [
-		'\t<footer class="content-page-footer">',
-		'\t\t<ul class="content-page-footer-links">',
-		`\t\t\t<li><a href="${prefix}">Editor</a></li>`,
-		...links,
-		'\t\t</ul>',
-		`\t\t<p class="content-page-copyright">${escapeHtml(site.copyright)}</p>`,
-		'\t</footer>'
-	].join('\n');
-}
-
-function renderPage(page, body, context) {
-	const { site, pages, indexHtml } = context;
-	const prefix = '../';
-	const canonical = `${site.origin}${page.slug}/`;
-	const title = `${page.title} | ${site.siteName}`;
-	const source = page.source === 'releases' ? 'js/core/releases.js' : `content/src/${page.source}.src.html`;
-	const kinds = page.kinds.map(kind => `doc-page-${kind}`).join(' ');
-	const content = [
-		headerHtml(page, pages, prefix),
-		'\t<div class="content-page-scroll">',
-		`\t<main class="doc-page-main ${kinds}" id="main">`,
-		`\t\t<article class="doc-content">\n${prefixRelativeUrls(body, prefix)}\n\t\t</article>`,
-		'\t</main>',
-		footerHtml(page, pages, prefix, site),
-		'\t</div>'
-	].join('\n');
-	return [
-		'<!DOCTYPE html>',
-		`<!-- GENERATED from ${source} by tools/build-pages.js (npm run build:modals). Do not edit. -->`,
-		'<html lang="en" data-theme="dark">',
-		'',
-		'<head>',
-		'\t<meta charset="UTF-8">',
-		'\t<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">',
-		`\t<title>${escapeHtml(title)}</title>`,
-		`\t<meta name="description" content="${escapeHtml(page.description)}">`,
-		`\t<link rel="canonical" href="${canonical}">`,
-		`\t<meta property="og:site_name" content="${escapeHtml(site.siteName)}">`,
-		`\t<meta property="og:title" content="${escapeHtml(page.title)}">`,
-		`\t<meta property="og:description" content="${escapeHtml(page.description)}">`,
-		`\t<meta property="og:type" content="${page.source === 'releases' ? 'website' : 'article'}">`,
-		`\t<meta property="og:url" content="${canonical}">`,
-		`\t<meta property="og:image" content="${site.origin}images/etc/preview-image.gif">`,
-		'\t<meta name="twitter:card" content="summary_large_image">',
-		`\t<link rel="stylesheet" href="${assetUrl('css/style.css', prefix)}">`,
-		// Release notes start open so they read without JavaScript; the page
-		// script collapses all but the newest.
-		'\t<noscript><style>.advanced-disclosure > .advanced-disclosure-content { display: flex; }</style></noscript>',
-		`\t<link rel="icon" href="${assetUrl('images/etc/favicon.ico', prefix)}" type="image/x-icon">`,
-		'</head>',
-		'',
-		'<body class="content-page">',
-		spriteFor(content, indexHtml),
-		content,
-		...pageScripts.map(script => `\t<script src="${assetUrl(script, prefix)}"></script>`),
-		'',
-		analyticsRegion(indexHtml),
-		'</body>',
-		'',
-		'</html>',
-		''
-	].join('\n');
+function pageEntry(slug) {
+	return `<?php\n// GENERATED by tools/build-pages.js. Do not edit.\n$slug = '${slug}';\nrequire dirname(__DIR__) . '/site/page.php';\n`;
 }
 
 function renderSitemap(site, pages) {
@@ -335,6 +233,7 @@ function buildPages({ fragments = new Map(), registries, compileFragment, check 
 	const pages = site.pages.filter(page => !page.feature || registries.FEATURES[page.feature]?.stage === 'on');
 	const context = { site, pages, indexHtml, registries, publishedModals: new Set(pages.map(page => page.modal).filter(Boolean)) };
 	const outputs = new Map();
+	const bodies = [];
 	for (const page of pages) {
 		let body = '';
 		if (page.source !== 'releases') {
@@ -343,8 +242,19 @@ function buildPages({ fragments = new Map(), registries, compileFragment, check 
 		} else {
 			body = pageBody(page, '', context);
 		}
-		outputs.set(path.join(root, page.slug, 'index.html'), renderPage(page, body, context));
+		outputs.set(path.join(root, page.slug, 'index.php'), pageEntry(page.slug));
+		const article = prefixRelativeUrls(body, '../');
+		bodies.push(article);
+		outputs.set(path.join(root, page.slug, 'content.html'), `<!-- GENERATED by tools/build-pages.js. Do not edit. -->\n${article}\n`);
 	}
+	outputs.set(path.join(root, 'site', 'generated.json'), JSON.stringify({
+		origin: site.origin, siteName: site.siteName, copyright: site.copyright, pages,
+		stylesheet: assetUrl('css/style.css', ''), favicon: assetUrl('images/etc/favicon.ico', ''),
+		scripts: pageScripts.map(script => assetUrl(script, ''))
+	}, null, '\t') + '\n');
+	const menuIcons = [...pageMenuIcons, ...pages.map(page => page.icon)];
+	outputs.set(path.join(root, 'site', 'sprite.html'), spriteFor(bodies.join('\n') + menuIcons.map(id => `<use href="#icon-${id}"></use>`).join(''), indexHtml) + '\n');
+	outputs.set(path.join(root, 'site', 'analytics.html'), analyticsRegion(indexHtml) + '\n');
 	outputs.set(path.join(root, 'sitemap.xml'), renderSitemap(site, pages));
 
 	const stale = [];
@@ -357,14 +267,18 @@ function buildPages({ fragments = new Map(), registries, compileFragment, check 
 			fs.writeFileSync(file, content, 'utf8');
 		}
 	}
-	// A page whose feature was turned off must not linger.
-	for (const page of site.pages.filter(item => !pages.includes(item))) {
-		const file = path.join(root, page.slug, 'index.html');
+	const obsolete = [
+		...site.pages.map(page => `${page.slug}/index.html`),
+		'studio/index.html', '404.html',
+		...site.pages.filter(page => !pages.includes(page)).flatMap(page => [`${page.slug}/index.php`, `${page.slug}/content.html`])
+	];
+	for (const relative of obsolete) {
+		const file = path.join(root, relative);
 		if (!fs.existsSync(file)) continue;
-		stale.push(`${page.slug}/index.html (feature "${page.feature}" is not on)`);
+		stale.push(`${relative} (obsolete)`);
 		if (!check) fs.rmSync(file);
 	}
 	return { stale, problems, written: check ? [] : stale };
 }
 
-module.exports = { buildPages, renderPage, pageBody, prefixRelativeUrls, renderSitemap, loadSite };
+module.exports = { buildPages, pageBody, prefixRelativeUrls, renderSitemap, loadSite };

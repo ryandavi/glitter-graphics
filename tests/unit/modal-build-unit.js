@@ -5,6 +5,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const vm = require('vm');
+const { execFileSync } = require('child_process');
 const { compile, buildOne, stampWiring, renderSource, formatIsoDate, loadRegistry, discoverNames } = require('../../tools/build-modals');
 const { lintSource } = require('../../tools/modal-lint');
 const { planTags } = require('../../tools/entities');
@@ -353,6 +354,19 @@ test('public pages are current and have no duplicate modal fragments', () => {
 	for (const page of loadSite().pages.filter(page => page.modal)) {
 		assert(!fs.existsSync(path.join(root, 'modals', `${page.source}.html`)), `duplicate fragment for ${page.slug}`);
 	}
+});
+test('PHP layout renders shared chrome and staging URLs', () => {
+	const html = execFileSync('php', ['-r', `$_SERVER['SCRIPT_NAME'] = '/glitter-staging/about/index.php'; require 'about/index.php';`], { cwd: root, encoding: 'utf8' });
+	assert((html.match(/<header /gu) || []).length === 1, 'expected one shared header');
+	assert((html.match(/<footer /gu) || []).length === 1, 'expected one shared footer');
+	assert(html.includes('class="doc-content"'), 'modal extraction target missing');
+	assert(html.includes('href="/glitter-staging/studio/"'), 'editor link escaped staging');
+	assert(html.includes('href="/glitter-staging/css/style.css?v='), 'stylesheet escaped staging');
+	assert(!html.includes('<?php'), 'PHP source leaked');
+	const { applyEnvironment } = require('../../tools/build-site');
+	const analytics = fs.readFileSync(path.join(root, 'site/analytics.html'), 'utf8');
+	assert(!applyEnvironment(analytics, { analytics: false }).includes('goatcounter'), 'staging analytics retained');
+	assert(applyEnvironment(analytics, { analytics: true }).includes('goatcounter'), 'production analytics lost');
 });
 test('every Preservation timeline entity is in content/entities.json', () => {
 	const context = {};

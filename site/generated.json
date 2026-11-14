@@ -1,0 +1,82 @@
+{
+	"origin": "https://labs.ryandavi.com/glitter/",
+	"siteName": "Glitter Graphic Editor",
+	"copyright": "© Ryan Davi 2026",
+	"pages": [
+		{
+			"slug": "guide",
+			"source": "guide",
+			"modal": "guideModal",
+			"kinds": [
+				"guide"
+			],
+			"icon": "question-circle",
+			"title": "Guide",
+			"description": "How to use Glitter Editor: starting a project, the tools, layers, the Library, animation and export."
+		},
+		{
+			"slug": "history",
+			"source": "history",
+			"modal": "historyModal",
+			"feature": "history",
+			"kinds": [
+				"document"
+			],
+			"icon": "clock-history",
+			"title": "History",
+			"description": "A history of glitter graphics: where the sparkle tiles came from, who made them, and the personal-web culture that passed them around."
+		},
+		{
+			"slug": "personal-web",
+			"source": "personal-web",
+			"modal": "personalWebModal",
+			"feature": "personalWeb",
+			"kinds": [
+				"document"
+			],
+			"icon": "palette",
+			"title": "Personal Web",
+			"description": "The personal web aesthetic of the 1990s and 2000s: tiled backgrounds, buttons, adoptables, dolls and the pages made to hold them."
+		},
+		{
+			"slug": "preservation",
+			"source": "preservation",
+			"modal": "preservationModal",
+			"kinds": [
+				"document"
+			],
+			"icon": "archive",
+			"title": "Preservation",
+			"description": "What happened to the services and image hosts of the personal web, and the people and projects that kept parts of it alive."
+		},
+		{
+			"slug": "about",
+			"source": "about",
+			"modal": "aboutModal",
+			"kinds": [
+				"document",
+				"about"
+			],
+			"icon": "circle-info",
+			"title": "About",
+			"description": "What Glitter Editor is, what it makes, how it handles your files, and its version history."
+		},
+		{
+			"slug": "updates",
+			"source": "releases",
+			"kinds": [
+				"updates"
+			],
+			"icon": "glitter",
+			"title": "Updates",
+			"description": "Every Glitter Editor release, newest first: what was added, changed and fixed."
+		}
+	],
+	"stylesheet": "css/style.css?v=427264c6",
+	"favicon": "images/etc/favicon.ico?v=bcdad78e",
+	"scripts": [
+		"js/ui/menu-popover.js?v=fdfbce8a",
+		"js/core/key-labels.js?v=80b61ded",
+		"js/site/content-page.js?v=28085a47"
+	]
+}

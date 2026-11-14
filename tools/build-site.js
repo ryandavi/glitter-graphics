@@ -2,8 +2,7 @@
 
 // Assembles the folder a deploy uploads: the tracked files under the paths in
 // tools/site.json, with per-environment changes applied to index.html and the
-// generated content pages (every published .html outside modals/). Only
-// tracked files are copied, so local-only pages never reach a server.
+// shared analytics include. Only tracked files are copied, so local-only pages never reach a server.
 
 const fs = require('fs');
 const path = require('path');
@@ -48,7 +47,7 @@ function main(args = process.argv.slice(2)) {
 		for (const file of files) {
 			const target = path.join(out, file);
 			fs.mkdirSync(path.dirname(target), { recursive: true });
-			if (file.endsWith('.html') && !file.startsWith('modals/')) {
+			if (file === 'index.html' || file === 'site/analytics.html') {
 				fs.writeFileSync(target, applyEnvironment(fs.readFileSync(path.join(root, file), 'utf8'), environment));
 			} else {
 				fs.copyFileSync(path.join(root, file), target);

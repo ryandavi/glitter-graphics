@@ -12,8 +12,27 @@ const { openApp } = require('../lib/app');
 			const { page, context, errors } = await openApp({ browser, viewport: { width, height: 900 }, touch: width === 390 });
 			const editorUrl = page.url();
 			const root = new URL('.', editorUrl).href;
+			const errorResponse = await page.request.get(`${root}404.php`);
+			assert.strictEqual(errorResponse.status(), 404);
+			const errorHtml = await errorResponse.text();
+			assert(errorHtml.includes('<meta name="robots" content="noindex">'));
+			assert(errorHtml.includes(`href="${new URL(root).pathname}studio/"`));
 			const menu = await page.locator('#appMenuBtn').boundingBox();
-			await page.evaluate(() => editor.modalManager.open('historyModal'));
+			for (const slug of ['guide', 'history', 'personal-web', 'preservation', 'about']) {
+				assert.strictEqual(await page.locator(`#appMenuPanel a[href="${slug}/"]`).count(), 1);
+			}
+			await page.locator('#appMenuBtn').click();
+			const [opened] = await Promise.all([
+				context.waitForEvent('page'),
+				page.locator('#historyBtn').click({ modifiers: ['Control'] })
+			]);
+			await opened.waitForURL(`${root}history/`);
+			assert.strictEqual(opened.url(), `${root}history/`);
+			assert.strictEqual(page.url(), editorUrl);
+			await opened.close();
+			await page.locator('#appMenuBtn').click();
+			await page.locator('#historyBtn').click();
+			await page.waitForURL(`${root}history/`);
 			assert.strictEqual(page.url(), `${root}history/`);
 			assert.strictEqual(await page.locator('#historyModal .modal-body h1').textContent(), 'History');
 			assert.strictEqual(await page.locator('#historyModal .modal-body head, #historyModal .modal-body header, #historyModal .modal-body script').count(), 0);
@@ -65,6 +84,22 @@ const { openApp } = require('../lib/app');
 				await page.locator('.content-page-scroll').evaluate(element => { element.scrollTop = 300; });
 				assert.deepStrictEqual(await page.locator('#appMenuBtn').boundingBox(), menu);
 			}
+			const standalone = await context.newPage();
+			await standalone.goto(`${root}history/`);
+			await standalone.locator('#appMenuBtn').click();
+			await standalone.locator('#appMenuPanel a[href$="/about/"]').click();
+			assert.strictEqual(standalone.url(), `${root}about/`);
+			await standalone.locator('.content-page-editor-link').click();
+			assert.strictEqual(standalone.url(), `${root}studio/`);
+			await standalone.waitForFunction(() => window.editor?.modalManager);
+			await standalone.evaluate(() => editor.modalManager.open('guideModal'));
+			assert.strictEqual(standalone.url(), `${root}guide/`);
+			await standalone.evaluate(async () => {
+				editor.modalManager.close('guideModal');
+				await editor.modalManager.pendingHistoryBack;
+			});
+			assert.strictEqual(standalone.url(), `${root}studio/`);
+			await standalone.close();
 			assert.deepStrictEqual(errors, []);
 			await context.close();
 			console.log(`PASS content routes, shared article, refresh and header at ${width}px`);

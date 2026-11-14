@@ -221,6 +221,7 @@ body.no-document .app-header {
 }
 
 .app-menu-item {
+	text-decoration: none;
 	display: flex;
 	align-items: center;
 	gap: var(--spacing-sm);

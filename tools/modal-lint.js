@@ -5,13 +5,13 @@ const { loadEntities } = require('./content-registry');
 
 const root = path.resolve(__dirname, '..');
 const defaultFiles = [
-	'history/index.html',
-	'personal-web/index.html',
+	'history/content.html',
+	'personal-web/content.html',
 	'modals/aylana.html',
-	'preservation/index.html',
-	'about/index.html',
+	'preservation/content.html',
+	'about/content.html',
 	'modals/welcome.html',
-	'guide/index.html'
+	'guide/content.html'
 ];
 // Prose-style rules apply to the long-form articles only; the guide and the
 // welcome screen get the token and structure rules.
@@ -394,7 +394,7 @@ const RULES = {
 };
 
 function isArticle(file) {
-	return articleFiles.has(path.basename(file) === 'index.html' ? path.basename(path.dirname(file)) : path.basename(file).replace(/(?:\.src)?\.html$/u, ''));
+	return articleFiles.has(['index.html', 'content.html'].includes(path.basename(file)) ? path.basename(path.dirname(file)) : path.basename(file).replace(/(?:\.src)?\.html$/u, ''));
 }
 
 function lintSource(file, source, options = {}) {

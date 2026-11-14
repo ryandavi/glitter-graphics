@@ -61,6 +61,10 @@
 	],
 	"publish": [
 		"index.html",
+		"studio",
+		"404.php",
+		"site",
+		".htaccess",
 		"css/style.css",
 		"js",
 		"data",
