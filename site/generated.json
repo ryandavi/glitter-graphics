@@ -18,7 +18,7 @@
 				"js/core/dom.js?v=3531b1f4",
 				"js/ui/menu-popover.js?v=fdfbce8a",
 				"js/core/key-labels.js?v=80b61ded",
-				"js/site/content-page.js?v=2958b61a"
+				"js/site/content-page.js?v=5f3be1cc"
 			]
 		},
 		{
@@ -40,7 +40,7 @@
 				"js/ui/doc-modal.js?v=f6a51f4c",
 				"js/ui/menu-popover.js?v=fdfbce8a",
 				"js/core/key-labels.js?v=80b61ded",
-				"js/site/content-page.js?v=2958b61a"
+				"js/site/content-page.js?v=5f3be1cc"
 			]
 		},
 		{
@@ -62,7 +62,7 @@
 				"js/ui/doc-modal.js?v=f6a51f4c",
 				"js/ui/menu-popover.js?v=fdfbce8a",
 				"js/core/key-labels.js?v=80b61ded",
-				"js/site/content-page.js?v=2958b61a"
+				"js/site/content-page.js?v=5f3be1cc"
 			]
 		},
 		{
@@ -81,7 +81,7 @@
 				"js/ui/doc-modal.js?v=f6a51f4c",
 				"js/ui/menu-popover.js?v=fdfbce8a",
 				"js/core/key-labels.js?v=80b61ded",
-				"js/site/content-page.js?v=2958b61a"
+				"js/site/content-page.js?v=5f3be1cc"
 			],
 			"icons": [
 				"magnifying-glass",
@@ -114,7 +114,7 @@
 				"js/ui/doc-modal.js?v=f6a51f4c",
 				"js/ui/menu-popover.js?v=fdfbce8a",
 				"js/core/key-labels.js?v=80b61ded",
-				"js/site/content-page.js?v=2958b61a"
+				"js/site/content-page.js?v=5f3be1cc"
 			]
 		},
 		{
@@ -131,16 +131,16 @@
 				"js/core/dom.js?v=3531b1f4",
 				"js/ui/menu-popover.js?v=fdfbce8a",
 				"js/core/key-labels.js?v=80b61ded",
-				"js/site/content-page.js?v=2958b61a"
+				"js/site/content-page.js?v=5f3be1cc"
 			]
 		}
 	],
-	"stylesheet": "css/style.css?v=1c0dc772",
+	"stylesheet": "css/style.css?v=81f8ff0f",
 	"favicon": "images/etc/favicon.ico?v=bcdad78e",
 	"scripts": [
 		"js/ui/menu-popover.js?v=fdfbce8a",
 		"js/core/key-labels.js?v=80b61ded",
-		"js/site/content-page.js?v=2958b61a"
+		"js/site/content-page.js?v=5f3be1cc"
 	],
 	"homeScripts": [
 		"js/site/home-page.js?v=e87a5367"

@@ -57,6 +57,48 @@
 		};
 		wide.addEventListener('change', place);
 		place();
+
+		// Mark the section being read: the last one whose heading has passed a
+		// line a quarter of the way down the scroll area. At the very bottom
+		// the last section wins, since short closing sections never reach the line.
+		const scroller = document.querySelector('.content-page-scroll');
+		const entries = [...toc.querySelectorAll('a[href^="#"]')]
+			.map(link => ({ link, target: document.getElementById(decodeURIComponent(link.hash.slice(1))) }))
+			.filter(entry => entry.target);
+		let current = null;
+		const update = () => {
+			if (!scroller || !wide.matches || !entries.length) return;
+			const view = scroller.getBoundingClientRect();
+			const line = view.top + view.height / 4;
+			const atBottom = scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 2;
+			let next = entries[0];
+			if (atBottom) next = entries[entries.length - 1];
+			else for (const entry of entries) {
+				if (entry.target.getBoundingClientRect().top > line) break;
+				next = entry;
+			}
+			if (next === current) return;
+			current?.link.classList.remove('is-current');
+			current?.link.removeAttribute('aria-current');
+			current = next;
+			current.link.classList.add('is-current');
+			current.link.setAttribute('aria-current', 'location');
+			// Keep it in view when the list scrolls inside its box.
+			const list = toc.querySelector(':scope > ol');
+			const box = list.getBoundingClientRect();
+			const item = current.link.getBoundingClientRect();
+			if (item.top < box.top || item.bottom > box.bottom) {
+				list.scrollTop += item.top - box.top - (box.height - item.height) / 2;
+			}
+		};
+		let queued = false;
+		scroller?.addEventListener('scroll', () => {
+			if (queued) return;
+			queued = true;
+			requestAnimationFrame(() => { queued = false; update(); });
+		}, { passive: true });
+		wide.addEventListener('change', update);
+		if (scroller) update();
 	}
 
 	// Release notes are built open so they read without JavaScript. With it,

@@ -13788,6 +13788,9 @@ body.content-page .content-page-footer * {
 .doc-page-main.has-side-toc > .content-page-toc > .toc ol > li {
   grid-template-columns: auto minmax(0, 1fr);
 }
+.doc-page-main.has-side-toc > .content-page-toc > .toc a.is-current {
+  color: var(--color-accent);
+}
 .doc-page-main.has-side-toc > .content-page-toc > .toc > ol {
   min-height: 0;
   overflow-y: auto;

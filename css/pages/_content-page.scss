@@ -161,6 +161,11 @@ body.content-page {
 
 			ol>li { grid-template-columns: auto minmax(0, 1fr); }
 
+			// The section being read (content-page.js marks it on scroll).
+			a.is-current {
+				color: var(--color-accent);
+			}
+
 			>ol {
 				min-height: 0;
 				overflow-y: auto;
