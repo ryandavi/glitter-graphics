@@ -72,11 +72,137 @@
 			"description": "Every Glitter Editor release, newest first: what was added, changed and fixed."
 		}
 	],
-	"stylesheet": "css/style.css?v=427264c6",
+	"stylesheet": "css/style.css?v=e705fae0",
 	"favicon": "images/etc/favicon.ico?v=bcdad78e",
 	"scripts": [
 		"js/ui/menu-popover.js?v=fdfbce8a",
 		"js/core/key-labels.js?v=80b61ded",
 		"js/site/content-page.js?v=28085a47"
-	]
+	],
+	"homeScripts": [
+		"js/site/home-page.js?v=e87a5367"
+	],
+	"home": {
+		"title": "Glitter Graphic Editor",
+		"description": "A browser editor for glitter graphics: sparkly text, stickers and animated GIFs made from the glitter tiles of 2000s personal websites.",
+		"slug": "home",
+		"kinds": [
+			"home"
+		],
+		"counts": {
+			"glitter": 334,
+			"stickers": 258
+		},
+		"release": {
+			"version": "0.6.0",
+			"name": "Paths, Crop & Library",
+			"dateLabel": "November 1, 2026"
+		},
+		"swatches": [
+			{
+				"url": "images/glitter/bring-on-the-glitter/orange-002.gif",
+				"name": "Red",
+				"width": 60,
+				"height": 30,
+				"set": "bring-on-the-glitter"
+			},
+			{
+				"url": "images/glitter/bring-on-the-glitter/brown-06.gif",
+				"name": "Red, Orange, and Yellow",
+				"width": 60,
+				"height": 30,
+				"set": "bring-on-the-glitter"
+			},
+			{
+				"url": "images/glitter/bring-on-the-glitter/brown-03.gif",
+				"name": "Brown 2",
+				"width": 60,
+				"height": 30,
+				"set": "bring-on-the-glitter"
+			},
+			{
+				"url": "images/glitter/bring-on-the-glitter/gold-010.gif",
+				"name": "Gold",
+				"width": 60,
+				"height": 30,
+				"set": "bring-on-the-glitter"
+			},
+			{
+				"url": "images/glitter/bring-on-the-glitter/orange-001.gif",
+				"name": "Coral",
+				"width": 60,
+				"height": 30,
+				"set": "bring-on-the-glitter"
+			},
+			{
+				"url": "images/glitter/sparkelies/lime-peridot.gif",
+				"name": "Lime Peridot",
+				"width": 61,
+				"height": 29,
+				"set": "sparkelies"
+			},
+			{
+				"url": "images/glitter/christmas/christmas-05.gif",
+				"name": "Green and Blue",
+				"width": 60,
+				"height": 30,
+				"set": "bring-on-the-glitter"
+			},
+			{
+				"url": "images/glitter/sparkelies/aquamarine.gif",
+				"name": "Aquamarine",
+				"width": 61,
+				"height": 29,
+				"set": "sparkelies"
+			},
+			{
+				"url": "images/glitter/bring-on-the-glitter/purple-008.gif",
+				"name": "Indigo",
+				"width": 60,
+				"height": 30,
+				"set": "bring-on-the-glitter"
+			},
+			{
+				"url": "images/glitter/stardrops/Sparkbutton-apinkish.gif",
+				"name": "Spark Button",
+				"width": 61,
+				"height": 29,
+				"set": "stardrops"
+			},
+			{
+				"url": "images/glitter/bring-on-the-glitter/black-04.gif",
+				"name": "Green, Blue, and Purple",
+				"width": 60,
+				"height": 30,
+				"set": "bring-on-the-glitter"
+			},
+			{
+				"url": "images/glitter/bring-on-the-glitter/silver-01.gif",
+				"name": "Snow",
+				"width": 60,
+				"height": 30,
+				"set": "bring-on-the-glitter"
+			}
+		],
+		"sets": {
+			"bring-on-the-glitter": {
+				"name": "Bring On The Glitter",
+				"sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+				"author": "Aylana",
+				"authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/"
+			},
+			"sparkelies": {
+				"name": "Sparkelies",
+				"sourceUrl": "https://web.archive.org/web/20040702024614/http://members.tripod.com/%7Eosodeoro/Sparklies/Sparkelies.html",
+				"author": "DAN-411",
+				"authorUrl": "https://osodeoro.tripod.com/"
+			},
+			"stardrops": {
+				"name": "Stardrops' Open Directory",
+				"sourceUrl": "https://web.archive.org/web/20021222043255/http://wtv-zone.com/Stardrops/BAR/",
+				"author": "Mica",
+				"authorUrl": "https://web.archive.org/web/20080115144844/http://stardropscloud.com/"
+			}
+		}
+	}
 }

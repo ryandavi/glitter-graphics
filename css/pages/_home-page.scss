@@ -1,0 +1,228 @@
+@use '../mixins' as *;
+
+/* ===== HOMEPAGE =====
+   site/home.php, inside the content-page shell (header, scroll, footer). The
+   one loud thing is the hero: the word "Glitter" as a selected text layer on
+   the editor's transparency checkerboard, filled with a real Library tile the
+   reader can swap. Everything below it is the reading column's plain type. */
+
+@font-face {
+	font-family: 'Cherry Bomb One';
+	src: url('../fonts/cherry-bomb-one.ttf') format('truetype');
+	font-display: swap;
+}
+
+body.home-page {
+	--home-width: 960px;
+	// Tiles are pixel art at 1x; this is how many screen pixels each tile pixel gets.
+	--tile-scale: 2;
+}
+
+// Paints an element with the current tile (site/home.php sets --tile, --tile-w
+// and --tile-h inline; js/site/home-page.js swaps them).
+@mixin tile-fill {
+	background-image: var(--tile);
+	background-repeat: repeat;
+	background-size: calc(var(--tile-w) * var(--tile-scale) * 1px) calc(var(--tile-h) * var(--tile-scale) * 1px);
+	image-rendering: pixelated;
+}
+
+.home-main {
+	flex: 1 0 auto;
+	width: 100%;
+	max-width: calc(var(--home-width) + 2 * var(--page-gutter));
+	margin-inline: auto;
+	padding: var(--spacing-xl) var(--page-gutter) var(--spacing-2xl);
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-2xl);
+}
+
+/* ----- Hero: a text layer on the canvas ----- */
+.home-hero {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-md);
+}
+
+.home-canvas {
+	@include checkerboard-image;
+	background-size: 16px 16px;
+	background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+	background-color: var(--color-bg-tertiary);
+	box-shadow: 0 0 0 1px var(--color-shadow-strong), 0 0 8px var(--color-shadow-strong);
+	display: grid;
+	place-items: center;
+	padding: clamp(var(--spacing-xl), 8vw, 88px) var(--spacing-md);
+	overflow: hidden;
+}
+
+.home-canvas-object {
+	@include selection-line;
+	position: relative;
+	padding: 0.12em 0.14em;
+	font-size: clamp(4.5rem, 22vw, 11rem);
+
+	>.home-canvas-handles>.transform-handle {
+		position: absolute;
+		transform: translate(-50%, -50%);
+
+		&:nth-child(1) { left: 0; top: 0; }
+		&:nth-child(2) { left: 100%; top: 0; }
+		&:nth-child(3) { left: 0; top: 100%; }
+		&:nth-child(4) { left: 100%; top: 100%; }
+	}
+}
+
+.home-wordmark {
+	margin: 0;
+	font-family: 'Cherry Bomb One', var(--font-ui);
+	font-size: 1em;
+	font-weight: normal;
+	line-height: 1;
+	// Fit the selection box to the letters, as the editor's text box does,
+	// instead of the font's ascent and descent.
+	text-box: trim-both cap alphabetic;
+	color: var(--color-text-primary);
+
+	@supports ((background-clip: text) or (-webkit-background-clip: text)) {
+		@include tile-fill;
+		-webkit-background-clip: text;
+		background-clip: text;
+		color: transparent;
+		// The light outline and drop shadow glitter text was always given, so
+		// the tile reads on the checkerboard.
+		filter:
+			drop-shadow(2px 0 0 var(--color-off-white))
+			drop-shadow(-2px 0 0 var(--color-off-white))
+			drop-shadow(0 2px 0 var(--color-off-white))
+			drop-shadow(0 -2px 0 var(--color-off-white))
+			drop-shadow(0 4px 0 var(--color-shadow-strong));
+	}
+}
+
+.home-fill {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--spacing-sm) var(--spacing-lg);
+}
+
+.home-swatches {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--spacing-xs);
+}
+
+.home-swatch {
+	@include tile-fill;
+	width: 36px;
+	height: 36px;
+	padding: 0;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+
+	&:hover { border-color: var(--color-border-hover); }
+
+	&[aria-pressed="true"] {
+		outline: 2px solid var(--color-accent);
+		outline-offset: 2px;
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--color-accent-hover);
+		outline-offset: 2px;
+	}
+}
+
+.home-credit {
+	color: var(--color-text-tertiary);
+	font-size: var(--font-size-sm);
+
+	a { color: var(--color-text-secondary); }
+}
+
+/* ----- Intro ----- */
+.home-intro {
+	max-width: 62ch;
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-md);
+	color: var(--color-text-secondary);
+	line-height: 1.6;
+
+	>.home-lead {
+		color: var(--color-text-primary);
+		font-size: var(--font-size-lg);
+		line-height: 1.5;
+	}
+}
+
+.home-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--spacing-sm);
+	margin-top: var(--spacing-xs);
+
+	>.btn-text-with-icon { text-decoration: none; }
+}
+
+/* ----- Reading list ----- */
+.home-reading {
+	>h2 {
+		margin-bottom: var(--spacing-sm);
+		color: var(--color-text-primary);
+		font-size: var(--font-size-xl);
+	}
+}
+
+.home-reading-list {
+	list-style: none;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.home-reading-row {
+	display: grid;
+	grid-template-columns: auto 9rem minmax(0, 1fr);
+	align-items: baseline;
+	gap: var(--spacing-xs) var(--spacing-md);
+	padding: var(--spacing-md) var(--spacing-xs);
+	border-top: 1px solid var(--color-border);
+	color: var(--color-text-secondary);
+	text-decoration: none;
+
+	&:hover,
+	&:focus-visible {
+		background: var(--color-bg-tertiary);
+		color: var(--color-text-secondary);
+
+		>.home-reading-title { color: var(--color-accent-hover); }
+	}
+
+	&:visited { color: var(--color-text-secondary); }
+
+	>.home-reading-icon {
+		align-self: center;
+		color: var(--color-text-tertiary);
+		font-size: var(--font-size-lg);
+	}
+
+	>.home-reading-title {
+		color: var(--color-text-primary);
+		font-weight: var(--font-weight-semibold);
+	}
+
+	@include mobile {
+		grid-template-columns: auto minmax(0, 1fr);
+
+		>.home-reading-description { grid-column: 2; }
+	}
+}
+
+.home-release {
+	margin-top: var(--spacing-md);
+	color: var(--color-text-tertiary);
+	font-size: var(--font-size-sm);
+}

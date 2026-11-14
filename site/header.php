@@ -2,9 +2,9 @@
 	<header class="app-header content-page-header">
 		<div class="app-header-left">
 			<a href="https://ryandavi.com" class="app-header-logo" target="_blank" rel="noopener noreferrer" aria-label="Visit ryandavi.com"><span class="logo" aria-hidden="true"></span></a>
-			<a class="app-header-title" href="<?= page_escape($base) ?>studio/" title="Open the editor">RYBABY LABS</a>
+			<a class="app-header-title" href="<?= page_escape($base) ?>" title="Home"<?= $home ? ' aria-current="page"' : '' ?>>RYBABY LABS</a>
 		</div>
-		<div class="app-header-center"><span class="app-header-page-title"><?= page_escape($page['title']) ?></span></div>
+		<div class="app-header-center"><?php if (!$home): ?><span class="app-header-page-title"><?= page_escape($page['title']) ?></span><?php endif; ?></div>
 		<div class="app-header-right">
 			<a class="btn-text-with-icon primary content-page-editor-link" href="<?= page_escape($base) ?>studio/">Open Editor</a>
 			<nav class="app-menu" id="appMenu" aria-label="Pages">

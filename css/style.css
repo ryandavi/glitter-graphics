@@ -3164,6 +3164,7 @@ body.no-document .app-header > .app-header-right > .app-header-project {
 }
 
 .app-menu-item {
+  text-decoration: none;
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
@@ -13542,9 +13543,6 @@ body.content-page .content-page-footer * {
 .app-header.content-page-header .content-page-editor-link {
   text-decoration: none;
 }
-.app-header.content-page-header a.app-menu-item {
-  text-decoration: none;
-}
 @media (max-width: 1040px) {
   .app-header.content-page-header {
     grid-template-columns: minmax(0, 1fr) auto;
@@ -13738,6 +13736,228 @@ body.content-page .content-page-footer * {
 }
 .content-page-footer > .content-page-footer-links a:hover, .content-page-footer > .content-page-footer-links a[aria-current=page] {
   color: var(--color-text-primary);
+}
+
+/* ===== HOMEPAGE =====
+   site/home.php, inside the content-page shell (header, scroll, footer). The
+   one loud thing is the hero: the word "Glitter" as a selected text layer on
+   the editor's transparency checkerboard, filled with a real Library tile the
+   reader can swap. Everything below it is the reading column's plain type. */
+@font-face {
+  font-family: "Cherry Bomb One";
+  src: url("../fonts/cherry-bomb-one.ttf") format("truetype");
+  font-display: swap;
+}
+body.home-page {
+  --home-width: 960px;
+  --tile-scale: 2;
+}
+
+.home-main {
+  flex: 1 0 auto;
+  width: 100%;
+  max-width: calc(var(--home-width) + 2 * var(--page-gutter));
+  margin-inline: auto;
+  padding: var(--spacing-xl) var(--page-gutter) var(--spacing-2xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2xl);
+}
+
+/* ----- Hero: a text layer on the canvas ----- */
+.home-hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.home-canvas {
+  background-image: linear-gradient(45deg, var(--color-checkerboard) 25%, transparent 25%), linear-gradient(-45deg, var(--color-checkerboard) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, var(--color-checkerboard) 75%), linear-gradient(-45deg, transparent 75%, var(--color-checkerboard) 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+  background-color: var(--color-bg-tertiary);
+  box-shadow: 0 0 0 1px var(--color-shadow-strong), 0 0 8px var(--color-shadow-strong);
+  display: grid;
+  place-items: center;
+  padding: clamp(var(--spacing-xl), 8vw, 88px) var(--spacing-md);
+  overflow: hidden;
+}
+
+.home-canvas-object {
+  box-sizing: border-box;
+  border: var(--selection-stroke) solid var(--color-accent);
+  box-shadow: 0 0 0 var(--selection-halo) rgba(255, 255, 255, 0.8), inset 0 0 0 var(--selection-halo) rgba(0, 0, 0, 0.45);
+  position: relative;
+  padding: 0.06em 0.12em 0.14em;
+  font-size: clamp(4.5rem, 19vw, 11rem);
+}
+.home-canvas-object > .home-canvas-handles > .transform-handle {
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+.home-canvas-object > .home-canvas-handles > .transform-handle:nth-child(1) {
+  left: 0;
+  top: 0;
+}
+.home-canvas-object > .home-canvas-handles > .transform-handle:nth-child(2) {
+  left: 100%;
+  top: 0;
+}
+.home-canvas-object > .home-canvas-handles > .transform-handle:nth-child(3) {
+  left: 0;
+  top: 100%;
+}
+.home-canvas-object > .home-canvas-handles > .transform-handle:nth-child(4) {
+  left: 100%;
+  top: 100%;
+}
+
+.home-wordmark {
+  margin: 0;
+  font-family: "Cherry Bomb One", var(--font-ui);
+  font-size: 1em;
+  font-weight: normal;
+  line-height: 1;
+  color: var(--color-text-primary);
+}
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+  .home-wordmark {
+    background-image: var(--tile);
+    background-repeat: repeat;
+    background-size: calc(var(--tile-w) * var(--tile-scale) * 1px) calc(var(--tile-h) * var(--tile-scale) * 1px);
+    image-rendering: pixelated;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(2px 0 0 var(--color-off-white)) drop-shadow(-2px 0 0 var(--color-off-white)) drop-shadow(0 2px 0 var(--color-off-white)) drop-shadow(0 -2px 0 var(--color-off-white)) drop-shadow(0 4px 0 var(--color-shadow-strong));
+  }
+}
+
+.home-fill {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm) var(--spacing-lg);
+}
+
+.home-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+}
+
+.home-swatch {
+  background-image: var(--tile);
+  background-repeat: repeat;
+  background-size: calc(var(--tile-w) * var(--tile-scale) * 1px) calc(var(--tile-h) * var(--tile-scale) * 1px);
+  image-rendering: pixelated;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.home-swatch:hover {
+  border-color: var(--color-border-hover);
+}
+.home-swatch[aria-pressed=true] {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+.home-swatch:focus-visible {
+  outline: 2px solid var(--color-accent-hover);
+  outline-offset: 2px;
+}
+
+.home-credit {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+}
+.home-credit a {
+  color: var(--color-text-secondary);
+}
+
+/* ----- Intro ----- */
+.home-intro {
+  max-width: 62ch;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+.home-intro > .home-lead {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-lg);
+  line-height: 1.5;
+}
+
+.home-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-xs);
+}
+.home-actions > .btn-text-with-icon {
+  text-decoration: none;
+}
+
+/* ----- Reading list ----- */
+.home-reading > h2 {
+  margin-bottom: var(--spacing-sm);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-xl);
+}
+
+.home-reading-list {
+  list-style: none;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.home-reading-row {
+  display: grid;
+  grid-template-columns: auto 9rem minmax(0, 1fr);
+  align-items: baseline;
+  gap: var(--spacing-xs) var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-xs);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+}
+.home-reading-row:hover, .home-reading-row:focus-visible {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+}
+.home-reading-row:hover > .home-reading-title, .home-reading-row:focus-visible > .home-reading-title {
+  color: var(--color-accent-hover);
+}
+.home-reading-row:visited {
+  color: var(--color-text-secondary);
+}
+.home-reading-row > .home-reading-icon {
+  align-self: center;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-lg);
+}
+.home-reading-row > .home-reading-title {
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+@media (max-width: 1040px) {
+  .home-reading-row {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .home-reading-row > .home-reading-description {
+    grid-column: 2;
+  }
+}
+
+.home-release {
+  margin-top: var(--spacing-md);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
 }
 
 @media (min-width: 1041px) {

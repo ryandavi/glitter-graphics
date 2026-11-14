@@ -2,6 +2,10 @@
 	"origin": "https://labs.ryandavi.com/glitter/",
 	"siteName": "Glitter Graphic Editor",
 	"copyright": "© Ryan Davi 2026",
+	"home": {
+		"title": "Glitter Graphic Editor",
+		"description": "A browser editor for glitter graphics: sparkly text, stickers and animated GIFs made from the glitter tiles of 2000s personal websites."
+	},
 	"pages": [
 		{
 			"slug": "guide",
@@ -61,6 +65,7 @@
 	],
 	"publish": [
 		"index.html",
+		"index.php",
 		"studio",
 		"404.php",
 		"site",

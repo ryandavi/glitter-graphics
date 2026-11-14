@@ -57,11 +57,7 @@
 	&.transparent-bg {
 
 		.preview-wrapper {
-			background-image:
-				linear-gradient(45deg, var(--color-checkerboard) 25%, transparent 25%),
-				linear-gradient(-45deg, var(--color-checkerboard) 25%, transparent 25%),
-				linear-gradient(45deg, transparent 75%, var(--color-checkerboard) 75%),
-				linear-gradient(-45deg, transparent 75%, var(--color-checkerboard) 75%);
+			@include checkerboard-image;
 			background-color: var(--color-bg-tertiary);
 		}
 	}

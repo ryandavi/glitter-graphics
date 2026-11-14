@@ -34,8 +34,9 @@ entry. `site/page.php` loads generated metadata and renders the shared
 article and extracts `.doc-content` for its modal; refreshing the article URL
 loads the same PHP page. No Node.js is needed at request time.
 
-PHP must be enabled on Apache. The published `.htaccess` enables `index.php`
-as a directory index while retaining `index.html` for the static editor root.
+PHP must be enabled on Apache. The published `.htaccess` lists `index.php`
+before `index.html`, so the site root serves the homepage (`index.php`,
+`site/home.php`) and `index.html` stays the editor shell that `studio/` serves.
 Old generated article `index.html` files must be removed during deployment so
 they cannot take precedence. The build removes them locally and the deploy
 must continue removing paths absent from git. GitHub Pages remains on the
@@ -72,8 +73,10 @@ PHP derives navigation and asset URLs from the executing script path, so product
 
 `studio/index.php` serves the existing static editor shell with a base URL
 pointing at the site root. Public-page editor links use `studio/`; no second
-copy of the editor shell is stored. The existing root editor is retained
-until its replacement is ready.
+copy of the editor shell is stored. The site root is the homepage; its tiles,
+credits, counts and latest release are built into `site/generated.json` by
+`tools/build-pages.js` from the Library data, so rebuild pages after changing
+glitter tiles or releases.
 
 `404.php` uses the shared public-page layout with `noindex`, returning the
 original Apache error status (or 404 on direct access). Configure Apache to
@@ -93,10 +96,15 @@ editor with HTTP 200. Proxy or CDN failures may need a host-level error page.
 
 The requested production destination is `https://glitter.ryandavi.com/`, with
 the editor at `/studio/`. The general project space is `lab.ryandavi.com/<project>/`.
-The domain migration requires server access and has not been applied:
+The new hostname is active: Apache serves `glitter.ryandavi.com` from the
+existing `/var/www/labs.ryandavi.com/glitter` folder, using the Cloudflare Origin
+CA wildcard certificate in `/etc/ssl/cloudflare/ryandavi.com.pem`. Its virtual
+host is `/etc/apache2/sites-available/glitter.ryandavi.com.conf`; HTTP redirects
+to HTTPS. The labs deploy continues updating the same folder. Application URL
+updates and old-address redirects below are still pending:
 
-1. Point DNS and TLS for `glitter.ryandavi.com` at the host and configure its
-   document root and deploy destination for this site's publish list.
+1. DNS, TLS and the dedicated virtual host are configured. The existing deploy
+   destination is shared with labs; no second deployment folder is needed.
 2. Change `tools/site.json` `origin` and the editor's Open Graph/share URLs to
    `https://glitter.ryandavi.com/`, then rebuild. Keep the current canonical
    origin until the new host is ready.

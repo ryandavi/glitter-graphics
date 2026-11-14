@@ -82,7 +82,7 @@ After compositor, exporter or frame changes, perform the export fragility routin
 
 ## Inspection tools
 
-- Invisible SCSS cleanup: `node tools/ui-ab.js` compares computed styles on the same DOM. Visible styling: `node tools/ui-contact-sheet.js` captures before/after pages with `--css <scratch.css>`. Ryan compiles committed CSS.
+- Invisible SCSS cleanup: `node tools/ui-ab.js` compares computed styles on the same DOM. Visible styling: `node tools/ui-contact-sheet.js` captures before/after pages with `--css <scratch.css>`. Compile committed CSS after SCSS changes, then run `node tools/build.js` to refresh generated files and hashes.
 - `node tools/wordart-contact-sheet.js` compares authored WordArt looks using real masks without adding document layers.
 - `node tools/load-report.js --url http://localhost/glitter/ --output .tmp/loading/report.json` measures cold/warm loads, bytes, boot stages and layout shifts; `--check` enforces CONFIG budgets. Measure without concurrent browser suites. For shipping budgets, use `node tools/serve.js` and `http://127.0.0.1:8100/?bundle=1`; `--css` serves scratch styles.
 

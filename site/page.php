@@ -6,7 +6,8 @@ if (!isset($slug)) {
 
 $site = json_decode(file_get_contents(__DIR__ . '/generated.json'), true, 512, JSON_THROW_ON_ERROR);
 $error = $slug === 'error';
-$page = null;
+$home = $slug === 'home';
+$page = $home ? $site['home'] : null;
 foreach ($site['pages'] as $candidate) {
 	if ($candidate['slug'] === $slug) $page = $candidate;
 }
@@ -22,9 +23,10 @@ if (!$page) {
 
 // SCRIPT_NAME preserves the mount path on production, staging and local hosts.
 $base = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
-if (!$error) $base = str_replace('\\', '/', dirname($base));
+// The homepage is the mount root itself; article pages sit one folder down.
+if (!$error && !$home) $base =str_replace('\\', '/', dirname($base));
 $base = rtrim($base, '/') . '/';
-$canonical = $site['origin'] . $page['slug'] . '/';
+$canonical = $site['origin'] . ($home ? '' : $page['slug'] . '/');
 function page_escape($value) {
 	return htmlspecialchars((string) $value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
