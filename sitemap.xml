@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-	<url><loc>https://labs.ryandavi.com/glitter/</loc></url>
-	<url><loc>https://labs.ryandavi.com/glitter/guide/</loc></url>
-	<url><loc>https://labs.ryandavi.com/glitter/history/</loc></url>
-	<url><loc>https://labs.ryandavi.com/glitter/personal-web/</loc></url>
-	<url><loc>https://labs.ryandavi.com/glitter/preservation/</loc></url>
-	<url><loc>https://labs.ryandavi.com/glitter/about/</loc></url>
-	<url><loc>https://labs.ryandavi.com/glitter/updates/</loc></url>
+	<url><loc>https://glitter.ryandavi.com/</loc></url>
+	<url><loc>https://glitter.ryandavi.com/guide/</loc></url>
+	<url><loc>https://glitter.ryandavi.com/history/</loc></url>
+	<url><loc>https://glitter.ryandavi.com/personal-web/</loc></url>
+	<url><loc>https://glitter.ryandavi.com/preservation/</loc></url>
+	<url><loc>https://glitter.ryandavi.com/about/</loc></url>
+	<url><loc>https://glitter.ryandavi.com/updates/</loc></url>
 </urlset>

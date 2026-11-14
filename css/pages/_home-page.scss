@@ -6,14 +6,18 @@
    the editor's transparency checkerboard, filled with a real Library tile the
    reader can swap. Everything below it is the reading column's plain type. */
 
+// The wordmark is Comic Sans where the system has it (Windows, macOS),
+// Chalkboard SE on iOS, and the bundled Comic Neue everywhere else (the same
+// stack and fallback as the editor's "Comic Sans MS" font, data/fonts.json).
 @font-face {
-	font-family: 'Cherry Bomb One';
-	src: url('../fonts/cherry-bomb-one.ttf') format('truetype');
+	font-family: 'Comic Neue';
+	src: local('Comic Neue'), url('../fonts/comic-neue.woff2') format('woff2');
 	font-display: swap;
 }
 
 body.home-page {
-	--home-width: 960px;
+	// The same column as the article pages and the footer.
+	--home-width: var(--page-prose-width);
 	// Tiles are pixel art at 1x; this is how many screen pixels each tile pixel gets.
 	--tile-scale: 2;
 }
@@ -32,7 +36,7 @@ body.home-page {
 	width: 100%;
 	max-width: calc(var(--home-width) + 2 * var(--page-gutter));
 	margin-inline: auto;
-	padding: var(--spacing-xl) var(--page-gutter) var(--spacing-2xl);
+	padding: var(--page-gutter);
 	display: flex;
 	flex-direction: column;
 	gap: var(--spacing-2xl);
@@ -55,13 +59,27 @@ body.home-page {
 	place-items: center;
 	padding: clamp(var(--spacing-xl), 8vw, 88px) var(--spacing-md);
 	overflow: hidden;
+
+	// Holds only the wordmark's filter; kept out of the centring grid.
+	>.home-alias-filter { position: absolute; }
 }
 
+// The selection line and handles share one overlay after the stickers, so
+// both draw over them (a border on the object itself paints beneath its
+// positioned children). The object keeps a clear border of the same width so
+// the box measures as before.
 .home-canvas-object {
-	@include selection-line;
 	position: relative;
 	padding: 0.12em 0.14em;
+	border: var(--selection-stroke) solid transparent;
 	font-size: clamp(4.5rem, 22vw, 11rem);
+
+	>.home-canvas-handles {
+		@include selection-line;
+		position: absolute;
+		inset: calc(-1 * var(--selection-stroke));
+		pointer-events: none;
+	}
 
 	>.home-canvas-handles>.transform-handle {
 		position: absolute;
@@ -74,16 +92,41 @@ body.home-page {
 	}
 }
 
+// Stickers on the text layer. Sized in em so they scale with the word: at the
+// largest word size (11rem = 176px) each shows at its own pixel size.
+.home-sticker {
+	position: absolute;
+	width: calc(var(--w) / 176 * 1em);
+	height: auto;
+	image-rendering: pixelated;
+	pointer-events: none;
+	// Centre at (--x%, --y%) of the text box, turned --r degrees (site.json presets).
+	left: calc(var(--x) * 1%);
+	top: calc(var(--y) * 1%);
+	transform: translate(-50%, -50%) rotate(calc(var(--r) * 1deg));
+}
+
 .home-wordmark {
-	margin: 0;
-	font-family: 'Cherry Bomb One', var(--font-ui);
+	font-family: 'Comic Sans MS', 'Comic Sans', 'Chalkboard SE', 'Comic Neue', var(--font-ui);
 	font-size: 1em;
-	font-weight: normal;
+	font-weight: bold;
 	line-height: 1;
 	// Fit the selection box to the letters, as the editor's text box does,
 	// instead of the font's ascent and descent.
 	text-box: trim-both cap alphabetic;
+	// The tile paints only inside the box, and the trim cuts off letters that
+	// overshoot the cap height and baseline (G, e, r). Padding grows the paint
+	// area past them; the matching negative margin keeps the layout as trimmed.
+	padding: 0.2em 0.1em;
+	margin: -0.2em -0.1em;
 	color: var(--color-text-primary);
+	// Aliased edges, like old glitter text. Font smoothing can only be turned
+	// off on macOS, so the #homeAlias filter (site/home.php) snaps the letters'
+	// edge alpha to fully on or off on every device. Its region reaches well
+	// past the box, which text-box trims to the cap height and baseline, so
+	// round letters that overshoot those lines aren't cut off.
+	-webkit-font-smoothing: none;
+	filter: url(#homeAlias);
 
 	@supports ((background-clip: text) or (-webkit-background-clip: text)) {
 		@include tile-fill;
@@ -93,6 +136,7 @@ body.home-page {
 		// The light outline and drop shadow glitter text was always given, so
 		// the tile reads on the checkerboard.
 		filter:
+			url(#homeAlias)
 			drop-shadow(2px 0 0 var(--color-off-white))
 			drop-shadow(-2px 0 0 var(--color-off-white))
 			drop-shadow(0 2px 0 var(--color-off-white))
@@ -101,12 +145,29 @@ body.home-page {
 	}
 }
 
+// Swatches and credit share one row; the credit's text wraps in its own space
+// rather than the whole credit dropping below. Phones stack them.
 .home-fill {
 	display: flex;
-	flex-wrap: wrap;
 	align-items: center;
-	justify-content: space-between;
 	gap: var(--spacing-sm) var(--spacing-lg);
+
+	>.home-credit {
+		flex: 1 1 14rem;
+		min-width: 0;
+		text-align: right;
+	}
+
+	@include mobile {
+		flex-direction: column;
+		align-items: stretch;
+
+		// The 14rem basis would become a height in a column.
+		>.home-credit {
+			flex: none;
+			text-align: left;
+		}
+	}
 }
 
 .home-swatches {
@@ -151,7 +212,7 @@ body.home-page {
 	flex-direction: column;
 	gap: var(--spacing-md);
 	color: var(--color-text-secondary);
-	line-height: 1.6;
+	line-height: 1.35;
 
 	>.home-lead {
 		color: var(--color-text-primary);

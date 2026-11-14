@@ -167,7 +167,8 @@ function initPreservationTimeline(modalBody) {
 
 		listEl.innerHTML = matches.map(item => renderTimelineItemHtml(item, ABOUT_TIMELINE_TAG_LABELS, ABOUT_TIMELINE_COUNTRY_LABELS)).join('');
 		listEl.scrollTop = 0;
-		initTooltipsInContainer(listEl);
+		// Standalone pages load the timeline without the editor's tooltip system.
+		if (typeof initTooltipsInContainer === 'function') initTooltipsInContainer(listEl);
 
 		typeButtons.forEach(button => {
 			const type = button.dataset.timelineType;

@@ -1,5 +1,5 @@
 {
-	"origin": "https://labs.ryandavi.com/glitter/",
+	"origin": "https://glitter.ryandavi.com/",
 	"siteName": "Glitter Graphic Editor",
 	"copyright": "© Ryan Davi 2026",
 	"pages": [
@@ -12,7 +12,13 @@
 			],
 			"icon": "question-circle",
 			"title": "Guide",
-			"description": "How to use Glitter Editor: starting a project, the tools, layers, the Library, animation and export."
+			"description": "How to use Glitter Editor: starting a project, the tools, layers, the Library, animation and export.",
+			"scripts": [
+				"js/core/dom.js?v=3531b1f4",
+				"js/ui/menu-popover.js?v=fdfbce8a",
+				"js/core/key-labels.js?v=80b61ded",
+				"js/site/content-page.js?v=2958b61a"
+			]
 		},
 		{
 			"slug": "history",
@@ -24,7 +30,17 @@
 			],
 			"icon": "clock-history",
 			"title": "History",
-			"description": "A history of glitter graphics: where the sparkle tiles came from, who made them, and the personal-web culture that passed them around."
+			"description": "A history of glitter graphics: where the sparkle tiles came from, who made them, and the personal-web culture that passed them around.",
+			"scripts": [
+				"js/core/dom.js?v=3531b1f4",
+				"js/generated/entities-data.js?v=b8b7d1f7",
+				"js/core/entities-group.js?v=b984c1dd",
+				"js/ui/tooltip.js?v=305ed707",
+				"js/ui/doc-modal.js?v=f6a51f4c",
+				"js/ui/menu-popover.js?v=fdfbce8a",
+				"js/core/key-labels.js?v=80b61ded",
+				"js/site/content-page.js?v=2958b61a"
+			]
 		},
 		{
 			"slug": "personal-web",
@@ -36,12 +52,41 @@
 			],
 			"icon": "palette",
 			"title": "Personal Web",
-			"description": "The personal web aesthetic of the 1990s and 2000s: tiled backgrounds, buttons, adoptables, dolls and the pages made to hold them."
+			"description": "The personal web aesthetic of the 1990s and 2000s: tiled backgrounds, buttons, adoptables, dolls and the pages made to hold them.",
+			"scripts": [
+				"js/core/dom.js?v=3531b1f4",
+				"js/generated/entities-data.js?v=b8b7d1f7",
+				"js/core/entities-group.js?v=b984c1dd",
+				"js/ui/tooltip.js?v=305ed707",
+				"js/ui/doc-modal.js?v=f6a51f4c",
+				"js/ui/menu-popover.js?v=fdfbce8a",
+				"js/core/key-labels.js?v=80b61ded",
+				"js/site/content-page.js?v=2958b61a"
+			]
 		},
 		{
 			"slug": "preservation",
 			"source": "preservation",
 			"modal": "preservationModal",
+			"scripts": [
+				"js/core/dom.js?v=3531b1f4",
+				"js/generated/entities-data.js?v=b8b7d1f7",
+				"js/core/entities-group.js?v=b984c1dd",
+				"js/core/format.js?v=e8e19ef6",
+				"js/ui/about-timeline-data.js?v=c875b6a5",
+				"js/core/preservation-group.js?v=6f1c5130",
+				"js/ui/about-timeline.js?v=99077cf8",
+				"js/ui/tooltip.js?v=305ed707",
+				"js/ui/doc-modal.js?v=f6a51f4c",
+				"js/ui/menu-popover.js?v=fdfbce8a",
+				"js/core/key-labels.js?v=80b61ded",
+				"js/site/content-page.js?v=2958b61a"
+			],
+			"icons": [
+				"magnifying-glass",
+				"x-mark",
+				"chevron-down"
+			],
 			"kinds": [
 				"document"
 			],
@@ -59,31 +104,177 @@
 			],
 			"icon": "circle-info",
 			"title": "About",
-			"description": "What Glitter Editor is, what it makes, how it handles your files, and its version history."
+			"description": "What Glitter Editor is, what it makes, how it handles your files, and its version history.",
+			"scripts": [
+				"js/core/dom.js?v=3531b1f4",
+				"js/generated/entities-data.js?v=b8b7d1f7",
+				"js/core/entities-group.js?v=b984c1dd",
+				"js/ui/tooltip.js?v=305ed707",
+				"js/ui/doc-modal.js?v=f6a51f4c",
+				"js/ui/menu-popover.js?v=fdfbce8a",
+				"js/core/key-labels.js?v=80b61ded",
+				"js/site/content-page.js?v=2958b61a"
+			]
 		},
 		{
 			"slug": "updates",
 			"source": "releases",
 			"kinds": [
+				"document",
 				"updates"
 			],
 			"icon": "glitter",
 			"title": "Updates",
-			"description": "Every Glitter Editor release, newest first: what was added, changed and fixed."
+			"description": "Every Glitter Editor release, newest first: what was added, changed and fixed.",
+			"scripts": [
+				"js/core/dom.js?v=3531b1f4",
+				"js/ui/menu-popover.js?v=fdfbce8a",
+				"js/core/key-labels.js?v=80b61ded",
+				"js/site/content-page.js?v=2958b61a"
+			]
 		}
 	],
-	"stylesheet": "css/style.css?v=e705fae0",
+	"stylesheet": "css/style.css?v=ad7f6c88",
 	"favicon": "images/etc/favicon.ico?v=bcdad78e",
 	"scripts": [
 		"js/ui/menu-popover.js?v=fdfbce8a",
 		"js/core/key-labels.js?v=80b61ded",
-		"js/site/content-page.js?v=28085a47"
+		"js/site/content-page.js?v=2958b61a"
 	],
 	"homeScripts": [
 		"js/site/home-page.js?v=e87a5367"
 	],
 	"home": {
 		"title": "Glitter Graphic Editor",
+		"stickerPresets": [
+			[
+				{
+					"url": "images/stickers/sparkle/sparkle_big_white.gif",
+					"name": "Big Sparkle White",
+					"width": 108,
+					"height": 110,
+					"x": 100,
+					"y": 0,
+					"rotate": 0
+				},
+				{
+					"url": "images/stickers/animal/butterfly_pink.gif",
+					"name": "Butterfly Pink",
+					"width": 120,
+					"height": 120,
+					"x": 0,
+					"y": 100,
+					"rotate": -12
+				}
+			],
+			[
+				{
+					"url": "images/stickers/decorative/red_heart_rotate.gif",
+					"name": "Rotating Heart Red",
+					"width": 75,
+					"height": 75,
+					"x": 97,
+					"y": 92,
+					"rotate": 10
+				},
+				{
+					"url": "images/stickers/sparkle/sparkle_blue.gif",
+					"name": "Sparkle Blue",
+					"width": 52,
+					"height": 46,
+					"x": 3,
+					"y": 4,
+					"rotate": -8
+				},
+				{
+					"url": "images/stickers/sparkle/sparkle_blue_3.gif",
+					"name": "Sparkle Blue",
+					"width": 32,
+					"height": 32,
+					"x": 60,
+					"y": -10,
+					"rotate": 0
+				}
+			],
+			[
+				{
+					"url": "images/stickers/character/star_dance.gif",
+					"name": "Dancing Star",
+					"width": 60,
+					"height": 60,
+					"x": 102,
+					"y": 12,
+					"rotate": 8
+				},
+				{
+					"url": "images/stickers/people/lips_pink-glitter.gif",
+					"name": "Lips Pink Glitter",
+					"width": 105,
+					"height": 65,
+					"x": -1,
+					"y": 96,
+					"rotate": -8
+				},
+				{
+					"url": "images/stickers/decorative/gem_pink.gif",
+					"name": "Gem Pink",
+					"width": 31,
+					"height": 32,
+					"x": 48,
+					"y": 104,
+					"rotate": 0
+				}
+			],
+			[
+				{
+					"url": "images/stickers/text/angel_blue-glitter.gif",
+					"name": "Angel Blue Glitter Text",
+					"width": 98,
+					"height": 49,
+					"x": 4,
+					"y": -6,
+					"rotate": -6
+				},
+				{
+					"url": "images/stickers/sparkle/hearts_pink-glitter.gif",
+					"name": "Hearts Pink Glitter",
+					"width": 46,
+					"height": 51,
+					"x": 98,
+					"y": 96,
+					"rotate": 12
+				}
+			],
+			[
+				{
+					"url": "images/stickers/flower/flower_gold-glitter.gif",
+					"name": "Flower Gold Glitter",
+					"width": 76,
+					"height": 93,
+					"x": -2,
+					"y": 6,
+					"rotate": -10
+				},
+				{
+					"url": "images/stickers/animal/butterfly_pink.gif",
+					"name": "Butterfly Pink",
+					"width": 120,
+					"height": 120,
+					"x": 101,
+					"y": 86,
+					"rotate": 14
+				},
+				{
+					"url": "images/stickers/sparkle/sparkle_blue.gif",
+					"name": "Sparkle Blue",
+					"width": 52,
+					"height": 46,
+					"x": 74,
+					"y": -12,
+					"rotate": 0
+				}
+			]
+		],
 		"description": "A browser editor for glitter graphics: sparkly text, stickers and animated GIFs made from the glitter tiles of 2000s personal websites.",
 		"slug": "home",
 		"kinds": [

@@ -85,6 +85,7 @@
 			background: none;
 			// Sits on the bar chrome, so it follows the bar's caption color.
 			color: var(--bar-title-color);
+			text-decoration: none;
 			font-family: inherit;
 			font-size: var(--app-header-mark-size);
 			font-weight: var(--font-weight-semibold);

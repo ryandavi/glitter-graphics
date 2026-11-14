@@ -18,6 +18,11 @@ const root = path.resolve(__dirname, '..');
 const sitePath = path.join(root, 'tools', 'site.json');
 const indexPath = path.join(root, 'index.html');
 const pageScripts = ['js/ui/menu-popover.js', 'js/core/key-labels.js', 'js/site/content-page.js'];
+// What an article adds around its own scripts: the editor's tooltips and
+// reference links, and the entity data when its mentions carry hover cards.
+const articleScripts = ['js/core/dom.js'];
+const entityScripts = ['js/generated/entities-data.js', 'js/core/entities-group.js'];
+const articleUiScripts = ['js/ui/tooltip.js', 'js/ui/doc-modal.js'];
 const pageMenuIcons = ['ellipsis-vertical', 'chevron-down'];
 const homeScripts = ['js/site/home-page.js'];
 // How many glitter tiles the homepage offers for its wordmark.
@@ -139,14 +144,19 @@ function unlinkUnpublished(html, publishedModals) {
 
 // What the editor's onLoaded hooks fill in (js/editor/modals-wiring.js), written
 // into the HTML so it reads without JavaScript.
-function fillStatic(html, page, registries) {
+function fillStatic(html, page, { registries, pages }) {
 	const { CONFIG, KEY_LABELS_PC, formatKeyLabel, renderReleaseEntryHtml } = registries;
+	// The site has a page of every release, so the article points there
+	// instead of repeating it; the editor's modal still renders the list here.
+	const updates = pages.find(item => item.source === 'releases');
 	const edits = [];
 	for (const node of elementRanges(html, () => true)) {
 		const { attrs } = node;
 		if (attrs['data-app-version'] !== undefined) edits.push(innerRange(node, escapeHtml(CONFIG.app.version)));
 		if (attrs['data-version-history'] !== undefined) {
-			edits.push(innerRange(node, CONFIG.app.releases.map((release, index) => renderReleaseEntryHtml(release, { open: index === 0 })).join('')));
+			edits.push(innerRange(node, updates
+				? `<p>Every release, newest first, is on <a href="${updates.slug}/">${escapeHtml(updates.title)}</a>.</p>`
+				: CONFIG.app.releases.map((release, index) => renderReleaseEntryHtml(release, { open: index === 0 })).join('')));
 		}
 		if (attrs.id === 'PreservationTimelineList') {
 			const timeline = getTimeline();
@@ -194,7 +204,8 @@ function pageBody(page, fragment, context) {
 		const { CONFIG, renderReleaseEntryHtml } = context.registries;
 		const entries = CONFIG.app.releases.map(release => renderReleaseEntryHtml(release, { open: true })).join('\n');
 		return [
-			`<h1 class="content-page-title">${escapeHtml(page.title)}</h1>`,
+			// The same hero the article pages open with.
+			`<div class="modal-hero-image">\n<img src="images/modal/glitter-text.gif" data-pixel-scale="3" class="center" alt="${escapeHtml(page.title)}" width="1200" height="900" loading="lazy" decoding="async" style="width: 1200px">\n<h1>${escapeHtml(page.title)}</h1>\n</div>`,
 			`<p>Every Glitter Editor release, newest first. You're reading about version <strong>${escapeHtml(CONFIG.app.version)}</strong>.</p>`,
 			`<div class="version-history">\n${entries}\n</div>`
 		].join('\n');
@@ -202,7 +213,7 @@ function pageBody(page, fragment, context) {
 	let html = fragment.replace(/^<!-- GENERATED[^\n]*-->\n/u, '');
 	html = applyFeatures(html, context.registries.FEATURES);
 	html = unlinkUnpublished(html, context.publishedModals);
-	html = fillStatic(html, page, context.registries);
+	html = fillStatic(html, page, context);
 	return html.trim();
 }
 
@@ -231,14 +242,24 @@ function homeData(site, registries) {
 		const { name, attribution } = credited.get(id);
 		return [id, { name, sourceUrl: attribution.sourceUrl, author: attribution.author, authorUrl: attribution.authorUrl || '' }];
 	}));
+	// Hand-composed sticker layouts for the hero (tools/site.json); the page
+	// picks one per visit. x and y place each sticker's centre as a percentage
+	// of the text box, so a layout holds at every word size.
+	const stickers = readData('stickers.json');
+	const stickerPresets = (site.home.stickerPresets || []).map(preset => preset.map(({ id, x, y, rotate = 0 }) => {
+		const sticker = stickers.find(item => item.id === id);
+		if (!sticker) throw new Error(`tools/site.json home sticker ${id} is not in data/stickers.json`);
+		return { url: sticker.url, name: sticker.name, width: sticker.width, height: sticker.height, x, y, rotate };
+	}));
 	const release = registries.CONFIG.app.releases[0];
 	return {
 		...site.home,
 		slug: 'home',
 		kinds: ['home'],
-		counts: { glitter: tiles.length, stickers: readData('stickers.json').length },
+		counts: { glitter: tiles.length, stickers: stickers.length },
 		release: { version: release.version, name: release.name, dateLabel: release.dateLabel },
 		swatches,
+		stickerPresets,
 		sets
 	};
 }
@@ -277,6 +298,7 @@ function buildPages({ fragments = new Map(), registries, compileFragment, check 
 	const context = { site, pages, indexHtml, registries, publishedModals: new Set(pages.map(page => page.modal).filter(Boolean)) };
 	const outputs = new Map();
 	const bodies = [];
+	const scriptsBySlug = new Map();
 	for (const page of pages) {
 		let body = '';
 		if (page.source !== 'releases') {
@@ -288,17 +310,23 @@ function buildPages({ fragments = new Map(), registries, compileFragment, check 
 		outputs.set(path.join(root, page.slug, 'index.php'), pageEntry(page.slug));
 		const article = prefixRelativeUrls(body, '../');
 		bodies.push(article);
+		const entities = /data-(?:card|entity)\b/u.test(article) ? entityScripts : [];
+		const ui = /data-(?:card|entity|tooltip)\b|<sup\b/u.test(article) ? articleUiScripts : [];
+		scriptsBySlug.set(page.slug, [...new Set([...articleScripts, ...entities, ...(page.scripts || []), ...ui, ...pageScripts])]);
 		outputs.set(path.join(root, page.slug, 'content.html'), `<!-- GENERATED by tools/build-pages.js. Do not edit. -->\n${article}\n`);
 	}
 	outputs.set(path.join(root, 'site', 'generated.json'), JSON.stringify({
-		origin: site.origin, siteName: site.siteName, copyright: site.copyright, pages,
+		origin: site.origin, siteName: site.siteName, copyright: site.copyright,
+		// Each article's full script list, in load order: shared libraries, the
+		// editor code its article needs, then the page scripts that start them.
+		pages: pages.map(page => ({ ...page, scripts: scriptsBySlug.get(page.slug).map(script => assetUrl(script, '')) })),
 		stylesheet: assetUrl('css/style.css', ''), favicon: assetUrl('images/etc/favicon.ico', ''),
 		scripts: pageScripts.map(script => assetUrl(script, '')),
 		homeScripts: homeScripts.map(script => assetUrl(script, '')),
 		home: homeData(site, registries)
 	}, null, '\t') + '\n');
 	outputs.set(path.join(root, 'index.php'), homeEntry);
-	const menuIcons = [...pageMenuIcons, ...pages.map(page => page.icon)];
+	const menuIcons = [...pageMenuIcons, ...pages.flatMap(page => [page.icon, ...(page.icons || [])])];
 	outputs.set(path.join(root, 'site', 'sprite.html'), spriteFor(bodies.join('\n') + menuIcons.map(id => `<use href="#icon-${id}"></use>`).join(''), indexHtml) + '\n');
 	outputs.set(path.join(root, 'site', 'analytics.html'), analyticsRegion(indexHtml) + '\n');
 	outputs.set(path.join(root, 'sitemap.xml'), renderSitemap(site, pages));

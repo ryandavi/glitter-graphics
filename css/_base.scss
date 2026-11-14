@@ -59,7 +59,10 @@ a {
 	text-underline-offset: 0.15em;
 	transition: color var(--transition-fast), text-decoration-color var(--transition-fast);
 
-	&:hover {
+	// State colours sit at element specificity (:where), so a link styled as a
+	// control (.btn-text-with-icon, .app-menu-item) keeps its own colour
+	// instead of turning purple once visited.
+	&:where(:hover) {
 		color: var(--color-accent-hover);
 		text-decoration-color: currentColor;
 	}
@@ -70,15 +73,15 @@ a {
 		border-radius: 0.15em;
 	}
 
-	&:active {
+	&:where(:active) {
 		color: var(--color-accent-active);
 	}
 
-	&:visited {
+	&:where(:visited) {
 		color: var(--color-accent-visited);
 	}
 
-	&:visited:hover {
+	&:where(:visited:hover) {
 		color: var(--color-accent-hover);
 	}
 

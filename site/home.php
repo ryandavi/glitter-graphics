@@ -5,6 +5,7 @@
 // Each visit starts the wordmark on a different tile.
 $swatches = $page['swatches'];
 $start = array_rand($swatches);
+$stickers = $page['stickerPresets'] ? $page['stickerPresets'][array_rand($page['stickerPresets'])] : [];
 // A root-relative URL: a url() inside a custom property would otherwise resolve
 // against the stylesheet that reads it.
 function home_tile_style($swatch, $base) {
@@ -22,8 +23,12 @@ $updates = array_values(array_filter($site['pages'], function ($item) { return $
 		<main class="home-main" id="main">
 			<section class="home-hero" aria-labelledby="homeTitle">
 				<div class="home-canvas" id="homeCanvas" style="<?= page_escape(home_tile_style($swatches[$start], $base)) ?>">
+					<svg class="home-alias-filter" width="0" height="0" aria-hidden="true" focusable="false"><filter id="homeAlias" x="-0.1" y="-0.5" width="1.2" height="2" color-interpolation-filters="sRGB"><feComponentTransfer><feFuncA type="discrete" tableValues="0 1"/></feComponentTransfer></filter></svg>
 					<div class="home-canvas-object">
 						<h1 class="home-wordmark" id="homeTitle">Glitter</h1>
+<?php foreach ($stickers as $sticker): ?>
+						<img class="home-sticker" src="<?= page_escape($base . $sticker['url']) ?>" alt="" title="<?= page_escape($sticker['name']) ?>" width="<?= (int) $sticker['width'] ?>" height="<?= (int) $sticker['height'] ?>" style="--w: <?= (int) $sticker['width'] ?>; --x: <?= (float) $sticker['x'] ?>; --y: <?= (float) $sticker['y'] ?>; --r: <?= (float) $sticker['rotate'] ?>">
+<?php endforeach; ?>
 						<span class="home-canvas-handles" aria-hidden="true">
 							<span class="transform-handle transform-handle-corner"></span><span class="transform-handle transform-handle-corner"></span><span class="transform-handle transform-handle-corner"></span><span class="transform-handle transform-handle-corner"></span>
 						</span>
@@ -40,7 +45,7 @@ $updates = array_values(array_filter($site['pages'], function ($item) { return $
 			</section>
 
 			<section class="home-intro">
-				<p class="home-lead">Glitter Editor makes glitter graphics: sparkly text, stickers and animated GIFs, built from the tiles people drew for their GeoCities, Angelfire and Tripod pages around the turn of the millennium.</p>
+				<p class="home-lead">Glitter Editor makes glitter graphics: sparkly text, stickers and animated GIFs, built from the glitter tiles people made and traded online around the turn of the millennium.</p>
 				<p>The Library holds <?= number_format($page['counts']['glitter']) ?> glitter tiles and <?= number_format($page['counts']['stickers']) ?> stickers. The archival sets are credited to the people who made them, like the tile above. Everything runs in your browser, and the images you load or export stay there.</p>
 				<div class="home-actions">
 					<a class="btn-text-with-icon primary" href="<?= page_escape($base) ?>studio/">Open the Editor</a>

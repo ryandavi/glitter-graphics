@@ -50,8 +50,6 @@ body.content-page {
 	top: 0;
 	z-index: var(--z-app-header-elevated);
 
-	>.app-header-left>.app-header-title { text-decoration: none; }
-
 	>.app-header-center>.app-header-page-title {
 		display: block;
 		color: var(--bar-title-color);
@@ -102,11 +100,76 @@ body.content-page {
 	}
 }
 
-// Updates has no hero image, so its title shows.
-.content-page-title {
-	margin-bottom: var(--spacing-md);
-	color: var(--color-text-primary);
-	font-size: var(--font-size-2xl);
+/* ----- Side contents column -----
+   js/site/content-page.js moves the article's .toc here and adds .has-side-toc
+   only at 1360px and up: the 800px column plus a contents column and gap on
+   each side, so the reading column stays centred like every other page. */
+.doc-page-main.has-side-toc {
+	--side-toc-width: 220px;
+	--side-toc-gap: var(--spacing-xl);
+	// How wide galleries may grow here: the page less a contents column and gap
+	// on each side. Resolved where it's used (cqi measures this element).
+	--side-breakout: min(var(--page-wide-width), 100cqi - 2 * (var(--side-toc-width) + var(--side-toc-gap)));
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, var(--page-prose-width)) minmax(0, 1fr);
+	column-gap: var(--side-toc-gap);
+	align-items: start;
+
+	>.doc-content {
+		grid-column: 2;
+		width: 100%;
+
+		// Galleries stop short of the contents column.
+		.figure-gallery {
+			--breakout-width: var(--side-breakout);
+		}
+	}
+
+	// The column is as tall as the scroll area (the window below the header)
+	// and holds the box at its top, level with the article; the box scrolls
+	// inside its own border when the list is taller than that. It sits one gap
+	// outside the widest gallery, so the two never meet.
+	>.content-page-toc {
+		// The .toc look lives in the article mixin; the column keeps it.
+		@include modal-shell.body-content;
+		grid-column: 1;
+		grid-row: 1;
+		justify-self: end;
+		width: var(--side-toc-width);
+		margin-right: calc((var(--side-breakout) - var(--page-prose-width)) / 2);
+		position: sticky;
+		top: 0;
+		z-index: 1;
+		// Start at the scroll area's top edge, above the main padding.
+		margin-top: calc(-1 * var(--spacing-xl));
+		height: calc(100dvh - var(--header-height));
+		padding-block: var(--spacing-xl);
+		display: flex;
+		flex-direction: column;
+
+		// The heading stays; the list scrolls inside the box's padding, so the
+		// scrollbar sits clear of the border. Long entries wrap, never scroll sideways.
+		>.toc {
+			display: flex;
+			margin: 0;
+			min-height: 0;
+			max-height: 100%;
+			padding-right: var(--spacing-sm);
+			font-size: var(--font-size-sm);
+			line-height: 1.35;
+			overflow-wrap: anywhere;
+
+			ol>li { grid-template-columns: auto minmax(0, 1fr); }
+
+			>ol {
+				min-height: 0;
+				overflow-y: auto;
+				overflow-x: hidden;
+				overscroll-behavior: contain;
+				padding-right: var(--spacing-sm);
+			}
+		}
+	}
 }
 
 /* ----- Footer ----- */

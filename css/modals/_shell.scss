@@ -97,6 +97,13 @@
 					grid-column: 2;
 				}
 
+				// Top-level sections read above their subsections.
+				&::before,
+				>a {
+					color: var(--color-text-primary);
+					font-weight: var(--font-weight-semibold);
+				}
+
 				/* nested list should also align under content */
 				>ol {
 					grid-column: 2;

@@ -24,6 +24,7 @@
 </head>
 <body class="content-page<?= $home ? ' home-page' : '' ?>">
 <?php readfile(__DIR__ . '/sprite.html'); ?>
+	<template id="tpl-icon"><svg class="icon"><use></use></svg></template>
 <?php require __DIR__ . '/header.php'; ?>
 	<div class="content-page-scroll">
 <?php if ($home): ?>
@@ -42,7 +43,7 @@
 <?php endif; ?>
 <?php require __DIR__ . '/footer.php'; ?>
 	</div>
-<?php foreach ($home ? array_merge($site['scripts'], $site['homeScripts']) : $site['scripts'] as $script): ?>
+<?php foreach (array_merge($page['scripts'] ?? $site['scripts'], $home ? $site['homeScripts'] : []) as $script): ?>
 	<script src="<?= page_escape($base . $script) ?>"></script>
 <?php endforeach; ?>
 <?php readfile(__DIR__ . '/analytics.html'); ?>

@@ -1,9 +1,16 @@
 {
-	"origin": "https://labs.ryandavi.com/glitter/",
+	"origin": "https://glitter.ryandavi.com/",
 	"siteName": "Glitter Graphic Editor",
 	"copyright": "© Ryan Davi 2026",
 	"home": {
 		"title": "Glitter Graphic Editor",
+		"stickerPresets": [
+			[{ "id": 178, "x": 100, "y": 0, "rotate": 0 }, { "id": 90, "x": 0, "y": 100, "rotate": -12 }],
+			[{ "id": 108, "x": 97, "y": 92, "rotate": 10 }, { "id": 179, "x": 3, "y": 4, "rotate": -8 }, { "id": 181, "x": 60, "y": -10, "rotate": 0 }],
+			[{ "id": 4, "x": 102, "y": 12, "rotate": 8 }, { "id": 26, "x": -1, "y": 96, "rotate": -8 }, { "id": 101, "x": 48, "y": 104, "rotate": 0 }],
+			[{ "id": 33, "x": 4, "y": -6, "rotate": -6 }, { "id": 173, "x": 98, "y": 96, "rotate": 12 }],
+			[{ "id": 6, "x": -2, "y": 6, "rotate": -10 }, { "id": 90, "x": 101, "y": 86, "rotate": 14 }, { "id": 179, "x": 74, "y": -12, "rotate": 0 }]
+		],
 		"description": "A browser editor for glitter graphics: sparkly text, stickers and animated GIFs made from the glitter tiles of 2000s personal websites."
 	},
 	"pages": [
@@ -40,6 +47,16 @@
 			"slug": "preservation",
 			"source": "preservation",
 			"modal": "preservationModal",
+			"scripts": [
+				"js/core/dom.js",
+				"js/core/format.js",
+				"js/generated/entities-data.js",
+				"js/core/entities-group.js",
+				"js/ui/about-timeline-data.js",
+				"js/core/preservation-group.js",
+				"js/ui/about-timeline.js"
+			],
+			"icons": ["magnifying-glass", "x-mark", "chevron-down"],
 			"kinds": ["document"],
 			"icon": "archive",
 			"title": "Preservation",
@@ -57,7 +74,7 @@
 		{
 			"slug": "updates",
 			"source": "releases",
-			"kinds": ["updates"],
+			"kinds": ["document", "updates"],
 			"icon": "glitter",
 			"title": "Updates",
 			"description": "Every Glitter Editor release, newest first: what was added, changed and fixed."

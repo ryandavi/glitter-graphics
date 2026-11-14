@@ -202,7 +202,7 @@ class TooltipManager {
 		const tooltip = document.createElement('div');
 		tooltip.className = 'tooltip';
 		// Article glosses run to a sentence, so their tooltips get more room.
-		if (element.closest('.document-modal')) tooltip.classList.add('tooltip-prose');
+		if (element.closest('.document-modal, .doc-page-document')) tooltip.classList.add('tooltip-prose');
 		const card = this.entityCard(element);
 		if (card) {
 			tooltip.classList.add('tooltip-has-entity');
