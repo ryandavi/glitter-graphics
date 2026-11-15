@@ -4,6 +4,7 @@
 	const Tone = root.GlitterToneAdjust || (typeof require === 'function' ? require('./tone-adjust.js') : null);
 	const Blur = root.GlitterBlur || (typeof require === 'function' ? require('./blur.js') : null);
 	const PixelEffects = root.GlitterPixelEffects || (typeof require === 'function' ? require('./pixel-effects.js') : null);
+	const Sensor = root.GlitterWebcamSensor || (typeof require === 'function' ? require('./webcam-sensor.js') : null);
 
 	const clampByte = (value) => Math.max(0, Math.min(255, Math.round(value)));
 
@@ -332,6 +333,13 @@
 			id: 'resample', params: Object.freeze({ scale: Object.freeze({ min: 0.05, max: 1 }), height: Object.freeze({ min: 1, max: 4320 }), amount: Object.freeze({ min: 0, max: 1 }) }),
 			pixel: (imageData, params) => resample(imageData, params.height ? sensorScale(imageData.height, params.height, params.amount) : params.scale),
 			isActive: (params) => Boolean(params.height) ? Number(params.amount ?? 1) > 0 : Number(params.scale) < 1
+		}),
+		// A whole early-2010s webcam, run on its sensor grid (js/effects/webcam-sensor.js).
+		// `sensor` is a CONFIG.tools.filter.webcam.resolutions entry.
+		webcam: Object.freeze({
+			id: 'webcam', params: Object.freeze({ sensor: Object.freeze({ kind: 'object' }), amount: Object.freeze({ min: 0, max: 1 }) }),
+			pixel: (imageData, params, context = {}) => Sensor.render(imageData, params.sensor, { amount: params.amount, seed: context.seed, frameIndex: context.frameIndex, jpegRoundTrip: context.jpegRoundTrip }),
+			isActive: (params) => Boolean(params.sensor) && Number(params.amount) > 0
 		}),
 		colorBalance: Object.freeze({
 			id: 'colorBalance', params: Object.freeze({ shadows: Object.freeze({ kind: 'channels' }), midtones: Object.freeze({ kind: 'channels' }), highlights: Object.freeze({ kind: 'channels' }) }),

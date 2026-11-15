@@ -81,6 +81,7 @@
 		"js/effects/grain.js",
 		"js/effects/blur.js",
 		"js/effects/filter-presets.js",
+		"js/effects/webcam-sensor.js",
 		"js/effects/filter-ops.js",
 		"js/effects/filter-looks.js",
 		"js/effects/filter-render.js",

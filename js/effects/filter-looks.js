@@ -77,18 +77,29 @@
 		];
 	}
 
-	// Early-2010s laptop webcam: soft and low-detail, waxy noise reduction,
-	// crunchy sharpening, washed-out color with green-yellow shadows and
-	// magenta mids, clipped ends, grain in the shadows, then compression.
-	// Resolution is the sensor's height: detail drops to what its cheap lens
-	// resolves (CONFIG.tools.filter.webcam.lensDetail of it) and grain is one sensor
-	// pixel, so the look is the same at any image size.
+	// Early-2010s laptop webcam, simulated as a camera on its own sensor grid
+	// (js/effects/webcam-sensor.js). Resolution picks the camera profile in
+	// CONFIG.tools.filter.webcam.resolutions; Strength eases every stage in.
 	const webcamResolutions = () => Object.entries(CONFIG.tools.filter.webcam.resolutions).map(([value, entry]) => ({ value, label: entry.label }));
 	function webcamRecipe(values) {
+		const amount = values.strength / 100;
+		if (!amount) return [];
+		const { resolutions } = CONFIG.tools.filter.webcam;
+		return [step('webcam', { sensor: resolutions[values.resolution] || Object.values(resolutions)[0], amount })];
+	}
+
+	// Lo-Fi Cam: the first Webcam recipe, kept as a stylized grade. Soft and
+	// low-detail, waxy blur, crunchy sharpening, washed-out color with
+	// green-yellow shadows and magenta mids, clipped ends, grain in the
+	// shadows, then compression. Resolution is the sensor's height (shared
+	// with Webcam): detail drops to what a cheap lens resolves
+	// (CONFIG.tools.filter.lofiCam.lensDetail of it) and grain is one sensor
+	// pixel, so the look is the same at any image size.
+	function lofiCamRecipe(values) {
 		const strength = values.strength / 100;
 		if (!strength) return [];
 		const mix = (identity, full) => identity + (full - identity) * strength;
-		const { resolutions, lensDetail } = CONFIG.tools.filter.webcam;
+		const { webcam: { resolutions }, lofiCam: { lensDetail } } = CONFIG.tools.filter;
 		const sensor = (resolutions[values.resolution] || Object.values(resolutions)[0]).height;
 		return [
 			step('resample', { height: Math.round(sensor * lensDetail), amount: strength }),
@@ -219,6 +230,11 @@
 			resolution: select('720', 'filterWebcamResolution', 'Resolution', webcamResolutions)
 		}), recipe: webcamRecipe,
 			summary: (values) => `Webcam ${CONFIG.tools.filter.webcam.resolutions[values.resolution]?.label || ''}`.trim() }),
+		'lofi-cam': Object.freeze({ id: 'lofi-cam', label: 'Lo-Fi Cam', group: 'web', tags: ['camera', 'lofi', 'grain', 'tint'], fields: Object.freeze({
+			strength: numeric('filterLookStrength', 'filterLofiCamStrength'),
+			resolution: select('720', 'filterLofiCamResolution', 'Resolution', webcamResolutions)
+		}), recipe: lofiCamRecipe,
+			summary: (values) => `Lo-Fi Cam ${CONFIG.tools.filter.webcam.resolutions[values.resolution]?.label || ''}`.trim() }),
 		'jpeg-crunch': Object.freeze({ id: 'jpeg-crunch', label: 'JPEG Crunch', group: 'pixel', tags: ['compression', 'artifact'], fields: Object.freeze({
 			quality: numeric('filterJpegQuality', 'filterJpegQuality'), generations: numeric('filterJpegGenerations', 'filterJpegGenerations'),
 			blockSize: numeric('filterJpegBlockSize', 'filterJpegBlockSize'), chromaBleed: numeric('filterChromaBleed', 'filterChromaBleed')

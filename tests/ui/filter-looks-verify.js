@@ -167,7 +167,7 @@ async function main() {
 			if (!looksGrid.querySelector('[data-preset-id="instagram:juno"].active')) throw new Error('Loaded Instagram project did not activate its matching look');
 			return output;
 		});
-		if (result.ids.length !== 45 || !result.ids.includes('warp:twirl') || !result.ids.includes('webcam') || !result.ids.includes('color-balance') || result.ids.includes('warp') || !result.ids.includes('hue-cycle') || result.ids[10] !== 'scanlines' || !result.ids.includes('jpeg-crunch') || result.ids.at(-1) !== 'instagram:hefe' || result.ids.includes('instagram')) throw new Error(`Unexpected looks: ${result.ids.join(',')}`);
+		if (result.ids.length !== 46 || !result.ids.includes('warp:twirl') || !result.ids.includes('webcam') || !result.ids.includes('color-balance') || result.ids.includes('warp') || !result.ids.includes('hue-cycle') || result.ids[10] !== 'scanlines' || !result.ids.includes('jpeg-crunch') || result.ids.at(-1) !== 'instagram:hefe' || result.ids.includes('instagram')) throw new Error(`Unexpected looks: ${result.ids.join(',')}`);
 		for (const type of ['scanlines', 'light-leak', 'dreamy-glow']) {
 			if (result.tiers[type] !== 1) throw new Error(`${type} is not Tier 1`);
 			if (!result.canvasesChanged[type]) throw new Error(`${type} export painter did not change pixels`);

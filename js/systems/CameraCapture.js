@@ -780,7 +780,8 @@ class CameraCapture {
 
 	// Renders `source` through looks into `target`. Booth renders run one at a
 	// time in a chain, so a slow async look (Deep Fry) can't pile up renders.
-	// Each paint reseeds, so grain moves like a live sensor's.
+	// Each paint is the next frame of one seed, so grain moves like a live
+	// sensor's while slower noise (the Webcam look's colour blotches) drifts.
 	paintLook(target, source, width, lookIds) {
 		const run = async () => {
 			const sourceWidth = source.videoWidth || source.width, sourceHeight = source.videoHeight || source.height;
@@ -793,8 +794,8 @@ class CameraCapture {
 			if (work.height !== h) work.height = h;
 			const ctx = work.getContext('2d', { willReadFrequently: true });
 			this.drawSource(ctx, source, w, h, source === this.ui.video && this.ui.mirror.checked);
-			const seed = `camera-${++this.paintCount}`;
-			for (const lookId of lookIds) await GlitterFilter.renderToCanvas(ctx, w, h, this.filterDataFor(lookId), 1, { seed });
+			const frameIndex = ++this.paintCount;
+			for (const lookId of lookIds) await GlitterFilter.renderToCanvas(ctx, w, h, this.filterDataFor(lookId), 1, { seed: 'camera', frameIndex });
 			if (target.width !== w) target.width = w;
 			if (target.height !== h) target.height = h;
 			target.getContext('2d').drawImage(work, 0, 0);

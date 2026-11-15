@@ -9,7 +9,8 @@ global.CONFIG = {
 		filter: {
 			animation: { frameMs: 100, crawl: { off: { label: 'Off', frameMs: 0 }, slow: { label: 'Slow', frameMs: 200 }, medium: { label: 'Medium', frameMs: 100 }, fast: { label: 'Fast', frameMs: 50 } } },
 			defaultType: 'basic',
-			webcam: { resolutions: { 480: { label: '480p', height: 480 }, 720: { label: '720p', height: 720 } }, lensDetail: 0.7 },
+			webcam: { resolutions: { 480: { label: '480p', height: 480 }, 720: { label: '720p', height: 720 } } },
+			lofiCam: { lensDetail: 0.7 },
 			tintPresets: {
 				'warming-85': { label: 'Warming Filter (85)', color: '#ec8a00' },
 				'warming-81': { label: 'Warming Filter (81)', color: '#efb45a' },
@@ -50,7 +51,7 @@ Blend.compositeColorBurn(colorBurnBackdrop, colorBurnSource);
 assert.deepStrictEqual(Array.from(colorBurnBackdrop.data), [0, 0, 0, 255, 57, 255, 20, 255]);
 assert.deepStrictEqual(Array.from(Tone.composeToneAffine(null).m), [1, 0, 0, 0, 1, 0, 0, 0, 1]);
 assert.strictEqual(Filter.normalizeFilterData({}).type, 'basic');
-assert.deepStrictEqual(Filter.FILTER_TYPES, ['basic', 'invert', 'grayscale', 'sepia', 'color-balance', 'tint', 'vignette', 'grain', 'hue-cycle', 'blur', 'instagram', 'scanlines', 'light-leak', 'dreamy-glow', 'webcam', 'jpeg-crunch', 'deep-fry', 'pixelate', 'posterize', 'dither', 'rgb-split', 'warp', 'gradient-map']);
+assert.deepStrictEqual(Filter.FILTER_TYPES, ['basic', 'invert', 'grayscale', 'sepia', 'color-balance', 'tint', 'vignette', 'grain', 'hue-cycle', 'blur', 'instagram', 'scanlines', 'light-leak', 'dreamy-glow', 'webcam', 'lofi-cam', 'jpeg-crunch', 'deep-fry', 'pixelate', 'posterize', 'dither', 'rgb-split', 'warp', 'gradient-map']);
 assert.strictEqual(Filter.normalizeFilterData({ type: 'instagram' }).presetId, 'rio');
 assert.strictEqual(Object.keys(Presets)[0], 'rio');
 
@@ -90,7 +91,7 @@ for (const entry of Filters.list()) {
 	});
 	const normalized = Filters.normalize(entry.id);
 	for (const recipeStep of Filters.recipe(normalized)) assert(Ops.get(recipeStep.op), `${entry.id} uses unknown op ${recipeStep.op}`);
-	assert.strictEqual(Filters.tier(normalized), ['color-balance', 'hue-cycle', 'webcam', 'jpeg-crunch', 'deep-fry', 'pixelate', 'posterize', 'dither', 'rgb-split', 'warp', 'gradient-map'].includes(entry.id) ? 3 : 1, `${entry.id} has the wrong render tier`);
+	assert.strictEqual(Filters.tier(normalized), ['color-balance', 'hue-cycle', 'webcam', 'lofi-cam', 'jpeg-crunch', 'deep-fry', 'pixelate', 'posterize', 'dither', 'rgb-split', 'warp', 'gradient-map'].includes(entry.id) ? 3 : 1, `${entry.id} has the wrong render tier`);
 }
 for (const library of PresetLibrary.listPresetLibraries()) {
 	assert(library.id && library.entries.length, 'preset libraries require entries');

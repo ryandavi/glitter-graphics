@@ -277,9 +277,45 @@ const CONFIG = deepFreeze({
 		filter: {
 			animation: { frameMs: 100, crawlSampleMs: 50, crawl: { off: { label: 'Off', frameMs: 0 }, slow: { label: 'Slow', frameMs: 200 }, medium: { label: 'Medium', frameMs: 100 }, fast: { label: 'Fast', frameMs: 50 } } },
 			defaultType: 'basic',
-			// The Webcam look's sensors, by height. A cheap lens resolves
-			// `lensDetail` of the sensor's lines; grain stays one sensor pixel.
-			webcam: { resolutions: { 480: { label: '480p', height: 480 }, 720: { label: '720p', height: 720 } }, lensDetail: 0.7 },
+			// The Webcam look's cameras, by sensor height (js/effects/webcam-sensor.js).
+			// Sizes are sensor pixels. lens: blur sigma. exposure: auto-exposure
+			// meters toward `target` (linear), `response` of the way, then `bias`
+			// over (webcams ran hot). noise: linear read/shot noise; chroma is a
+			// share of luma noise, `chromaSize` px blobs; blotch is a share of
+			// read noise in `blotchSize` px blotches; *Frames: keys the colour
+			// noise eases between. whiteBalance: gray-world `correction` share,
+			// then the camera's own cast. tone: black crush, S-curve, shoulder
+			// knee. color: saturation, with reds/skin at `warmSaturation`. isp:
+			// chroma smear sigma, noise reduction (edges above `denoiseEdge`
+			// kept), unsharp amount and radius. jpeg: quality at sensor size.
+			// Starting points for tuning by eye, not measurements.
+webcam: {
+    resolutions: {
+        480: {
+            label: '480p', height: 480, lens: 0.85,
+            exposure: { target: 0.22, response: 0.65, minGain: 0.7, maxGain: 3.2, bias: 1.3 },
+            noise: { read: 0.0055, shot: 0.0003, chroma: 0.25, chromaSize: 1.0, blotch: 0.45, blotchSize: 8, chromaFrames: 2, blotchFrames: 8 },
+            whiteBalance: { correction: 0.55, cast: [1.05, 1, 0.94] },
+            tone: { black: 0.05, contrast: 0.12, knee: 0.78 },
+            color: { saturation: 0.72, warmSaturation: 0.98 },
+            isp: { chromaBlur: 1.4, denoise: 0.5, denoiseEdge: 0.05, sharpen: 1, sharpenRadius: 1 },
+            jpeg: { quality: 55, chromaBleed: 0.3 }
+        },
+        720: {
+            label: '720p', height: 720, lens: 0.75,
+            exposure: { target: 0.2, response: 0.7, minGain: 0.7, maxGain: 2.6, bias: 1.22 },
+            noise: { read: 0.004, shot: 0.0002, chroma: 0.14, chromaSize: 0.8, blotch: 0.25, blotchSize: 9, chromaFrames: 2, blotchFrames: 10 },
+            whiteBalance: { correction: 0.7, cast: [1.03, 1, 0.97] },
+            tone: { black: 0.035, contrast: 0.1, knee: 0.82 },
+            color: { saturation: 0.8, warmSaturation: 1.02 },
+            isp: { chromaBlur: 1.1, denoise: 0.25, denoiseEdge: 0.035, sharpen: 0.85, sharpenRadius: 0.8 },
+            jpeg: { quality: 70, chromaBleed: 0.15 }
+        }
+    }
+},
+			// Lo-Fi Cam (the first Webcam recipe) uses Webcam's resolutions; its
+			// cheap lens resolves `lensDetail` of the sensor's lines.
+			lofiCam: { lensDetail: 0.7 },
 			tintPresets: {
 				'warming-85': { label: 'Warming Filter (85)', color: '#ec8a00' },
 				'warming-81': { label: 'Warming Filter (81)', color: '#efb45a' },
