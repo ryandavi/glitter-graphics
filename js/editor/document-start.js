@@ -28,12 +28,22 @@ setupImageListeners() {
 		});
 
 		openImageBtn?.addEventListener('click', () => imageUpload?.click());
+		// The drop area reads as one target, so a click on its empty space
+		// opens an image too. Its buttons keep their own actions.
+		document.querySelector('.workspace-start-drop')?.addEventListener('click', (event) => {
+			if (!event.target.closest('button, a, input')) imageUpload?.click();
+		});
 		const takePhotoButtons = document.querySelectorAll('#takePhotoBtn, #takePhotoMenuItem');
+		// Each stays as the page drew it (the start hint) until the check answers.
 		takePhotoButtons.forEach((button) => {
-			button.hidden = true;
 			button.addEventListener('click', () => COMMANDS.takePhoto.run(this));
 		});
-		CameraCapture.watchAvailability(() => takePhotoButtons.forEach((button) => { button.hidden = !CameraCapture.isSupported(); }));
+		CameraCapture.watchAvailability(() => {
+			const supported = CameraCapture.isSupported();
+			takePhotoButtons.forEach((button) => { button.hidden = !supported; });
+			document.documentElement.classList.remove('has-camera-hint');
+			writeStartHint('hasCamera', supported);
+		});
 
 		if (imageUpload) {
 			imageUpload.addEventListener('change', async (e) => {
@@ -119,8 +129,14 @@ setupImageListeners() {
 		const list = document.getElementById('workspaceStartResumeList');
 		if (!section || !list) return;
 		list.querySelectorAll('[data-thumbnail-url]').forEach(tile => URL.revokeObjectURL(tile.dataset.thumbnailUrl));
+		// Rows replacing the boot placeholders fade in; later re-renders don't.
+		list.classList.toggle('is-arriving', Boolean(list.querySelector('.is-placeholder')));
 		list.replaceChildren(...summaries.map(summary => this.buildWorkspaceStartResumeTile(summary)));
 		section.hidden = !summaries.length;
+		// The real rows are in, so the reserved space (index.html head) goes,
+		// and the next load reserves this many.
+		document.documentElement.classList.remove('has-resume-hint');
+		writeStartHint('resumeCount', summaries.length);
 	},
 
 	buildWorkspaceStartResumeTile(summary) {
@@ -129,7 +145,6 @@ setupImageListeners() {
 		const edited = formatRelativeTime(summary.savedAt);
 		const tile = buildElement('workspace-start-resume');
 		const media = buildElement('action-card-media workspace-start-resume-preview', undefined, 'span');
-		media.style.setProperty('--aspect', String(Number((width / height).toFixed(4))));
 		if (summary.thumbnail) {
 			const image = buildElement('workspace-start-resume-thumbnail', undefined, 'img');
 			image.alt = '';
@@ -140,7 +155,7 @@ setupImageListeners() {
 		}
 		const size = `${width} × ${height} px`;
 		const card = buildActionCard({
-			className: 'is-framed workspace-start-resume-card',
+			className: 'is-quiet workspace-start-resume-card',
 			dataset: {},
 			ariaLabel: `Resume ${name}, ${width} by ${height} pixels, edited ${edited}${summary.fileSaved ? '' : ', not saved to a file'}`,
 			media,

@@ -898,6 +898,8 @@
   --color-accent-surface: color-mix(in srgb, var(--color-accent) 14%, transparent);
   /* a selected row among selected rows: the active one */
   --color-accent-surface-strong: color-mix(in srgb, var(--color-accent) 28%, transparent);
+  /* hover on a surfaceless control over glass (.action-card.is-quiet) */
+  --color-quiet-hover: color-mix(in srgb, var(--color-text-primary) 7%, transparent);
   --selected-outline-color: var(--color-accent-border);
   --smart-guide-color: #ff2d8d;
   --shape-asset-icon-color: var(--color-icon-strong);
@@ -1626,34 +1628,11 @@ textarea {
   grid-column: 2;
   align-self: start;
 }
-.action-card.is-framed {
-  padding: 0;
-  border-color: transparent;
+.action-card.is-quiet {
   background: transparent;
 }
-.action-card.is-framed > .action-card-media {
-  box-sizing: border-box;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background-color: var(--color-bg-secondary);
-  transition: background-color var(--transition-fast), border-color var(--transition-fast);
-}
-.action-card.is-framed:hover, .action-card.is-framed:focus-visible {
-  border-color: transparent;
-  background: transparent;
-}
-.action-card.is-framed:hover > .action-card-media, .action-card.is-framed:focus-visible > .action-card-media {
-  border-color: var(--color-border-hover);
-  background-color: var(--color-bg-tertiary);
-}
-.action-card.is-framed.active {
-  border-color: transparent;
-  background: transparent;
-  box-shadow: none;
-}
-.action-card.is-framed.active > .action-card-media {
-  border-color: var(--color-accent);
-  box-shadow: 0 0 0 1px var(--color-accent);
+.action-card.is-quiet:hover, .action-card.is-quiet:focus-visible {
+  background: var(--color-quiet-hover);
 }
 
 .action-card-media {
@@ -5867,16 +5846,21 @@ body.tool-select .preview-container.is-over-picked-layer {
   overflow: auto;
   overscroll-behavior: contain;
   touch-action: pan-y;
+  --start-shape-radius: var(--radius-sm);
+  --start-resume-preview: 48px;
+  --start-resume-row: calc(var(--start-resume-preview) + 2 * var(--spacing-sm) + 2px);
 }
 
 .workspace-start-card {
-  width: min(600px, 100%);
+  width: min(560px, 100%);
   display: flex;
   flex-direction: column;
   margin-block: auto;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  background: var(--color-bg-primary);
+  background: var(--panel-bg);
+  -webkit-backdrop-filter: var(--panel-backdrop);
+  backdrop-filter: var(--panel-backdrop);
   text-align: center;
 }
 
@@ -5920,7 +5904,7 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
   margin: var(--spacing-xs) 0 0;
   text-wrap: balance;
   color: var(--color-text-secondary);
-  line-height: 1.5;
+  line-height: 1.2;
 }
 
 .workspace-start-section {
@@ -5933,36 +5917,21 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 .workspace-start-section[hidden] {
   display: none;
 }
-.workspace-start-section > .property-group-label {
-  text-align: center;
-}
 
 .workspace-start-presets {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--spacing-md) var(--spacing-sm);
-}
-
-.workspace-start {
-  --start-frame-size: 88px;
-  --start-row-size: 56px;
+  gap: var(--spacing-xs);
 }
 
 .workspace-start-preset-preview {
-  --box-width: calc(var(--start-frame-size) * var(--scale, 1) * min(var(--aspect, 1), 1));
-  width: var(--box-width);
-  aspect-ratio: var(--aspect, 1);
-  margin: calc(var(--start-frame-size) - var(--box-width) / var(--aspect, 1)) 0 var(--spacing-sm);
-  background-repeat: repeat;
-}
-.workspace-start-preset[data-preset-id] > .workspace-start-preset-preview {
-  background-image: linear-gradient(45deg, var(--color-checkerboard) 25%, transparent 25%), linear-gradient(-45deg, var(--color-checkerboard) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, var(--color-checkerboard) 75%), linear-gradient(-45deg, transparent 75%, var(--color-checkerboard) 75%);
-  background-size: 8px 8px;
-  background-position: 0 0, 0 4px, 4px -4px, -4px 0;
+  width: 100%;
+  height: 64px;
+  margin-bottom: var(--spacing-xs);
 }
 
 .workspace-start-more-icon {
-  --icon-size: 32px;
+  --icon-size: 36px;
   width: var(--icon-size);
   height: var(--icon-size);
   background-color: currentColor;
@@ -5977,15 +5946,24 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
   }
 }
 
-.workspace-start-preset.is-framed:is(:hover, :focus-visible)[data-preset-id] > .workspace-start-preset-preview,
-.workspace-start-preset.is-framed:is(:hover, :focus-visible) .workspace-start-more-icon {
+.workspace-start-preset-shape {
+  height: 100%;
+  max-width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--start-shape-radius);
+  background-color: var(--new-canvas-preview-bg);
+  background-repeat: repeat;
+  transition: border-color var(--transition-fast);
+}
+
+.workspace-start-preset:is(:hover, :focus-visible) .workspace-start-preset-shape {
+  border-color: var(--color-border-hover);
+}
+.workspace-start-preset:is(:hover, :focus-visible) :is(.workspace-start-preset-shape, .workspace-start-more-icon) {
   background-image: var(--workspace-heading-glitter-image);
-  background-size: auto;
-  background-position: 0 0;
 }
 @media (forced-colors: active), (prefers-reduced-motion: reduce) {
-  .workspace-start-preset.is-framed:is(:hover, :focus-visible)[data-preset-id] > .workspace-start-preset-preview,
-  .workspace-start-preset.is-framed:is(:hover, :focus-visible) .workspace-start-more-icon {
+  .workspace-start-preset:is(:hover, :focus-visible) :is(.workspace-start-preset-shape, .workspace-start-more-icon) {
     background-image: none;
   }
 }
@@ -5993,9 +5971,40 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 .workspace-start-resume-list {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: 2px;
 }
 
+.workspace-start-resume.is-placeholder {
+  height: var(--start-resume-row);
+  padding: var(--spacing-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+.workspace-start-resume.is-placeholder::before {
+  content: "";
+  display: block;
+  width: var(--start-resume-preview);
+  height: var(--start-resume-preview);
+  border: 1px solid var(--color-border);
+  border-radius: var(--start-shape-radius);
+  background: var(--new-canvas-preview-bg);
+  box-sizing: border-box;
+}
+
+.workspace-start-resume-list.is-arriving > .workspace-start-resume {
+  animation: start-resume-arrive var(--transition-fast) ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .workspace-start-resume-list.is-arriving > .workspace-start-resume {
+    animation: none;
+  }
+}
+
+@keyframes start-resume-arrive {
+  from {
+    opacity: 0;
+  }
+}
 .workspace-start-resume {
   position: relative;
   min-width: 0;
@@ -6023,11 +6032,10 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
   align-self: start;
 }
 .workspace-start-resume > .workspace-start-resume-card {
-  grid-template-columns: var(--start-row-size) minmax(0, 1fr);
   grid-template-rows: none;
   align-content: center;
-  column-gap: var(--spacing-md);
-  padding: 0 calc(var(--spacing-sm) + var(--row-height)) 0 0;
+  min-height: var(--start-resume-row);
+  padding-right: calc(var(--spacing-sm) + var(--row-height));
 }
 .workspace-start-resume > .workspace-start-resume-card > .action-card-media {
   grid-row: 1/span 3;
@@ -6041,16 +6049,16 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
   color: var(--color-warning-text);
 }
 .workspace-start-resume .workspace-start-resume-preview {
-  justify-self: start;
-  width: calc(var(--start-row-size) * min(var(--aspect, 1), 1));
-  aspect-ratio: var(--aspect, 1);
-  overflow: hidden;
+  width: var(--start-resume-preview);
+  height: var(--start-resume-preview);
 }
 
 .workspace-start-resume-thumbnail {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  max-width: 100%;
+  max-height: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--start-shape-radius);
+  background: var(--new-canvas-preview-bg);
 }
 
 .workspace-start-resume-discard {
@@ -6082,11 +6090,23 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
   border-radius: var(--radius-lg);
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
 }
 .workspace-start-drop .workspace-start-drop-icon {
   width: 24px;
   height: 24px;
   color: var(--color-text-tertiary);
+  transition: color var(--transition-fast);
+}
+body.boot-interactive .workspace-start-drop {
+  cursor: pointer;
+}
+body.boot-interactive .workspace-start-drop:hover {
+  border-color: var(--color-accent-border);
+  background: var(--color-accent-surface);
+}
+body.boot-interactive .workspace-start-drop:hover .workspace-start-drop-icon {
+  color: var(--color-accent);
 }
 .workspace-start-drop .workspace-start-drop-label {
   color: var(--color-text-primary);
@@ -6118,6 +6138,7 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start-drop > :not(.work
   display: grid;
   align-content: center;
   gap: var(--spacing-xs);
+  padding-inline: var(--spacing-xl);
   visibility: hidden;
   animation: boot-indicator var(--boot-indicator-min-visible) var(--boot-indicator-delay) forwards;
 }
@@ -15151,10 +15172,6 @@ body.home-page {
   .workspace-start-presets {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .workspace-start {
-    --start-frame-size: 40px;
-    --start-row-size: 40px;
-  }
   .workspace-start-preset {
     min-height: var(--row-height);
     display: grid;
@@ -15177,17 +15194,13 @@ body.home-page {
     grid-column: 2;
     align-self: start;
   }
-  .workspace-start-preset {
-    grid-template-columns: var(--start-frame-size) minmax(0, 1fr);
-    padding: 0;
-  }
   .workspace-start-preset-preview {
-    justify-self: start;
-    width: calc(var(--start-frame-size) * min(var(--aspect, 1), 1));
-    margin: 0;
+    width: 32px;
+    height: 32px;
+    margin-bottom: 0;
   }
   .workspace-start-more-icon {
-    --icon-size: 24px;
+    --icon-size: 28px;
   }
   .workspace-start-links {
     flex-wrap: nowrap;

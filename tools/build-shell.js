@@ -29,19 +29,12 @@ function renderToolButtons(indent, registries) {
 	return lines.join('\n');
 }
 
-// The start card draws each size to scale: `--aspect` is width / height and
-// `--scale` is the long side over the largest canvas allowed, so CSS can
-// size the box (css/workspace/_start-card.scss). Keep in step with
-// buildCanvasSizeCard in js/ui/panel-renderer.js.
-function canvasPreviewStyle({ width, height }, { maxWidth, maxHeight }) {
-	const round = (value) => Number(value.toFixed(4));
-	return `--aspect: ${round(width / height)}; --scale: ${round(Math.max(width, height) / Math.max(maxWidth, maxHeight))};`;
-}
-
 function renderStartPresets(indent, registries) {
 	return registries.CONFIG.canvas.presets.filter((preset) => preset.quickStart).map((preset) => [
-		`${indent}<button class="action-card is-framed workspace-start-preset" type="button" data-preset-id="${escapeHtml(preset.id)}" aria-label="New ${escapeHtml(preset.label)} canvas, ${escapeHtml(preset.width)} by ${escapeHtml(preset.height)} pixels">`,
-		`${indent}\t<span class="action-card-media workspace-start-preset-preview" style="${escapeHtml(canvasPreviewStyle(preset, registries.CONFIG.canvas.limits))}"></span>`,
+		`${indent}<button class="action-card is-quiet workspace-start-preset" type="button" data-preset-id="${escapeHtml(preset.id)}" aria-label="New ${escapeHtml(preset.label)} canvas, ${escapeHtml(preset.width)} by ${escapeHtml(preset.height)} pixels">`,
+		`${indent}\t<span class="action-card-media workspace-start-preset-preview">`,
+		`${indent}\t\t<span class="workspace-start-preset-shape" style="aspect-ratio: ${escapeHtml(preset.width)} / ${escapeHtml(preset.height)};"></span>`,
+		`${indent}\t</span>`,
 		`${indent}\t<strong class="action-card-title">${escapeHtml(preset.label)}</strong>`,
 		`${indent}\t<span class="action-card-detail">${escapeHtml(preset.width)} × ${escapeHtml(preset.height)} px</span>`,
 		`${indent}</button>`

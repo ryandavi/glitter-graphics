@@ -560,24 +560,18 @@
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 
-	// The canvas beside its text, fitted to a smaller square; Continue's
-	// thumbnail shrinks with it, so the text columns still line up.
-	.workspace-start { --start-frame-size: 40px; --start-row-size: 40px; }
-
 	.workspace-start-preset {
 		min-height: var(--row-height);
 		@include action-card-horizontal;
-		grid-template-columns: var(--start-frame-size) minmax(0, 1fr);
-		padding: 0;
 	}
 
 	.workspace-start-preset-preview {
-		justify-self: start;
-		width: calc(var(--start-frame-size) * min(var(--aspect, 1), 1));
-		margin: 0;
+		width: 32px;
+		height: 32px;
+		margin-bottom: 0;
 	}
 
-	.workspace-start-more-icon { --icon-size: 24px; }
+	.workspace-start-more-icon { --icon-size: 28px; }
 
 	.workspace-start-links {
 		flex-wrap: nowrap;

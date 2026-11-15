@@ -12,6 +12,18 @@ const STORAGE_KEYS = Object.freeze({
 	panelCards: { key: 'glitter.panel-cards', resetWith: () => resetPanelCardStates() }
 });
 
+// What the start card found last time, so its first paint matches what the
+// scripts will find and nothing pops in (the head script in index.html
+// applies them; css/workspace/_start-card.scss holds the space):
+//   resumeCount  Continue rows (recovery drafts)
+//   hasCamera    whether Take Photo showed
+// Layout hints, not settings, so they stay out of STORAGE_KEYS and Reset.
+const START_HINTS_KEY = 'glitter.start-hints';
+
+function writeStartHint(name, value) {
+	writeStored(START_HINTS_KEY, { ...readStored(START_HINTS_KEY, {}), [name]: value });
+}
+
 function readStored(key, fallback) {
 	try {
 		const raw = localStorage.getItem(key);

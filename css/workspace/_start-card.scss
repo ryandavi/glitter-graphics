@@ -11,18 +11,25 @@
 	overflow: auto;
 	overscroll-behavior: contain;
 	touch-action: pan-y;
+	// One corner for every canvas drawn on the card: the preset shapes and
+	// the Continue thumbnails. Each sits centred in its tile, not in the
+	// tile's corner, so a concentric radius does not apply.
+	--start-shape-radius: var(--radius-sm);
+	// A Continue row: the thumbnail box, the card padding and its border.
+	--start-resume-preview: 48px;
+	--start-resume-row: calc(var(--start-resume-preview) + 2 * var(--spacing-sm) + 2px);
 }
 
 .workspace-start-card {
-	width: min(600px, 100%);
+	width: min(560px, 100%);
 	display: flex;
 	flex-direction: column;
 	margin-block: auto;
 	border: 1px solid var(--color-border);
 	border-radius: var(--radius-lg);
-	// Solid like a modal, not glass: nothing is open behind it, and the
-	// action cards read as tiles only on the surface they were designed for.
-	background: var(--color-bg-primary);
+	background: var(--panel-bg);
+	-webkit-backdrop-filter: var(--panel-backdrop);
+	backdrop-filter: var(--panel-backdrop);
 	text-align: center;
 }
 
@@ -68,7 +75,7 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 		margin: var(--spacing-xs) 0 0;
 		text-wrap: balance;
 		color: var(--color-text-secondary);
-		line-height: 1.5;
+		line-height: 1.2;
 	}
 }
 
@@ -82,44 +89,25 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 	text-align: left;
 
 	&[hidden] { display: none; }
-	> .property-group-label { text-align: center; }
 }
 
 .workspace-start-presets {
 	display: grid;
 	grid-template-columns: repeat(4, minmax(0, 1fr));
-	gap: var(--spacing-md) var(--spacing-sm);
+	gap: var(--spacing-xs);
 }
 
-// One box per item. The tiles are `.action-card.is-framed`, and the frame
-// is the canvas itself, drawn to scale: `--aspect` (width / height) and
-// `--scale` (long side over the largest canvas) come inline from the preset,
-// so a 400 px Blingee sits small beside a 1024 px square. Boxes stand on one
-// baseline so the labels line up. An empty canvas shows the editor's
-// transparency checkerboard; hover fills it with glitter.
-.workspace-start {
-	--start-frame-size: 88px;
-	--start-row-size: 56px;
-}
-
+// The tiles are `.action-card.is-quiet`; only the preview box is sized here.
 .workspace-start-preset-preview {
-	--box-width: calc(var(--start-frame-size) * var(--scale, 1) * min(var(--aspect, 1), 1));
-	width: var(--box-width);
-	aspect-ratio: var(--aspect, 1);
-	margin: calc(var(--start-frame-size) - var(--box-width) / var(--aspect, 1)) 0 var(--spacing-sm);
-	background-repeat: repeat;
-
-	.workspace-start-preset[data-preset-id] > & {
-		@include checkerboard-image;
-		background-size: 8px 8px;
-		background-position: 0 0, 0 4px, 4px -4px, -4px 0;
-	}
+	width: 100%;
+	height: 64px;
+	margin-bottom: var(--spacing-xs);
 }
 
 // More Presets draws #icon-new-canvas as a mask so hover can fill it with
 // glitter like the size shapes. Keep the path in step with the sprite symbol.
 .workspace-start-more-icon {
-	--icon-size: 32px;
+	--icon-size: 36px;
 	width: var(--icon-size);
 	height: var(--icon-size);
 	background-color: currentColor;
@@ -130,14 +118,23 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 	@media (forced-colors: active) { forced-color-adjust: none; background-color: CanvasText; }
 }
 
-// Hovering a size previews what it is for: the canvas fills with the theme's
+.workspace-start-preset-shape {
+	height: 100%;
+	max-width: 100%;
+	border: 1px solid var(--color-border);
+	border-radius: var(--start-shape-radius);
+	background-color: var(--new-canvas-preview-bg);
+	background-repeat: repeat;
+	transition: border-color var(--transition-fast);
+}
+
+// Hovering a size previews what it is for: the shape fills with the theme's
 // glitter, the same texture as the heading.
-.workspace-start-preset.is-framed:is(:hover, :focus-visible) {
-	&[data-preset-id] > .workspace-start-preset-preview,
-	.workspace-start-more-icon {
+.workspace-start-preset:is(:hover, :focus-visible) {
+	.workspace-start-preset-shape { border-color: var(--color-border-hover); }
+
+	:is(.workspace-start-preset-shape, .workspace-start-more-icon) {
 		background-image: var(--workspace-heading-glitter-image);
-		background-size: auto;
-		background-position: 0 0;
 
 		@media (forced-colors: active), (prefers-reduced-motion: reduce) {
 			background-image: none;
@@ -145,13 +142,47 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 	}
 }
 
-// Continue: one row per recovery draft, newest first. The thumbnail fits a
-// row-sized square, left-aligned, so the text column lines up across drafts. Discard sits at the row's end and shows on hover or
-// focus (always on touch).
+// Continue: one row per recovery draft, newest first. Discard sits at the
+// row's end and shows on hover or focus (always on touch).
 .workspace-start-resume-list {
 	display: flex;
 	flex-direction: column;
-	gap: var(--spacing-sm);
+	gap: 2px;
+}
+
+// The drafts are read after boot, and the card is centred, so rows arriving
+// late would push everything down. The head script stamps the last known
+// count (START_HINTS_KEY, js/core/storage.js) on <html>, and an inline script
+// under the list shows Continue with that many placeholder rows: an outline
+// and an empty thumbnail square, the same size as a real row. The real rows
+// replace them and fade in.
+
+.workspace-start-resume.is-placeholder {
+	height: var(--start-resume-row);
+	padding: var(--spacing-sm);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+
+	&::before {
+		content: '';
+		display: block;
+		width: var(--start-resume-preview);
+		height: var(--start-resume-preview);
+		border: 1px solid var(--color-border);
+		border-radius: var(--start-shape-radius);
+		background: var(--new-canvas-preview-bg);
+		box-sizing: border-box;
+	}
+}
+
+.workspace-start-resume-list.is-arriving > .workspace-start-resume {
+	animation: start-resume-arrive var(--transition-fast) ease-out;
+
+	@media (prefers-reduced-motion: reduce) { animation: none; }
+}
+
+@keyframes start-resume-arrive {
+	from { opacity: 0; }
 }
 
 .workspace-start-resume {
@@ -161,11 +192,10 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 	> .workspace-start-resume-card {
 		width: 100%;
 		@include action-card-horizontal;
-		grid-template-columns: var(--start-row-size) minmax(0, 1fr);
 		grid-template-rows: none;
 		align-content: center;
-		column-gap: var(--spacing-md);
-		padding: 0 calc(var(--spacing-sm) + var(--row-height)) 0 0;
+		min-height: var(--start-resume-row);
+		padding-right: calc(var(--spacing-sm) + var(--row-height));
 
 		> .action-card-media { grid-row: 1 / span 3; }
 		> .action-card-title { @include truncate; }
@@ -173,17 +203,17 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 	}
 
 	.workspace-start-resume-preview {
-		justify-self: start;
-		width: calc(var(--start-row-size) * min(var(--aspect, 1), 1));
-		aspect-ratio: var(--aspect, 1);
-		overflow: hidden;
+		width: var(--start-resume-preview);
+		height: var(--start-resume-preview);
 	}
 }
 
 .workspace-start-resume-thumbnail {
-	width: 100%;
-	height: 100%;
-	object-fit: cover;
+	max-width: 100%;
+	max-height: 100%;
+	border: 1px solid var(--color-border);
+	border-radius: var(--start-shape-radius);
+	background: var(--new-canvas-preview-bg);
 }
 
 .workspace-start-resume-discard {
@@ -215,11 +245,26 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 	border-radius: var(--radius-lg);
 	color: var(--color-text-secondary);
 	font-size: var(--font-size-sm);
+	transition: border-color var(--transition-fast), background-color var(--transition-fast);
 
 	.workspace-start-drop-icon {
 		width: 24px;
 		height: 24px;
 		color: var(--color-text-tertiary);
+		transition: color var(--transition-fast);
+	}
+
+	// Once the editor is up, the whole well opens an image on click
+	// (js/editor/document-start.js), so it answers hover like a button.
+	body.boot-interactive & {
+		cursor: pointer;
+
+		&:hover {
+			border-color: var(--color-accent-border);
+			background: var(--color-accent-surface);
+
+			.workspace-start-drop-icon { color: var(--color-accent); }
+		}
 	}
 
 	.workspace-start-drop-label {
@@ -253,6 +298,8 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start-drop > :not(.work
 	display: grid;
 	align-content: center;
 	gap: var(--spacing-xs);
+	// Inset like the well's own content, so the bar never touches the dashes.
+	padding-inline: var(--spacing-xl);
 	visibility: hidden;
 	animation: boot-indicator var(--boot-indicator-min-visible) var(--boot-indicator-delay) forwards;
 	.export-progress-bar { align-self: center; }
