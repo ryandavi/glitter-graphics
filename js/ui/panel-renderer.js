@@ -58,11 +58,21 @@ function buildCanvasPresetGroup(label, grid) {
 function buildCanvasSizeCard(preset, { quickStart = false, recent = false } = {}) {
 	const media = document.createElement('span');
 	media.className = `action-card-media ${quickStart ? 'workspace-start-preset-preview' : 'blank-preview-wrapper'}`;
-	const shape = document.createElement('span');
-	shape.className = quickStart ? 'workspace-start-preset-shape' : 'blank-preview';
-	shape.style.aspectRatio = `${preset.width} / ${preset.height}`;
-	if (!quickStart) shape.classList.toggle('wide', preset.width > preset.height);
-	media.appendChild(shape);
+	// On the start card the media is the canvas itself (one box), drawn to
+	// scale by CSS from `--aspect` and `--scale` (same values as
+	// tools/build-shell.js); in New Canvas a shape sits inside the tile.
+	if (quickStart) {
+		const { maxWidth, maxHeight } = CONFIG.canvas.limits;
+		const round = (value) => String(Number(value.toFixed(4)));
+		media.style.setProperty('--aspect', round(preset.width / preset.height));
+		media.style.setProperty('--scale', round(Math.max(preset.width, preset.height) / Math.max(maxWidth, maxHeight)));
+	} else {
+		const shape = document.createElement('span');
+		shape.className = 'blank-preview';
+		shape.style.aspectRatio = `${preset.width} / ${preset.height}`;
+		shape.classList.toggle('wide', preset.width > preset.height);
+		media.appendChild(shape);
+	}
 	const details = [{ text: `${preset.width} × ${preset.height}${quickStart ? ' px' : ''}` }];
 	if (!quickStart && preset.detail) details.push({ text: preset.detail, className: 'blank-detail' });
 	return buildActionCard({

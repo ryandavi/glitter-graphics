@@ -541,6 +541,7 @@
 	.workspace-start-card {
 		width: 100%;
 		max-width: 500px;
+		box-shadow: none;
 	}
 
 	.workspace-start-main {
@@ -559,22 +560,24 @@
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 
-	// A smaller frame beside the text; Continue's frame shrinks with it.
-	.workspace-start { --start-frame-size: 44px; }
+	// The canvas beside its text, fitted to a smaller square; Continue's
+	// thumbnail shrinks with it, so the text columns still line up.
+	.workspace-start { --start-frame-size: 40px; --start-row-size: 40px; }
 
 	.workspace-start-preset {
 		min-height: var(--row-height);
 		@include action-card-horizontal;
+		grid-template-columns: var(--start-frame-size) minmax(0, 1fr);
 		padding: 0;
 	}
 
 	.workspace-start-preset-preview {
-		width: var(--start-frame-size);
-		margin-bottom: 0;
-		padding: var(--spacing-xs);
+		justify-self: start;
+		width: calc(var(--start-frame-size) * min(var(--aspect, 1), 1));
+		margin: 0;
 	}
 
-	.workspace-start-more-icon { --icon-size: 28px; }
+	.workspace-start-more-icon { --icon-size: 24px; }
 
 	.workspace-start-links {
 		flex-wrap: nowrap;
@@ -610,7 +613,7 @@
 		padding: 0;
 		border: 0;
 
-		> .workspace-start-drop-label { display: none; }
+		> :is(.workspace-start-drop-icon, .workspace-start-drop-label) { display: none; }
 	}
 
 	#newCanvasModal {

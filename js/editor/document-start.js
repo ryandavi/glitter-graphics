@@ -129,6 +129,7 @@ setupImageListeners() {
 		const edited = formatRelativeTime(summary.savedAt);
 		const tile = buildElement('workspace-start-resume');
 		const media = buildElement('action-card-media workspace-start-resume-preview', undefined, 'span');
+		media.style.setProperty('--aspect', String(Number((width / height).toFixed(4))));
 		if (summary.thumbnail) {
 			const image = buildElement('workspace-start-resume-thumbnail', undefined, 'img');
 			image.alt = '';

@@ -267,7 +267,7 @@ textarea {
 			box-sizing: border-box;
 			border: 1px solid var(--color-border);
 			border-radius: var(--radius-md);
-			background: var(--color-bg-secondary);
+			background-color: var(--color-bg-secondary);
 			transition: background-color var(--transition-fast), border-color var(--transition-fast);
 		}
 
@@ -278,7 +278,7 @@ textarea {
 
 			> .action-card-media {
 				border-color: var(--color-border-hover);
-				background: var(--color-bg-tertiary);
+				background-color: var(--color-bg-tertiary);
 			}
 		}
 
