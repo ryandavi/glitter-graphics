@@ -263,7 +263,8 @@ body:not(.boot-library) #designGalleryContent > :not(.boot-library-loading) { di
 				align-items: center;
 				gap: var(--spacing-sm);
 				padding: var(--spacing-sm);
-				border-radius: var(--radius-xs);
+				// Concentric with the picker's corner (border + padding).
+				border-radius: concentric-radius(var(--radius-sm), 1px, var(--spacing-xs));
 				color: var(--color-text-primary);
 				font-size: var(--font-size-sm);
 				font-weight: var(--font-weight-normal);

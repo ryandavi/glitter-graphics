@@ -122,7 +122,7 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 		@include action-card-horizontal;
 		grid-template-rows: none;
 		align-content: center;
-		padding-right: calc(var(--spacing-base) + var(--row-height));
+		padding-right: calc(var(--spacing-sm) + var(--row-height));
 
 		> .action-card-media { grid-row: 1 / span 3; }
 		> .action-card-title { @include truncate; }
@@ -136,11 +136,12 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 	}
 }
 
+// Concentric with the card's corner: its border and padding sit between them.
 .workspace-start-resume-thumbnail {
 	max-width: 100%;
 	max-height: 100%;
 	border: 1px solid var(--color-border);
-	border-radius: var(--radius-sm);
+	border-radius: concentric-radius(var(--radius-md), 1px, var(--spacing-sm));
 	background: var(--new-canvas-preview-bg);
 }
 

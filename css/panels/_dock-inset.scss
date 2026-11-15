@@ -15,8 +15,8 @@
 @media (min-width: ($mobile-breakpoint + 1px)) {
 	:root {
 		--dock-gap: var(--spacing-base);
-		// A card's sections sit inside its 1px border, so they round one less.
-		--dock-inner-radius: calc(var(--radius-panel) - 1px);
+		// A card's sections sit flush inside its 1px border.
+		--dock-inner-radius: #{concentric-radius(var(--radius-panel), 1px)};
 	}
 
 	// The gaps: around the row, rail | row, the side docks | canvas, and

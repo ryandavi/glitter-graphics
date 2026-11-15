@@ -106,13 +106,33 @@ $modal-compact-breakpoint: 600px;
 	gap: var(--spacing-md);
 }
 
+// Concentric corners: a rounded surface nested near a rounded parent's corner
+// rounds by the parent's radius less the distance between their edges
+// (border + padding), never below square. The parent's radius stays the
+// theme token; the child follows it, so rounder themes round both.
+//   border-radius: concentric-radius(var(--radius-md), 1px, var(--spacing-sm));
+// Keep the padding even on both axes where a child sits in the corner.
+@function concentric-radius($outer, $insets...) {
+	$expr: "#{$outer}";
+	@each $inset in $insets {
+		$expr: "#{$expr} - #{$inset}";
+	}
+	@return max(0px, calc(#{$expr}));
+}
+
+// A native color input's swatch, concentric with the field around it.
+@mixin color-swatch-corner {
+	border: 0;
+	border-radius: concentric-radius(var(--color-input-radius), 1px, var(--color-input-padding));
+}
+
 @mixin action-card-horizontal {
 	display: grid;
 	grid-template-columns: auto minmax(0, 1fr);
 	grid-template-rows: auto auto;
 	column-gap: var(--spacing-sm);
 	row-gap: 1px;
-	padding: var(--spacing-sm) var(--spacing-base);
+	padding: var(--spacing-sm);
 	text-align: left;
 
 	> .action-card-media {
@@ -628,8 +648,8 @@ $modal-compact-breakpoint: 600px;
 		width: var(--control-height);
 		height: var(--control-height);
 		aspect-ratio: 1;
-		padding: 2px;
-		border-radius: var(--radius-inner);
+		--color-input-padding: 2px;
+		--color-input-radius: var(--radius-inner);
 	}
 }
 

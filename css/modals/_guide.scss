@@ -29,7 +29,9 @@
 
 				>img {
 					image-rendering: auto;
-					border-radius: var(--radius-xs);
+					// Concentric with the figure's corner (_welcome.scss: radius-sm,
+					// 1px border, this padding).
+					border-radius: concentric-radius(var(--radius-sm), 1px, var(--spacing-sm));
 				}
 			}
 

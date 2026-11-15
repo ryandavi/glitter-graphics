@@ -28,7 +28,7 @@
 	min-width: 0;
 	display: grid;
 	gap: var(--spacing-xs);
-	padding: 6px;
+	padding: var(--spacing-sm);
 	background: var(--color-bg-tertiary);
 	color: var(--color-text-primary);
 	font: inherit;
@@ -45,7 +45,8 @@
 	height: var(--preset-grid-thumbnail-height);
 	display: block;
 	border: 1px solid var(--color-border);
-	border-radius: var(--radius-inner);
+	// Concentric with the option's corner (no border, its padding).
+	border-radius: concentric-radius(var(--radius-inner), var(--spacing-sm));
 }
 
 .preset-grid-thumbnail.shape-preset-thumbnail {

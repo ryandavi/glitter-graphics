@@ -1611,7 +1611,7 @@ textarea {
   grid-template-rows: auto auto;
   column-gap: var(--spacing-sm);
   row-gap: 1px;
-  padding: var(--spacing-sm) var(--spacing-base);
+  padding: var(--spacing-sm);
   text-align: left;
 }
 .action-card.is-horizontal > .action-card-media {
@@ -1744,11 +1744,13 @@ html[data-show-all-controls=true] .advanced-disclosure > .advanced-disclosure-co
 }
 
 input[type=color] {
+  --color-input-radius: var(--radius-control);
+  --color-input-padding: var(--spacing-xs);
   width: 56px;
   height: var(--control-height);
-  padding: var(--spacing-xs);
+  padding: var(--color-input-padding);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-control);
+  border-radius: var(--color-input-radius);
   background-color: transparent;
   background-position: 0 0, 0 4px, 4px -4px, -4px 0;
   background-size: 8px 8px;
@@ -1772,11 +1774,11 @@ input[type=color]::-webkit-color-swatch-wrapper {
 }
 input[type=color]::-webkit-color-swatch {
   border: 0;
-  border-radius: var(--radius-xs);
+  border-radius: max(0px, (var(--color-input-radius) - 1px - var(--color-input-padding)));
 }
 input[type=color]::-moz-color-swatch {
   border: 0;
-  border-radius: var(--radius-xs);
+  border-radius: max(0px, (var(--color-input-radius) - 1px - var(--color-input-padding)));
 }
 
 input[type=range] {
@@ -1944,8 +1946,8 @@ input[type=range]:disabled {
   width: var(--control-height);
   height: var(--control-height);
   aspect-ratio: 1;
-  padding: 2px;
-  border-radius: var(--radius-inner);
+  --color-input-padding: 2px;
+  --color-input-radius: var(--radius-inner);
 }
 .color-list-control {
   flex: 1;
@@ -4359,7 +4361,7 @@ body:not(.boot-library) #designGalleryContent > :not(.boot-library-loading) {
       align-items: center;
       gap: var(--spacing-sm);
       padding: var(--spacing-sm);
-      border-radius: var(--radius-xs);
+      border-radius: max(0px, (var(--radius-sm) - 1px - var(--spacing-xs)));
       color: var(--color-text-primary);
       font-size: var(--font-size-sm);
       font-weight: var(--font-weight-normal);
@@ -5941,7 +5943,7 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
   grid-template-rows: auto auto;
   column-gap: var(--spacing-sm);
   row-gap: 1px;
-  padding: var(--spacing-sm) var(--spacing-base);
+  padding: var(--spacing-sm);
   text-align: left;
 }
 .workspace-start-resume > .workspace-start-resume-card > .action-card-media {
@@ -5959,7 +5961,7 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 .workspace-start-resume > .workspace-start-resume-card {
   grid-template-rows: none;
   align-content: center;
-  padding-right: calc(var(--spacing-base) + var(--row-height));
+  padding-right: calc(var(--spacing-sm) + var(--row-height));
 }
 .workspace-start-resume > .workspace-start-resume-card > .action-card-media {
   grid-row: 1/span 3;
@@ -5982,7 +5984,7 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
   max-width: 100%;
   max-height: 100%;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border-radius: max(0px, (var(--radius-md) - 1px - var(--spacing-sm)));
   background: var(--new-canvas-preview-bg);
 }
 
@@ -8030,7 +8032,7 @@ body.tool-text .text-hover-baselines {
   min-width: 0;
   display: grid;
   gap: var(--spacing-xs);
-  padding: 6px;
+  padding: var(--spacing-sm);
   background: var(--color-bg-tertiary);
   color: var(--color-text-primary);
   font: inherit;
@@ -8047,7 +8049,7 @@ body.tool-text .text-hover-baselines {
   height: var(--preset-grid-thumbnail-height);
   display: block;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-inner);
+  border-radius: max(0px, (var(--radius-inner) - var(--spacing-sm)));
 }
 
 .preset-grid-thumbnail.shape-preset-thumbnail {
@@ -8457,8 +8459,8 @@ body.tool-text .text-hover-baselines {
   width: var(--control-height);
   height: var(--control-height);
   aspect-ratio: 1;
-  padding: 2px;
-  border-radius: var(--radius-inner);
+  --color-input-padding: 2px;
+  --color-input-radius: var(--radius-inner);
 }
 .gradient-stop-set .gradient-stop-hex {
   min-width: 0;
@@ -11460,8 +11462,8 @@ body.modal-open {
   width: var(--control-height);
   height: var(--control-height);
   aspect-ratio: 1;
-  padding: 2px;
-  border-radius: var(--radius-inner);
+  --color-input-padding: 2px;
+  --color-input-radius: var(--radius-inner);
 }
 #glitterRecolorModal .recolor-color-control {
   grid-column: 2/-2;
@@ -12916,7 +12918,7 @@ body.modal-open {
 #guideModal .guide-content .guide-screenshot > figure > img,
 .doc-page-guide .guide-content .guide-screenshot > figure > img {
   image-rendering: auto;
-  border-radius: var(--radius-xs);
+  border-radius: max(0px, (var(--radius-sm) - 1px - var(--spacing-sm)));
 }
 #guideModal .guide-content .guide-screenshot.guide-screenshot-modal > figure,
 .doc-page-guide .guide-content .guide-screenshot.guide-screenshot-modal > figure {
@@ -15059,7 +15061,7 @@ body.home-page {
     grid-template-rows: auto auto;
     column-gap: var(--spacing-sm);
     row-gap: 1px;
-    padding: var(--spacing-sm) var(--spacing-base);
+    padding: var(--spacing-sm);
     text-align: left;
   }
   .workspace-start-preset > .action-card-media {
@@ -15120,7 +15122,7 @@ body.home-page {
 @media (min-width: 1041px) {
   :root {
     --dock-gap: var(--spacing-base);
-    --dock-inner-radius: calc(var(--radius-panel) - 1px);
+    --dock-inner-radius: max(0px, (var(--radius-panel) - 1px));
   }
   .main-area {
     padding: var(--dock-gap);

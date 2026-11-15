@@ -46,7 +46,7 @@ One scale each, declared in `css/_tokens.scss`. Use the token; a literal is a bu
 | Row height | `--row-height`: a chrome button, a tool button. Property rows use `--property-row-height` (the control height) and section titles `--property-title-height`, both in `css/panels/property/_tokens.scss` |
 | List row | `--list-row-height`: a row that leads with a thumbnail |
 | Chip | `--chip-height`: tags and pills, derived from the control height |
-| Radius | `--radius-lg` 8 (panel), `-md` 6, `-sm` 4 (control), `-xs` 3 (inner). Nested rounded elements step down one. |
+| Radius | `--radius-lg` 8 (panel), `-md` 6, `-sm` 4 (control), `-xs` 3 (inner). A rounded element near a rounded parent's corner is concentric: `concentric-radius(parent radius, border, padding)` in `_mixins.scss` (never below square), with even padding at that corner. |
 | Modal width | `--modal-width-dialog` 480, `--modal-width-form` 720, `--modal-width-reading` 880 |
 
 **Density is one media query.** `@media (pointer: coarse)` at the end of `_tokens.scss` raises the three heights (28/32/40 become 40/44/52). Never restate a height for touch anywhere else, and never size a control from the viewport width.
