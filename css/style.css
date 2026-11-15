@@ -1626,6 +1626,35 @@ textarea {
   grid-column: 2;
   align-self: start;
 }
+.action-card.is-framed {
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+}
+.action-card.is-framed > .action-card-media {
+  box-sizing: border-box;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-secondary);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+}
+.action-card.is-framed:hover, .action-card.is-framed:focus-visible {
+  border-color: transparent;
+  background: transparent;
+}
+.action-card.is-framed:hover > .action-card-media, .action-card.is-framed:focus-visible > .action-card-media {
+  border-color: var(--color-border-hover);
+  background: var(--color-bg-tertiary);
+}
+.action-card.is-framed.active {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+.action-card.is-framed.active > .action-card-media {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 1px var(--color-accent);
+}
 
 .action-card-media {
   display: flex;
@@ -5838,16 +5867,7 @@ body.tool-select .preview-container.is-over-picked-layer {
   overflow: auto;
   overscroll-behavior: contain;
   touch-action: pan-y;
-}
-.workspace-start.drag-over .workspace-start-drop {
-  border-color: var(--color-accent);
-  background: var(--color-accent-surface);
-}
-.workspace-start.drag-over .workspace-start-drop > .workspace-start-drop-label {
-  display: none;
-}
-.workspace-start.drag-over .workspace-start-drop > .workspace-start-drop-label.is-dragging {
-  display: block;
+  background: var(--color-bg-primary);
 }
 
 .workspace-start-card {
@@ -5855,9 +5875,6 @@ body.tool-select .preview-container.is-over-picked-layer {
   display: flex;
   flex-direction: column;
   margin-block: auto;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-bg-primary);
   text-align: center;
 }
 
@@ -5920,13 +5937,18 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 .workspace-start-presets {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--spacing-xs);
+  gap: var(--spacing-md) var(--spacing-sm);
+}
+
+.workspace-start {
+  --start-frame-size: 72px;
 }
 
 .workspace-start-preset-preview {
   width: 100%;
-  height: 64px;
+  height: var(--start-frame-size);
   margin-bottom: var(--spacing-xs);
+  padding: var(--spacing-sm);
 }
 
 .workspace-start-more-icon {
@@ -5970,7 +5992,7 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 .workspace-start-resume-list {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--spacing-sm);
 }
 
 .workspace-start-resume {
@@ -6002,7 +6024,8 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 .workspace-start-resume > .workspace-start-resume-card {
   grid-template-rows: none;
   align-content: center;
-  padding-right: calc(var(--spacing-sm) + var(--row-height));
+  column-gap: var(--spacing-md);
+  padding: 0 calc(var(--spacing-sm) + var(--row-height)) 0 0;
 }
 .workspace-start-resume > .workspace-start-resume-card > .action-card-media {
   grid-row: 1/span 3;
@@ -6016,8 +6039,9 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
   color: var(--color-warning-text);
 }
 .workspace-start-resume .workspace-start-resume-preview {
-  width: 48px;
-  height: 48px;
+  width: var(--start-frame-size);
+  height: var(--start-frame-size);
+  padding: var(--spacing-sm);
 }
 
 .workspace-start-resume-thumbnail {
@@ -6057,10 +6081,6 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
   border-radius: var(--radius-lg);
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
-  transition: border-color var(--transition-fast), background-color var(--transition-fast);
-}
-.workspace-start-drop > .workspace-start-drop-label.is-dragging {
-  display: none;
 }
 .workspace-start-drop small {
   color: var(--color-text-tertiary);
@@ -6108,7 +6128,6 @@ body.boot-interactive .workspace-start-loading, body.boot-failed .workspace-star
   justify-content: center;
   gap: var(--spacing-xs) var(--spacing-lg);
   padding: var(--spacing-md);
-  border-top: 1px solid var(--color-border);
 }
 
 .workspace-start-link {
@@ -15102,7 +15121,6 @@ body.home-page {
   .workspace-start-card {
     width: 100%;
     max-width: 500px;
-    box-shadow: none;
   }
   .workspace-start-main {
     gap: var(--spacing-md);
@@ -15119,6 +15137,9 @@ body.home-page {
   }
   .workspace-start-presets {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .workspace-start {
+    --start-frame-size: 44px;
   }
   .workspace-start-preset {
     min-height: var(--row-height);
@@ -15142,10 +15163,13 @@ body.home-page {
     grid-column: 2;
     align-self: start;
   }
+  .workspace-start-preset {
+    padding: 0;
+  }
   .workspace-start-preset-preview {
-    width: 32px;
-    height: 32px;
+    width: var(--start-frame-size);
     margin-bottom: 0;
+    padding: var(--spacing-xs);
   }
   .workspace-start-more-icon {
     --icon-size: 28px;

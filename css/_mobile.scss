@@ -541,7 +541,6 @@
 	.workspace-start-card {
 		width: 100%;
 		max-width: 500px;
-		box-shadow: none;
 	}
 
 	.workspace-start-main {
@@ -560,15 +559,19 @@
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 
+	// A smaller frame beside the text; Continue's frame shrinks with it.
+	.workspace-start { --start-frame-size: 44px; }
+
 	.workspace-start-preset {
 		min-height: var(--row-height);
 		@include action-card-horizontal;
+		padding: 0;
 	}
 
 	.workspace-start-preset-preview {
-		width: 32px;
-		height: 32px;
+		width: var(--start-frame-size);
 		margin-bottom: 0;
+		padding: var(--spacing-xs);
 	}
 
 	.workspace-start-more-icon { --icon-size: 28px; }

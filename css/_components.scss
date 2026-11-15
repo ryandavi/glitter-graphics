@@ -194,6 +194,7 @@ textarea {
 // and the text tiers. Owners (Add menu, Quick add, New Canvas presets, start
 // card tiles) add only grid placement and media sizing.
 //   .is-horizontal  media beside the text instead of above it
+//   .is-framed      the frame is on the media only; the text sits on nothing
 // A .choice-card picks a value and stays selected; an action card does something.
 // ===========================================================================
 .action-card {
@@ -251,7 +252,48 @@ textarea {
 
 	&.is-horizontal {
 		@include action-card-horizontal;
-	}}
+	}
+
+	// The frame moves onto the media: a fixed thumbnail frame carries the tile
+	// surface and the text sits under (or beside) it on nothing, as in Figma's
+	// and Photoshop's home screens. Every frame is the same size, so tiles line
+	// up without a box around the whole card. The owner sizes the media.
+	&.is-framed {
+		padding: 0;
+		border-color: transparent;
+		background: transparent;
+
+		> .action-card-media {
+			box-sizing: border-box;
+			border: 1px solid var(--color-border);
+			border-radius: var(--radius-md);
+			background: var(--color-bg-secondary);
+			transition: background-color var(--transition-fast), border-color var(--transition-fast);
+		}
+
+		&:hover,
+		&:focus-visible {
+			border-color: transparent;
+			background: transparent;
+
+			> .action-card-media {
+				border-color: var(--color-border-hover);
+				background: var(--color-bg-tertiary);
+			}
+		}
+
+		&.active {
+			border-color: transparent;
+			background: transparent;
+			box-shadow: none;
+
+			> .action-card-media {
+				border-color: var(--color-accent);
+				box-shadow: 0 0 0 1px var(--color-accent);
+			}
+		}
+	}
+}
 
 .action-card-media {
 	display: flex;

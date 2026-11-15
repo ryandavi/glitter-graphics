@@ -11,15 +11,11 @@
 	overflow: auto;
 	overscroll-behavior: contain;
 	touch-action: pan-y;
-
-	// A file over the workspace: the drop area answers, the card stays put.
-	&.drag-over .workspace-start-drop {
-		border-color: var(--color-accent);
-		background: var(--color-accent-surface);
-
-		> .workspace-start-drop-label { display: none; }
-		> .workspace-start-drop-label.is-dragging { display: block; }
-	}
+	// A home page, not a dialog: the panel color fills the workspace edge to
+	// edge, so the content needs no card and the frames are the only boxes.
+	// Themed workspace backgrounds show once a document is open; the text
+	// colors are tuned for the panel, not for those.
+	background: var(--color-bg-primary);
 }
 
 .workspace-start-card {
@@ -27,11 +23,6 @@
 	display: flex;
 	flex-direction: column;
 	margin-block: auto;
-	border: 1px solid var(--color-border);
-	border-radius: var(--radius-lg);
-	// Solid like a modal, not glass: nothing is open behind it, and the
-	// action cards read as tiles only on the surface they were designed for.
-	background: var(--color-bg-primary);
 	text-align: center;
 }
 
@@ -41,8 +32,7 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 	cursor: default;
 }
 
-// The card is two bands: the main content with its own padding, then the
-// links strip along the bottom edge.
+// Two bands: the main content, then a plain row of links under it.
 .workspace-start-main {
 	display: flex;
 	flex-direction: column;
@@ -96,14 +86,20 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 .workspace-start-presets {
 	display: grid;
 	grid-template-columns: repeat(4, minmax(0, 1fr));
-	gap: var(--spacing-xs);
+	gap: var(--spacing-md) var(--spacing-sm);
 }
 
-// The tiles are `.action-card`s; only the preview box is sized here.
+// The tiles are `.action-card.is-framed`; only the frame is sized here.
+// Continue's frame uses the same height, so the two sections line up.
+.workspace-start {
+	--start-frame-size: 72px;
+}
+
 .workspace-start-preset-preview {
 	width: 100%;
-	height: 64px;
+	height: var(--start-frame-size);
 	margin-bottom: var(--spacing-xs);
+	padding: var(--spacing-sm);
 }
 
 // More Presets draws #icon-new-canvas as a mask so hover can fill it with
@@ -149,7 +145,7 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 .workspace-start-resume-list {
 	display: flex;
 	flex-direction: column;
-	gap: 2px;
+	gap: var(--spacing-sm);
 }
 
 .workspace-start-resume {
@@ -161,7 +157,8 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 		@include action-card-horizontal;
 		grid-template-rows: none;
 		align-content: center;
-		padding-right: calc(var(--spacing-sm) + var(--row-height));
+		column-gap: var(--spacing-md);
+		padding: 0 calc(var(--spacing-sm) + var(--row-height)) 0 0;
 
 		> .action-card-media { grid-row: 1 / span 3; }
 		> .action-card-title { @include truncate; }
@@ -169,13 +166,14 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 	}
 
 	.workspace-start-resume-preview {
-		width: 48px;
-		height: 48px;
+		width: var(--start-frame-size);
+		height: var(--start-frame-size);
+		padding: var(--spacing-sm);
 	}
 }
 
-// The same corner as the preset shapes: it sits centred, not in the card's
-// corner, so a concentric radius does not apply.
+// The same corner as the preset shapes: it sits centred in its frame, not
+// in the frame's corner, so a concentric radius does not apply.
 .workspace-start-resume-thumbnail {
 	max-width: 100%;
 	max-height: 100%;
@@ -199,7 +197,8 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 }
 
 // Everything that brings a file in: the label, the open buttons and the
-// limits share one dashed well, so the drop target is plain to see.
+// limits share one dashed well, so the drop target is plain to see. While a
+// file is dragged, the workspace's own drop outline (_stage.scss) answers.
 .workspace-start-drop {
 	position: relative;
 	width: 100%;
@@ -212,9 +211,6 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 	border-radius: var(--radius-lg);
 	color: var(--color-text-secondary);
 	font-size: var(--font-size-sm);
-	transition: border-color var(--transition-fast), background-color var(--transition-fast);
-
-	> .workspace-start-drop-label.is-dragging { display: none; }
 
 	small {
 		color: var(--color-text-tertiary);
@@ -258,7 +254,6 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start-drop > :not(.work
 	justify-content: center;
 	gap: var(--spacing-xs) var(--spacing-lg);
 	padding: var(--spacing-md);
-	border-top: 1px solid var(--color-border);
 }
 
 .workspace-start-link {

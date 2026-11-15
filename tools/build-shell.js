@@ -31,7 +31,7 @@ function renderToolButtons(indent, registries) {
 
 function renderStartPresets(indent, registries) {
 	return registries.CONFIG.canvas.presets.filter((preset) => preset.quickStart).map((preset) => [
-		`${indent}<button class="action-card workspace-start-preset" type="button" data-preset-id="${escapeHtml(preset.id)}" aria-label="New ${escapeHtml(preset.label)} canvas, ${escapeHtml(preset.width)} by ${escapeHtml(preset.height)} pixels">`,
+		`${indent}<button class="action-card is-framed workspace-start-preset" type="button" data-preset-id="${escapeHtml(preset.id)}" aria-label="New ${escapeHtml(preset.label)} canvas, ${escapeHtml(preset.width)} by ${escapeHtml(preset.height)} pixels">`,
 		`${indent}\t<span class="action-card-media workspace-start-preset-preview">`,
 		`${indent}\t\t<span class="workspace-start-preset-shape" style="aspect-ratio: ${escapeHtml(preset.width)} / ${escapeHtml(preset.height)};"></span>`,
 		`${indent}\t</span>`,

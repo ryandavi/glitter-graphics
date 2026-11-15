@@ -3,7 +3,6 @@ const DOCUMENT_START_METHODS = {
 setupImageListeners() {
 		const imageUpload = document.getElementById('imageUpload');
 		const projectUpload = document.getElementById('projectUpload');
-		const workspaceStart = document.getElementById('workspaceStart');
 		const openProjectBtn = document.getElementById('openProjectBtn');
 		const openProjectMenuItem = document.getElementById('openProjectMenuItem');
 		const openImageBtn = document.getElementById('openImageBtn');
@@ -63,7 +62,6 @@ setupImageListeners() {
 		let dragDepth = 0;
 		const setDropActive = (active) => {
 			this.previewContainer?.classList.toggle('workspace-drop-active', active);
-			workspaceStart?.classList.toggle('drag-over', active);
 		};
 		this.previewContainer?.addEventListener('dragenter', (event) => {
 			if (!event.dataTransfer?.types?.includes('Files')) return;
@@ -141,7 +139,7 @@ setupImageListeners() {
 		}
 		const size = `${width} × ${height} px`;
 		const card = buildActionCard({
-			className: 'workspace-start-resume-card',
+			className: 'is-framed workspace-start-resume-card',
 			dataset: {},
 			ariaLabel: `Resume ${name}, ${width} by ${height} pixels, edited ${edited}${summary.fileSaved ? '' : ', not saved to a file'}`,
 			media,
