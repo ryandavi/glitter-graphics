@@ -1629,11 +1629,9 @@ textarea {
   align-self: start;
 }
 .action-card.is-quiet {
-  border-color: transparent;
   background: transparent;
 }
 .action-card.is-quiet:hover, .action-card.is-quiet:focus-visible {
-  border-color: transparent;
   background: var(--color-quiet-hover);
 }
 
@@ -5940,8 +5938,21 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
   height: 64px;
   margin-bottom: var(--spacing-xs);
 }
-.workspace-start-preset-preview > .icon-wrapper > svg.icon {
-  font-size: 36px;
+
+.workspace-start-more-icon {
+  --icon-size: 36px;
+  width: var(--icon-size);
+  height: var(--icon-size);
+  background-color: currentColor;
+  background-repeat: repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2.5' y='2.5' width='11' height='11' rx='1.5'/%3E%3Cpath d='M8 6v4M6 8h4'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2.5' y='2.5' width='11' height='11' rx='1.5'/%3E%3Cpath d='M8 6v4M6 8h4'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+@media (forced-colors: active) {
+  .workspace-start-more-icon {
+    forced-color-adjust: none;
+    background-color: CanvasText;
+  }
 }
 
 .workspace-start-preset-shape {
@@ -5956,10 +5967,12 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 
 .workspace-start-preset:is(:hover, :focus-visible) .workspace-start-preset-shape {
   border-color: var(--color-border-hover);
+}
+.workspace-start-preset:is(:hover, :focus-visible) :is(.workspace-start-preset-shape, .workspace-start-more-icon) {
   background-image: var(--workspace-heading-glitter-image);
 }
 @media (forced-colors: active), (prefers-reduced-motion: reduce) {
-  .workspace-start-preset:is(:hover, :focus-visible) .workspace-start-preset-shape {
+  .workspace-start-preset:is(:hover, :focus-visible) :is(.workspace-start-preset-shape, .workspace-start-more-icon) {
     background-image: none;
   }
 }
@@ -6021,7 +6034,7 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
   max-width: 100%;
   max-height: 100%;
   border: 1px solid var(--color-border);
-  border-radius: max(0px, (var(--radius-md) - 1px - var(--spacing-sm)));
+  border-radius: var(--radius-sm);
   background: var(--new-canvas-preview-bg);
 }
 
@@ -15144,8 +15157,8 @@ body.home-page {
     height: 32px;
     margin-bottom: 0;
   }
-  .workspace-start-preset-preview > .icon-wrapper > svg.icon {
-    font-size: 28px;
+  .workspace-start-more-icon {
+    --icon-size: 28px;
   }
   .workspace-start-links {
     flex-wrap: nowrap;

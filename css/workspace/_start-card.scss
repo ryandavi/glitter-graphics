@@ -99,14 +99,25 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 	gap: var(--spacing-xs);
 }
 
-// The tiles are `.action-card.is-quiet`: the canvas shape is the tile, so
-// it carries the only surface. Only the preview box is sized here.
+// The tiles are `.action-card.is-quiet`; only the preview box is sized here.
 .workspace-start-preset-preview {
 	width: 100%;
 	height: 64px;
 	margin-bottom: var(--spacing-xs);
+}
 
-	>.icon-wrapper>svg.icon { font-size: 36px; }
+// More Presets draws #icon-new-canvas as a mask so hover can fill it with
+// glitter like the size shapes. Keep the path in step with the sprite symbol.
+.workspace-start-more-icon {
+	--icon-size: 36px;
+	width: var(--icon-size);
+	height: var(--icon-size);
+	background-color: currentColor;
+	background-repeat: repeat;
+	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2.5' y='2.5' width='11' height='11' rx='1.5'/%3E%3Cpath d='M8 6v4M6 8h4'/%3E%3C/svg%3E") center / contain no-repeat;
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2.5' y='2.5' width='11' height='11' rx='1.5'/%3E%3Cpath d='M8 6v4M6 8h4'/%3E%3C/svg%3E") center / contain no-repeat;
+
+	@media (forced-colors: active) { forced-color-adjust: none; background-color: CanvasText; }
 }
 
 .workspace-start-preset-shape {
@@ -121,12 +132,15 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 
 // Hovering a size previews what it is for: the shape fills with the theme's
 // glitter, the same texture as the heading.
-.workspace-start-preset:is(:hover, :focus-visible) .workspace-start-preset-shape {
-	border-color: var(--color-border-hover);
-	background-image: var(--workspace-heading-glitter-image);
+.workspace-start-preset:is(:hover, :focus-visible) {
+	.workspace-start-preset-shape { border-color: var(--color-border-hover); }
 
-	@media (forced-colors: active), (prefers-reduced-motion: reduce) {
-		background-image: none;
+	:is(.workspace-start-preset-shape, .workspace-start-more-icon) {
+		background-image: var(--workspace-heading-glitter-image);
+
+		@media (forced-colors: active), (prefers-reduced-motion: reduce) {
+			background-image: none;
+		}
 	}
 }
 
@@ -160,12 +174,13 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 	}
 }
 
-// Concentric with the card's corner: its border and padding sit between them.
+// The same corner as the preset shapes: it sits centred, not in the card's
+// corner, so a concentric radius does not apply.
 .workspace-start-resume-thumbnail {
 	max-width: 100%;
 	max-height: 100%;
 	border: 1px solid var(--color-border);
-	border-radius: concentric-radius(var(--radius-md), 1px, var(--spacing-sm));
+	border-radius: var(--radius-sm);
 	background: var(--new-canvas-preview-bg);
 }
 
