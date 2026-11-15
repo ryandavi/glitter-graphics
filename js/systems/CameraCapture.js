@@ -69,6 +69,8 @@ class CameraCapture {
 		this.aspect = remembered('cameraAspect', aspects);
 		this.gifCapture = remembered('cameraGifCapture', modes.gif.capture);
 		this.speed = modes.gif.defaultSpeed;
+		// 'off', or a CONFIG.tools.filter.webcam.resolutions key.
+		this.webcam = 'off';
 		this.countdownSeconds = countdownSeconds[0];
 		this.bindChoice(this.ui.countdown, String(this.countdownSeconds), value => { this.countdownSeconds = Number(value); });
 		this.bindChoice(this.ui.aspect, this.aspect, value => this.setAspect(value));
@@ -79,7 +81,7 @@ class CameraCapture {
 		this.ui.mirror.addEventListener('change', () => this.syncMirror());
 		this.ui.device.addEventListener('change', () => { this.deviceId = this.ui.device.value; this.start(); });
 		this.ui.bounce.addEventListener('change', () => { this.reviewStart = performance.now(); });
-		this.ui.webcam.addEventListener('change', () => { this.painted = null; this.lastCellsPaint = 0; });
+		this.bindChoice(this.ui.webcam, this.webcam, value => { this.webcam = value; this.painted = null; this.lastCellsPaint = 0; });
 		this.ui.sound.checked = PREFERENCES.get('cameraSound');
 		this.ui.sound.addEventListener('change', () => PREFERENCES.set('cameraSound', this.ui.sound.checked));
 		this.ui.video.addEventListener('resize', () => this.syncStageAspect());
@@ -704,15 +706,23 @@ class CameraCapture {
 		if (open) this.ui.effects.querySelector('.active')?.focus();
 	}
 
+	// A look's filter value; the Webcam look takes the chosen resolution.
+	lookValue(lookId) {
+		const value = GlitterFilters.looksLibrary.apply(lookId);
+		if (lookId === CONFIG.tools.camera.effects.webcamLook) value.resolution = this.webcam;
+		return value;
+	}
+
 	filterDataFor(lookId) {
-		if (!this.lookData.has(lookId)) this.lookData.set(lookId, GlitterFilter.normalizeFilterData(GlitterFilters.looksLibrary.apply(lookId)));
-		return this.lookData.get(lookId);
+		const key = lookId === CONFIG.tools.camera.effects.webcamLook ? `${lookId}:${this.webcam}` : lookId;
+		if (!this.lookData.has(key)) this.lookData.set(key, GlitterFilter.normalizeFilterData(this.lookValue(lookId)));
+		return this.lookData.get(key);
 	}
 
 	// The looks a cell or the stage renders, in stack order: the Webcam look
 	// (when on) under the chosen effect.
 	looksFor(lookId) {
-		return [this.ui.webcam.checked ? CONFIG.tools.camera.effects.webcamLook : null, lookId].filter(Boolean);
+		return [this.webcam !== 'off' ? CONFIG.tools.camera.effects.webcamLook : null, lookId].filter(Boolean);
 	}
 
 	// ── View loop ──
@@ -751,7 +761,8 @@ class CameraCapture {
 		if (!live && this.painted?.source === source && this.painted.key === key) return;
 		if (live && now - (this.painted?.at || 0) < CONFIG.tools.camera.effects.stageIntervalMs) return;
 		this.painted = { source, key, at: now };
-		const width = looks.length ? CONFIG.tools.camera.effects.stageWidth : (source.width || source.videoWidth);
+		const { stageWidth, webcamStageWidth } = CONFIG.tools.camera.effects;
+		const width = looks.length ? (webcamStageWidth[this.webcam] || stageWidth) : (source.width || source.videoWidth);
 		this.stageBusy = true;
 		this.paintLook(this.ui.view, source, width, looks).finally(() => { this.stageBusy = false; });
 	}
@@ -825,7 +836,7 @@ class CameraCapture {
 		const base = layers.getBaseLayer();
 		if (base) layers.setActiveLayer(base.id);
 		if (cells) await this.placeCells(cells);
-		looks.forEach(lookId => layers.addLayer(LayerType.FILTER, { filterLayer: { filterData: GlitterFilters.looksLibrary.apply(lookId) } }));
+		looks.forEach(lookId => layers.addLayer(LayerType.FILTER, { filterLayer: { filterData: this.lookValue(lookId) } }));
 	}
 
 	// Each shot of a layout take as a PNG at its cell's size, with the cell's

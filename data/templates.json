@@ -9,8 +9,7 @@
 			"description": "A Y2K profile graphic with animated glitter type, frame and sparkles",
 			"src": "data/templates/blingee-nameplate.glitter.json",
 			"icon": "sparkles",
-			"aspectRatio": "1 / 1",
-			"preview": "linear-gradient(145deg, #08000f, #51116c 48%, #ff3c96 72%, #0bd2fa)"
+			"aspectRatio": "1 / 1"
 		},
 		{
 			"id": "impact-meme-canvas",
@@ -19,8 +18,7 @@
 			"description": "A blank square canvas with large editable Impact captions",
 			"src": "data/templates/impact-meme.glitter.json",
 			"icon": "text",
-			"aspectRatio": "1 / 1",
-			"preview": "linear-gradient(145deg, #262626, #090909)"
+			"aspectRatio": "1 / 1"
 		},
 		{
 			"id": "impact-meme",
@@ -41,7 +39,7 @@
 					"font": "Impact, 'Arial Black', sans-serif",
 					"color": "#ffffff",
 					"outline": "#000000",
-					"size": "15px"
+					"size": "11cqi"
 				}
 			}
 		},
@@ -65,7 +63,7 @@
 					"italic": "italic",
 					"color": "#ffe21f",
 					"outline": "#000000",
-					"size": "11px"
+					"size": "8cqi"
 				}
 			}
 		},
@@ -87,7 +85,7 @@
 					"font": "Arial, sans-serif",
 					"color": "#ffffff",
 					"bar": "rgb(0 0 0 / 60%)",
-					"size": "11px"
+					"size": "8cqi"
 				}
 			}
 		},
@@ -110,7 +108,7 @@
 					"font": "Silkscreen, 'Courier New', monospace",
 					"color": "#ff8a3d",
 					"glow": "#ff3d00",
-					"size": "10px"
+					"size": "7cqi"
 				}
 			}
 		},
@@ -121,8 +119,7 @@
 			"description": "Choose an image for the Photo shape, then edit the title and subtitle",
 			"src": "data/templates/demotivational-poster.glitter.json",
 			"icon": "text",
-			"aspectRatio": "5 / 4",
-			"preview": "linear-gradient(#111111, #000000)"
+			"aspectRatio": "5 / 4"
 		}
 	]
 }

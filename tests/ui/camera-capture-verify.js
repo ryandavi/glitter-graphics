@@ -185,9 +185,9 @@ const { openApp } = require('../lib/app');
 		assert(await page.evaluate(() => document.getElementById('cameraEffects').hidden && /Bulge/.test(document.getElementById('cameraEffectsBtn').textContent)), 'Choosing an effect closes the grid and names it');
 		// WP-9a timing: one stage paint of the live camera through Webcam + Bulge.
 		const webcamMs = await page.evaluate(async () => {
-			const capture = editor.cameraCapture, webcam = document.getElementById('cameraWebcam');
-			webcam.checked = true; webcam.dispatchEvent(new Event('change'));
-			const target = document.createElement('canvas'), video = document.getElementById('cameraVideo'), { stageWidth } = CONFIG.tools.camera.effects;
+			const capture = editor.cameraCapture;
+			document.querySelector('#cameraWebcam [data-value="720"]').click();
+			const target = document.createElement('canvas'), video = document.getElementById('cameraVideo'), stageWidth = CONFIG.tools.camera.effects.webcamStageWidth[720];
 			await capture.paintLook(target, video, stageWidth, capture.looksFor(capture.effect));
 			const started = performance.now();
 			for (let run = 0; run < 5; run++) await capture.paintLook(target, video, stageWidth, capture.looksFor(capture.effect));

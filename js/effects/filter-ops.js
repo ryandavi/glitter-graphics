@@ -29,19 +29,53 @@
 	// shadows, the way a small sensor's noise sits in the dark areas. Frames
 	// after the first fold their index into the seed, so animated grain moves
 	// while a still keeps its pattern.
-	function noise(imageData, amount = 0, seed = '', { shadows = 0, frameIndex = 0 } = {}) {
+	// `height` sizes the grain to a sensor that many pixels tall: on a taller
+	// image each grain spans several pixels, stretched bilinearly the way the
+	// camera's own upscale would. Without it every pixel gets its own grain.
+	function noise(imageData, amount = 0, seed = '', { shadows = 0, frameIndex = 0, height = 0 } = {}) {
 		let state = 2166136261;
 		for (const character of String(frameIndex ? `${seed}:${frameIndex}` : seed)) state = Math.imul(state ^ character.charCodeAt(0), 16777619);
 		const scale = Math.max(0, Number(amount) || 0) * 255;
 		const shadowWeight = Math.max(0, Math.min(1, Number(shadows) || 0));
-		const data = imageData.data;
-		for (let offset = 0; offset < data.length; offset += 4) {
-			state ^= state << 13; state ^= state >>> 17; state ^= state << 5;
-			const weight = shadowWeight ? 1 - shadowWeight * luminance(data, offset) : 1;
-			const delta = ((state >>> 0) / 4294967295 - 0.5) * scale * weight;
-			for (let channel = 0; channel < 3; channel++) data[offset + channel] = clampByte(data[offset + channel] + delta);
+		const { width, height: imageHeight, data } = imageData;
+		const next = () => { state ^= state << 13; state ^= state >>> 17; state ^= state << 5; return (state >>> 0) / 4294967295 - 0.5; };
+		const factor = Number(height) > 0 ? Math.min(1, Number(height) / imageHeight) : 1;
+		const gridWidth = Math.max(1, Math.round(width * factor)), gridHeight = Math.max(1, Math.round(imageHeight * factor));
+		let grid = null;
+		if (gridWidth < width || gridHeight < imageHeight) {
+			grid = new Float32Array(gridWidth * gridHeight);
+			for (let cell = 0; cell < grid.length; cell++) grid[cell] = next();
+		}
+		for (let y = 0, offset = 0; y < imageHeight; y++) {
+			let top = 0, bottom = 0, fy = 0;
+			if (grid) {
+				const sy = Math.max(0, Math.min(gridHeight - 1, (y + 0.5) * gridHeight / imageHeight - 0.5));
+				top = Math.floor(sy); bottom = Math.min(gridHeight - 1, top + 1); fy = sy - top;
+			}
+			for (let x = 0; x < width; x++, offset += 4) {
+				let value;
+				if (grid) {
+					const sx = Math.max(0, Math.min(gridWidth - 1, (x + 0.5) * gridWidth / width - 0.5));
+					const left = Math.floor(sx), right = Math.min(gridWidth - 1, left + 1), fx = sx - left;
+					const upper = grid[top * gridWidth + left] + (grid[top * gridWidth + right] - grid[top * gridWidth + left]) * fx;
+					const lower = grid[bottom * gridWidth + left] + (grid[bottom * gridWidth + right] - grid[bottom * gridWidth + left]) * fx;
+					value = upper + (lower - upper) * fy;
+				} else {
+					value = next();
+				}
+				const weight = shadowWeight ? 1 - shadowWeight * luminance(data, offset) : 1;
+				const delta = value * scale * weight;
+				for (let channel = 0; channel < 3; channel++) data[offset + channel] = clampByte(data[offset + channel] + delta);
+			}
 		}
 		return imageData;
+	}
+
+	// The resample scale for a sensor `height` pixels tall, eased in by
+	// `amount` (0 keeps the image, 1 is the full sensor).
+	function sensorScale(imageHeight, height, amount = 1) {
+		const full = Math.min(1, Number(height) / imageHeight);
+		return 1 + (full - 1) * Math.max(0, Math.min(1, Number(amount ?? 1)));
 	}
 
 	// Softens by resolution: averages down to `scale` of the size, then
@@ -288,11 +322,17 @@
 		}),
 		sharpen: Object.freeze({ id: 'sharpen', params: Object.freeze({ amount: Object.freeze({ min: 0, max: 2 }) }), pixel: (imageData, params) => sharpen(imageData, params.amount), isActive: (params) => Number(params.amount) > 0 }),
 		noise: Object.freeze({
-			id: 'noise', params: Object.freeze({ amount: Object.freeze({ min: 0, max: 1 }), shadows: Object.freeze({ min: 0, max: 1 }) }),
-			pixel: (imageData, params, context = {}) => noise(imageData, params.amount, context.seed, { shadows: params.shadows, frameIndex: context.frameIndex }),
+			id: 'noise', params: Object.freeze({ amount: Object.freeze({ min: 0, max: 1 }), shadows: Object.freeze({ min: 0, max: 1 }), height: Object.freeze({ min: 0, max: 4320 }) }),
+			pixel: (imageData, params, context = {}) => noise(imageData, params.amount, context.seed, { shadows: params.shadows, frameIndex: context.frameIndex, height: params.height }),
 			isActive: (params) => Number(params.amount) > 0
 		}),
-		resample: Object.freeze({ id: 'resample', params: Object.freeze({ scale: Object.freeze({ min: 0.05, max: 1 }) }), pixel: (imageData, params) => resample(imageData, params.scale), isActive: (params) => Number(params.scale) < 1 }),
+		// `scale` is a share of the image; `height` instead resamples to a sensor
+		// that many pixels tall, eased in by `amount`.
+		resample: Object.freeze({
+			id: 'resample', params: Object.freeze({ scale: Object.freeze({ min: 0.05, max: 1 }), height: Object.freeze({ min: 1, max: 4320 }), amount: Object.freeze({ min: 0, max: 1 }) }),
+			pixel: (imageData, params) => resample(imageData, params.height ? sensorScale(imageData.height, params.height, params.amount) : params.scale),
+			isActive: (params) => Boolean(params.height) ? Number(params.amount ?? 1) > 0 : Number(params.scale) < 1
+		}),
 		colorBalance: Object.freeze({
 			id: 'colorBalance', params: Object.freeze({ shadows: Object.freeze({ kind: 'channels' }), midtones: Object.freeze({ kind: 'channels' }), highlights: Object.freeze({ kind: 'channels' }) }),
 			pixel: (imageData, params) => colorBalance(imageData, params),

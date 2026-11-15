@@ -29,12 +29,13 @@ function buildActionCard({ className, dataset, ariaLabel, pressed, media, title,
 	return button;
 }
 
-// A text style's card media: its sample lines set on a stand-in photo, from
+// A template's card media: its sample lines set on a stand-in photo, from
 // the template manifest's `sample` ({ place, text: [], style: { font, size,
-// weight, italic, color, outline, glow, bar } }). `place` is split (top and
-// bottom), bottom, band or corner.
-function buildAddEntrySample(sample) {
-	const media = buildElement('action-card-media add-entry-sample', undefined, 'span');
+// weight, italic, color, outline, glow, bar, backdrop } }). `place` is split
+// (top and bottom), bottom, band, corner or poster. Text Styles in the Add
+// menu and Templates in New Canvas both use it.
+function buildAddEntrySample(sample, className = 'action-card-media') {
+	const media = buildElement(`${className} add-entry-sample`, undefined, 'span');
 	media.dataset.place = sample.place || 'bottom';
 	media.classList.toggle('has-outline', Boolean(sample.style?.outline));
 	media.setAttribute('aria-hidden', 'true');

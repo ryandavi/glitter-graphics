@@ -215,9 +215,12 @@ const CONFIG = deepFreeze({
 			// look renders in under 13 ms, at 400 px the slowest (Dither) in ~40 ms.
 			effects: {
 				looks: ['warp:bulge', 'warp:twirl', 'warp:pinch', 'sepia', 'grayscale', 'dreamy-glow', 'dither', 'deep-fry'],
-				// The Webcam toggle stacks this look under the chosen effect.
+				// The Webcam choice stacks this look under the chosen effect, and
+				// the stage then renders at `webcamStageWidth` for that resolution
+				// so the grain shows at its real size.
 				webcamLook: 'webcam',
-				cellWidth: 160, cellIntervalMs: 200, stageWidth: 400, stageIntervalMs: 66
+				cellWidth: 160, cellIntervalMs: 200, stageWidth: 400, stageIntervalMs: 66,
+				webcamStageWidth: { 480: 640, 720: 960 }
 			}
 		},
 		// How far a GIF's cycle may be stretched, as a share of the file's own.
@@ -274,6 +277,9 @@ const CONFIG = deepFreeze({
 		filter: {
 			animation: { frameMs: 100, crawlSampleMs: 50, crawl: { off: { label: 'Off', frameMs: 0 }, slow: { label: 'Slow', frameMs: 200 }, medium: { label: 'Medium', frameMs: 100 }, fast: { label: 'Fast', frameMs: 50 } } },
 			defaultType: 'basic',
+			// The Webcam look's sensors, by height. A cheap lens resolves
+			// `lensDetail` of the sensor's lines; grain stays one sensor pixel.
+			webcam: { resolutions: { 480: { label: '480p', height: 480 }, 720: { label: '720p', height: 720 } }, lensDetail: 0.7 },
 			tintPresets: {
 				'warming-85': { label: 'Warming Filter (85)', color: '#ec8a00' },
 				'warming-81': { label: 'Warming Filter (81)', color: '#efb45a' },

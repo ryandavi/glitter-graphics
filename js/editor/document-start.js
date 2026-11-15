@@ -230,10 +230,8 @@ setupImageListeners() {
 			templates.forEach((template) => {
 				const previewWrapper = document.createElement('span');
 				previewWrapper.className = 'action-card-media blank-preview-wrapper template-preview-wrapper';
-				const preview = document.createElement('span');
-				preview.className = 'blank-preview template-preview';
+				const preview = buildAddEntrySample(template.sample || {}, 'template-preview');
 				preview.style.aspectRatio = template.aspectRatio || '1 / 1';
-				preview.style.background = template.preview || 'var(--color-bg-primary)';
 				previewWrapper.appendChild(preview);
 				const button = buildActionCard({
 					className: 'blank-image-option new-canvas-template-btn',

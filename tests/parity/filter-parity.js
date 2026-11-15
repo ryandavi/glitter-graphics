@@ -9,6 +9,7 @@ global.CONFIG = {
 		filter: {
 			animation: { frameMs: 100, crawl: { off: { label: 'Off', frameMs: 0 }, slow: { label: 'Slow', frameMs: 200 }, medium: { label: 'Medium', frameMs: 100 }, fast: { label: 'Fast', frameMs: 50 } } },
 			defaultType: 'basic',
+			webcam: { resolutions: { 480: { label: '480p', height: 480 }, 720: { label: '720p', height: 720 } }, lensDetail: 0.7 },
 			tintPresets: {
 				'warming-85': { label: 'Warming Filter (85)', color: '#ec8a00' },
 				'warming-81': { label: 'Warming Filter (81)', color: '#efb45a' },

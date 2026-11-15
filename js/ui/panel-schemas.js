@@ -1297,8 +1297,9 @@ const PANEL_SCHEMAS = {
 				{ label: 'Camera', rows: [
 					{ kind: 'select', id: 'cameraDevice', label: 'Camera', ariaLabel: 'Camera', options: [] },
 					{ kind: 'toggle', id: 'cameraMirror', label: 'Mirror', checked: true },
-					// The cheap-webcam look, under whichever effect is picked.
-					{ kind: 'toggle', id: 'cameraWebcam', label: 'Webcam look', checked: false },
+					// The cheap-webcam look at a sensor size, under whichever effect is picked.
+					{ kind: 'segmented', id: 'cameraWebcam', label: 'Webcam look', ariaLabel: 'Webcam look',
+						options: [{ label: 'Off', value: 'off' }, ...Object.entries(CONFIG.tools.filter.webcam.resolutions).map(([value, entry]) => ({ label: entry.label, value }))] },
 					{ kind: 'toggle', id: 'cameraSound', label: 'Beeps and shutter', checked: true }
 				] }
 			] }

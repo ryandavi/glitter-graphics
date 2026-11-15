@@ -13,7 +13,8 @@
 // height, so a scrollbar (once takes overflow) shrinks the thumbnails
 // instead of pushing the settings up into view.
 #cameraModal {
-	--camera-thumb-height: 80px;
+	// The roll's height: thumbnails plus the well's padding and border.
+	--camera-thumb-height: 90px;
 	--camera-roll-gap: var(--spacing-lg);
 	--camera-roll-after: var(--camera-roll-gap);
 	--camera-chrome-height: calc(2px
@@ -152,10 +153,12 @@
 
 	// The roll: every take as a thumbnail, newest last. It keeps its height
 	// while empty so nothing below it moves on the first take.
+	// A well the takes fill in, shown even while empty.
 	.camera-roll {
+		@include inset-surface(var(--spacing-xs));
 		display: flex;
 		align-items: stretch;
-		gap: var(--spacing-sm);
+		gap: var(--spacing-xs);
 		height: var(--camera-thumb-height);
 		box-sizing: border-box;
 		margin-top: var(--camera-roll-gap);
@@ -170,6 +173,7 @@
 			font-size: var(--font-size-sm);
 		}
 
+		&.is-empty { justify-content: center; }
 		&:not(.is-empty) > .camera-roll-empty { display: none; }
 	}
 

@@ -90,9 +90,16 @@
 	}
 }
 
-// A text style's sample, set on a stand-in photo. The look comes from the
-// template manifest's `sample.style` as --sample-* properties.
+// A template's sample, set on a stand-in photo: Text Styles in the Add menu
+// and Templates in New Canvas. The look comes from the template manifest's
+// `sample.style` as --sample-* properties; sizes are in cqi so one sample
+// reads the same on any card size.
 .add-entry-sample {
+	// Illustration, not chrome: the same dusky scene in either theme. Swap
+	// this for url('../images/...') to use a real photo.
+	--sample-photo:
+		radial-gradient(circle at 80% 42%, #f6c58a 0 8%, transparent 9%),
+		linear-gradient(180deg, #6d84a8 0%, #b7a2a8 52%, #4c5a4a 53%, #2f3a2e 100%);
 	position: relative;
 	display: flex;
 	flex-direction: column;
@@ -101,18 +108,18 @@
 	aspect-ratio: 2 / 1;
 	padding: 6%;
 	overflow: hidden;
+	container-type: inline-size;
 	border-radius: var(--radius-sm);
-	// Illustration, not chrome: the same dusky scene in either theme.
-	background:
-		radial-gradient(circle at 80% 42%, #f6c58a 0 8%, transparent 9%),
-		linear-gradient(180deg, #6d84a8 0%, #b7a2a8 52%, #4c5a4a 53%, #2f3a2e 100%);
+	background: var(--sample-backdrop, var(--sample-photo));
+	background-size: cover;
+	background-position: center;
 
 	> .add-entry-sample-text {
 		max-width: 100%;
 		@include truncate;
 		color: var(--sample-color, #fff);
 		font-family: var(--sample-font, inherit);
-		font-size: var(--sample-size, 11px);
+		font-size: var(--sample-size, 8cqi);
 		font-style: var(--sample-italic, normal);
 		font-weight: var(--sample-weight, 400);
 		line-height: 1.1;
@@ -139,6 +146,27 @@
 	}
 
 	&[data-place="corner"] { align-items: flex-end; }
+
+	// A framed photo over the backdrop, a title under it and smaller lines
+	// after the title.
+	&[data-place="poster"] {
+		justify-content: flex-start;
+		gap: 3%;
+
+		&::before {
+			content: '';
+			flex: 1;
+			align-self: stretch;
+			margin-inline: 6%;
+			border: 1px solid #fff;
+			outline: 2px solid var(--sample-backdrop, #000);
+			outline-offset: -3px;
+			background: var(--sample-photo);
+			background-size: cover;
+		}
+
+		> .add-entry-sample-text ~ .add-entry-sample-text { font-size: calc(var(--sample-size, 8cqi) * 0.45); }
+	}
 }
 
 .add-menu > .modal-footer.add-menu-footer {

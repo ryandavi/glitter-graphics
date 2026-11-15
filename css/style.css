@@ -8912,6 +8912,9 @@ body.tool-text .text-hover-baselines {
 }
 
 .add-entry-sample {
+  --sample-photo:
+  	radial-gradient(circle at 80% 42%, #f6c58a 0 8%, transparent 9%),
+  	linear-gradient(180deg, #6d84a8 0%, #b7a2a8 52%, #4c5a4a 53%, #2f3a2e 100%);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -8920,8 +8923,11 @@ body.tool-text .text-hover-baselines {
   aspect-ratio: 2/1;
   padding: 6%;
   overflow: hidden;
+  container-type: inline-size;
   border-radius: var(--radius-sm);
-  background: radial-gradient(circle at 80% 42%, #f6c58a 0 8%, transparent 9%), linear-gradient(180deg, #6d84a8 0%, #b7a2a8 52%, #4c5a4a 53%, #2f3a2e 100%);
+  background: var(--sample-backdrop, var(--sample-photo));
+  background-size: cover;
+  background-position: center;
 }
 .add-entry-sample > .add-entry-sample-text {
   max-width: 100%;
@@ -8930,7 +8936,7 @@ body.tool-text .text-hover-baselines {
   text-overflow: ellipsis;
   color: var(--sample-color, #fff);
   font-family: var(--sample-font, inherit);
-  font-size: var(--sample-size, 11px);
+  font-size: var(--sample-size, 8cqi);
   font-style: var(--sample-italic, normal);
   font-weight: var(--sample-weight, 400);
   line-height: 1.1;
@@ -8956,6 +8962,24 @@ body.tool-text .text-hover-baselines {
 }
 .add-entry-sample[data-place=corner] {
   align-items: flex-end;
+}
+.add-entry-sample[data-place=poster] {
+  justify-content: flex-start;
+  gap: 3%;
+}
+.add-entry-sample[data-place=poster]::before {
+  content: "";
+  flex: 1;
+  align-self: stretch;
+  margin-inline: 6%;
+  border: 1px solid #fff;
+  outline: 2px solid var(--sample-backdrop, #000);
+  outline-offset: -3px;
+  background: var(--sample-photo);
+  background-size: cover;
+}
+.add-entry-sample[data-place=poster] > .add-entry-sample-text ~ .add-entry-sample-text {
+  font-size: calc(var(--sample-size, 8cqi) * 0.45);
 }
 
 .add-menu > .modal-footer.add-menu-footer {
@@ -10961,9 +10985,10 @@ body.modal-open {
   background: var(--color-bg-primary);
 }
 #newCanvasModal .template-preview {
-  width: 100%;
-  max-height: 100%;
-  border-radius: var(--radius-sm);
+  width: auto;
+  height: 100%;
+  max-width: 100%;
+  padding: 5%;
 }
 #newCanvasModal .blank-image-grid {
   display: grid;
@@ -13143,7 +13168,7 @@ body.modal-open {
 
 /* ===== TAKE PHOTO MODAL (photo booth) ===== */
 #cameraModal {
-  --camera-thumb-height: 80px;
+  --camera-thumb-height: 90px;
   --camera-roll-gap: var(--spacing-lg);
   --camera-roll-after: var(--camera-roll-gap);
   --camera-chrome-height: calc(2px
@@ -13300,9 +13325,13 @@ body.modal-open {
   text-overflow: ellipsis;
 }
 #cameraModal .camera-roll {
+  padding: var(--spacing-xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-card);
   display: flex;
   align-items: stretch;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-xs);
   height: var(--camera-thumb-height);
   box-sizing: border-box;
   margin-top: var(--camera-roll-gap);
@@ -13315,6 +13344,9 @@ body.modal-open {
   align-self: center;
   color: var(--color-text-tertiary);
   font-size: var(--font-size-sm);
+}
+#cameraModal .camera-roll.is-empty {
+  justify-content: center;
 }
 #cameraModal .camera-roll:not(.is-empty) > .camera-roll-empty {
   display: none;

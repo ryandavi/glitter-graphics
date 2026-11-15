@@ -80,17 +80,23 @@
 	// Early-2010s laptop webcam: soft and low-detail, waxy noise reduction,
 	// crunchy sharpening, washed-out color with green-yellow shadows and
 	// magenta mids, clipped ends, grain in the shadows, then compression.
+	// Resolution is the sensor's height: detail drops to what its cheap lens
+	// resolves (CONFIG.tools.filter.webcam.lensDetail of it) and grain is one sensor
+	// pixel, so the look is the same at any image size.
+	const webcamResolutions = () => Object.entries(CONFIG.tools.filter.webcam.resolutions).map(([value, entry]) => ({ value, label: entry.label }));
 	function webcamRecipe(values) {
 		const strength = values.strength / 100;
 		if (!strength) return [];
 		const mix = (identity, full) => identity + (full - identity) * strength;
+		const { resolutions, lensDetail } = CONFIG.tools.filter.webcam;
+		const sensor = (resolutions[values.resolution] || Object.values(resolutions)[0]).height;
 		return [
-			step('resample', { scale: mix(1, 0.5) }),
+			step('resample', { height: Math.round(sensor * lensDetail), amount: strength }),
 			step('blur', { radius: 1 * strength, mode: 'normal', opacity: 1 }),
 			step('sharpen', { amount: 1.1 * strength }),
 			step('tone', { tone: { contrast: mix(1, 1.28), brightness: mix(1, 1.07), saturate: mix(1, 0.82) } }),
 			step('colorBalance', { shadows: [-0.05 * strength, 0.28 * strength, -0.3 * strength], midtones: [0.18 * strength, -0.2 * strength, 0.08 * strength], highlights: [0, 0, 0] }),
-			step('noise', { amount: 0.14 * strength, shadows: 0.85 }),
+			step('noise', { amount: 0.14 * strength, shadows: 0.85, height: sensor }),
 			step('jpeg', { quality: Math.round(mix(92, 60)), generations: 1, blockSize: 1, chromaBleed: 0.25 * strength })
 		];
 	}
@@ -209,8 +215,10 @@
 			strength: numeric('filterLookStrength', 'filterLookStrength'), radius: numeric('filterDreamyGlowRadius', 'filterDreamyGlowRadius')
 		}), recipe: (values) => [step('blur', { radius: values.radius, mode: 'normal', opacity: 0.62 * values.strength / 100, composite: true })] }),
 		webcam: Object.freeze({ id: 'webcam', label: 'Webcam', group: 'web', tags: ['camera', 'lofi', '2010s', 'grain'], fields: Object.freeze({
-			strength: numeric('filterLookStrength', 'filterWebcamStrength')
-		}), recipe: webcamRecipe }),
+			strength: numeric('filterLookStrength', 'filterWebcamStrength'),
+			resolution: select('720', 'filterWebcamResolution', 'Resolution', webcamResolutions)
+		}), recipe: webcamRecipe,
+			summary: (values) => `Webcam ${CONFIG.tools.filter.webcam.resolutions[values.resolution]?.label || ''}`.trim() }),
 		'jpeg-crunch': Object.freeze({ id: 'jpeg-crunch', label: 'JPEG Crunch', group: 'pixel', tags: ['compression', 'artifact'], fields: Object.freeze({
 			quality: numeric('filterJpegQuality', 'filterJpegQuality'), generations: numeric('filterJpegGenerations', 'filterJpegGenerations'),
 			blockSize: numeric('filterJpegBlockSize', 'filterJpegBlockSize'), chromaBleed: numeric('filterChromaBleed', 'filterChromaBleed')
