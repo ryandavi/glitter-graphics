@@ -141,7 +141,7 @@ setupImageListeners() {
 		}
 		const size = `${width} × ${height} px`;
 		const card = buildActionCard({
-			className: 'is-quiet workspace-start-resume-card',
+			className: 'workspace-start-resume-card',
 			dataset: {},
 			ariaLabel: `Resume ${name}, ${width} by ${height} pixels, edited ${edited}${summary.fileSaved ? '' : ', not saved to a file'}`,
 			media,

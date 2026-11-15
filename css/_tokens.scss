@@ -235,9 +235,6 @@ $timeline-narrow-width: 600px;
 	--color-accent-surface: color-mix(in srgb, var(--color-accent) 14%, transparent);
 	/* a selected row among selected rows: the active one */
 	--color-accent-surface-strong: color-mix(in srgb, var(--color-accent) 28%, transparent);
-	/* hover on a surfaceless control over glass (.action-card.is-quiet) */
-	--color-quiet-hover: color-mix(in srgb, var(--color-text-primary) 7%, transparent);
-
 	--selected-outline-color: var(--color-accent-border);
 	--smart-guide-color: #ff2d8d;
 	--shape-asset-icon-color: var(--color-icon-strong);

@@ -251,18 +251,7 @@ textarea {
 
 	&.is-horizontal {
 		@include action-card-horizontal;
-	}
-
-	// A launcher on glass (the start card): the outline stays so tiles and rows
-	// line up, but there is no fill to read as a hole in the panel. Hover and
-	// focus bring up a tint that reads on glass in every theme. Never `.active`.
-	&.is-quiet {
-		background: transparent;
-
-		&:hover,
-		&:focus-visible { background: var(--color-quiet-hover); }
-	}
-}
+	}}
 
 .action-card-media {
 	display: flex;

@@ -66,7 +66,7 @@ function buildCanvasSizeCard(preset, { quickStart = false, recent = false } = {}
 	const details = [{ text: `${preset.width} × ${preset.height}${quickStart ? ' px' : ''}` }];
 	if (!quickStart && preset.detail) details.push({ text: preset.detail, className: 'blank-detail' });
 	return buildActionCard({
-		className: quickStart ? 'is-quiet workspace-start-preset' :'blank-image-option new-canvas-preset-btn',
+		className: quickStart ? 'workspace-start-preset' :'blank-image-option new-canvas-preset-btn',
 		dataset: { ...(preset.id && !recent ? { presetId: preset.id } : {}), width: preset.width, height: preset.height },
 		ariaLabel: `${quickStart ? 'New ' : ''}${preset.label}${quickStart ? ' canvas' : ''}, ${preset.width} by ${preset.height} pixels`,
 		pressed: quickStart ? undefined : false, media, title: preset.label, details

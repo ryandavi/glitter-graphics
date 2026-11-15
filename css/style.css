@@ -898,8 +898,6 @@
   --color-accent-surface: color-mix(in srgb, var(--color-accent) 14%, transparent);
   /* a selected row among selected rows: the active one */
   --color-accent-surface-strong: color-mix(in srgb, var(--color-accent) 28%, transparent);
-  /* hover on a surfaceless control over glass (.action-card.is-quiet) */
-  --color-quiet-hover: color-mix(in srgb, var(--color-text-primary) 7%, transparent);
   --selected-outline-color: var(--color-accent-border);
   --smart-guide-color: #ff2d8d;
   --shape-asset-icon-color: var(--color-icon-strong);
@@ -1627,12 +1625,6 @@ textarea {
 .action-card.is-horizontal > .action-card-detail {
   grid-column: 2;
   align-self: start;
-}
-.action-card.is-quiet {
-  background: transparent;
-}
-.action-card.is-quiet:hover, .action-card.is-quiet:focus-visible {
-  background: var(--color-quiet-hover);
 }
 
 .action-card-media {
@@ -5865,9 +5857,7 @@ body.tool-select .preview-container.is-over-picked-layer {
   margin-block: auto;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  background: var(--panel-bg);
-  -webkit-backdrop-filter: var(--panel-backdrop);
-  backdrop-filter: var(--panel-backdrop);
+  background: var(--color-bg-primary);
   text-align: center;
 }
 
