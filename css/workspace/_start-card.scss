@@ -12,10 +12,13 @@
 	overscroll-behavior: contain;
 	touch-action: pan-y;
 
-	&.drag-over .workspace-start-card {
+	// A file over the workspace: the drop area answers, the card stays put.
+	&.drag-over .workspace-start-drop {
 		border-color: var(--color-accent);
-		background: var(--color-bg-primary);
-		transform: translateY(-2px);
+		background: var(--color-accent-surface);
+
+		> .workspace-start-drop-label { display: none; }
+		> .workspace-start-drop-label.is-dragging { display: block; }
 	}
 }
 
@@ -30,7 +33,6 @@
 	-webkit-backdrop-filter: var(--panel-backdrop);
 	backdrop-filter: var(--panel-backdrop);
 	text-align: center;
-	transition: transform var(--transition-fast), border-color var(--transition-fast), background-color var(--transition-fast);
 }
 
 body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
@@ -45,8 +47,8 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	gap: var(--spacing-xl);
-	padding: clamp(12px, 2vw, 20px) clamp(24px, 4vw, 40px);
+	gap: var(--spacing-lg);
+	padding: clamp(16px, 2.5vw, 24px) clamp(20px, 4vw, 32px);
 }
 
 .workspace-start-copy {
@@ -78,14 +80,27 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 	}
 }
 
-.workspace-start-presets {
+// A section is a label over its tiles, as in New Canvas and the Add menu:
+// the tiles are the content, so the section draws no box.
+.workspace-start-section {
 	width: 100%;
-	display: grid;
-	grid-template-columns: repeat(4, minmax(0, 1fr));
-	gap: var(--spacing-sm);
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-xs);
+	text-align: left;
+
+	&[hidden] { display: none; }
+	> .property-group-label { padding-inline: var(--spacing-sm); }
 }
 
-// The tiles are quiet `.action-card`s; only the preview box is sized here.
+.workspace-start-presets {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: var(--spacing-xs);
+}
+
+// The tiles are `.action-card.is-quiet`: the canvas shape is the tile, so
+// it carries the only surface. Only the preview box is sized here.
 .workspace-start-preset-preview {
 	width: 100%;
 	height: 64px;
@@ -99,18 +114,28 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 	max-width: 100%;
 	border: 1px solid var(--color-border);
 	border-radius: var(--radius-sm);
-	background: var(--new-canvas-preview-bg);
+	background-color: var(--new-canvas-preview-bg);
+	background-repeat: repeat;
+	transition: border-color var(--transition-fast);
 }
 
-// Resume: one tile per recovery draft, in a full-width row ahead of the
-// preset tiles. One draft fills the row; more share it and wrap on narrow
-// cards. Each has its Discard button in the top right corner. Scoped under
-// the row so the phone's preset tile rules do not reach it.
+// Hovering a size previews what it is for: the shape fills with the theme's
+// glitter, the same texture as the heading.
+.workspace-start-preset:is(:hover, :focus-visible) .workspace-start-preset-shape {
+	border-color: var(--color-border-hover);
+	background-image: var(--workspace-heading-glitter-image);
+
+	@media (forced-colors: active), (prefers-reduced-motion: reduce) {
+		background-image: none;
+	}
+}
+
+// Continue: one row per recovery draft, newest first. Discard sits at the
+// row's end and shows on hover or focus (always on touch).
 .workspace-start-resume-list {
-	grid-column: 1 / -1;
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-	gap: var(--spacing-sm);
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
 }
 
 .workspace-start-resume {
@@ -130,9 +155,8 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 	}
 
 	.workspace-start-resume-preview {
-		width: 64px;
-		height: 64px;
-		margin-bottom: 0;
+		width: 48px;
+		height: 48px;
 	}
 }
 
@@ -147,10 +171,43 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 
 .workspace-start-resume-discard {
 	position: absolute;
-	top: var(--spacing-xs);
+	top: 50%;
 	right: var(--spacing-xs);
+	translate: 0 -50%;
+	opacity: 0;
+	transition: opacity var(--transition-fast);
+
+	.workspace-start-resume:is(:hover, :focus-within) > &,
+	&:focus-visible { opacity: 1; }
+
+	@media (hover: none) { opacity: 1; }
 }
 
+// Everything that brings a file in: the label, the open buttons and the
+// limits share one dashed well, so the drop target is plain to see.
+.workspace-start-drop {
+	position: relative;
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--spacing-sm);
+	padding: var(--spacing-lg) var(--spacing-md);
+	border: 1px dashed var(--color-border-hover);
+	border-radius: var(--radius-lg);
+	color: var(--color-text-secondary);
+	font-size: var(--font-size-sm);
+	transition: border-color var(--transition-fast), background-color var(--transition-fast);
+
+	> .workspace-start-drop-label.is-dragging { display: none; }
+
+	small {
+		color: var(--color-text-tertiary);
+		font-size: var(--font-size-xs);
+	}
+}
+
+// Sized to their labels and centred; they wrap rather than stretch.
 .workspace-start-actions {
 	display: flex;
 	flex-wrap: wrap;
@@ -160,20 +217,6 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 	>button { min-height: var(--row-height); }
 }
 
-.workspace-start-drop {
-	position: relative;
-	display: flex;
-	flex-direction: column;
-	gap: var(--spacing-xs);
-	color: var(--color-text-secondary);
-	font-size: var(--font-size-sm);
-
-	small {
-		color: var(--color-text-tertiary);
-		font-size: var(--font-size-xs);
-	}
-}
-
 body:not(.boot-interactive):not(.boot-failed) .workspace-start-drop > :not(.workspace-start-loading) {
 	visibility: hidden;
 }
@@ -181,6 +224,7 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start-drop > :not(.work
 .workspace-start-loading {
 	@include cover;
 	display: grid;
+	align-content: center;
 	gap: var(--spacing-xs);
 	visibility: hidden;
 	animation: boot-indicator var(--boot-indicator-min-visible) var(--boot-indicator-delay) forwards;

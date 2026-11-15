@@ -553,8 +553,10 @@
 		display: none;
 	}
 
+	#workspaceStartResume { order: 2; }
+	.workspace-start-new { order: 3; }
+
 	.workspace-start-presets {
-		order: 2;
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 
@@ -588,7 +590,6 @@
 	// Three buttons don't fit one row at phone width without cutting their
 	// labels, so a row wraps before any label is cut.
 	.workspace-start-actions {
-		order: 1;
 		width: 100%;
 
 		>button {
@@ -599,10 +600,14 @@
 		}
 	}
 
+	// Phones open files rather than drop them: the well loses its outline and
+	// label and leads the card as a row of buttons.
 	.workspace-start-drop {
-		order: 3;
+		order: 1;
+		padding: 0;
+		border: 0;
 
-		> span { display: none; }
+		> .workspace-start-drop-label { display: none; }
 	}
 
 	#newCanvasModal {

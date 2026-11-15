@@ -108,22 +108,21 @@ setupImageListeners() {
 		if (noDocument && this.recovery) this.refreshWorkspaceStartResume();
 	},
 
-	// Resume tiles lead the start card, one per recovery draft, newest first
-	// (js/editor/document-recovery.js). They read only the drafts' summaries.
+	// Resume rows lead the start card under Continue, one per recovery draft,
+	// newest first (js/editor/document-recovery.js). They read only the drafts'
+	// summaries.
 	async refreshWorkspaceStartResume() {
 		const summaries = this.isRecoveryEnabled() && !this.originalImage ? await RECOVERY_STORE.listSummaries() : [];
 		if (!this.originalImage) this.renderWorkspaceStartResume(summaries || []);
 	},
 
 	renderWorkspaceStartResume(summaries) {
-		const host = document.getElementById('workspaceStartPresets');
-		const previous = host?.querySelector('.workspace-start-resume-list');
-		previous?.querySelectorAll('[data-thumbnail-url]').forEach(tile => URL.revokeObjectURL(tile.dataset.thumbnailUrl));
-		previous?.remove();
-		if (!host || !summaries.length) return;
-		const list = buildElement('workspace-start-resume-list');
-		list.append(...summaries.map(summary => this.buildWorkspaceStartResumeTile(summary)));
-		host.prepend(list);
+		const section = document.getElementById('workspaceStartResume');
+		const list = document.getElementById('workspaceStartResumeList');
+		if (!section || !list) return;
+		list.querySelectorAll('[data-thumbnail-url]').forEach(tile => URL.revokeObjectURL(tile.dataset.thumbnailUrl));
+		list.replaceChildren(...summaries.map(summary => this.buildWorkspaceStartResumeTile(summary)));
+		section.hidden = !summaries.length;
 	},
 
 	buildWorkspaceStartResumeTile(summary) {
@@ -131,7 +130,7 @@ setupImageListeners() {
 		const { width, height } = summary.canvas;
 		const edited = formatRelativeTime(summary.savedAt);
 		const tile = buildElement('workspace-start-resume');
-		const media = buildElement('action-card-media workspace-start-preset-preview workspace-start-resume-preview', undefined, 'span');
+		const media = buildElement('action-card-media workspace-start-resume-preview', undefined, 'span');
 		if (summary.thumbnail) {
 			const image = buildElement('workspace-start-resume-thumbnail', undefined, 'img');
 			image.alt = '';
@@ -142,14 +141,14 @@ setupImageListeners() {
 		}
 		const size = `${width} × ${height} px`;
 		const card = buildActionCard({
-			className: 'workspace-start-preset workspace-start-resume-card',
+			className: 'is-quiet workspace-start-resume-card',
 			dataset: {},
 			ariaLabel: `Resume ${name}, ${width} by ${height} pixels, edited ${edited}${summary.fileSaved ? '' : ', not saved to a file'}`,
 			media,
 			title: name,
 			details: [
-				{ text: `Resume · edited ${edited}` },
-				summary.fileSaved ? { text: size } : { text: `${size} · Not saved to a file`, className: 'is-warning' }
+				{ text: `Edited ${edited} · ${size}` },
+				...(summary.fileSaved ? [] : [{ text: 'Not saved to a file', className: 'is-warning' }])
 			]
 		});
 		card.addEventListener('click', () => this.resumeRecovery(summary.id));

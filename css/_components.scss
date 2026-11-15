@@ -252,6 +252,20 @@ textarea {
 	&.is-horizontal {
 		@include action-card-horizontal;
 	}
+
+	// A launcher, not a picker (the start card): no surface at rest, so the
+	// media carries the tile; hover and focus bring up a tint that reads on
+	// glass in every theme. Never `.active`.
+	&.is-quiet {
+		border-color: transparent;
+		background: transparent;
+
+		&:hover,
+		&:focus-visible {
+			border-color: transparent;
+			background: var(--color-quiet-hover);
+		}
+	}
 }
 
 .action-card-media {
