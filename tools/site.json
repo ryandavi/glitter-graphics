@@ -74,8 +74,9 @@
 		{
 			"slug": "updates",
 			"source": "releases",
+			"modal": "updatesModal",
 			"kinds": ["document", "updates"],
-			"icon": "glitter",
+			"icon": "sparkles",
 			"title": "Updates",
 			"description": "Every Glitter Editor release, newest first: what was added, changed and fixed."
 		}

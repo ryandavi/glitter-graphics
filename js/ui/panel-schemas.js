@@ -1277,24 +1277,29 @@ const PANEL_SCHEMAS = {
 		section: { id: 'cameraSettingsSection', bare: true },
 		sections: [
 			{ kind: 'section', sets: [
-				{ rows: [
-					// Reviewing a GIF: play forward then back, so the loop doesn't jump,
-					// at the speed Use encodes.
-					{ kind: 'toggle', id: 'cameraBounce', label: 'Bounce', checked: true },
-					{ kind: 'segmented', id: 'cameraSpeed', label: 'Speed', ariaLabel: 'GIF speed',
-						options: Object.entries(CONFIG.tools.camera.modes.gif.speeds).map(([value, speed]) => ({ label: speed.label, value })) },
-					{ kind: 'toggle', id: 'cameraMirror', label: 'Mirror', checked: true },
-					{ kind: 'select', id: 'cameraDevice', label: 'Camera', ariaLabel: 'Camera', options: [] },
-					{ kind: 'segmented', id: 'cameraCountdown', label: 'Countdown', ariaLabel: 'Countdown before each shot',
-						options: CONFIG.tools.camera.countdownSeconds.map(seconds => ({ label: seconds ? `${seconds} s` : 'Off', value: String(seconds) })) },
+				// Named for the mode ("Mode: Grid"), since the mode buttons are icons.
+				{ label: { id: 'cameraModeLabel' }, rows: [
 					{ kind: 'segmented', id: 'cameraAspect', label: 'Aspect', ariaLabel: 'Aspect ratio',
 						options: Object.entries(CONFIG.tools.camera.aspects).map(([value, aspect]) => ({ label: aspect.label, value })) },
+					{ kind: 'segmented', id: 'cameraCountdown', label: 'Countdown', ariaLabel: 'Countdown before each shot',
+						options: CONFIG.tools.camera.countdownSeconds.map(seconds => ({ label: seconds ? `${seconds} s` : 'Off', value: String(seconds) })) },
 					// GIF only: frames in a fast burst, or one a second for stop motion.
 					{ kind: 'segmented', id: 'cameraCapture', label: 'Capture', ariaLabel: 'GIF capture',
-						options: Object.entries(CONFIG.tools.camera.modes.gif.capture).map(([value, capture]) => ({ label: capture.label, value })) },
+						options: Object.entries(CONFIG.tools.camera.modes.gif.capture).map(([value, capture]) => ({ label: capture.label, value })) }
+				] },
+				// Reviewing a GIF: play forward then back, so the loop doesn't jump,
+				// at the speed Use encodes.
+				{ id: 'cameraPlaybackSet', label: 'Playback', rows: [
+					{ kind: 'toggle', id: 'cameraBounce', label: 'Bounce', checked: true },
+					{ kind: 'segmented', id: 'cameraSpeed', label: 'Speed', ariaLabel: 'GIF speed',
+						options: Object.entries(CONFIG.tools.camera.modes.gif.speeds).map(([value, speed]) => ({ label: speed.label, value })) }
+				] },
+				{ label: 'Camera', rows: [
+					{ kind: 'select', id: 'cameraDevice', label: 'Camera', ariaLabel: 'Camera', options: [] },
+					{ kind: 'toggle', id: 'cameraMirror', label: 'Mirror', checked: true },
 					// The cheap-webcam look, under whichever effect is picked.
 					{ kind: 'toggle', id: 'cameraWebcam', label: 'Webcam look', checked: false },
-					{ kind: 'toggle', id: 'cameraSound', label: 'Sound', checked: true }
+					{ kind: 'toggle', id: 'cameraSound', label: 'Beeps and shutter', checked: true }
 				] }
 			] }
 		]

@@ -173,18 +173,19 @@ const CONFIG = deepFreeze({
 		camera: {
 			idealWidth: 1280, idealHeight: 720, countdownSeconds: [0, 3, 5],
 			fileNames: { image: 'Photo.png', animation: 'Photo.gif' },
-			// Shot modes, in segmented-control order. `layout` composes the shots
-			// into one image; `animated` encodes them as a GIF instead.
+			// Shot modes, in segmented-control order; each button shows `icon`.
+			// `layout` places the shots in a grid on Use, one layer each;
+			// `animated` encodes them as a GIF instead.
 			modes: {
 				// Grid and Strip count down before every shot; with Countdown off,
 				// shots are `intervalMs` apart.
-				photo: { label: 'Photo', shots: 1 },
-				grid: { label: 'Grid', shots: 4, intervalMs: 1000, layout: { columns: 2, rows: 2 } },
-				strip: { label: 'Strip', shots: 4, intervalMs: 1000, layout: { columns: 1, rows: 4 } },
+				photo: { label: 'Photo', icon: 'image', shots: 1 },
+				grid: { label: 'Grid', icon: 'camera-grid', shots: 4, intervalMs: 1000, layout: { columns: 2, rows: 2 } },
+				strip: { label: 'Strip', icon: 'camera-strip', shots: 4, intervalMs: 1000, layout: { columns: 1, rows: 4 } },
 				// `capture` is the gap between frames (a stop-motion frame beeps and
 				// flashes first); `speeds` is the review-time playback delay.
 				gif: {
-					label: 'GIF', shots: 8, animated: true,
+					label: 'GIF', icon: 'camera-gif', shots: 8, animated: true,
 					capture: {
 						burst: { label: 'Burst', intervalMs: 150 },
 						stopMotion: { label: 'Stop motion', intervalMs: 1000, cue: true }

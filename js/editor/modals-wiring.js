@@ -104,6 +104,7 @@ updateOrientationButtons(width, height) {
 			url: 'about/', references: 'ol#AboutReferencesList',
 			onLoaded: (body) => this.renderVersionHistory(body)
 		});
+		this.registerDocumentModal('updatesModal', { url: 'updates/', onLoaded: (body) => this.bindGuideLinks(body) });
 		this.registerDocumentModal('guideModal', { url: 'guide/', onLoaded: (body) => localizeKeyLabels(body) });
 
 		// Layer type picker modal (no open button - opened programmatically)
@@ -278,16 +279,24 @@ renderVersionHistory(root, { headingLevel = 4 } = {}) {
 
 	root.querySelectorAll('[data-version-history]').forEach((history) => {
 		history.innerHTML = renderUpdateReleaseHtml(latest, { anchor: false, headingLevel })
-			+ '<p>The <a href="updates/" target="_blank" rel="noopener">Updates</a> page lists what changed in every release.</p>';
-		if (history.dataset.guideLinksBound !== 'true') {
-			history.dataset.guideLinksBound = 'true';
-			history.addEventListener('click', (event) => {
-				const link = event.target.closest?.('[data-guide-anchor]');
-				if (!link || !isPlainClick(event)) return;
-				event.preventDefault();
-				this.openGuideAt(link.dataset.guideAnchor);
-			});
-		}
+			+ '<p><a href="updates/" data-open-modal="updatesModal">Updates</a> lists what changed in every release.</p>';
+		this.bindGuideLinks(history);
+	});
+},
+
+// A release's "Show me" links and its link to Updates open those modals on a
+// plain click; other clicks keep the link.
+bindGuideLinks(root) {
+	if (root.dataset.guideLinksBound === 'true') return;
+	root.dataset.guideLinksBound = 'true';
+	root.addEventListener('click', (event) => {
+		if (!isPlainClick(event)) return;
+		const guide = event.target.closest?.('[data-guide-anchor]');
+		const modal = guide ? null : event.target.closest?.('[data-open-modal]');
+		if (!guide && !modal) return;
+		event.preventDefault();
+		if (guide) this.openGuideAt(guide.dataset.guideAnchor);
+		else this.openDocumentAt(modal.dataset.openModal, modal.dataset.openAnchor || null);
 	});
 },
 

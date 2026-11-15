@@ -120,11 +120,12 @@
 		{
 			"slug": "updates",
 			"source": "releases",
+			"modal": "updatesModal",
 			"kinds": [
 				"document",
 				"updates"
 			],
-			"icon": "glitter",
+			"icon": "sparkles",
 			"title": "Updates",
 			"description": "Every Glitter Editor release, newest first: what was added, changed and fixed.",
 			"scripts": [
@@ -135,7 +136,7 @@
 			]
 		}
 	],
-	"stylesheet": "css/style.css?v=93f96f3a",
+	"stylesheet": "css/style.css?v=b276c5f5",
 	"favicon": "images/etc/favicon.ico?v=bcdad78e",
 	"scripts": [
 		"js/ui/menu-popover.js?v=3861a0e1",
@@ -286,9 +287,9 @@
 			"stickers": 258
 		},
 		"release": {
-			"version": "0.6.0",
-			"name": "Paths, Crop & Library",
-			"dateLabel": "November 1, 2026"
+			"version": "0.7.0",
+			"name": "Public Alpha & Photo Booth",
+			"dateLabel": "December 1, 2026"
 		},
 		"swatches": [
 			{

@@ -36,7 +36,7 @@ const { openApp } = require('../lib/app');
 
 		await page.locator('#takePhotoBtn').click();
 		await ready();
-		const live = await page.evaluate(() => ({ mirror: document.getElementById('cameraMirror').checked, mirrored: document.getElementById('cameraStage').classList.contains('is-mirrored'), useDisabled: document.getElementById('cameraUseBtn').disabled, use: document.querySelector('#cameraUseBtn .name').textContent, modes: [...document.querySelectorAll('#cameraModes [data-mode]')].map(button => button.textContent), effects: document.querySelectorAll('#cameraEffects .camera-effect').length, roll: document.getElementById('cameraRoll').classList.contains('is-empty') }));
+		const live = await page.evaluate(() => ({ mirror: document.getElementById('cameraMirror').checked, mirrored: document.getElementById('cameraStage').classList.contains('is-mirrored'), useDisabled: document.getElementById('cameraUseBtn').disabled, use: document.querySelector('#cameraUseBtn .name').textContent, modes: [...document.querySelectorAll('#cameraModes [data-mode]')].map(button => button.getAttribute('aria-label')), effects: document.querySelectorAll('#cameraEffects .camera-effect').length, roll: document.getElementById('cameraRoll').classList.contains('is-empty') }));
 		assert.deepEqual(live, { mirror: true, mirrored: true, useDisabled: true, use: 'Use', modes: ['Photo', 'Grid', 'Strip', 'GIF'], effects: 9, roll: true }, 'A front camera previews mirrored, with four modes, a 3×3 Effects grid, an empty roll and Use disabled');
 		await page.locator('#cameraModes [data-mode="photo"]').click();
 		const footerLive = await footer();
@@ -57,12 +57,12 @@ const { openApp } = require('../lib/app');
 				if (Math.abs(a[i] - b[j]) + Math.abs(a[i + 1] - b[j + 1]) + Math.abs(a[i + 2] - b[j + 2]) > 24) mismatched++;
 			}
 			const limits = CONFIG.canvas.limits;
-			return { mismatched, fits: still.width <= limits.maxWidth && still.height <= limits.maxHeight, useDisabled: document.getElementById('cameraUseBtn').disabled, videoOpacity: getComputedStyle(video).opacity, bounceHidden: document.getElementById('cameraBounce').closest('.property-row').hidden, speedHidden: document.getElementById('cameraSpeed').closest('.property-row').hidden, takes: document.querySelectorAll('#cameraRoll .camera-take').length };
+			return { mismatched, fits: still.width <= limits.maxWidth && still.height <= limits.maxHeight, useDisabled: document.getElementById('cameraUseBtn').disabled, videoOpacity: getComputedStyle(video).opacity, playbackHidden: document.getElementById('cameraPlaybackSet').hidden, takes: document.querySelectorAll('#cameraRoll .camera-take').length };
 		});
 		assert.equal(mirror.mismatched, 0, 'The mirrored still is the preview flipped');
 		assert(mirror.fits, 'The still fits the canvas limits');
 		assert.deepEqual([mirror.useDisabled, mirror.takes], [false, 1], 'After the shutter: Use is enabled and the roll holds the take');
-		assert(mirror.bounceHidden && mirror.speedHidden, 'Bounce and Speed only show when reviewing a GIF');
+		assert(mirror.playbackHidden, 'Playback (Bounce, Speed) only shows when reviewing a GIF');
 		assert.deepEqual(await footer(), footerLive, 'The footer keeps every control in place after a take');
 		await page.waitForFunction(() => !document.getElementById('cameraView').hidden && document.getElementById('cameraView').width === editor.cameraCapture.result.image.width);
 
@@ -79,7 +79,7 @@ const { openApp } = require('../lib/app');
 		assert.deepEqual(await page.evaluate(() => [editor.cameraCapture.phase, editor.cameraCapture.selected === editor.cameraCapture.roll[0], document.getElementById('cameraUseBtn').disabled]), ['live', true, false], 'Picking it again returns to the camera, still selected for Use');
 		const roll = await page.evaluate(() => {
 			const capture = editor.cameraCapture, limit = CONFIG.tools.camera.roll.size;
-			for (let added = 0; added < limit + 2; added++) capture.addTake({ mode: 'photo', image: capture.roll[0].image, ratio: null });
+			for (let added = 0; added < limit + 2; added++) capture.addTake({ mode: 'photo', image: capture.roll[0].image, aspect: 'original' });
 			return { length: capture.roll.length, buttons: document.querySelectorAll('#cameraRoll .camera-take').length, limit };
 		});
 		assert.deepEqual([roll.length, roll.buttons], [roll.limit, roll.limit], 'The roll keeps the newest takes up to its limit');
@@ -118,14 +118,20 @@ const { openApp } = require('../lib/app');
 		assert(await page.evaluate(() => editor.cameraCapture.roll.length === 1 && editor.cameraCapture.roll[0].pending && Boolean(document.querySelector('#cameraRoll .camera-take.is-pending'))), 'The Grid take shows on the roll while shooting');
 		await review();
 		const grid = await page.evaluate(() => {
-			const { result } = editor.cameraCapture, size = editor.cameraCapture.shotSize(CONFIG.tools.camera.modes.grid), limits = CONFIG.canvas.limits;
+			const { result } = editor.cameraCapture, size = editor.cameraCapture.layoutCell(result), limits = CONFIG.canvas.limits;
 			return { width: result.image.width, height: result.image.height, expected: [2 * size.width + 3 * size.gutter, 2 * size.height + 3 * size.gutter], square: size.width === size.height, fits: result.image.width <= limits.maxWidth && result.image.height <= limits.maxHeight, corner: Array.from(result.image.getContext('2d').getImageData(0, 0, 1, 1).data), remembered: PREFERENCES.get('cameraMode'), guide: document.getElementById('cameraCrop').hidden };
 		});
 		assert.deepEqual([grid.width, grid.height], grid.expected, 'Grid composes four cells and three gutters each way');
 		assert(grid.square && grid.fits && grid.remembered === 'grid', `Grid cells are square, fit the limits, and the mode is remembered: ${JSON.stringify(grid)}`);
 		assert(grid.guide, 'A Grid take is already cropped, so its review has no guide');
 		assert.deepEqual(grid.corner, [255, 255, 255, 255], 'The gutter is the CONFIG background');
+		// Reviewing, the Aspect control re-crops the take from its full shots.
 		await page.locator('#cameraAspect [data-value="original"]').click();
+		const recropped = await page.evaluate(() => {
+			const { result } = editor.cameraCapture, { videoWidth, videoHeight } = document.getElementById('cameraVideo'), cell = editor.cameraCapture.layoutCell(result);
+			return { take: result.aspect, setting: PREFERENCES.get('cameraAspect'), cellRatio: cell.width / cell.height, camera: videoWidth / videoHeight, thumb: result.thumb.width / result.thumb.height, image: result.image.width / result.image.height };
+		});
+		assert(recropped.take === 'original' && recropped.setting === 'original' && Math.abs(recropped.cellRatio - recropped.camera) < 0.02 && Math.abs(recropped.thumb - recropped.image) < 0.05, `Aspect re-crops the reviewed Grid take and its thumbnail: ${JSON.stringify(recropped)}`);
 
 		// Closing mid-sequence cancels it, empties the roll and stops the camera.
 		await page.locator('#cameraTakeBtn').click();
@@ -167,9 +173,9 @@ const { openApp } = require('../lib/app');
 			bounce.click();
 			counts.push(capture.reviewFrames().length);
 			bounce.click();
-			return { counts, bounceShown: !bounce.closest('.property-row').hidden, speedShown: !document.getElementById('cameraSpeed').closest('.property-row').hidden, use: document.querySelector('#cameraUseBtn .name').textContent };
+			return { counts, playbackShown: !document.getElementById('cameraPlaybackSet').hidden, use: document.querySelector('#cameraUseBtn .name').textContent };
 		});
-		assert.deepEqual(gif, { counts: [8, 14, 8], bounceShown: true, speedShown: true, use: 'Use' }, 'GIF review: 8 frames, Bounce plays 14, toggling changes it instantly, Speed shows');
+		assert.deepEqual(gif, { counts: [8, 14, 8], playbackShown: true, use: 'Use' }, 'GIF review: 8 frames, Bounce plays 14, toggling changes it instantly, Speed shows');
 		await page.locator('#cameraSpeed [data-value="fast"]').click();
 
 		// Effect + Webcam: both become Filter layers above the base, Webcam underneath.

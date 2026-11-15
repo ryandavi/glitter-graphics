@@ -25,7 +25,7 @@ setupImageListeners() {
 			}
 			event.currentTarget.classList.remove('has-update');
 			event.currentTarget.removeAttribute('aria-label');
-			this.openDocumentAt('aboutModal', 'AboutVersionHistory');
+			this.modalManager.open('updatesModal');
 		});
 
 		openImageBtn?.addEventListener('click', () => imageUpload?.click());

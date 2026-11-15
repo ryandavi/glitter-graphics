@@ -6,10 +6,23 @@
 // keeps playing under a review but is hidden, so the margins around a Grid or
 // Strip show the stage background. The stage takes the camera's shape
 // (--camera-aspect, set from the video); on desktop it is sized from the
-// viewport height and the dialog fits it, leaving room for the roll and the
-// fixed footer.
+// viewport height: stage, roll and the space around them fill the dialog's
+// 90dvh between the header and the fixed footer, and the settings scroll in
+// below. The chrome sum mirrors the modal shell (dialog border, header,
+// body top padding, footer with the 56px shutter). The roll is a fixed
+// height, so a scrollbar (once takes overflow) shrinks the thumbnails
+// instead of pushing the settings up into view.
 #cameraModal {
-	--camera-stage-height: min(70dvh, calc(90dvh - 14rem));
+	--camera-thumb-height: 80px;
+	--camera-roll-gap: var(--spacing-lg);
+	--camera-roll-after: var(--camera-roll-gap);
+	--camera-chrome-height: calc(2px
+		+ var(--row-height) + var(--spacing-md) + 1px
+		+ var(--spacing-lg)
+		+ 56px + 2 * var(--spacing-md) + 1px);
+	--camera-stage-height: calc(90dvh - var(--camera-chrome-height)
+		- var(--camera-roll-gap) - var(--camera-thumb-height)
+		- var(--camera-roll-after));
 
 	> .modal-content {
 		--modal-width: fit-content;
@@ -109,16 +122,14 @@
 		&[hidden] { display: none; }
 	}
 
+	// Effect tiles and roll takes are the shared selectable card.
 	.camera-effect {
-		position: relative;
+		@include selectable-card;
 		min-width: 0;
 		min-height: 0;
 		padding: 0;
-		border: 2px solid transparent;
-		border-radius: var(--radius-control);
 		overflow: hidden;
 		background: #000;
-		cursor: pointer;
 
 		> canvas {
 			display: block;
@@ -137,31 +148,24 @@
 			text-shadow: 0 1px 3px rgb(0 0 0 / 80%);
 			@include truncate;
 		}
-
-		&:hover { border-color: var(--color-border-hover); }
-
-		&:focus-visible {
-			outline: none;
-			border-color: var(--color-accent);
-			box-shadow: var(--control-focus-ring);
-		}
-
-		&.active { border-color: var(--color-accent); }
 	}
 
 	// The roll: every take as a thumbnail, newest last. It keeps its height
 	// while empty so nothing below it moves on the first take.
 	.camera-roll {
 		display: flex;
-		align-items: center;
-		gap: var(--spacing-xs);
-		min-height: calc(48px + 2 * var(--spacing-xs));
-		margin-top: var(--spacing-sm);
-		padding-block: var(--spacing-xs);
-		overflow-x: auto;
+		align-items: stretch;
+		gap: var(--spacing-sm);
+		height: var(--camera-thumb-height);
+		box-sizing: border-box;
+		margin-top: var(--camera-roll-gap);
+		margin-bottom: var(--camera-roll-after);
+		overflow: auto hidden;
 		overscroll-behavior-x: contain;
+		scrollbar-width: thin;
 
 		> .camera-roll-empty {
+			align-self: center;
 			color: var(--color-text-tertiary);
 			font-size: var(--font-size-sm);
 		}
@@ -170,15 +174,12 @@
 	}
 
 	.camera-take {
-		position: relative;
+		@include selectable-card;
 		flex: none;
-		height: 48px;
+		height: 100%;
 		padding: 0;
-		border: 2px solid transparent;
-		border-radius: var(--radius-control);
 		overflow: hidden;
 		background: #000;
-		cursor: pointer;
 
 		> canvas {
 			display: block;
@@ -199,28 +200,71 @@
 			line-height: 1.4;
 		}
 
-		&:hover:not(:disabled) { border-color: var(--color-border-hover); }
+		// The roll has no padding and clips its overflow, so the selected
+		// ring is drawn inside the thumbnail instead of around it.
+		&:is(.active, .selected) { outline-offset: -2px; }
 
-		&:focus-visible {
-			outline: none;
-			border-color: var(--color-accent);
-			box-shadow: var(--control-focus-ring);
-		}
-
-		&.active { border-color: var(--color-accent); }
 		&.is-pending { opacity: 0.75; }
 		&:disabled { cursor: default; }
 	}
 
+	// The settings sit in the modal body's padding, so rows and set
+	// headings add no side gutter of their own.
+	#cameraSettingsSection {
+		.property-row { padding-inline: 0; }
+		.property-set-label { padding-inline: 0; }
+	}
+
+	// A take and its remove button. The button shows on hover, on keyboard
+	// focus and on the selected take; touch screens always show it.
+	.camera-roll-item {
+		position: relative;
+		flex: none;
+		display: flex;
+	}
+
+	.camera-take-remove {
+		position: absolute;
+		top: 2px;
+		right: 2px;
+		display: grid;
+		place-items: center;
+		width: 18px;
+		height: 18px;
+		padding: 0;
+		border: 0;
+		border-radius: 50%;
+		background: rgb(0 0 0 / 65%);
+		color: #fff;
+		cursor: pointer;
+		opacity: 0;
+		transition: opacity var(--transition-fast);
+
+		> svg.icon { width: 10px; height: 10px; }
+
+		&:hover { background: rgb(0 0 0 / 85%); }
+		&:disabled { display: none; }
+	}
+
+	.camera-roll-item:hover > .camera-take-remove,
+	.camera-roll-item:focus-within > .camera-take-remove,
+	.camera-take.active + .camera-take-remove { opacity: 1; }
+
+	@media (hover: none) {
+		.camera-take-remove { opacity: 1; }
+	}
+
 	// The fixed footer: modes on the left, the shutter centred, Effects and
-	// Use on the right. Nothing in it hides, so it never reflows.
+	// Use on the right. Nothing in it hides, so it never reflows. The modes
+	// and Effects take the footer button height so the row reads as one.
 	> .modal-content > .modal-footer.camera-booth-bar {
+		--control-height: var(--row-height);
 		display: grid;
 		grid-template-columns: 1fr auto 1fr;
 		align-items: center;
 		gap: var(--spacing-md);
 
-		> .camera-modes { justify-self: start; }
+		> .camera-modes { justify-self: start; width: auto; }
 	}
 
 	.camera-booth-actions {
@@ -230,7 +274,13 @@
 		gap: var(--spacing-base);
 	}
 
-	.camera-modes > .segmented-option { padding-inline: var(--spacing-md); }
+	// Icon-only mode buttons; the settings heading names the mode.
+	.camera-modes > .segmented-option {
+		flex: 0 0 auto;
+		padding-inline: var(--spacing-md);
+
+		> svg.icon { width: 1.25em; height: 1.25em; }
+	}
 
 	// The round shutter: the accent fill of a primary action.
 	.camera-shutter {
@@ -260,14 +310,17 @@
 		&[hidden] { display: none; }
 	}
 
-	.modal-form { margin-top: var(--spacing-sm); }
 
 	// Phone width: the stage spans the sheet and the modes get their own row
 	// above the shutter.
 	@media (max-width: 480px) {
+		--camera-thumb-height: 56px;
+		--camera-roll-gap: var(--spacing-md);
+
 		> .modal-content { min-width: 0; }
 		.camera-stage { width: 100%; }
-		> .modal-content > .modal-footer.camera-booth-bar > .camera-modes { grid-column: 1 / -1; justify-self: stretch; }
+		> .modal-content > .modal-footer.camera-booth-bar > .camera-modes { grid-column: 1 / -1; justify-self: stretch; width: 100%; }
+		.camera-modes > .segmented-option { flex: 1 1 0; }
 	}
 }
 

@@ -61,7 +61,7 @@ class CameraCapture {
 		this.workCanvases = new WeakMap();
 		this.lookData = new Map();
 		this.paintCount = 0;
-		this.ui = Object.fromEntries(['cameraModal', 'cameraStage', 'cameraVideo', 'cameraView', 'cameraCrop', 'cameraFlash', 'cameraCountdownBadge', 'cameraEffects', 'cameraRoll', 'cameraModes', 'cameraTakeBtn', 'cameraEffectsBtn', 'cameraUseBtn', 'cameraMirror', 'cameraDevice', 'cameraCountdown', 'cameraAspect', 'cameraCapture', 'cameraWebcam', 'cameraSound', 'cameraBounce', 'cameraSpeed']
+		this.ui = Object.fromEntries(['cameraModal', 'cameraStage', 'cameraVideo', 'cameraView', 'cameraCrop', 'cameraFlash', 'cameraCountdownBadge', 'cameraEffects', 'cameraRoll', 'cameraModes', 'cameraTakeBtn', 'cameraEffectsBtn', 'cameraUseBtn', 'cameraMirror', 'cameraDevice', 'cameraCountdown', 'cameraAspect', 'cameraCapture', 'cameraWebcam', 'cameraSound', 'cameraBounce', 'cameraSpeed', 'cameraPlaybackSet']
 			.map(id => [id.replace(/^camera/, '').replace(/^./, char => char.toLowerCase()), document.getElementById(id)]));
 		const { modes, aspects, countdownSeconds } = CONFIG.tools.camera;
 		const remembered = (key, table) => (Object.hasOwn(table, PREFERENCES.get(key)) ? PREFERENCES.get(key) : Object.keys(table)[0]);
@@ -71,7 +71,7 @@ class CameraCapture {
 		this.speed = modes.gif.defaultSpeed;
 		this.countdownSeconds = countdownSeconds[0];
 		this.bindChoice(this.ui.countdown, String(this.countdownSeconds), value => { this.countdownSeconds = Number(value); });
-		this.bindChoice(this.ui.aspect, this.aspect, value => { this.aspect = value; PREFERENCES.set('cameraAspect', value); this.syncCrop(); });
+		this.bindChoice(this.ui.aspect, this.aspect, value => this.setAspect(value));
 		this.bindChoice(this.ui.capture, this.gifCapture, value => { this.gifCapture = value; PREFERENCES.set('cameraGifCapture', value); });
 		this.bindChoice(this.ui.speed, this.speed, value => { this.speed = value; this.reviewStart = performance.now(); });
 		this.buildModes();
@@ -87,6 +87,21 @@ class CameraCapture {
 		this.ui.takeBtn.addEventListener('click', () => this.take());
 		this.ui.effectsBtn.addEventListener('click', () => this.setEffectsOpen(this.ui.effects.hidden));
 		this.ui.useBtn.addEventListener('click', () => this.use());
+		// A mouse wheel scrolls the roll sideways once it overflows.
+		this.ui.roll.addEventListener('wheel', event => {
+			const roll = this.ui.roll;
+			if (event.ctrlKey || Math.abs(event.deltaY) <= Math.abs(event.deltaX) || roll.scrollWidth <= roll.clientWidth) return;
+			event.preventDefault();
+			roll.scrollLeft += event.deltaY;
+		}, { passive: false });
+		// Delete or Backspace on a roll thumbnail removes that take.
+		this.ui.roll.addEventListener('keydown', event => {
+			if (event.key !== 'Delete' && event.key !== 'Backspace') return;
+			const take = this.roll.find(entry => entry.button === event.target);
+			if (!take || this.phase === 'shooting' || take.pending) return;
+			event.preventDefault();
+			this.deleteTake(take);
+		});
 		document.addEventListener('visibilitychange', () => {
 			if (document.hidden) this.stop();
 			else if (this.isOpen()) this.start();
@@ -201,7 +216,9 @@ class CameraCapture {
 			button.type = 'button';
 			button.className = 'segmented-option';
 			button.dataset.mode = id;
-			button.textContent = mode.label;
+			button.title = mode.label;
+			button.setAttribute('aria-label', mode.label);
+			button.append(createIcon(mode.icon));
 			button.addEventListener('click', () => {
 				this.mode = id;
 				PREFERENCES.set('cameraMode', id);
@@ -216,6 +233,9 @@ class CameraCapture {
 			const active = button.dataset.mode === this.mode;
 			button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active));
 		});
+		// The buttons are icons, so the settings name the mode in words.
+		const label = document.getElementById('cameraModeLabel');
+		if (label) label.textContent = `Mode: ${CONFIG.tools.camera.modes[this.mode].label}`;
 		// Capture (Burst or Stop motion) only applies to a GIF.
 		this.ui.capture.closest('.property-row').hidden = !CONFIG.tools.camera.modes[this.mode].animated;
 	}
@@ -228,7 +248,21 @@ class CameraCapture {
 		this.syncCrop();
 	}
 
-	aspectRatio() { return CONFIG.tools.camera.aspects[this.aspect]?.ratio || null; }
+	aspectRatio(aspect = this.aspect) { return CONFIG.tools.camera.aspects[aspect]?.ratio || null; }
+
+	// The setting for the next shot. Reviewing a take, it also re-crops that
+	// take: every take keeps its full frames, so nothing is lost.
+	setAspect(value) {
+		this.aspect = value;
+		PREFERENCES.set('cameraAspect', value);
+		const take = this.phase === 'review' ? this.selected : null;
+		if (take && take.aspect !== value) {
+			take.aspect = value;
+			if (take.layout) take.image = this.composeLayout(take);
+			this.drawTakeThumb(take);
+		}
+		this.syncCrop();
+	}
 
 	// The centred part of a width × height frame at `ratio` (width over height).
 	cropRect(ratio, width = this.ui.video.videoWidth, height = this.ui.video.videoHeight) {
@@ -244,7 +278,8 @@ class CameraCapture {
 	// Dims the stage outside the chosen aspect: live, the setting; reviewing a
 	// Photo or GIF take, the aspect Use will crop it to.
 	syncCrop() {
-		const ratio = this.phase === 'review' ? this.selected?.ratio : this.aspectRatio();
+		const take = this.phase === 'review' ? this.selected : null;
+		const ratio = take ? (take.layout ? null : this.aspectRatio(take.aspect)) : this.aspectRatio();
 		const { videoWidth: width, videoHeight: height } = this.ui.video;
 		this.ui.crop.hidden = !ratio || !width || !height;
 		if (this.ui.crop.hidden) return;
@@ -266,11 +301,11 @@ class CameraCapture {
 		const mode = CONFIG.tools.camera.modes[this.mode];
 		const capture = mode.animated ? mode.capture[this.gifCapture] : null;
 		const sequence = this.sequence = { cancelled: false, timer: null, resolve: null, pending: null };
-		const size = this.shotSize(mode);
+		const size = this.shotSize();
 		const shots = [];
 		this.setEffectsOpen(false);
 		this.setPhase('shooting');
-		if (mode.layout) sequence.pending = this.addTake({ mode: this.mode, layout: mode.layout, size, pending: true });
+		if (mode.layout) sequence.pending = this.addTake({ mode: this.mode, layout: mode.layout, aspect: this.aspect, shots, pending: true });
 		for (let index = 0; index < mode.shots; index++) {
 			const caption = mode.layout || capture?.cue ? `${index + 1} of ${mode.shots}` : '';
 			const countdown = !index || mode.layout ? this.countdownSeconds : 0;
@@ -296,19 +331,20 @@ class CameraCapture {
 			// A GIF burst flashes once: a flash every frame would strobe. Stop
 			// motion is one a second, under the photosensitivity line.
 			if (!mode.animated || !index || capture.cue) this.flash();
-			if (sequence.pending) this.drawLayoutThumb(sequence.pending, shots);
+			if (sequence.pending) this.drawTakeThumb(sequence.pending);
 		}
 		this.sequence = null;
 		let take = sequence.pending;
 		if (take) {
 			take.pending = false;
-			take.image = this.composeLayout(shots, mode.layout, size);
+			take.image = this.composeLayout(take);
 		} else {
 			// Photo and GIF keep the full frame; Use crops to the aspect.
-			const ratio = this.aspectRatio();
-			take = this.addTake(mode.animated ? { mode: this.mode, frames: shots, ratio } : { mode: this.mode, image: shots[0], ratio });
+			const aspect = this.aspect;
+			take = this.addTake(mode.animated ? { mode: this.mode, frames: shots, aspect } : { mode: this.mode, image: shots[0], aspect });
 		}
 		this.selected = take;
+		this.showTakeAspect(take);
 		this.setPhase('review');
 		this.ui.useBtn.focus();
 	}
@@ -343,14 +379,21 @@ class CameraCapture {
 
 	hideBadge() { this.ui.countdownBadge.hidden = true; }
 
-	// The size of one shot and the part of the frame it keeps. A composed
-	// layout crops each cell to the aspect and shrinks the cells so the whole
-	// result fits the canvas limits; nothing the booth makes asks to be resized.
-	shotSize(mode) {
-		const crop = this.cropRect(mode.layout ? this.aspectRatio() : null);
-		if (!mode.layout) return { ...this.editor.getConstrainedCanvasSize(crop.width, crop.height), gutter: 0, crop };
+	// Every shot keeps the full camera frame, within the canvas limits, so a
+	// take can be re-cropped to any aspect after it is shot.
+	shotSize() {
+		const { videoWidth: width, videoHeight: height } = this.ui.video;
+		return this.editor.getConstrainedCanvasSize(width, height);
+	}
+
+	// One cell of a layout take: the part of each shot its aspect keeps, and
+	// a cell size shrunk so the whole layout fits the canvas limits; nothing
+	// the booth makes asks to be resized.
+	layoutCell(take) {
+		const shot = take.shots[0];
+		const crop = this.cropRect(this.aspectRatio(take.aspect), shot.width, shot.height);
 		const gutter = CONFIG.tools.camera.grid.gutter * Math.min(crop.width, crop.height);
-		const full = this.layoutSize(mode.layout, { width: crop.width, height: crop.height, gutter });
+		const full = this.layoutSize(take.layout, { width: crop.width, height: crop.height, gutter });
 		const fitted = this.editor.getConstrainedCanvasSize(full.width, full.height);
 		const scale = Math.min(1, fitted.width / full.width, fitted.height / full.height);
 		return { width: Math.max(1, Math.floor(crop.width * scale)), height: Math.max(1, Math.floor(crop.height * scale)), gutter: Math.floor(gutter * scale), crop };
@@ -360,36 +403,53 @@ class CameraCapture {
 		return { width: columns * cell.width + (columns + 1) * cell.gutter, height: rows * cell.height + (rows + 1) * cell.gutter };
 	}
 
-	// Draws the shots so far into a layout at `scale`; empty cells stay background.
-	drawLayout(ctx, shots, layout, cell, scale = 1) {
-		const size = this.layoutSize(layout, cell);
+	// The top-left corner of shot `index`'s cell, reading across then down.
+	cellOrigin({ columns }, cell, index) {
+		const column = index % columns, row = Math.floor(index / columns);
+		return { x: cell.gutter + column * (cell.width + cell.gutter), y: cell.gutter + row * (cell.height + cell.gutter) };
+	}
+
+	// Draws a layout take's shots so far at `scale`, each cropped to the
+	// take's aspect; empty cells stay background. `shots: false` draws the
+	// background alone, the base Use places each shot's layer on.
+	drawLayout(ctx, take, cell, scale = 1, { shots = true } = {}) {
+		const { crop } = cell;
+		const size = this.layoutSize(take.layout, cell);
 		ctx.fillStyle = CONFIG.tools.camera.grid.background;
 		ctx.fillRect(0, 0, size.width * scale, size.height * scale);
-		shots.forEach((shot, index) => {
-			const column = index % layout.columns, row = Math.floor(index / layout.columns);
-			const x = cell.gutter + column * (cell.width + cell.gutter), y = cell.gutter + row * (cell.height + cell.gutter);
-			ctx.drawImage(shot, x * scale, y * scale, cell.width * scale, cell.height * scale);
+		if (!shots) return;
+		take.shots.forEach((shot, index) => {
+			const { x, y } = this.cellOrigin(take.layout, cell, index);
+			ctx.drawImage(shot, crop.x, crop.y, crop.width, crop.height, x * scale, y * scale, cell.width * scale, cell.height * scale);
 		});
 	}
 
-	composeLayout(shots, layout, cell) {
-		const size = this.layoutSize(layout, cell);
+	composeLayout(take, options) {
+		const cell = this.layoutCell(take);
+		const size = this.layoutSize(take.layout, cell);
 		const canvas = createAppCanvas(size.width, size.height, 'camera/layout');
-		this.drawLayout(canvas.getContext('2d'), shots, layout, cell);
+		this.drawLayout(canvas.getContext('2d'), take, cell, 1, options);
 		return canvas;
 	}
 
-	// One camera frame as the preview shows it, mirror and crop included.
-	captureFrame({ width, height, crop }) {
+	// One shot of a layout take, cropped and sized to its cell.
+	cellImage(take, cell, index) {
+		const { crop } = cell;
+		const canvas = createAppCanvas(cell.width, cell.height, 'camera/cell');
+		canvas.getContext('2d').drawImage(take.shots[index], crop.x, crop.y, crop.width, crop.height, 0, 0, cell.width, cell.height);
+		return canvas;
+	}
+
+	// One full camera frame as the preview shows it, mirror included.
+	captureFrame({ width, height }) {
 		const canvas = createAppCanvas(width, height, 'camera/shot');
-		this.drawSource(canvas.getContext('2d'), this.ui.video, width, height, this.ui.mirror.checked, crop);
+		this.drawSource(canvas.getContext('2d'), this.ui.video, width, height, this.ui.mirror.checked);
 		return canvas;
 	}
 
-	drawSource(ctx, source, width, height, mirror, crop = null) {
+	drawSource(ctx, source, width, height, mirror) {
 		ctx.setTransform(mirror ? -1 : 1, 0, 0, 1, mirror ? width : 0, 0);
-		if (crop) ctx.drawImage(source, crop.x, crop.y, crop.width, crop.height, 0, 0, width, height);
-		else ctx.drawImage(source, 0, 0, width, height);
+		ctx.drawImage(source, 0, 0, width, height);
 		ctx.setTransform(1, 0, 0, 1, 0, 0);
 	}
 
@@ -407,8 +467,7 @@ class CameraCapture {
 		[this.ui.mirror, this.ui.device].forEach(control => { control.disabled = shooting; });
 		[this.ui.countdown, this.ui.aspect, this.ui.capture].forEach(control => control.querySelectorAll('button').forEach(button => { button.disabled = shooting; }));
 		const gifReview = review && Boolean(this.selected?.frames);
-		this.ui.bounce.closest('.property-row').hidden = !gifReview;
-		this.ui.speed.closest('.property-row').hidden = !gifReview;
+		this.ui.playbackSet.hidden = !gifReview;
 		this.syncRoll();
 		this.syncCrop();
 	}
@@ -418,12 +477,16 @@ class CameraCapture {
 	clearRoll() {
 		this.roll = [];
 		this.selected = null;
-		this.ui.roll.querySelectorAll('.camera-take').forEach(button => button.remove());
+		this.ui.roll.querySelectorAll('.camera-roll-item').forEach(item => item.remove());
 		this.syncRoll();
 	}
 
 	// Adds a take as the newest thumbnail; the oldest drops past the limit.
+	// The thumbnail and its remove button are siblings, since a button
+	// can't hold another.
 	addTake(take) {
+		const item = document.createElement('div');
+		item.className = 'camera-roll-item';
 		const button = document.createElement('button');
 		button.type = 'button';
 		button.className = 'camera-take';
@@ -435,24 +498,48 @@ class CameraCapture {
 			badge.textContent = label;
 			button.append(badge);
 		}
-		button.setAttribute('aria-label', `${label} ${++this.takeCount}`);
+		const name = `${label} ${++this.takeCount}`;
+		button.setAttribute('aria-label', name);
 		button.addEventListener('click', () => this.selectTake(take));
-		Object.assign(take, { button, thumb });
+		const remove = document.createElement('button');
+		remove.type = 'button';
+		remove.className = 'camera-take-remove icon-wrapper';
+		remove.title = 'Remove';
+		remove.setAttribute('aria-label', `Remove ${name}`);
+		remove.append(createIcon('x-mark'));
+		remove.addEventListener('click', () => this.deleteTake(take));
+		item.append(button, remove);
+		Object.assign(take, { item, button, remove, thumb });
 		this.roll.push(take);
 		while (this.roll.length > CONFIG.tools.camera.roll.size) this.removeTake(this.roll[0]);
-		if (take.layout) this.drawLayoutThumb(take, []);
-		else this.drawThumb(take, take.image || take.frames[0]);
-		this.ui.roll.append(button);
-		button.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+		this.drawTakeThumb(take);
+		this.ui.roll.append(item);
+		item.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
 		this.syncRoll();
 		return take;
 	}
 
 	removeTake(take) {
 		this.roll = this.roll.filter(entry => entry !== take);
-		take.button?.remove();
+		take.item?.remove();
 		if (this.selected === take) this.selected = this.roll.filter(entry => !entry.pending).at(-1) || null;
 		this.syncRoll();
+	}
+
+	// The person removes a take. Reviewing it, the stage moves to the newest
+	// take left, or back to the camera when the roll is empty; focus stays on
+	// the roll so Delete can clear it take by take.
+	deleteTake(take) {
+		if (this.phase === 'shooting' || take.pending) return;
+		const reviewing = this.phase === 'review' && this.selected === take;
+		const index = this.roll.indexOf(take);
+		this.removeTake(take);
+		if (reviewing) {
+			if (this.selected) this.showTakeAspect(this.selected);
+			this.setPhase(this.selected ? 'review' : 'live');
+		}
+		const next = this.roll[Math.min(index, this.roll.length - 1)];
+		(next?.button || this.ui.takeBtn).focus();
 	}
 
 	// Picking a take reviews it; picking the reviewed take again goes back to
@@ -461,7 +548,17 @@ class CameraCapture {
 		if (this.phase === 'shooting' || take.pending) return;
 		if (take === this.selected && this.phase === 'review') { this.setPhase('live'); return; }
 		this.selected = take;
+		this.showTakeAspect(take);
 		this.setPhase('review');
+	}
+
+	// Reviewing a take, the Aspect control shows (and edits) that take's
+	// aspect, which also becomes the setting for the next shot.
+	showTakeAspect(take) {
+		if (!take?.aspect || take.aspect === this.aspect) return;
+		this.aspect = take.aspect;
+		PREFERENCES.set('cameraAspect', take.aspect);
+		this.syncChoice(this.ui.aspect, take.aspect);
 	}
 
 	syncRoll() {
@@ -473,24 +570,32 @@ class CameraCapture {
 			take.button.setAttribute('aria-pressed', String(active));
 			take.button.classList.toggle('is-pending', Boolean(take.pending));
 			take.button.disabled = shooting;
+			take.remove.disabled = shooting || Boolean(take.pending);
 		});
 		this.ui.useBtn.disabled = shooting || !this.selected;
 	}
 
-	drawThumb(take, source) {
+	// The thumbnail shows what Use makes: a Photo or GIF cropped to its
+	// aspect, a layout filling in cell by cell. Before a layout's first shot
+	// there is nothing to measure, so it waits blank at the camera's shape.
+	drawTakeThumb(take) {
 		const height = CONFIG.tools.camera.roll.thumbPx;
-		take.thumb.width = Math.max(1, Math.round(height * source.width / source.height));
+		let width = height * (this.ui.video.videoWidth || 16) / (this.ui.video.videoHeight || 9);
+		let draw = null;
+		if (take.layout && take.shots.length) {
+			const cell = this.layoutCell(take);
+			const size = this.layoutSize(take.layout, cell);
+			width = size.width * height / size.height;
+			draw = ctx => this.drawLayout(ctx, take, cell, height / size.height);
+		} else if (!take.layout) {
+			const source = take.image || take.frames[0];
+			const crop = this.cropRect(this.aspectRatio(take.aspect), source.width, source.height);
+			width = height * crop.width / crop.height;
+			draw = ctx => ctx.drawImage(source, crop.x, crop.y, crop.width, crop.height, 0, 0, ctx.canvas.width, height);
+		}
+		take.thumb.width = Math.max(1, Math.round(width));
 		take.thumb.height = height;
-		take.thumb.getContext('2d').drawImage(source, 0, 0, take.thumb.width, height);
-	}
-
-	drawLayoutThumb(take, shots) {
-		const height = CONFIG.tools.camera.roll.thumbPx;
-		const size = this.layoutSize(take.layout, take.size);
-		const scale = height / size.height;
-		take.thumb.width = Math.max(1, Math.round(size.width * scale));
-		take.thumb.height = height;
-		this.drawLayout(take.thumb.getContext('2d'), shots, take.layout, take.size, scale);
+		draw?.(take.thumb.getContext('2d'));
 	}
 
 	// ── Review ──
@@ -691,38 +796,81 @@ class CameraCapture {
 
 	// Opens the selected take as the document. A Photo or GIF taken at an
 	// aspect is cropped by canvas size, one undo step after the open, so
-	// Undo brings back the full frame. Each look becomes a Filter layer right
-	// above the base image: Webcam first, the effect over it.
+	// Undo brings back the full frame. A Grid or Strip opens as its
+	// background with each shot as its own sticker layer in its cell, so a
+	// shot can be moved, resized or swapped. Each look becomes a Filter layer
+	// over the photo: Webcam first, the effect over it.
 	async use() {
 		const take = this.selected;
 		if (!take || this.phase === 'shooting' || this.ui.useBtn.disabled) return;
 		this.ui.useBtn.disabled = true;
 		const looks = this.looksFor(this.effect);
-		let file = null;
+		let file = null, cells = null;
 		try {
-			file = await this.resultFile(take);
+			if (take.layout) cells = await this.layoutCellFiles(take);
+			file = await this.resultFile(take, { shots: !cells });
 		} catch (error) {
 			console.error('Camera result failed:', error);
 		}
 		this.editor.modalManager.close('cameraModal');
 		if (!file) { this.editor.showError('Could not save the photo.'); return; }
 		if (!await openEditorFiles(this.editor, [file], { asDocument: true })) return;
-		if (take.ratio) {
+		const ratio = take.layout ? null : this.aspectRatio(take.aspect);
+		if (ratio) {
 			const { width, height } = this.editor.originalCanvas;
-			const crop = this.cropRect(take.ratio, width, height);
+			const crop = this.cropRect(ratio, width, height);
 			this.editor.resizeCanvas(crop.width, crop.height, -crop.x, -crop.y, { historyLabel: 'Crop to aspect', updateStatus: false });
 		}
 		const layers = this.editor.layerManager;
 		const base = layers.getBaseLayer();
 		if (base) layers.setActiveLayer(base.id);
+		if (cells) await this.placeCells(cells);
 		looks.forEach(lookId => layers.addLayer(LayerType.FILTER, { filterLayer: { filterData: GlitterFilters.looksLibrary.apply(lookId) } }));
 	}
 
+	// Each shot of a layout take as a PNG at its cell's size, with the cell's
+	// centre in canvas pixels.
+	async layoutCellFiles(take) {
+		const cell = this.layoutCell(take);
+		const label = CONFIG.tools.camera.modes[take.mode].label;
+		return Promise.all(take.shots.map(async (shot, index) => {
+			const blob = await encodeCanvasToBlob(this.cellImage(take, cell, index), 'image/png');
+			if (!blob) throw new Error('Could not encode a shot');
+			const { x, y } = this.cellOrigin(take.layout, cell, index);
+			return { file: new File([blob], `${label} shot ${index + 1}.png`, { type: 'image/png' }), center: { x: x + cell.width / 2, y: y + cell.height / 2 } };
+		}));
+	}
+
+	// Places each shot as a sticker layer over the base, in shot order, as
+	// one undo step. A full layer stack places as many as fit.
+	async placeCells(cells) {
+		const { stickerLibrary, stickerManager, layerManager } = this.editor;
+		let placed = 0;
+		for (const { file, center } of cells) {
+			const item = await stickerLibrary.handleUserUpload(file, { navigate: false });
+			if (!item || !await stickerLibrary.ensureAssetDetails(item.id)) break;
+			const layer = stickerManager.createLayer(item.id);
+			if (!layer) break;
+			layer.transform.position = { x: center.x, y: center.y };
+			layerManager.insertLayer(layer);
+			layerManager.setActiveLayer(layer.id);
+			stickerManager.renderLayer(layer);
+			placed++;
+		}
+		if (!placed) return;
+		layerManager.renderLayersList();
+		this.editor.requestPreviewUpdate();
+		this.editor.saveState('Place shots');
+		this.editor.updateActionButtons();
+	}
+
 	// A PNG of the image, or a GIF of the frames in review order and speed.
-	async resultFile(take) {
+	// A layout take with `shots: false` is its background alone.
+	async resultFile(take, { shots = true } = {}) {
 		const { fileNames } = CONFIG.tools.camera;
 		if (take.image) {
-			const blob = await encodeCanvasToBlob(take.image, 'image/png');
+			const image = take.layout && !shots ? this.composeLayout(take, { shots: false }) : take.image;
+			const blob = await encodeCanvasToBlob(image, 'image/png');
 			return blob && new File([blob], fileNames.image, { type: 'image/png' });
 		}
 		const frames = this.reviewFrames(take);

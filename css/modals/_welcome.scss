@@ -116,22 +116,23 @@
 	}
 }
 
-// Release notes in Welcome and About are the Updates page's release markup
+// Release notes in Welcome and the Updates modal are the Updates page's release markup
 // (renderUpdateReleaseHtml in js/core/releases.js, styled in
 // pages/_updates-page.scss). Inside a modal the release is the first thing in
-// its slot, so it drops the page's separating rule.
-#welcomeModal,
-#aboutModal {
+// its slot, so it drops the page's separating rule, and the link to Updates
+// after it gets a gap.
+#welcomeModal {
 	.update-release {
 		margin-top: 0;
 		padding-top: 0;
 		border-top: 0;
+
+		+ p { margin-top: var(--spacing-lg); }
 	}
 }
 
 #welcomeModal,
-#aboutModal,
-.doc-page-about,
+#updatesModal,
 .doc-page-updates {
 	.version-history-guide-link {
 		padding: 0;
