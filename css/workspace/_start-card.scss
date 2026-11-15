@@ -69,14 +69,6 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 			color: var(--color-text-primary);
 		}
 	}
-
-	p {
-		max-width: 420px;
-		margin: var(--spacing-xs) 0 0;
-		text-wrap: balance;
-		color: var(--color-text-secondary);
-		line-height: 1.2;
-	}
 }
 
 // A section is a label over its tiles, as in New Canvas and the Add menu:
@@ -243,8 +235,7 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 	padding: var(--spacing-lg) var(--spacing-md);
 	border: 1px dashed var(--color-border-hover);
 	border-radius: var(--radius-lg);
-	color: var(--color-text-secondary);
-	font-size: var(--font-size-sm);
+	@include type-body;
 	transition: border-color var(--transition-fast), background-color var(--transition-fast);
 
 	.workspace-start-drop-icon {
@@ -267,16 +258,7 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 		}
 	}
 
-	.workspace-start-drop-label {
-		color: var(--color-text-primary);
-		font-size: var(--font-size-md);
-		font-weight: var(--font-weight-medium);
-	}
-
-	small {
-		color: var(--color-text-tertiary);
-		font-size: var(--font-size-xs);
-	}
+	small { @include type-meta; }
 }
 
 // Sized to their labels and centred; they wrap rather than stretch.
@@ -324,9 +306,8 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start-drop > :not(.work
 	padding: 0;
 	border: 0;
 	background: none;
-	color: var(--color-text-secondary);
 	font: inherit;
-	font-size: var(--font-size-sm);
+	@include type-body;
 	cursor: pointer;
 
 	&:hover,

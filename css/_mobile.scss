@@ -602,8 +602,9 @@
 
 	// Phones open files rather than drop them: the well loses its outline and
 	// label and leads the card as a row of buttons.
+	.workspace-start-open { order: 1; }
+
 	.workspace-start-drop {
-		order: 1;
 		padding: 0;
 		border: 0;
 

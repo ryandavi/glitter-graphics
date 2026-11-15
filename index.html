@@ -61,7 +61,7 @@
 	<meta name="twitter:image" content="https://glitter.ryandavi.com/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=13587885">
+	<link rel="stylesheet" href="css/style.css?v=628e67b0">
 	<!-- shell:boot:start -->
 	<style>:root { --boot-indicator-delay: 400ms; --boot-indicator-min-visible: 300ms; }</style>
 	<!-- shell:boot:end -->
@@ -550,7 +550,6 @@
 									<div class="workspace-start-copy">
 										<h2>Create a glitter graphic</h2>
 										<button class="btn-flat" id="bootReload" type="button" hidden>Reload</button>
-										<p>Pick a canvas size, open an image, or continue a saved project.</p>
 									</div>
 									<!-- Resume rows, one per recovery draft (js/editor/document-start.js); hidden while there are none. -->
 									<div class="workspace-start-section" id="workspaceStartResume" hidden>
@@ -609,32 +608,35 @@
 										</div>
 									</div>
 									<!-- Everything that brings a file in shares one drop area. -->
-									<div class="workspace-start-drop">
-										<div class="workspace-start-loading is-indeterminate" role="status" aria-label="Loading editor">
-											<span>Loading editor…</span>
-											<div class="export-progress-bar" aria-hidden="true"><div class="export-progress-fill"></div></div>
+									<div class="workspace-start-section workspace-start-open">
+										<div class="property-group-label">Open</div>
+										<div class="workspace-start-drop">
+											<div class="workspace-start-loading is-indeterminate" role="status" aria-label="Loading editor">
+												<span>Loading editor…</span>
+												<div class="export-progress-bar" aria-hidden="true"><div class="export-progress-fill"></div></div>
+											</div>
+											<svg class="icon workspace-start-drop-icon" aria-hidden="true"><use href="#icon-upload"></use></svg>
+											<span class="workspace-start-drop-label">Drop an image or Glitter project here</span>
+											<div class="workspace-start-actions">
+												<button class="btn-text-with-icon icon-wrapper primary" id="openImageBtn" type="button">
+													<svg class="icon"><use href="#icon-open-image"></use></svg>
+													<span class="name">Open Image</span>
+												</button>
+												<button class="btn-text-with-icon icon-wrapper btn-secondary" id="takePhotoBtn" type="button" hidden>
+													<svg class="icon"><use href="#icon-camera"></use></svg>
+													<span class="name">Take Photo</span>
+												</button>
+												<script>
+													// Shown from the last visit's answer until the camera check replaces it.
+													if (document.documentElement.classList.contains('has-camera-hint')) document.getElementById('takePhotoBtn').hidden = false;
+												</script>
+												<button class="btn-text-with-icon icon-wrapper btn-secondary" id="openProjectBtn" type="button">
+													<svg class="icon"><use href="#icon-open-project"></use></svg>
+													<span class="name">Open Project</span>
+												</button>
+											</div>
+											<small>Images up to 10 MB · canvas up to 1024 × 1024 px</small>
 										</div>
-										<svg class="icon workspace-start-drop-icon" aria-hidden="true"><use href="#icon-upload"></use></svg>
-										<span class="workspace-start-drop-label">Drop an image or Glitter project here</span>
-										<div class="workspace-start-actions">
-											<button class="btn-text-with-icon icon-wrapper primary" id="openImageBtn" type="button">
-												<svg class="icon"><use href="#icon-open-image"></use></svg>
-												<span class="name">Open Image</span>
-											</button>
-											<button class="btn-text-with-icon icon-wrapper btn-secondary" id="takePhotoBtn" type="button" hidden>
-												<svg class="icon"><use href="#icon-camera"></use></svg>
-												<span class="name">Take Photo</span>
-											</button>
-											<script>
-												// Shown from the last visit's answer until the camera check replaces it.
-												if (document.documentElement.classList.contains('has-camera-hint')) document.getElementById('takePhotoBtn').hidden = false;
-											</script>
-											<button class="btn-text-with-icon icon-wrapper btn-secondary" id="openProjectBtn" type="button">
-												<svg class="icon"><use href="#icon-open-project"></use></svg>
-												<span class="name">Open Project</span>
-											</button>
-										</div>
-										<small>Images up to 10 MB · canvas up to 1024 × 1024 px</small>
 									</div>
 								</div>
 								<div class="workspace-start-links">

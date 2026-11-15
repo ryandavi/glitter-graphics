@@ -257,7 +257,8 @@
   	"Courier New",
   	monospace;
   /* The UI's four sizes: panels, lists, bars and modal chrome use only
-     these, at weights 400 and 600. */
+     these, at weights 400 and 600. Components reach them through the
+     type-* role mixins in _mixins.scss rather than picking a size. */
   --font-size-xs: 11px;
   /* meta lines, notes */
   --font-size-sm: 12px;

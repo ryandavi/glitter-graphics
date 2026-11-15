@@ -70,6 +70,55 @@ $modal-compact-breakpoint: 600px;
 	text-overflow: ellipsis;
 }
 
+// ===== Type roles ==========================================================
+// Text is styled by its job, never by picking a size and a gray. Each role
+// sets size, weight, color and line height together; the color follows the
+// role: primary for names and titles, secondary for prose and meta, tertiary
+// only for the uppercase eyebrow (its weight and caps carry the contrast).
+// Display type (a screen's one hero heading) stays local to its screen.
+
+// Window bars, modal titles.
+@mixin type-title {
+	font-size: var(--font-size-base);
+	font-weight: var(--font-weight-semibold);
+	line-height: 1.2;
+	color: var(--color-text-primary);
+}
+
+// The one uppercase level: a group label over its content.
+@mixin type-eyebrow {
+	font-size: var(--font-size-xs);
+	font-weight: var(--font-weight-semibold);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	line-height: 1.2;
+	color: var(--color-text-tertiary);
+}
+
+// The name of a thing you can pick: a tile, a list row, a file.
+@mixin type-name {
+	font-size: var(--font-size-sm);
+	font-weight: var(--font-weight-semibold);
+	line-height: 1.25;
+	color: var(--color-text-primary);
+}
+
+// Descriptions, instructions, link strips.
+@mixin type-body {
+	font-size: var(--font-size-sm);
+	font-weight: var(--font-weight-normal);
+	line-height: 1.35;
+	color: var(--color-text-secondary);
+}
+
+// Dimensions, limits, counts, timestamps: facts beside a name.
+@mixin type-meta {
+	font-size: var(--font-size-xs);
+	font-weight: var(--font-weight-normal);
+	line-height: 1.2;
+	color: var(--color-text-secondary);
+}
+
 // Fills its positioned parent edge to edge.
 @mixin cover {
 	position: absolute;

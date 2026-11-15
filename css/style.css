@@ -949,7 +949,8 @@
   	"Courier New",
   	monospace;
   /* The UI's four sizes: panels, lists, bars and modal chrome use only
-     these, at weights 400 and 600. */
+     these, at weights 400 and 600. Components reach them through the
+     type-* role mixins in _mixins.scss rather than picking a size. */
   --font-size-xs: 11px;
   /* meta lines, notes */
   --font-size-sm: 12px;
@@ -1643,16 +1644,17 @@ textarea {
 }
 
 .action-card-title {
-  color: var(--color-text-primary);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
   line-height: 1.25;
+  color: var(--color-text-primary);
 }
 
 .action-card-detail {
-  color: var(--color-text-secondary);
   font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-normal);
   line-height: 1.2;
+  color: var(--color-text-secondary);
 }
 
 .property-card-chevron,
@@ -5899,13 +5901,6 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
     color: var(--color-text-primary);
   }
 }
-.workspace-start-copy p {
-  max-width: 420px;
-  margin: var(--spacing-xs) 0 0;
-  text-wrap: balance;
-  color: var(--color-text-secondary);
-  line-height: 1.2;
-}
 
 .workspace-start-section {
   width: 100%;
@@ -6088,8 +6083,10 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
   padding: var(--spacing-lg) var(--spacing-md);
   border: 1px dashed var(--color-border-hover);
   border-radius: var(--radius-lg);
-  color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-normal);
+  line-height: 1.35;
+  color: var(--color-text-secondary);
   transition: border-color var(--transition-fast), background-color var(--transition-fast);
 }
 .workspace-start-drop .workspace-start-drop-icon {
@@ -6108,14 +6105,11 @@ body.boot-interactive .workspace-start-drop:hover {
 body.boot-interactive .workspace-start-drop:hover .workspace-start-drop-icon {
   color: var(--color-accent);
 }
-.workspace-start-drop .workspace-start-drop-label {
-  color: var(--color-text-primary);
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-medium);
-}
 .workspace-start-drop small {
-  color: var(--color-text-tertiary);
   font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-normal);
+  line-height: 1.2;
+  color: var(--color-text-secondary);
 }
 
 .workspace-start-actions {
@@ -6167,9 +6161,11 @@ body.boot-interactive .workspace-start-loading, body.boot-failed .workspace-star
   padding: 0;
   border: 0;
   background: none;
-  color: var(--color-text-secondary);
   font: inherit;
   font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-normal);
+  line-height: 1.35;
+  color: var(--color-text-secondary);
   cursor: pointer;
 }
 .workspace-start-link:hover, .workspace-start-link:focus-visible {
@@ -9176,8 +9172,8 @@ body.tool-text .text-hover-baselines {
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--color-text-tertiary);
   line-height: 1.2;
+  color: var(--color-text-tertiary);
 }
 
 .property-block-title,
@@ -15223,8 +15219,10 @@ body.home-page {
     min-height: var(--touch-target-min);
     white-space: nowrap;
   }
-  .workspace-start-drop {
+  .workspace-start-open {
     order: 1;
+  }
+  .workspace-start-drop {
     padding: 0;
     border: 0;
   }

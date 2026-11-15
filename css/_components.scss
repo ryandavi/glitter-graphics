@@ -271,18 +271,9 @@ textarea {
 	color: var(--color-text-tertiary);
 }
 
-.action-card-title {
-	color: var(--color-text-primary);
-	font-size: var(--font-size-sm);
-	font-weight: var(--font-weight-semibold);
-	line-height: 1.25;
-}
+.action-card-title { @include type-name; }
 
-.action-card-detail {
-	color: var(--color-text-secondary);
-	font-size: var(--font-size-xs);
-	line-height: 1.2;
-}
+.action-card-detail { @include type-meta; }
 
 // ===========================================================================
 // DISCLOSURE

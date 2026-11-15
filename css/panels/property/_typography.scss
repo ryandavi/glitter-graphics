@@ -6,14 +6,7 @@
 
 // The one uppercase level: an L1 group label separates from the sentence-case
 // section titles beneath it without needing a box.
-.property-group-label {
-	font-size: var(--font-size-xs);
-	font-weight: var(--font-weight-semibold);
-	letter-spacing: 0.08em;
-	text-transform: uppercase;
-	color: var(--color-text-tertiary);
-	line-height: 1.2;
-}
+.property-group-label { @include type-eyebrow; }
 
 .property-block-title,
 .property-card > .property-card-title,
