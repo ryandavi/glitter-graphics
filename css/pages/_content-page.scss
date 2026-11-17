@@ -58,6 +58,13 @@ body.content-page {
 		@include truncate;
 	}
 
+	>.app-header-left>.app-header-title {
+		gap: var(--spacing-sm);
+		font-size: var(--font-size-base);
+
+		>img { height: var(--spacing-xl); }
+	}
+
 	.content-page-editor-link { text-decoration: none; }
 
 
@@ -66,6 +73,17 @@ body.content-page {
 
 		>.app-header-center { display: none; }
 		>.app-header-right { grid-column: 2; }
+	}
+}
+
+.editor-link-arrow {
+	transform: rotate(45deg);
+
+	@media (prefers-reduced-motion: no-preference) {
+		transition: transform 180ms ease;
+
+		a:hover > &,
+		a:focus-visible > & { transform: translate(var(--spacing-2xs), calc(-1 * var(--spacing-2xs))) rotate(45deg); }
 	}
 }
 

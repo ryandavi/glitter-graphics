@@ -2,11 +2,11 @@
 	<header class="app-header content-page-header">
 		<div class="app-header-left">
 			<a href="https://ryandavi.com" class="app-header-logo" target="_blank" rel="noopener noreferrer" aria-label="Visit ryandavi.com"><span class="logo" aria-hidden="true"></span></a>
-			<a class="app-header-title" href="<?= page_escape($base) ?>" title="Home"<?= $home ? ' aria-current="page"' : '' ?>>RYBABY LABS</a>
+			<a class="app-header-title" href="<?= page_escape($base) ?>" title="Home"<?= $home ? ' aria-current="page"' : '' ?>><img src="<?= page_escape($base) ?>images/branding/rybaby.png" alt="Rybaby" width="100" height="28"><span>Labs</span></a>
 		</div>
 		<div class="app-header-center"><?php if (!$home): ?><span class="app-header-page-title"><?= page_escape($page['title']) ?></span><?php endif; ?></div>
 		<div class="app-header-right">
-			<a class="btn-text-with-icon primary content-page-editor-link" href="<?= page_escape($base) ?>studio/">Open Editor</a>
+			<a class="btn-text-with-icon primary content-page-editor-link" href="<?= page_escape($base) ?>studio/">Open Editor<svg class="icon editor-link-arrow" aria-hidden="true"><use href="#icon-arrow-up"></use></svg></a>
 			<nav class="app-menu" id="appMenu" aria-label="Pages">
 				<button class="btn-icon-simple icon-wrapper app-menu-trigger" id="appMenuBtn" type="button" title="Menu" aria-label="Menu" aria-haspopup="menu" aria-expanded="false" aria-controls="appMenuPanel">
 					<svg class="icon"><use href="#icon-ellipsis-vertical"></use></svg><span class="name">Menu</span>

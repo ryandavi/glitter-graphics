@@ -23,7 +23,7 @@ const pageScripts = ['js/ui/menu-popover.js', 'js/core/key-labels.js', 'js/site/
 const articleScripts = ['js/core/dom.js'];
 const entityScripts = ['js/generated/entities-data.js', 'js/core/entities-group.js'];
 const articleUiScripts = ['js/ui/tooltip.js', 'js/ui/doc-modal.js'];
-const pageMenuIcons = ['ellipsis-vertical', 'chevron-down'];
+const pageMenuIcons = ['ellipsis-vertical', 'chevron-down', 'arrow-up'];
 const homeScripts = ['js/site/home-page.js'];
 // How many glitter tiles the homepage offers for its wordmark.
 const homeSwatchCount = 12;

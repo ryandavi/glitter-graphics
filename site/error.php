@@ -10,7 +10,7 @@
 				<p class="home-lead"><?= page_escape($page['description']) ?></p>
 				<div class="home-actions">
 					<a class="btn-text-with-icon primary" href="<?= page_escape($base) ?>">Go to the homepage</a>
-					<a class="btn-text-with-icon" href="<?= page_escape($base) ?>studio/">Open the Editor</a>
+					<a class="btn-text-with-icon" href="<?= page_escape($base) ?>studio/">Open Editor<svg class="icon editor-link-arrow" aria-hidden="true"><use href="#icon-arrow-up"></use></svg></a>
 				</div>
 			</section>
 		</main>
