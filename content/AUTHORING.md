@@ -22,7 +22,7 @@ Every modal (history, personal-web, aylana, preservation, about, welcome, guide)
 | `{references}` inside `<ol id="…ReferencesList">` | The numbered references, in first-citation order |
 | `{references:general}` inside `<ul … class="general-references-list">` | Sources whose `general` lists this page, alphabetically |
 | `{toc:HistoryTOC}` | The contents list, on its own line |
-| `{ui-tool:select}` `{ui-tool-icon:select}` `{ui-panel:textSettingsSection}` `{ui-shortcuts}` | Guide only: names, icons and shortcuts from the app's registries |
+| `{ui-tool:select}` `{ui-tool-icon:select}` `{ui-panel:textSettingsSection}` `{ui-shortcuts}` | Guide and Documentation: names, icons and shortcuts from the app's registries |
 
 Everything else is plain HTML.
 

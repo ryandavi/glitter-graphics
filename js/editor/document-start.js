@@ -14,7 +14,7 @@ setupImageListeners() {
 		});
 		this.renderWorkspaceStartPresets();
 
-		document.getElementById('workspaceStartTutorial')?.addEventListener('click', () => this.openGuideAt('getting-started'));
+		document.getElementById('workspaceStartTutorial')?.addEventListener('click', () => this.openDocumentAt('guideModal', 'getting-started'));
 		document.getElementById('workspaceStartAbout')?.addEventListener('click', () => this.modalManager.open('aboutModal'));
 		document.getElementById('workspaceStartWhatsNew')?.addEventListener('click', (event) => {
 			try {

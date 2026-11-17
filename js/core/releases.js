@@ -307,7 +307,7 @@ function releaseAnchor(release) {
 // click instead. `headingLevel` is the release heading's level (its groups sit
 // one below); `anchor: false` omits the section id where two copies could
 // share a page.
-function renderUpdateReleaseHtml(release, { guideHref = 'guide/', headingLevel = 2, anchor = true } = {}) {
+function renderUpdateReleaseHtml(release, { guideHref = 'documentation/', headingLevel = 2, anchor = true } = {}) {
 	const escape = escapeReleaseHtml;
 	const features = release.features.map(normalizeReleaseFeature);
 	const parts = [

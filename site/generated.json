@@ -13,7 +13,25 @@
 			],
 			"icon": "question-circle",
 			"title": "Guide",
-			"description": "How to use Glitter Editor: starting a project, the tools, layers, the Library, animation and export.",
+			"description": "Make your first glitter graphic: a beginner walkthrough from a blank canvas or photo to a saved project and animated GIF.",
+			"scripts": [
+				"js/core/dom.js?v=3531b1f4",
+				"js/ui/menu-popover.js?v=3861a0e1",
+				"js/core/key-labels.js?v=80b61ded",
+				"js/site/content-page.js?v=5f3be1cc"
+			]
+		},
+		{
+			"slug": "documentation",
+			"source": "documentation",
+			"modal": "documentationModal",
+			"kinds": [
+				"document",
+				"guide"
+			],
+			"icon": "question-circle",
+			"title": "Documentation",
+			"description": "Detailed reference for tools, layers, masks, paths, effects, animation, keyboard shortcuts and export settings.",
 			"scripts": [
 				"js/core/dom.js?v=3531b1f4",
 				"js/ui/menu-popover.js?v=3861a0e1",
@@ -136,7 +154,7 @@
 			]
 		}
 	],
-	"stylesheet": "css/style.css?v=628e67b0",
+	"stylesheet": "css/style.css?v=cb7e5ff5",
 	"favicon": "images/etc/favicon.ico?v=bcdad78e",
 	"scripts": [
 		"js/ui/menu-popover.js?v=3861a0e1",
@@ -277,7 +295,7 @@
 				}
 			]
 		],
-		"description": "A browser editor for glitter graphics: sparkly text, stickers and animated GIFs made from the glitter tiles of 2000s personal websites.",
+		"description": "A free browser-based editor for glitter graphics, stickers and animated GIFs, inspired by web aesthetics from the early 2000s through the late 2010s. No download or installation needed.",
 		"slug": "home",
 		"kinds": [
 			"home"

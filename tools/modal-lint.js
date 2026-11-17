@@ -11,7 +11,8 @@ const defaultFiles = [
 	'preservation/content.html',
 	'about/content.html',
 	'modals/welcome.html',
-	'guide/content.html'
+	'guide/content.html',
+	'documentation/content.html'
 ];
 // Prose-style rules apply to the long-form articles only; the guide and the
 // welcome screen get the token and structure rules.

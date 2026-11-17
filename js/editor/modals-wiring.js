@@ -106,6 +106,7 @@ updateOrientationButtons(width, height) {
 		});
 		this.registerDocumentModal('updatesModal', { url: 'updates/', onLoaded: (body) => this.bindGuideLinks(body) });
 		this.registerDocumentModal('guideModal', { url: 'guide/', onLoaded: (body) => localizeKeyLabels(body) });
+		this.registerDocumentModal('documentationModal', { url: 'documentation/', onLoaded: (body) => localizeKeyLabels(body) });
 
 		// Layer type picker modal (no open button - opened programmatically)
 		// Coarse pointers start on the title so the keyboard stays closed.
@@ -348,7 +349,7 @@ watchModalSources() {
 },
 
 async openGuideAt(anchor) {
-	return this.openDocumentAt('guideModal', anchor);
+	return this.openDocumentAt('documentationModal', anchor);
 },
 
 // Shared by the Guide and About deep links: open() closes whatever is

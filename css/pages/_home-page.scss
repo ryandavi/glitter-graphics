@@ -234,6 +234,20 @@ body.home-page {
 	>.btn-text-with-icon { text-decoration: none; }
 }
 
+.home-maker {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-sm);
+	font-size: var(--font-size-xs);
+
+	a { display: flex; }
+	img { width: 100px; height: auto; }
+}
+
+.home-actions + .home-maker {
+	margin-top: var(--spacing-lg);
+}
+
 /* ----- Reading list ----- */
 .home-reading {
 	>h2 {

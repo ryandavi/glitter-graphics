@@ -11,7 +11,7 @@
 			[{ "id": 33, "x": 4, "y": -6, "rotate": -6 }, { "id": 173, "x": 98, "y": 96, "rotate": 12 }],
 			[{ "id": 6, "x": -2, "y": 6, "rotate": -10 }, { "id": 90, "x": 101, "y": 86, "rotate": 14 }, { "id": 179, "x": 74, "y": -12, "rotate": 0 }]
 		],
-		"description": "A browser editor for glitter graphics: sparkly text, stickers and animated GIFs made from the glitter tiles of 2000s personal websites."
+		"description": "A free browser-based editor for glitter graphics, stickers and animated GIFs, inspired by web aesthetics from the early 2000s through the late 2010s. No download or installation needed."
 	},
 	"pages": [
 		{
@@ -21,7 +21,19 @@
 			"kinds": ["document", "guide"],
 			"icon": "question-circle",
 			"title": "Guide",
-			"description": "How to use Glitter Editor: starting a project, the tools, layers, the Library, animation and export."
+			"description": "Make your first glitter graphic: a beginner walkthrough from a blank canvas or photo to a saved project and animated GIF."
+		},
+		{
+			"slug": "documentation",
+			"source": "documentation",
+			"modal": "documentationModal",
+			"kinds": [
+				"document",
+				"guide"
+			],
+			"icon": "question-circle",
+			"title": "Documentation",
+			"description": "Detailed reference for tools, layers, masks, paths, effects, animation, keyboard shortcuts and export settings."
 		},
 		{
 			"slug": "history",
@@ -95,6 +107,7 @@
 		"fonts",
 		"modals",
 		"guide",
+		"documentation",
 		"history",
 		"personal-web",
 		"preservation",

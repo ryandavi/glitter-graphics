@@ -12992,10 +12992,12 @@ body.modal-open {
 
 /* ===== GUIDE MODAL ===== */
 #guideModal .modal-hero-image,
+#documentationModal .modal-hero-image,
 .doc-page-guide .modal-hero-image {
   background: var(--theme-glitter-image) repeat;
 }
 #guideModal .modal-hero-image > h1,
+#documentationModal .modal-hero-image > h1,
 .doc-page-guide .modal-hero-image > h1 {
   position: absolute;
   width: 1px;
@@ -13008,16 +13010,19 @@ body.modal-open {
   white-space: nowrap;
 }
 #guideModal .guide-content,
+#documentationModal .guide-content,
 .doc-page-guide .guide-content {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xl);
 }
 #guideModal .guide-content .guide-screenshot,
+#documentationModal .guide-content .guide-screenshot,
 .doc-page-guide .guide-content .guide-screenshot {
   margin: var(--spacing-xl) 0;
 }
 #guideModal .guide-content .guide-screenshot > figure,
+#documentationModal .guide-content .guide-screenshot > figure,
 .doc-page-guide .guide-content .guide-screenshot > figure {
   width: 100%;
   max-width: 100%;
@@ -13025,34 +13030,41 @@ body.modal-open {
   overflow: hidden;
 }
 #guideModal .guide-content .guide-screenshot > figure > img,
+#documentationModal .guide-content .guide-screenshot > figure > img,
 .doc-page-guide .guide-content .guide-screenshot > figure > img {
   image-rendering: auto;
   border-radius: max(0px, (var(--radius-sm) - 1px - var(--spacing-sm)));
 }
 #guideModal .guide-content .guide-screenshot.guide-screenshot-modal > figure,
+#documentationModal .guide-content .guide-screenshot.guide-screenshot-modal > figure,
 .doc-page-guide .guide-content .guide-screenshot.guide-screenshot-modal > figure {
   max-width: 720px;
 }
 #guideModal .guide-content > .guide-section,
+#documentationModal .guide-content > .guide-section,
 .doc-page-guide .guide-content > .guide-section {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
 }
 #guideModal .guide-content > .guide-section > .guide-subsection,
+#documentationModal .guide-content > .guide-section > .guide-subsection,
 .doc-page-guide .guide-content > .guide-section > .guide-subsection {
   display: flex;
   flex-direction: column;
 }
 #guideModal .guide-content > .guide-section > .guide-subsection + .guide-subsection,
+#documentationModal .guide-content > .guide-section > .guide-subsection + .guide-subsection,
 .doc-page-guide .guide-content > .guide-section > .guide-subsection + .guide-subsection {
   margin-top: var(--spacing-md);
 }
 #guideModal .guide-content > .guide-section > .guide-subsection > h3,
+#documentationModal .guide-content > .guide-section > .guide-subsection > h3,
 .doc-page-guide .guide-content > .guide-section > .guide-subsection > h3 {
   font-size: 1.1em;
 }
 #guideModal .guide-content > .guide-section > .guide-subsection .guide-item,
+#documentationModal .guide-content > .guide-section > .guide-subsection .guide-item,
 .doc-page-guide .guide-content > .guide-section > .guide-subsection .guide-item {
   display: grid;
   grid-template-columns: 24px 1fr;
@@ -13060,6 +13072,7 @@ body.modal-open {
   align-items: start;
 }
 #guideModal .guide-content > .guide-section > .guide-subsection .guide-item .guide-item-icon,
+#documentationModal .guide-content > .guide-section > .guide-subsection .guide-item .guide-item-icon,
 .doc-page-guide .guide-content > .guide-section > .guide-subsection .guide-item .guide-item-icon {
   width: 24px;
   height: 24px;
@@ -13069,38 +13082,48 @@ body.modal-open {
   flex-shrink: 0;
 }
 #guideModal .guide-content > .guide-section > .guide-subsection .guide-item .guide-item-icon:not(.empty),
+#documentationModal .guide-content > .guide-section > .guide-subsection .guide-item .guide-item-icon:not(.empty),
 .doc-page-guide .guide-content > .guide-section > .guide-subsection .guide-item .guide-item-icon:not(.empty) {
   background-color: var(--color-bg-tertiary);
   border-radius: var(--radius-md);
 }
 #guideModal .guide-content > .guide-section > .guide-subsection .guide-item .guide-item-icon .icon-wrapper,
+#documentationModal .guide-content > .guide-section > .guide-subsection .guide-item .guide-item-icon .icon-wrapper,
 .doc-page-guide .guide-content > .guide-section > .guide-subsection .guide-item .guide-item-icon .icon-wrapper {
   width: 20px;
   height: 20px;
 }
 #guideModal .guide-content > .guide-section > .guide-subsection .guide-item.is-iconless,
+#documentationModal .guide-content > .guide-section > .guide-subsection .guide-item.is-iconless,
 .doc-page-guide .guide-content > .guide-section > .guide-subsection .guide-item.is-iconless {
   grid-template-columns: 1fr;
 }
 #guideModal .guide-content > .guide-section > .guide-subsection .guide-item .guide-item-content,
+#documentationModal .guide-content > .guide-section > .guide-subsection .guide-item .guide-item-content,
 .doc-page-guide .guide-content > .guide-section > .guide-subsection .guide-item .guide-item-content {
   min-width: 0;
 }
 #guideModal .guide-content > .guide-section > .guide-subsection .guide-item + .guide-item,
+#documentationModal .guide-content > .guide-section > .guide-subsection .guide-item + .guide-item,
 .doc-page-guide .guide-content > .guide-section > .guide-subsection .guide-item + .guide-item {
   margin-top: var(--spacing-base);
 }
 #guideModal .guide-content > .guide-section > .guide-subsection .guide-item + h3,
+#documentationModal .guide-content > .guide-section > .guide-subsection .guide-item + h3,
 .doc-page-guide .guide-content > .guide-section > .guide-subsection .guide-item + h3 {
   margin-top: var(--spacing-md);
 }
 #guideModal .guide-content > .guide-section > .guide-subsection p + .guide-item,
+#documentationModal .guide-content > .guide-section > .guide-subsection p + .guide-item,
 .doc-page-guide .guide-content > .guide-section > .guide-subsection p + .guide-item {
   margin-top: var(--spacing-md);
 }
 #guideModal .guide-content > .guide-section > .guide-subsection h3 + .guide-item,
 #guideModal .guide-content > .guide-section > .guide-subsection ul + p,
 #guideModal .guide-content > .guide-section > .guide-subsection p + p,
+#documentationModal .guide-content > .guide-section > .guide-subsection h3 + .guide-item,
+#documentationModal .guide-content > .guide-section > .guide-subsection ul + p,
+#documentationModal .guide-content > .guide-section > .guide-subsection p + p,
 .doc-page-guide .guide-content > .guide-section > .guide-subsection h3 + .guide-item,
 .doc-page-guide .guide-content > .guide-section > .guide-subsection ul + p,
 .doc-page-guide .guide-content > .guide-section > .guide-subsection p + p {
@@ -13108,6 +13131,8 @@ body.modal-open {
 }
 #guideModal .guide-content > .guide-section > .guide-subsection h3 + p,
 #guideModal .guide-content > .guide-section > .guide-subsection p + ul,
+#documentationModal .guide-content > .guide-section > .guide-subsection h3 + p,
+#documentationModal .guide-content > .guide-section > .guide-subsection p + ul,
 .doc-page-guide .guide-content > .guide-section > .guide-subsection h3 + p,
 .doc-page-guide .guide-content > .guide-section > .guide-subsection p + ul {
   margin-top: var(--spacing-xs);
@@ -14525,6 +14550,24 @@ body.home-page {
 }
 .home-actions > .btn-text-with-icon {
   text-decoration: none;
+}
+
+.home-maker {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-xs);
+}
+.home-maker a {
+  display: flex;
+}
+.home-maker img {
+  width: 100px;
+  height: auto;
+}
+
+.home-actions + .home-maker {
+  margin-top: var(--spacing-lg);
 }
 
 /* ----- Reading list ----- */
