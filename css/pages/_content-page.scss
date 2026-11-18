@@ -58,13 +58,6 @@ body.content-page {
 		@include truncate;
 	}
 
-	>.app-header-left>.app-header-title {
-		gap: var(--spacing-sm);
-		font-size: var(--font-size-base);
-
-		>img { height: var(--spacing-xl); }
-	}
-
 	.content-page-editor-link { text-decoration: none; }
 
 

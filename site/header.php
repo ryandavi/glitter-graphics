@@ -2,7 +2,7 @@
 	<header class="app-header content-page-header">
 		<div class="app-header-left">
 			<a href="https://ryandavi.com" class="app-header-logo" target="_blank" rel="noopener noreferrer" aria-label="Visit ryandavi.com"><span class="logo" aria-hidden="true"></span></a>
-			<a class="app-header-title" href="<?= page_escape($base) ?>" title="Home"<?= $home ? ' aria-current="page"' : '' ?>><img src="<?= page_escape($base) ?>images/branding/rybaby.png" alt="Rybaby" width="100" height="28"><span>Labs</span></a>
+			<a class="app-header-title" href="<?= page_escape($base) ?>" title="Home"<?= $home ? ' aria-current="page"' : '' ?>><img src="<?= page_escape($base) ?>images/branding/rybaby.png" alt="Rybaby" width="100" height="28"><span>LABS</span></a>
 		</div>
 		<div class="app-header-center"><?php if (!$home): ?><span class="app-header-page-title"><?= page_escape($page['title']) ?></span><?php endif; ?></div>
 		<div class="app-header-right">

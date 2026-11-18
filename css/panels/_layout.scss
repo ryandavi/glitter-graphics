@@ -15,7 +15,7 @@
 
 /* ===== HEADER ===== */
 .app-header {
-	--app-header-mark-size: var(--font-size-xl);
+	--app-header-mark-size: var(--font-size-2xl);
 	height: var(--header-height);
 	background: var(--color-bg-secondary);
 	border-bottom: 1px solid var(--color-window-border);
@@ -80,6 +80,7 @@
 		>.app-header-title {
 			display: flex;
 			align-items: center;
+			gap: var(--spacing-sm);
 			padding: 0;
 			border: 0;
 			background: none;
@@ -87,8 +88,8 @@
 			color: var(--bar-title-color);
 			text-decoration: none;
 			font-family: inherit;
-			font-size: var(--app-header-mark-size);
-			font-weight: var(--font-weight-semibold);
+			font-size: var(--font-size-md);
+			font-weight: var(--font-weight-bold);
 			line-height: 1;
 			text-shadow: inherit;
 			cursor: pointer;

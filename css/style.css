@@ -2947,7 +2947,7 @@ input.color-hex-input {
 
 /* ===== HEADER ===== */
 .app-header {
-  --app-header-mark-size: var(--font-size-xl);
+  --app-header-mark-size: var(--font-size-2xl);
   height: var(--header-height);
   background: var(--color-bg-secondary);
   border-bottom: 1px solid var(--color-window-border);
@@ -3014,14 +3014,15 @@ input.color-hex-input {
 .app-header > .app-header-left > .app-header-title {
   display: flex;
   align-items: center;
+  gap: var(--spacing-sm);
   padding: 0;
   border: 0;
   background: none;
   color: var(--bar-title-color);
   text-decoration: none;
   font-family: inherit;
-  font-size: var(--app-header-mark-size);
-  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
   line-height: 1;
   text-shadow: inherit;
   cursor: pointer;
@@ -13903,13 +13904,6 @@ body.content-page .content-page-footer * {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-}
-.app-header.content-page-header > .app-header-left > .app-header-title {
-  gap: var(--spacing-sm);
-  font-size: var(--font-size-base);
-}
-.app-header.content-page-header > .app-header-left > .app-header-title > img {
-  height: var(--spacing-xl);
 }
 .app-header.content-page-header .content-page-editor-link {
   text-decoration: none;
