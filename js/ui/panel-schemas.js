@@ -1006,7 +1006,9 @@ const PANEL_SCHEMAS = {
 					summary: { id: 'textWarpSummary' }, sets: [
 					{ rows: [
 						{ kind: 'presetGrid', id: 'textWarpPresets', label: 'Text warp presets', classes: 'property-inset text-warp-presets' },
-						{ kind: 'slider', id: 'textWarpBend', slider: 'textWarpBend', rowId: 'textWarpBendRow', title: 'How strongly the text bends. Negative values bend the other way.' }
+						{ kind: 'slider', id: 'textWarpBend', slider: 'textWarpBend', rowId: 'textWarpBendRow', title: 'How strongly the text bends. Negative values bend the other way.' },
+						{ kind: 'segmented', label: 'Flow', ariaLabel: 'Warp flow', rowId: 'textWarpFlowRow', options: getOptions('cycleFlow').map(option => ({ label: option.label, attrs: { 'data-text-warp-flow': option.value } })) },
+						{ kind: 'slider', id: 'textWarpCycle', slider: 'textWarpCycle', rowId: 'textWarpCycleRow', title: 'Time for the wave to travel once around the text' }
 					] }
 				] }
 			] },
@@ -1208,7 +1210,11 @@ const PANEL_SCHEMAS = {
 							} },
 							{ kind: 'slider', id: 'pathStrokeDash', slider: 'strokeDash' },
 							{ kind: 'slider', id: 'pathStrokeGap', slider: 'strokeGap' },
-							{ kind: 'slider', id: 'pathStrokeDashOffset', slider: 'strokeDashOffset', title: 'Slides the dashes along the line' }
+							{ kind: 'slider', id: 'pathStrokeDashOffset', slider: 'strokeDashOffset', title: 'Slides the dashes along the line' },
+							{ kind: 'segmented', label: 'Flow', rowId: 'pathStrokeFlowRow', revert: true, get options() {
+								return getOptions('cycleFlow').map(({ value, label, suffix }) => ({ id: `pathStroke${suffix}`, value, label, active: value === 'none' }));
+							} },
+							{ kind: 'slider', id: 'pathStrokeDashCycle', slider: 'strokeDashCycle', title: 'Time for the dashes to move one dash and gap' }
 						] },
 						{ id: 'pathStrokeEnds', label: 'Start', rows: [
 							{ kind: 'presetGrid', id: 'pathStrokeStartShapes', label: 'Start of line', classes: 'property-inset stroke-ornaments' },
@@ -1256,6 +1262,11 @@ const PANEL_SCHEMAS = {
 						{ id: 'newCanvasWidth', mark: 'W', label: 'Width', min: CONFIG.canvas.limits.minSize, max: CONFIG.canvas.limits.maxWidth, step: 1, inputMode: 'numeric' },
 						{ id: 'newCanvasHeight', mark: 'H', label: 'Height', min: CONFIG.canvas.limits.minSize, max: CONFIG.canvas.limits.maxHeight, step: 1, inputMode: 'numeric' }
 					] },
+					// Same field as Export Settings' File Size Limit; document-start.js
+					// fills the options from the shared size-target list.
+					{ kind: 'select', id: 'newCanvasSizeLimit', label: 'File size limit', ariaLabel: 'File size limit', options: [{ value: 'none', label: 'No limit' }] },
+					{ kind: 'field', id: 'newCanvasSizeLimitKB', rowId: 'newCanvasSizeLimitKBRow', hidden: true, label: 'Limit', type: 'number', unit: 'KB',
+						min: CONFIG.export.fit.minTargetKB, max: CONFIG.export.fit.maxTargetKB, step: 10, value: CONFIG.export.defaults.targetSizeKB, inputMode: 'numeric' },
 					{ kind: 'segmented', id: 'newCanvasOrientation', label: 'Orientation', ariaLabel: 'Canvas orientation', options: [
 						{ id: 'orientationPortrait', icon: 'portrait', label: 'Portrait', value: 'portrait' },
 						{ id: 'orientationLandscape', icon: 'landscape', label: 'Landscape', value: 'landscape' }

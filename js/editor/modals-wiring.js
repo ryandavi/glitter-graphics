@@ -61,6 +61,7 @@ updateOrientationButtons(width, height) {
 					syncFieldReverts(document.getElementById('settingsModal'));
 					const htmlSceneExporter = await this.ensureHtmlSceneExporter();
 					htmlSceneExporter.refreshStickerMetadata();
+					this.refreshProtectDraftsRow();
 					this.settingsFilter?.refresh();
 					this.settingsFilter?.reset();
 				}

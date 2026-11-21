@@ -56,6 +56,16 @@ function formatSizeLimit(limitKB) {
 	return limitKB >= 1024 ? `${Number((limitKB / 1024).toFixed(1))} MB` : `${Math.round(limitKB)} KB`;
 }
 
+// The choices for a file size limit: the one list behind Export Settings and
+// New Canvas. A target id, 'none' or 'custom' (which also carries a KB value).
+function getSizeTargetOptions() {
+	return [
+		{ value: 'none', label: 'No limit' },
+		...CONFIG.export.sizeTargets.map((target) => ({ value: target.id, label: `${target.service} · ${formatSizeLimit(target.limitKB)}` })),
+		{ value: 'custom', label: 'Custom' }
+	];
+}
+
 // A size target as a fit goal: { id, label, limitBytes }. The label reads
 // after "under": "10 MB for Discord".
 function describeSizeTarget(target) {

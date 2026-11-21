@@ -169,7 +169,9 @@ class SceneCompositor {
 		return layers.flatMap((layer) => {
 			const sources = [
 				...(LAYER_UI_CONFIG[layer.type]?.timelineSources?.(layer, { compositor: this, includeBaseImage, canvasData }) || []),
-				...this._createPatternTimelineSources(layer, includeBaseImage)
+				...this._createPatternTimelineSources(layer, includeBaseImage),
+				...this._createDashFlowTimelineSources(layer),
+				...this._createWarpFlowTimelineSources(layer)
 			];
 			const targets = new Map(listTimingTargets(this.editor, [layer]).map(target => [target.key, target]));
 			return sources.map(source => ({ ...source, adjustable: targets.get(source.key)?.can.period === true }));
@@ -184,15 +186,47 @@ class SceneCompositor {
 			.flatMap((entry) => {
 				const pattern = normalizeEffectPattern(entry.data.pattern);
 				if (pattern.scroll === 'none') return [];
-				return [{
-					key: `__pattern_${getPaintSlotSourceKey(layer, entry)}`,
-					rowLabel: 'Pattern scroll', label: `${describeLayer(layer, this.editor).name} pattern scroll`, ownerLayerId: layer.id, effectSlot: entry.key,
-					naturalPeriod: pattern.scrollCycleMs,
-					periodRange: { min: FIELDS.patternScrollCycle.min, max: FIELDS.patternScrollCycle.max },
-					preferredSamplingRate: CONFIG.rendering.pattern.exportFps,
-					sampleAt: (time, period = pattern.scrollCycleMs) => ({ time: time * pattern.scrollCycleMs / period })
-				}];
+				return [this._createCycleTimelineSource(layer, entry, {
+					keyPrefix: '__pattern_', rowLabel: 'Pattern scroll', cycleMs: pattern.scrollCycleMs,
+					rangeField: 'patternScrollCycle', samplingRate: CONFIG.rendering.pattern.exportFps
+				})];
 			});
+	}
+
+	// Marching ants: the path stroke's flowing dashes (see getStrokeDashFlowOffset).
+	_createDashFlowTimelineSources(layer) {
+		if (layer.visible === false) return [];
+		return getLayerPaintSlots(layer).filter((entry) => entry.renders && entry.role === 'stroke' && isStrokeFlowing(entry.data))
+			.map((entry) => this._createCycleTimelineSource(layer, entry, {
+				keyPrefix: '__dashflow_', rowLabel: 'Dash flow', cycleMs: Number(entry.data.dashCycleMs) || FIELDS.strokeDashCycle.value,
+				rangeField: 'strokeDashCycle', samplingRate: CONFIG.tools.path.stroke.flowFps
+			}));
+	}
+
+	// An animated text warp (Wave, Flag, Ripple with Flow on): one source per
+	// layer. The text manager lays the warp out per sampled time (frameMask).
+	_createWarpFlowTimelineSources(layer) {
+		if (layer.visible === false || layer.type !== LayerType.TEXT_GLITTER || !isTextWarpFlowing(layer.textData.warp)) return [];
+		return [this._createCycleTimelineSource(layer, { sourceKey: layer.id }, {
+			keyPrefix: '__warpflow_', rowLabel: 'Text warp', cycleMs: layer.textData.warp.cycleMs,
+			rangeField: 'textWarpCycle', samplingRate: CONFIG.tools.text.warp.flowFps
+		})];
+	}
+
+	// One cycling parameter (a paint slot's, or a whole layer's with a
+	// sourceKey on `entry`) on the shared clock: its natural period is
+	// the cycle, and retiming it just rescales the sampled time (the
+	// parameter reads the time through getCycledPhase). Keys match the
+	// timing target of the same kind (createCycleTimingKind).
+	_createCycleTimelineSource(layer, entry, { keyPrefix, rowLabel, cycleMs, rangeField, samplingRate }) {
+		return {
+			key: `${keyPrefix}${entry.sourceKey ?? getPaintSlotSourceKey(layer, entry)}`,
+			rowLabel, label: `${describeLayer(layer, this.editor).name} ${rowLabel.toLowerCase()}`, ownerLayerId: layer.id, effectSlot: entry.key,
+			naturalPeriod: cycleMs,
+			periodRange: { min: FIELDS[rangeField].min, max: FIELDS[rangeField].max },
+			preferredSamplingRate: samplingRate,
+			sampleAt: (time, period = cycleMs) => ({ time: time * cycleMs / period })
+		};
 	}
 
 	_createFilterTimelineSources(layer) {
@@ -645,8 +679,10 @@ class SceneCompositor {
 		const buildStack = scratch.buildStack || ((resolveSource) => buildSlotStack(layer, resolveSource));
 		buildStack((entry) => this._getSlotSource(layer, entry)).forEach((item) => {
 			if (this._bodyOnly && !isClipBodyEntry(item)) return;
-			const maskCanvas = slotMasks[item.key];
+			let maskCanvas = slotMasks[item.key];
 			if (!maskCanvas) return;
+			// A flowing dash (marching ants) re-strokes, and an animated text warp re-lays out, at this frame's moment.
+			if (slotMasks.frameMask) maskCanvas = slotMasks.frameMask(item.key, sourceSelectionMap?.get(`__dashflow_${item.sourceKey}`)?.time ?? timestamp, sourceSelectionMap?.get(`__warpflow_${layer.id}`)?.time ?? timestamp) || maskCanvas;
 			this._renderFilledMaskInto(fillCanvas, maskCanvas, this._bodyOnly ? { mode: 'solid', color: '#fff', opacity: 1 } : item.source, layer, frameIndex, item.sourceKey, sourceSelectionMap, resolvedFramesBySource);
 			compositeCtx.drawImage(fillCanvas, pad, pad, width, height);
 		});

@@ -21,6 +21,15 @@ function getStrokeDashStyle(stroke) {
 	return isOptionValue('strokeDashStyle', stroke?.dashStyle) ? stroke.dashStyle : 'solid';
 }
 
+function getStrokeDashFlow(stroke) {
+	return isOptionValue('cycleFlow', stroke?.dashFlow) ? stroke.dashFlow : 'none';
+}
+
+// A flowing stroke is dashed or dotted and has a flow set (marching ants).
+function isStrokeFlowing(stroke) {
+	return getStrokeDashFlow(stroke) !== 'none' &&getStrokeDashStyle(stroke) !== 'solid';
+}
+
 // A stroke joins Smooth or Sharp; it has no Pixel edge.
 function getStrokeEdgeStyle(stroke) {
 	return stroke?.edgeStyle === 'miter' ? 'miter' : 'round';
@@ -37,6 +46,8 @@ function buildDefaultStroke(options = {}) {
 		dashPx: FIELDS.strokeDash.value,
 		gapPx: FIELDS.strokeGap.value,
 		dashOffsetPx: FIELDS.strokeDashOffset.value,
+		dashFlow: 'none',
+		dashCycleMs: FIELDS.strokeDashCycle.value,
 		startShapeId: null,
 		startSize: FIELDS.strokeOrnamentSize.value / 100,
 		endShapeId: null,
@@ -64,7 +75,18 @@ function getStrokeLineDash(stroke) {
 	return null;
 }
 
-// Everything in the stroke data that changes the mask.
+// How far a flowing dash has slid at `timeMs`, in canvas dash-offset px (add it
+// to the stroke's own offset). One cycle slides exactly one dash + gap, so the
+// loop is seamless at any cycle. Forward marches toward the path's end.
+function getStrokeDashFlowOffset(stroke, timeMs) {
+	if (!isStrokeFlowing(stroke)) return 0;
+	const dash = getStrokeLineDash(stroke);
+	const phase = getCycledPhase(timeMs, getStrokeDashFlow(stroke), Number(stroke.dashCycleMs) || FIELDS.strokeDashCycle.value);
+	return -phase * (dash[0] + dash[1]);
+}
+
+// Everything in the stroke data that changes the mask. Flow is left out: the
+// mask is drawn at rest and a flowing dash re-strokes per frame.
 function getStrokeMaskKey(stroke) {
 	if (!stroke) return null;
 	return [
@@ -149,8 +171,9 @@ function getStrokeReach(subpaths, stroke, getOrnament = getStrokeOrnament) {
 
 // The stroke mask for a path. geometry is { subpaths } in path-local px;
 // surface is { width, height, originX, originY }: the canvas to allocate and
-// where the path's origin sits in it.
-function buildStrokeMask(geometry, stroke, surface) {
+// where the path's origin sits in it. flowOffsetPx slides the dashes (see
+// getStrokeDashFlowOffset).
+function buildStrokeMask(geometry, stroke, surface, flowOffsetPx = 0) {
 	const canvas = createAppCanvas(0, 0, 'paint/stroke-mask');
 	canvas.width = surface.width;
 	canvas.height = surface.height;
@@ -178,7 +201,7 @@ function buildStrokeMask(geometry, stroke, surface) {
 			const plan = planStrokeSubpath(subpath, stroke);
 			if (plan.path) {
 				ctx.setLineDash(dash || []);
-				ctx.lineDashOffset = dash ? (Number(stroke.dashOffsetPx) || 0) + plan.dashShift : 0;
+				ctx.lineDashOffset = dash ? (Number(stroke.dashOffsetPx) || 0) + plan.dashShift + flowOffsetPx : 0;
 				ctx.stroke(PathGeometry.toPath2D([plan.path]));
 			}
 			plan.ornaments.forEach((placement) => {
@@ -271,5 +294,5 @@ function getStrokeThumbnail(key, value) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-	module.exports = { planStrokeSubpath, getStrokeReach, getStrokeLineDash, getStrokeMaskKey, STROKE_PRESETS, findStrokePresetId };
+	module.exports = { planStrokeSubpath, getStrokeReach, getStrokeLineDash, getStrokeMaskKey, getStrokeDashFlow, isStrokeFlowing, STROKE_PRESETS, findStrokePresetId };
 }

@@ -27,6 +27,12 @@
 	// chroma noise and blotches ease between keys `chromaFrames` and
 	// `blotchFrames` apart, so the colour drifts instead of flickering. A
 	// still (frame 0) keeps one pattern per seed.
+	//
+	// Temporal effects (a profile's `temporal`) only run past frame 0, so a
+	// still never shows them: ghosting blends in a share of the previous
+	// frame (kept per seed and grid size, used only when it is the frame just
+	// before), exposure flicker nudges the gain from frame to frame, and white
+	// balance drifts slowly warm and cool.
 
 	const GAMMA = 2.2;
 	// Display input is looked up at 12 bits; linear sensor output at 14 bits
@@ -57,6 +63,18 @@
 
 	// Roughly Gaussian with unit variance, from one hash: three 10-bit uniforms.
 	const gauss = (h) => (((h & 1023) + ((h >>> 10) & 1023) + ((h >>> 20) & 1023)) / 1023 - 1.5) * 2;
+
+	// A smooth random value in -1..1 along time: one hashed key every `frames`
+	// frames, eased between.
+	function drift(frame, frames, salt) {
+		const time = frame / Math.max(1, frames), key = Math.floor(time), mix = smooth(time - key);
+		const at = (index) => hash(index, 0, 0, salt) / 2147483648 - 1;
+		return lerp(at(key), at(key + 1), mix);
+	}
+
+	// The last developed frame of each stream, for ghosting.
+	const history = new Map();
+	const HISTORY_LIMIT = 24;
 
 	// Float scratch reused between renders; everything that reads it runs
 	// before the first await, so overlapping renders can't share a buffer.
@@ -187,7 +205,7 @@
 	// Auto-exposure and white balance from the sensor picture: a
 	// centre-weighted mean sets the gain; gray-world sets the channel gains,
 	// only `correction` of the way, then the camera's own `cast`.
-	function meter(red, green, blue, width, height, profile, amount) {
+	function meter(red, green, blue, width, height, profile, amount, frame = 0, salt = 0) {
 		let total = 0, luma = 0, sumR = 0, sumG = 0, sumB = 0;
 		const stride = Math.max(1, Math.round(Math.min(width, height) / 120));
 		for (let y = 0; y < height; y += stride) {
@@ -204,8 +222,16 @@
 		const gain = clamp((exposure.target / mean) ** exposure.response, exposure.minGain, exposure.maxGain) * exposure.bias;
 		const means = [sumR, sumG, sumB].map((sum) => Math.max(1e-4, sum / total));
 		const raw = means.map((channel, index) => clamp((mean / channel) ** whiteBalance.correction, 0.75, 1.35) * whiteBalance.cast[index]);
+		const { temporal } = profile;
+		let flicker = 1;
+		if (temporal && frame > 0) {
+			flicker += temporal.flicker.amount * drift(frame, temporal.flicker.frames, salt ^ 0x3c6ef372);
+			// The cast swings warm (more red, less blue) and cool.
+			const swing = temporal.drift.amount * drift(frame, temporal.drift.frames, salt ^ 0x1b873593);
+			raw[0] *= 1 + swing; raw[2] *= 1 - swing;
+		}
 		const level = 0.2126 * raw[0] + 0.7152 * raw[1] + 0.0722 * raw[2];
-		return { gain: lerp(1, gain, amount), balance: raw.map((value) => lerp(1, value / level, amount)) };
+		return { gain: lerp(1, gain * flicker, amount), balance: raw.map((value) => lerp(1, value / level, amount)) };
 	}
 
 	// `profile` is a CONFIG.tools.filter.webcam.resolutions entry; `amount`
@@ -229,7 +255,7 @@
 		blur(blue, gridWidth, gridHeight, lensVariance, temp);
 
 		// Exposure, sensor noise, white balance, tone and colour, in one pass.
-		const { gain, balance: [balanceR, balanceG, balanceB] } = meter(red, green, blue, gridWidth, gridHeight, profile, amount);
+		const { gain, balance: [balanceR, balanceG, balanceB] } = meter(red, green, blue, gridWidth, gridHeight, profile, amount, Math.max(0, Math.floor(frameIndex)) | 0, seedSalt(seed));
 		const { noise, tone, color } = profile;
 		const lut = toneLut(tone.black * amount, tone.contrast * amount, lerp(1, tone.knee, amount));
 		const toneScale = TONE_LEVELS / TONE_MAX;
@@ -291,6 +317,21 @@
 			const cleaned = red[cell] + denoise * detail / (1 + ratioToEdge * ratioToEdge);
 			const Y = cleaned + sharpen * (cleaned - soft[cell]), r = Y + blue[cell], b = Y + green[cell];
 			out[offset] = r * 255; out[offset + 1] = (Y - 0.299 * r - 0.114 * b) / 0.587 * 255; out[offset + 2] = b * 255; out[offset + 3] = 255;
+		}
+
+		// Ghosting: a share of the previous frame of this stream stays.
+		const frameNumber = Math.max(0, Math.floor(frameIndex)) | 0, key = `${seed}|${gridWidth}x${gridHeight}`;
+		const previous = history.get(key);
+		if (profile.temporal?.ghost && frameNumber > 0 && previous?.frame === frameNumber - 1) {
+			const ghost = profile.temporal.ghost * amount, last = previous.data;
+			for (let index = 0; index < out.length; index += 4) {
+				out[index] = lerp(out[index], last[index], ghost); out[index + 1] = lerp(out[index + 1], last[index + 1], ghost); out[index + 2] = lerp(out[index + 2], last[index + 2], ghost);
+			}
+		}
+		if (profile.temporal?.ghost) {
+			history.delete(key);
+			history.set(key, { frame: frameNumber, data: out.slice() });
+			if (history.size > HISTORY_LIMIT) history.delete(history.keys().next().value);
 		}
 
 		let developed = small;

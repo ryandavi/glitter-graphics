@@ -127,6 +127,8 @@ const FIELDS = Object.freeze({
 	strokeDash: { label: 'Dash', unit: 'px', min: 1, max: 200, step: 1, value: 16, cost: 'raster' },
 	strokeGap: { label: 'Gap', unit: 'px', min: 1, max: 200, step: 1, value: 12, cost: 'raster' },
 	strokeDashOffset: { label: 'Dash offset', unit: 'px', min: 0, max: 200, step: 1, value: 0, cost: 'raster' },
+	// Only the clock changes (the preview re-strokes on its own tick), so a drag costs no more than a style field.
+	strokeDashCycle: { label: 'Cycle', unit: 'ms', min: 100, max: 20000, step: 100, value: 1000, scale: 'log' },
 	// Ornament size as a multiple of the stroke width, in percent.
 	strokeOrnamentSize: { label: 'Size', unit: '%', min: 100, max: 1000, step: 10, value: 400, cost: 'raster' },
 	shapeRadius: { label: 'Radius', unit: 'px', min: 0, max: 100, step: 1, value: 0, cost: 'raster' },
@@ -173,6 +175,8 @@ const FIELDS = Object.freeze({
 	textLineHeight: { label: 'Line height', unit: '%', min: 50, max: 250, step: 1, value: 100, cost: 'raster' },
 	textPaddingH: { label: 'Horizontal box padding', unit: 'px', min: 0, max: 200, step: 1, value: 0, cost: 'raster' },
 	textPaddingV: { label: 'Vertical box padding', unit: 'px', min: 0, max: 200, step: 1, value: 0, cost: 'raster' },
+	// Only the clock changes (the preview re-lays the text out on its own tick), so a drag costs no more than a style field.
+	textWarpCycle: { label: 'Cycle', unit: 'ms', min: 100, max: 20000, step: 100, value: 2000, scale: 'log' },
 	textWarpBend: { label: 'Bend', unit: '%', min: -100, max: 100, step: 1, value: 50, cost: 'raster' },
 	transformScale: { label: 'Scale', unit: '%', min: 10, max: 500, step: 1, value: 100 },
 	transformRotation: { label: 'Rotation', unit: '°', min: 0, max: 360, step: 1, value: 0 },

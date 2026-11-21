@@ -138,6 +138,8 @@ const CONFIG = deepFreeze({
 			{ id: 'general', label: 'General' },
 			{ id: 'social', label: 'Social Media' }
 		],
+		// A preset may name a `sizeTarget` (an id from CONFIG.export.sizeTargets):
+		// picking it in New Canvas also sets the document's file size limit.
 		presets: [
 			{ id: 'instagram-square', group: 'social', label: 'Instagram Square', detail: '1:1', width: 1024, height: 1024, quickStart: true },
 			{ id: 'instagram-portrait', group: 'social', label: 'Instagram Portrait', detail: '4:5', width: 800, height: 1000 },
@@ -215,6 +217,9 @@ const CONFIG = deepFreeze({
 			// look renders in under 13 ms, at 400 px the slowest (Dither) in ~40 ms.
 			effects: {
 				looks: ['warp:bulge', 'warp:twirl', 'warp:pinch', 'sepia', 'grayscale', 'dreamy-glow', 'dither', 'deep-fry'],
+				// Animated looks only move in a GIF, so there each takes the place of
+				// the still look it is keyed by (same grid size).
+				gifLooks: { 'warp:pinch': 'warp:wobble' },
 				// The Webcam choice stacks this look under the chosen effect, and
 				// the stage then renders at `webcamStageWidth` for that resolution
 				// so the grain shows at its real size.
@@ -288,6 +293,9 @@ const CONFIG = deepFreeze({
 			// knee. color: saturation, with reds/skin at `warmSaturation`. isp:
 			// chroma smear sigma, noise reduction (edges above `denoiseEdge`
 			// kept), unsharp amount and radius. jpeg: quality at sensor size.
+				// temporal (never on a still): ghost is the share of the previous frame
+				// kept; flicker is the gain swing, new every `frames` frames; drift is
+				// the warm/cool swing of the white balance over `frames` frames.
 			// Starting points for tuning by eye, not measurements.
 webcam: {
     resolutions: {
@@ -299,7 +307,8 @@ webcam: {
             tone: { black: 0.05, contrast: 0.12, knee: 0.78 },
             color: { saturation: 0.72, warmSaturation: 0.98 },
             isp: { chromaBlur: 1.4, denoise: 0.5, denoiseEdge: 0.05, sharpen: 1, sharpenRadius: 1 },
-            jpeg: { quality: 55, chromaBleed: 0.3 }
+            jpeg: { quality: 55, chromaBleed: 0.3 },
+            temporal: { ghost: 0.3, flicker: { amount: 0.07, frames: 3 }, drift: { amount: 0.06, frames: 40 } }
         },
         720: {
             label: '720p', height: 720, lens: 0.75,
@@ -309,7 +318,8 @@ webcam: {
             tone: { black: 0.035, contrast: 0.1, knee: 0.82 },
             color: { saturation: 0.8, warmSaturation: 1.02 },
             isp: { chromaBlur: 1.1, denoise: 0.25, denoiseEdge: 0.035, sharpen: 0.85, sharpenRadius: 0.8 },
-            jpeg: { quality: 70, chromaBleed: 0.15 }
+            jpeg: { quality: 70, chromaBleed: 0.15 },
+            temporal: { ghost: 0.18, flicker: { amount: 0.04, frames: 3 }, drift: { amount: 0.035, frames: 50 } }
         }
     }
 },
@@ -598,7 +608,10 @@ webcam: {
 				cap: 'round',
 				// Canvas bevels a Sharp join once its point would pass this many
 				// half-widths; it also sizes the stroke mask's reserve.
-				miterLimit: 8
+				miterLimit: 8,
+				// Frames per second a flowing dash (marching ants) is
+				// re-stroked at, in the preview and in export.
+				flowFps: 30
 			},
 			// The path's Outline: a color by default, so it reads against a
 			// glitter line.
@@ -686,6 +699,11 @@ webcam: {
 			defaultOrientation: 'horizontal',
 			// WARP_TYPES id (js/paint/text-warp.js); 'none' draws text flat.
 			defaultWarpType: 'none',
+			// An animated warp (Wave, Flag, Ripple with Flow on) is laid out at one of
+			// phaseSteps phases per cycle. flowFps caps how often the preview and
+			// export step to a new one; boundsPhases of them (evenly spread) size the mask box so it holds still while the text waves;
+			// phaseCacheSize bounds the laid-out phases kept in memory.
+			warp: { phaseSteps: 24, flowFps: 20, boundsPhases: 8, phaseCacheSize: 48 },
 			// Canvas input uses the same string and layout as the panel.
 			fontsManifest: 'data/fonts.json',
 			defaultFontId: 'comic-sans',
@@ -871,6 +889,9 @@ webcam: {
 			show: { curves: false, cycles: true, frames: false, details: false, nextLoop: false },
 			showLabels: { curves: 'Motion curves', cycles: 'Cycle marks', frames: 'Output frames', details: 'Details column', nextLoop: 'Next pass' },
 			snapPx: 8, dragThresholdPx: 3,
+			// A motion bar's drag picks time (across) or order (up/down) once the
+			// pointer has moved this far, and keeps that direction.
+			axisLockPx: 6,
 			keyPositionTolerance: 0.001, keyNudgeStep: 0.01, keyFastNudgeStep: 0.05,
 			keySingularTolerance: 1e-8,
 			frameViewMaxSide: 500,
@@ -1064,6 +1085,7 @@ webcam: {
 				controls: [
 					{ kind: 'toggle', id: 'contextAutoSelect', label: 'Auto-Select' },
 					{ kind: 'button', id: 'contextRemoveBackground', icon: 'eraser', name: 'Remove background', title: 'Remove background from this uploaded sticker', action: 'removeBackground' },
+						{ kind: 'button', id: 'contextAutoGlitter', icon: 'magic-wand', name: 'Auto Glitter', title: 'Turn the base image into editable glitter layers', action: 'autoGlitter' },
 					{ kind: 'button', id: 'centerLayerHorizontal', icon: 'align-center-x', name: 'Center H', title: 'Center Horizontally', action: 'centerSelectionH' },
 					{ kind: 'button', id: 'centerLayerVertical', icon: 'align-center-y', name: 'Center V', title: 'Center Vertically', action: 'centerSelectionV' },
 					{ kind: 'button', id: 'duplicateLayerSelection', icon: 'clone', name: 'Duplicate', title: 'Duplicate selected layer(s) (Ctrl+D)', action: 'duplicateSelection' },

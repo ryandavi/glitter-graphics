@@ -2,6 +2,38 @@
 
 const TIMING_TARGET_OWNERS = new WeakMap();
 
+// ===== CYCLING PARAMETERS =====
+// A cycling parameter (marching ants' dash offset, later a text warp's phase)
+// stores `flow` ('none' | 'forward' | 'back', the cycleFlow options) and
+// `cycleMs`. Everything reads the phase through getCycledPhase, one cycle
+// always spans exactly one period of the parameter so the loop is seamless at
+// any cycleMs. A parameter also registers a timing target
+// (createCycleTimingKind below) and a compositor source for the shared clock
+// (SceneCompositor._createCycleTimelineSource).
+
+// Where a cycling parameter is at `timeMs`: a fraction of one cycle in [0, 1).
+// Forward counts up, Back counts down; Off holds at 0.
+function getCycledPhase(timeMs, flow, cycleMs) {
+	if ((flow !== 'forward' && flow !== 'back') || !(cycleMs > 0)) return 0;
+	const cycle = (((timeMs / cycleMs) % 1) + 1) % 1;
+	return flow === 'forward' ? cycle : (1 - cycle) % 1;
+}
+
+// A timing kind for the cycling parameters `entries(layer)` lists, each
+// { key?, data, sourceKey? }: a paint slot (key, data) or a whole-layer
+// parameter (data, sourceKey). The period is `data[periodKey]`, edited within
+// the `rangeField` field's range.
+function createCycleTimingKind({ keyPrefix, label, rangeField, periodKey, entries }) {
+	const range = () => ({ min: FIELDS[rangeField].min, max: FIELDS[rangeField].max });
+	return {
+		collect(editor, layer) {
+			return entries(layer).map(entry => ({ key: `${keyPrefix}${entry.sourceKey ?? getPaintSlotSourceKey(layer, entry)}`, slot: entry.key, record: entry.data,
+				label, period: Number(entry.data[periodKey]) || FIELDS[rangeField].value, periodRange: range(), can: { period: true } }));
+		},
+		write(editor, layer, target, patch) { if (patch.period != null) target.record[periodKey] = clampNumber(patch.period, target.periodRange.min, target.periodRange.max); }
+	};
+}
+
 const ANIMATION_TIMING_KINDS = {
 	appear: {
 		movePatch(target, delta) { return { run: { start: target.run.start + delta, end: target.run.end + delta } }; },
@@ -69,6 +101,14 @@ const ANIMATION_TIMING_KINDS = {
 		},
 		write(editor, layer, target, patch) { if (patch.period != null) target.record.scrollCycleMs = clampNumber(patch.period, target.periodRange.min, target.periodRange.max); }
 	},
+	dashFlow: createCycleTimingKind({
+		keyPrefix: '__dashflow_', label: 'Dash flow', rangeField: 'strokeDashCycle', periodKey: 'dashCycleMs',
+		entries: layer => getLayerPaintSlots(layer).filter(entry => entry.renders && entry.role === 'stroke' && isStrokeFlowing(entry.data))
+	}),
+	warpFlow: createCycleTimingKind({
+		keyPrefix: '__warpflow_', label: 'Text warp', rangeField: 'textWarpCycle', periodKey: 'cycleMs',
+		entries: layer => layer.type === LayerType.TEXT_GLITTER && isTextWarpFlowing(layer.textData.warp) ? [{ data: layer.textData.warp, sourceKey: layer.id }] : []
+	}),
 	filterAnimation: {
 		collect(editor, layer) {
 			if (!layer.filterData || !GlitterFilter.isActive(layer.filterData, layer.opacity)) return [];

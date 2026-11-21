@@ -44,8 +44,9 @@ const EDITOR_DOCUMENT_IO_METHODS = {
 		this.updateHelpfulMessage();
 		this.syncTransformHandlesForActiveLayer();
 	},
-	finishDocumentReplace({ saved = false, loop = CONFIG.project.loop, markers = [], draftId = null } = {}) {
+	finishDocumentReplace({ saved = false, loop = CONFIG.project.loop, markers = [], sizeLimit = null, draftId = null } = {}) {
 		this.setDocumentLoop(loop, { commit: false });
+		this.setDocumentSizeLimit(sizeLimit, { markDirty: false });
 		this.setTimelineMarkers(markers, null, { commit: false });
 		this.historyManager.reset(this.originalImage ? this.historyManager.createStateSnapshot() : null);
 		this.isSaved = saved;
@@ -307,6 +308,8 @@ const EDITOR_DOCUMENT_IO_METHODS = {
 		if (CONFIG.app.startup.layers.createBaseImage) {
 			const layer = this.layerManager.createBaseImageLayer(LayerType.BASE_IMAGE);
 			this.layers.push(layer);
+			// A new document starts on its base image; a project load (deferFinish) keeps the saved selection.
+			if (!deferFinish) this.layerManager.setActiveLayer(layer.id);
 		}
 
 		if (CONFIG.app.startup.layers.createDefaultGlitterFill) {

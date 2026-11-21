@@ -167,7 +167,10 @@
 	function warp(imageData, { shape = 'bulge', amount = 0, radius = 1 } = {}) {
 		const width = imageData.width;
 		const height = imageData.height;
-		const strength = Math.max(0, Math.min(1, Number(amount) || 0));
+		// A negative Amount runs the shape backwards (Bulge becomes Pinch, Twirl
+		// turns the other way); Wobble swings Amount through zero.
+		const signed = Math.max(-1, Math.min(1, Number(amount) || 0));
+		const strength = Math.abs(signed);
 		const reach = Math.max(1, Math.min(width, height) / 2 * Math.max(0, Number(radius) || 0));
 		if (!strength) return imageData;
 		const source = new Uint8ClampedArray(imageData.data);
@@ -176,8 +179,8 @@
 		const centerY = (height - 1) / 2;
 		// Bulge and Pinch are one curve: a power above 1 magnifies the centre,
 		// its inverse shrinks it.
-		const power = (1 + strength * WARP_RADIAL_POWER) ** (shape === 'pinch' ? -1 : 1);
-		const turn = strength * WARP_TWIRL_RADIANS;
+		const power = (1 + strength * WARP_RADIAL_POWER) ** ((shape === 'pinch') === (signed > 0) ? -1 : 1);
+		const turn = signed * WARP_TWIRL_RADIANS;
 		const sample = (x, y, target) => {
 			const left = Math.max(0, Math.min(width - 1, Math.floor(x)));
 			const top = Math.max(0, Math.min(height - 1, Math.floor(y)));
@@ -369,9 +372,9 @@
 		}),
 		warp: Object.freeze({
 			id: 'warp',
-			params: Object.freeze({ shape: Object.freeze({ kind: 'string' }), amount: Object.freeze({ min: 0, max: 1 }), radius: Object.freeze({ min: 0, max: 1.5 }) }),
+			params: Object.freeze({ shape: Object.freeze({ kind: 'string' }), amount: Object.freeze({ min: -1, max: 1 }), radius: Object.freeze({ min: 0, max: 1.5 }) }),
 			pixel: (imageData, params) => warp(imageData, params),
-			isActive: (params) => Number(params.amount) > 0 && Number(params.radius) > 0
+			isActive: (params) => Number(params.amount) !== 0 && Number(params.radius) > 0
 		}),
 		rgbSplit: Object.freeze({ id: 'rgbSplit', params: Object.freeze({ offset: Object.freeze({ min: 0, max: 40 }) }), pixel: (imageData, params) => rgbSplit(imageData, params.offset), isActive: (params) => Number(params.offset) > 0 }),
 		gradientMap: Object.freeze({ id: 'gradientMap', params: Object.freeze({ stops: Object.freeze({ kind: 'gradientStops' }) }), pixel: (imageData, params) => gradientMap(imageData, params.stops), isActive: () => true })

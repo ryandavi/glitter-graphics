@@ -35,6 +35,8 @@
 	const autoPalette = (values) => values.palette == null || values.palette === 'auto';
 	const patterned = (values) => ['bayer', 'halftone'].includes(values.algorithm);
 	const warpOptions = [{ value: 'bulge', label: 'Bulge' }, { value: 'pinch', label: 'Pinch' }, { value: 'twirl', label: 'Twirl' }];
+	const warpMotionOptions = [{ value: 'none', label: 'None' }, { value: 'wobble', label: 'Wobble' }];
+	const wobbling = (values) => values.motion === 'wobble';
 	const balanceRanges = [{ value: 'shadows', label: 'Shadows' }, { value: 'midtones', label: 'Midtones' }, { value: 'highlights', label: 'Highlights' }];
 	const balanceChannels = [['Red', 'filterBalanceRed'], ['Green', 'filterBalanceGreen'], ['Blue', 'filterBalanceBlue']];
 	// Nine stored shifts (range × channel); the Range select shows one range's three.
@@ -56,6 +58,17 @@
 	function hueCycleAnimation(values) {
 		return { frames: Math.round(values.speed * 1000 / CONFIG.tools.filter.animation.frameMs), frameMs: CONFIG.tools.filter.animation.frameMs };
 	}
+
+	// Hue Cycle and Warp Wobble share one cycle length (`speed`, in seconds),
+	// kept to whole animation frames.
+	function quantizeCycle(values) {
+		values.speed = Math.round(values.speed * 1000 / CONFIG.tools.filter.animation.frameMs) * CONFIG.tools.filter.animation.frameMs / 1000;
+	}
+	const cyclePeriodControl = Object.freeze({
+		range: () => ({ min: Fields.filterHueCycleSpeed.min * 1000, max: Fields.filterHueCycleSpeed.max * 1000 }),
+		resolve: (ms) => Math.round(ms / CONFIG.tools.filter.animation.frameMs) * CONFIG.tools.filter.animation.frameMs,
+		set: (values, ms) => { values.speed = ms / 1000; }
+	});
 
 	function scanlineAnimation(values) {
 		const frameMs = CONFIG.tools.filter.animation.crawl[values.crawl].frameMs;
@@ -187,12 +200,7 @@
 			description: 'Every frame changes the whole canvas; more steps make larger GIFs.',
 			fields: Object.freeze({ speed: numeric('filterHueCycleSpeed', 'filterHueCycleSpeed') }),
 			animation: hueCycleAnimation,
-			normalize: (values) => { values.speed = Math.round(values.speed * 1000 / CONFIG.tools.filter.animation.frameMs) * CONFIG.tools.filter.animation.frameMs / 1000; },
-			periodControl: {
-				range: () => ({ min: Fields.filterHueCycleSpeed.min * 1000, max: Fields.filterHueCycleSpeed.max * 1000 }),
-				resolve: (ms) => Math.round(ms / CONFIG.tools.filter.animation.frameMs) * CONFIG.tools.filter.animation.frameMs,
-				set: (values, ms) => { values.speed = ms / 1000; }
-			},
+			normalize: quantizeCycle, periodControl: cyclePeriodControl,
 			recipe: (values, frameIndex = 0) => {
 				const { frames } = hueCycleAnimation(values);
 				return [step('tone', { tone: { hueRotate: 360 * (frameIndex % frames) / frames } })];
@@ -285,12 +293,22 @@
 		}), recipe: (values) => [step('rgbSplit', { offset: values.offset })] }),
 		// One op, one look per shape (lookField). The warp centres in the canvas
 		// or the filter region, so moving the region places it.
-		warp: Object.freeze({ id: 'warp', label: 'Warp', group: 'distort', lookField: 'shape', tags: ['funhouse', 'distort', 'face'], fields: Object.freeze({
+		warp: Object.freeze({ id: 'warp', label: 'Warp', group: 'distort', lookField: 'shape', lookKey: (value) => wobbling(value) ? 'wobble' : value.shape, tags: ['funhouse', 'distort', 'face'], fields: Object.freeze({
 			shape: select('bulge', 'filterWarpShape', 'Shape', warpOptions),
 			amount: numeric('filterWarpAmount', 'filterWarpAmount'),
-			radius: numeric('filterWarpRadius', 'filterWarpRadius')
-		}), recipe: (values) => [step('warp', { shape: values.shape, amount: values.amount / 100, radius: values.radius / 100 })],
-			summary: (values) => warpOptions.find((entry) => entry.value === values.shape)?.label || 'Warp' }),
+			radius: numeric('filterWarpRadius', 'filterWarpRadius'),
+			motion: select('none', 'filterWarpMotion', 'Motion', warpMotionOptions),
+			speed: numeric('filterHueCycleSpeed', 'filterWarpCycle', { when: wobbling })
+		}), animation: (values) => wobbling(values) ? hueCycleAnimation(values) : null,
+			normalize: quantizeCycle, periodControl: cyclePeriodControl,
+			// Wobble swings Amount on a cosine through one cycle, so frame 0 is the
+			// set Amount: Bulge to Pinch, and a back-and-forth twist for Twirl.
+			recipe: (values, frameIndex = 0) => {
+				const { frames } = hueCycleAnimation(values);
+				const swing = wobbling(values) ? Math.cos(2 * Math.PI * (frameIndex % frames) / frames) : 1;
+				return [step('warp', { shape: values.shape, amount: values.amount / 100 * swing, radius: values.radius / 100 })];
+			},
+			summary: (values) => wobbling(values) ? 'Wobble' : (warpOptions.find((entry) => entry.value === values.shape)?.label || 'Warp') }),
 		'gradient-map': Object.freeze({ id: 'gradient-map', label: 'Gradient Map', group: 'pixel', fields: Object.freeze({
 			gradientId: select('pink-blue', 'filterGradientMap', 'Gradient', gradientOptions)
 		}), recipe: (values) => [step('gradientMap', { stops: gradientStops(values.gradientId) })] })
@@ -338,7 +356,7 @@
 	function lookId(value) {
 		const filter = FILTERS[value?.type];
 		if (!filter) return null;
-		return filter.lookField ? `${filter.id}:${value[filter.lookField]}` : filter.id;
+		return filter.lookField ? `${filter.id}:${filter.lookKey?.(value) ?? value[filter.lookField]}` : filter.id;
 	}
 
 	const instagramLookEntries = Object.entries(Presets).map(([presetId, preset]) => ({
@@ -363,6 +381,7 @@
 			...warpOptions.map((option) => ({
 				id: lookId({ type: 'warp', shape: option.value }), label: option.label, group: 'distort', tags: FILTERS.warp.tags, value: { type: 'warp', shape: option.value }
 			})),
+			{ id: 'warp:wobble', label: 'Wobble', group: 'distort', tags: [...FILTERS.warp.tags, 'animated'], value: { type: 'warp', shape: 'bulge', motion: 'wobble' } },
 			...instagramLookEntries
 		],
 		renderThumbnail(entry, element) { root.GlitterFilter?.renderCssThumbnail?.(element, normalize(entry.value.type, entry.value)); }

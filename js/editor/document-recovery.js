@@ -154,6 +154,35 @@ const EDITOR_RECOVERY_METHODS = {
 			savedAt: Date.now(),
 			fileSaved
 		}, { keep: CONFIG.app.recovery.keepDrafts });
+		// Chromium grants this silently from site engagement and never prompts;
+		// elsewhere the Settings row asks, so a prompt follows the user's own click.
+		if (!this.storagePersistAttempted && navigator.userAgentData) {
+			this.storagePersistAttempted = true;
+			await this.requestStoragePersistence();
+		}
+	},
+
+	async requestStoragePersistence() {
+		let persisted = false;
+		try { persisted = Boolean(await navigator.storage?.persist?.()); } catch { /* Refused or unsupported. */ }
+		this.refreshProtectDraftsRow(persisted);
+		return persisted;
+	},
+
+	// The Settings "Protect Drafts" row: status line plus its button.
+	async refreshProtectDraftsRow(known = null) {
+		const status = document.getElementById('protectDraftsStatus');
+		const button = document.getElementById('protectDrafts');
+		if (!status || !button) return;
+		const supported = typeof navigator.storage?.persist === 'function';
+		let persisted = known;
+		if (persisted === null && supported) {
+			try { persisted = await navigator.storage.persisted(); } catch { persisted = false; }
+		}
+		button.disabled = !supported || Boolean(persisted);
+		status.textContent = !supported ? 'This browser cannot protect drafts.'
+			: persisted ? 'Drafts are protected from automatic cleanup.'
+				: 'The browser may clear drafts when storage runs low.';
 	},
 
 	// After a file save the draft stays (Resume is still the quickest way

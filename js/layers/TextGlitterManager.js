@@ -10,6 +10,12 @@ class TextGlitterManager {
 		this.layerTransforms = new Map();
 
 		this.textMaskCache = new Map();
+		// An animated warp (isTextWarpFlowing) is laid out per phase step: the
+		// step each layer shows now, when it last stepped, and the cache keys of
+		// the phases kept (oldest first), so a long cycle cannot grow the cache.
+		this.warpPhaseSteps = new Map();
+		this.warpSteppedAt = new Map();
+		this.phasedMeasurementKeys = [];
 		// Preview mask data URL per layer id and mask bucket (fill, border, ...),
 		// each keyed by content. Dropped when the layer's element is removed.
 		// Keyed `${layerId}|${maskType}`; rebuilt on demand, so in the preview budget.
@@ -64,6 +70,9 @@ class TextGlitterManager {
 			orientationButtons: Array.from(document.querySelectorAll('[data-text-orientation]')),
 			warpPresets: document.getElementById('textWarpPresets'),
 			warpBendRow: document.getElementById('textWarpBendRow'),
+			warpFlowButtons: Array.from(document.querySelectorAll('[data-text-warp-flow]')),
+			warpFlowRow: document.getElementById('textWarpFlowRow'),
+			warpCycleRow: document.getElementById('textWarpCycleRow'),
 			warpSummary: document.getElementById('textWarpSummary'),
 			alignButtons: Array.from(document.querySelectorAll('[data-text-align]')),
 			verticalAlignButtons: Array.from(document.querySelectorAll('[data-text-valign]')),
@@ -159,6 +168,14 @@ class TextGlitterManager {
 				const layer = this.getActiveTextLayer();
 				if (!layer || layer.textData.orientation === button.dataset.textOrientation) return;
 				editLayout(layer, () => { layer.textData.orientation = button.dataset.textOrientation; });
+			});
+		});
+
+		this.ui.warpFlowButtons.forEach(button => {
+			button.addEventListener('click', () => {
+				const layer = this.getActiveTextLayer();
+				if (!layer || layer.textData.warp.flow === button.dataset.textWarpFlow) return;
+				editLayout(layer, () => { layer.textData.warp = normalizeTextWarp({ ...layer.textData.warp, flow: button.dataset.textWarpFlow }); });
 			});
 		});
 
@@ -819,6 +836,15 @@ class TextGlitterManager {
 		const match = matchWarpPreset(warp);
 		const entry = match && WARP_PRESETS.get(match.id);
 		if (this.ui.warpBendRow) this.ui.warpBendRow.hidden = warp.type === 'none';
+		// Flow is for the wave types; its Cycle shows once Flow is on.
+		const phased = Boolean(WARP_TYPES[warp.type]?.phased);
+		if (this.ui.warpFlowRow) this.ui.warpFlowRow.hidden = !phased;
+		if (this.ui.warpCycleRow) this.ui.warpCycleRow.hidden = !phased || warp.flow === 'none';
+		this.ui.warpFlowButtons.forEach(button => {
+			const active = button.dataset.textWarpFlow === warp.flow;
+			button.classList.toggle('active', active);
+			button.setAttribute('aria-pressed', String(active));
+		});
 		if (this.ui.warpSummary) this.ui.warpSummary.textContent = entry ? entry.label : (WARP_TYPES[warp.type]?.label || '');
 		if (!this.ui.warpPresets) return;
 		const selection = { activeId: match?.id || null, modified: Boolean(match?.modified), contextId: 'text' };
@@ -995,7 +1021,7 @@ class TextGlitterManager {
 			textData.letterSpacing,
 			textData.lineHeight,
 			textData.align,
-			isTextWarpActive(textData.warp) ? [textData.warp.type, textData.warp.bend] : null,
+			isTextWarpActive(textData.warp) ? [textData.warp.type, textData.warp.bend, this.getWarpPhaseStep(layer) || null] : null,
 			textData.verticalAlign || 'top',
 			textData.verticalTrim || CONFIG.tools.text.defaultVerticalTrim,
 			textData.boxMode || 'point',
@@ -1117,20 +1143,26 @@ class TextGlitterManager {
 		const flatInkRect = { left: textInkLeft, top: textInkTop, right: textInkRight, bottom: textInkBottom };
 		const flatDecorations = layout.decorations;
 		const warpEnvelope = hasInk && hasWarpEnvelope(layer.textData.warp);
-		const warpedGlyphs = hasInk && isTextWarpActive(layer.textData.warp)
-			? this.layoutWarpedTextGlyphs(ctx, visibleLines, {
-				glyphs: layout.glyphs,
-				warp: layer.textData.warp,
-				align: layer.textData.align,
-				layoutWidth,
-				contentOffsetY,
-				ascent,
-				lineHeightPx,
-				letterSpacing,
-				fontSize,
-				inkRect: flatInkRect
-			})
-			: null;
+		// An animated warp lays out at this layer's phase (see getLayoutWarp).
+		const layoutWarp = this.getLayoutWarp(layer);
+		const layoutWarpAt = (warp) => this.layoutWarpedTextGlyphs(ctx, visibleLines, {
+			glyphs: layout.glyphs,
+			warp,
+			align: layer.textData.align,
+			layoutWidth,
+			contentOffsetY,
+			ascent,
+			lineHeightPx,
+			letterSpacing,
+			fontSize,
+			inkRect: flatInkRect
+		});
+		const warpedGlyphs = hasInk && isTextWarpActive(layer.textData.warp) ? layoutWarpAt(layoutWarp) : null;
+		// A waving warp sizes its box from a few phases spread round the cycle,
+		// not from the phase on show, so the box holds still while the text waves.
+		const warpBounds = warpedGlyphs && isTextWarpFlowing(layer.textData.warp)
+			? this.getWarpBoundsPhases().map(phase => layoutWarpAt({ ...layer.textData.warp, phase }))
+			: [warpedGlyphs];
 		if (warpedGlyphs) layout.decorations = TextLayout.warpDecorations(layout, warpedGlyphs, letterSpacing);
 		if (warpedGlyphs) {
 			textInkLeft = Infinity;
@@ -1139,7 +1171,7 @@ class TextGlitterManager {
 			textInkBottom = -Infinity;
 			positionedLines.forEach((line, index) => {
 				if (line.blank) return;
-				const bounds = [...warpedGlyphs.filter(glyph => glyph.line === index && glyph.bounds).map(glyph => glyph.bounds), ...layout.decorations.filter(rect => rect.line === index && rect.bounds).map(rect => rect.bounds)];
+				const bounds = [...warpBounds.flatMap(set => set.filter(glyph => glyph.line === index && glyph.bounds).map(glyph => glyph.bounds)), ...layout.decorations.filter(rect => rect.line === index && rect.bounds).map(rect => rect.bounds)];
 				if (!bounds.length) {
 					positionedLines[index] = { blank: true };
 					return;
@@ -1221,7 +1253,7 @@ class TextGlitterManager {
 		const fontDeclaration = maskCtx.font;
 		const warpMetrics = warpEnvelope ? TextLayout.getWarpMetrics(flatInkRect, fontSize, ascent) : null;
 		// drawFlat(flat, x, y) paints unwarped artwork offset by (x, y).
-		const drawThroughEnvelope = (context, drawFlat) => drawThroughWarpEnvelope(context, layer.textData.warp, warpMetrics, flatInkRect, layoutX, layoutY, (flat, x, y) => {
+		const drawThroughEnvelope = (context, drawFlat) => drawThroughWarpEnvelope(context, layoutWarp, warpMetrics, flatInkRect, layoutX, layoutY, (flat, x, y) => {
 			flat.font = fontDeclaration;
 			flat.textBaseline = 'alphabetic';
 			flat.fillStyle = '#fff';
@@ -1361,9 +1393,71 @@ class TextGlitterManager {
 		};
 
 		this.textMaskCache.set(key, entry);
+		if (isTextWarpFlowing(layer.textData.warp)) this.trimPhasedMeasurements(key);
 		layer.textData.width = canvasWidth;
 		layer.textData.height = canvasHeight;
 		return entry;
+	}
+
+	// ===== ANIMATED WARP =====
+	// Wave, Flag and Ripple with Flow on are laid out at one of
+	// CONFIG.tools.text.warp.phaseSteps phases per cycle. The phase step on show
+	// is per layer (the preview ticker or an export frame sets it) and is part of
+	// the measurement's cache key; the stored warp never carries a phase.
+
+	getWarpPhaseStep(layer) {
+		return isTextWarpFlowing(layer.textData.warp) ? this.warpPhaseSteps.get(layer.id) || 0 : 0;
+	}
+
+	// The warp the layout reads: the stored one plus the phase on show.
+	getLayoutWarp(layer) {
+		const warp = layer.textData.warp;
+		return isTextWarpFlowing(warp) ? { ...warp, phase: this.getWarpPhaseStep(layer) / CONFIG.tools.text.warp.phaseSteps } : warp;
+	}
+
+	// The phases that size the mask box: boundsPhases of them, evenly spread.
+	getWarpBoundsPhases() {
+		const { boundsPhases } = CONFIG.tools.text.warp;
+		return Array.from({ length: boundsPhases }, (_, index) => index / boundsPhases);
+	}
+
+	trimPhasedMeasurements(key) {
+		const keys = this.phasedMeasurementKeys;
+		keys.push(key);
+		while (keys.length > CONFIG.tools.text.warp.phaseCacheSize) this.textMaskCache.delete(keys.shift());
+	}
+
+	// Steps a layer to the phase for `timeMs`; false when it is already there.
+	setWarpPhaseAt(layer, timeMs) {
+		const step = getTextWarpPhaseStep(layer.textData.warp, timeMs);
+		if (this.warpPhaseSteps.get(layer.id) === step) return false;
+		this.warpPhaseSteps.set(layer.id, step);
+		return true;
+	}
+
+	// Registers (or drops) the preview tick that re-lays a waving warp out.
+	syncWarpFlow(wrapper, layer) {
+		const ticker = this.editor.animationTicker;
+		const id = `${layer.id}:warpFlow`;
+		if (!isTextWarpFlowing(layer.textData.warp)) {
+			ticker?.unregister(id);
+			return;
+		}
+		this.warpSteppedAt.delete(layer.id);
+		ticker?.register(id, {
+			getLayer: () => layer,
+			getWrapper: () => wrapper,
+			paint: (timeMs) => this.paintWarpFlow(layer, wrapper, timeMs)
+		});
+	}
+
+	paintWarpFlow(layer, wrapper, timeMs) {
+		const now = performance.now();
+		if (now - (this.warpSteppedAt.get(layer.id) || 0) < 1000 / CONFIG.tools.text.warp.flowFps) return;
+		if (!this.setWarpPhaseAt(layer, timeMs)) return;
+		this.warpSteppedAt.set(layer.id, now);
+		const stack = wrapper.querySelector('.text-glitter-stack');
+		if (stack) this.reconcileTextSpans(stack, layer, this.getMeasurementEntry(layer));
 	}
 
 	// The user-facing visible-art frame in text-local units, centered relative
@@ -1433,6 +1527,26 @@ class TextGlitterManager {
 		}
 
 		await FontLibrary.ensureLoaded(layer.textData.fontId);
+		const masks = this.buildSlotMasks(layer);
+		if (isTextWarpFlowing(layer.textData.warp)) {
+			// An animated warp re-lays out at each frame's moment (the exporter
+			// asks per slot; the masks of one phase are built once).
+			let built = null;
+			masks.frameMask = (key, dashTimeMs, warpTimeMs) => {
+				const step = getTextWarpPhaseStep(layer.textData.warp, warpTimeMs);
+				if (built?.step !== step) {
+					const shown = this.warpPhaseSteps.get(layer.id);
+					this.warpPhaseSteps.set(layer.id, step);
+					try { built = { step, masks: this.buildSlotMasks(layer) }; } finally { this.warpPhaseSteps.set(layer.id, shown ?? 0); }
+				}
+				return built.masks[key] || null;
+			};
+		}
+		return masks;
+	}
+
+	// Every slot mask at the layer's current warp phase (see renderSlotMasks).
+	buildSlotMasks(layer) {
 		const measurement = getRasterMeasurement(layer, this.getMeasurementEntry(layer));
 		const masks = {
 			fill: measurement.lettersCanvas,
@@ -1523,6 +1637,7 @@ class TextGlitterManager {
 					delete layer._pendingPointAnchorTarget;
 				}
 				this.reconcileTextSpans(stack, layer, measurement);
+				this.syncWarpFlow(wrapper, layer);
 				wrapper.classList.toggle('text-overflowing', Boolean(measurement.hasOverflow));
 				syncLayerAnimationPreview(wrapper, layer, this.editor.animationTicker);
 
@@ -2034,6 +2149,8 @@ class TextGlitterManager {
 	// ===== CENTERING METHODS (Delegation to LayerTransform, mirrors StickerManager) =====
 
 	removeLayerElement(layerId) {
+		this.editor.animationTicker?.unregister(`${layerId}:warpFlow`);
+		this.warpPhaseSteps.delete(layerId);
 		this.previewMaskUrls.deleteWhere((key) => key.startsWith(`${layerId}|`));
 		LAYER_ELEMENT_METHODS.removeLayerElement.call(this, layerId);
 	}

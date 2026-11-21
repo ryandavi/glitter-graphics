@@ -51,6 +51,7 @@ class ProjectSerializer {
 			},
 			loop: { ...this.editor.documentLoop },
 			markers: (this.editor.documentMarkers || []).map(marker => ({ ...marker })),
+			sizeLimit: this.editor.getDocumentSizeLimit(),
 			baseImage: await this.serializeBaseImage(),
 			layers,
 			activeLayerId: this.editor.activeLayerId,
@@ -148,7 +149,7 @@ class ProjectSerializer {
 		this.editor.layerManager.restoreSelectionState(activeLayer ? activeLayer.id : null);
 		this.editor.setProjectName(migrated.name || '', { markDirty: false });
 		this.editor.openedFromNewerProjectVersion = migrated.version > ProjectSerializer.FORMAT_VERSION;
-		this.editor.finishDocumentReplace({ saved, loop: migrated.loop, markers: migrated.markers, draftId });
+		this.editor.finishDocumentReplace({ saved, loop: migrated.loop, markers: migrated.markers, sizeLimit: migrated.sizeLimit, draftId });
 		this.editor.updateSelectedColorsDisplay();
 		this.editor.updateStatus('Project loaded');
 		return true;

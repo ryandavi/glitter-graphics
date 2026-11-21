@@ -60,8 +60,9 @@ class CameraCapture {
 		this.renderChain = Promise.resolve();
 		this.workCanvases = new WeakMap();
 		this.lookData = new Map();
-		this.paintCount = 0;
-		this.ui = Object.fromEntries(['cameraModal', 'cameraStage', 'cameraVideo', 'cameraView', 'cameraCrop', 'cameraFlash', 'cameraCountdownBadge', 'cameraEffects', 'cameraRoll', 'cameraModes', 'cameraTakeBtn', 'cameraEffectsBtn', 'cameraUseBtn', 'cameraMirror', 'cameraDevice', 'cameraCountdown', 'cameraAspect', 'cameraCapture', 'cameraWebcam', 'cameraSound', 'cameraBounce', 'cameraSpeed', 'cameraPlaybackSet']
+		this.streams = new WeakMap();
+		this.streamCount = 0;
+		this.ui = Object.fromEntries(['cameraModal', 'cameraStage', 'cameraVideo', 'cameraView', 'cameraCrop', 'cameraFlash', 'cameraCountdownBadge', 'cameraRetake', 'cameraEffects', 'cameraRoll', 'cameraModes', 'cameraTakeBtn', 'cameraEffectsBtn', 'cameraUseBtn', 'cameraMirror', 'cameraDevice', 'cameraCountdown', 'cameraAspect', 'cameraCapture', 'cameraWebcam', 'cameraSound', 'cameraBounce', 'cameraSpeed', 'cameraPlaybackSet']
 			.map(id => [id.replace(/^camera/, '').replace(/^./, char => char.toLowerCase()), document.getElementById(id)]));
 		const { modes, aspects, countdownSeconds } = CONFIG.tools.camera;
 		const remembered = (key, table) => (Object.hasOwn(table, PREFERENCES.get(key)) ? PREFERENCES.get(key) : Object.keys(table)[0]);
@@ -89,6 +90,8 @@ class CameraCapture {
 		this.ui.takeBtn.addEventListener('click', () => this.take());
 		this.ui.effectsBtn.addEventListener('click', () => this.setEffectsOpen(this.ui.effects.hidden));
 		this.ui.useBtn.addEventListener('click', () => this.use());
+		this.ui.view.addEventListener('click', event => this.offerRetake(event));
+		this.ui.retake.addEventListener('click', () => this.retake(this.selected, Number(this.ui.retake.dataset.cell)));
 		// A mouse wheel scrolls the roll sideways once it overflows.
 		this.ui.roll.addEventListener('wheel', event => {
 			const roll = this.ui.roll;
@@ -240,6 +243,13 @@ class CameraCapture {
 		if (label) label.textContent = `Mode: ${CONFIG.tools.camera.modes[this.mode].label}`;
 		// Capture (Burst or Stop motion) only applies to a GIF.
 		this.ui.capture.closest('.property-row').hidden = !CONFIG.tools.camera.modes[this.mode].animated;
+		// The Effects grid swaps in the animated looks for a GIF, and keeps the
+		// chosen effect if it is still offered.
+		if (this.effectCells) {
+			const kept = this.effect;
+			this.buildEffects();
+			if (this.effectCells.some(cell => cell.lookId === kept)) this.setEffect(kept);
+		}
 	}
 
 	// The stage takes the camera's shape, so the video fills it and the crop
@@ -312,11 +322,7 @@ class CameraCapture {
 			const caption = mode.layout || capture?.cue ? `${index + 1} of ${mode.shots}` : '';
 			const countdown = !index || mode.layout ? this.countdownSeconds : 0;
 			if (countdown) {
-				for (let remaining = countdown; remaining > 0; remaining--) {
-					this.showBadge(String(remaining), caption);
-					this.playSound(remaining === 1 ? 'lastBeep' : 'beep');
-					if (!await this.wait(1000, sequence)) return;
-				}
+				if (!await this.countDown(countdown, caption, sequence)) return;
 			} else if (index) {
 				const gap = capture ? capture.intervalMs : mode.intervalMs;
 				if (caption) this.showBadge('', caption);
@@ -351,6 +357,72 @@ class CameraCapture {
 		this.ui.useBtn.focus();
 	}
 
+	// The count before a shot, one beep and badge a second; false if cancelled.
+	async countDown(seconds, caption, sequence) {
+		for (let remaining = seconds; remaining > 0; remaining--) {
+			this.showBadge(String(remaining), caption);
+			this.playSound(remaining === 1 ? 'lastBeep' : 'beep');
+			if (!await this.wait(1000, sequence)) return false;
+		}
+		return true;
+	}
+
+	// Retakes one cell of a Grid or Strip: the countdown for that cell alone,
+	// the other shots kept. Cancelling goes back to reviewing the take.
+	async retake(take, index) {
+		if (!this.stream || this.sequence || this.phase !== 'review' || !take?.layout || !this.ui.video.videoWidth) return;
+		const sequence = this.sequence = { cancelled: false, timer: null, resolve: null, pending: null, retake: take };
+		this.setPhase('shooting');
+		if (this.countdownSeconds && !await this.countDown(this.countdownSeconds, `${index + 1} of ${take.shots.length}`, sequence)) return;
+		this.hideBadge();
+		// Same size as the shots kept, so the cells still line up.
+		take.shots[index] = this.captureFrame(take.shots[0]);
+		this.playSound('shutter');
+		this.flash();
+		this.sequence = null;
+		take.image = this.composeLayout(take);
+		this.drawTakeThumb(take);
+		this.setPhase('review');
+		this.ui.useBtn.focus();
+	}
+
+	// The cell of a Grid or Strip take under a tap on the stage, with its box
+	// as shares of the stage, or null on a gutter or outside the picture. The
+	// picture is drawn contained, so the tap is mapped back through that fit.
+	cellAt(take, event) {
+		const stage = this.ui.stage.getBoundingClientRect(), image = take.image;
+		if (!image || !stage.width || !stage.height) return null;
+		const fit = Math.min(stage.width / image.width, stage.height / image.height);
+		const left = (stage.width - image.width * fit) / 2, top = (stage.height - image.height * fit) / 2;
+		const x = (event.clientX - stage.left - left) / fit, y = (event.clientY - stage.top - top) / fit;
+		const cell = this.layoutCell(take);
+		for (let index = 0; index < take.shots.length; index++) {
+			const origin = this.cellOrigin(take.layout, cell, index);
+			if (x < origin.x || y < origin.y || x >= origin.x + cell.width || y >= origin.y + cell.height) continue;
+			return {
+				index,
+				box: { left: (left + origin.x * fit) / stage.width, top: (top + origin.y * fit) / stage.height, width: cell.width * fit / stage.width, height: cell.height * fit / stage.height }
+			};
+		}
+		return null;
+	}
+
+	// Tapping a cell while reviewing a Grid or Strip offers Retake over it;
+	// tapping the gutter or the same cell again puts the offer away.
+	offerRetake(event) {
+		const take = this.selected, button = this.ui.retake;
+		const hit = this.phase === 'review' && take?.layout ? this.cellAt(take, event) : null;
+		if (!hit || (!button.hidden && Number(button.dataset.cell) === hit.index)) { this.hideRetake(); return; }
+		button.dataset.cell = String(hit.index);
+		button.hidden = false;
+		// The button sits at the cell's centre, so its box is the cell's share.
+		this.ui.stage.style.setProperty('--retake-x', `${(hit.box.left + hit.box.width / 2) * 100}%`);
+		this.ui.stage.style.setProperty('--retake-y', `${(hit.box.top + hit.box.height / 2) * 100}%`);
+		button.focus();
+	}
+
+	hideRetake() { this.ui.retake.hidden = true; }
+
 	wait(ms, sequence) {
 		return new Promise(resolve => {
 			sequence.resolve = resolve;
@@ -367,7 +439,7 @@ class CameraCapture {
 		clearTimeout(sequence.timer);
 		sequence.resolve?.(false);
 		if (sequence.pending) this.removeTake(sequence.pending);
-		if (this.phase === 'shooting') this.setPhase('live');
+		if (this.phase === 'shooting') this.setPhase(sequence.retake ? 'review' : 'live');
 	}
 
 	// A big count with an optional caption ("2 of 4"), or the caption alone.
@@ -462,6 +534,7 @@ class CameraCapture {
 		const shooting = phase === 'shooting', review = phase === 'review';
 		this.reviewStart = performance.now();
 		this.painted = null;
+		this.hideRetake();
 		this.ui.stage.classList.toggle('is-review', review);
 		this.ui.takeBtn.disabled = shooting;
 		this.ui.modes.querySelectorAll('button').forEach(button => { button.disabled = shooting; });
@@ -669,7 +742,9 @@ class CameraCapture {
 
 	// A 3×3 grid: None in the centre, the CONFIG looks around it.
 	buildEffects() {
-		const looks = CONFIG.tools.camera.effects.looks.filter(id => GlitterFilters.looksLibrary.get(id));
+		const { looks: stillLooks, gifLooks } = CONFIG.tools.camera.effects;
+		const animated = CONFIG.tools.camera.modes[this.mode].animated;
+		const looks = stillLooks.map(id => (animated && gifLooks[id]) || id).filter(id => GlitterFilters.looksLibrary.get(id));
 		const middle = Math.floor(looks.length / 2);
 		this.effectCells = [...looks.slice(0, middle), null, ...looks.slice(middle)].map(lookId => {
 			const button = document.createElement('button');
@@ -794,8 +869,14 @@ class CameraCapture {
 			if (work.height !== h) work.height = h;
 			const ctx = work.getContext('2d', { willReadFrequently: true });
 			this.drawSource(ctx, source, w, h, source === this.ui.video && this.ui.mirror.checked);
-			const frameIndex = ++this.paintCount;
-			for (const lookId of lookIds) await GlitterFilter.renderToCanvas(ctx, w, h, this.filterDataFor(lookId), 1, { seed: 'camera', frameIndex });
+			// Each target is its own stream (its own seed and frame count), so the
+			// effects menu's cells don't break the stage's frame-to-frame state.
+			// A Photo or Grid is a still: frame 0, no temporal effects.
+			const stream = this.streams.get(target) || { seed: target === this.ui.view ? 'camera' : `camera:${++this.streamCount}`, frame: 0 };
+			this.streams.set(target, stream);
+			const still = this.phase === 'review' && Boolean(this.selected?.image) && target === this.ui.view;
+			const frameIndex = still ? 0 : ++stream.frame;
+			for (const lookId of lookIds) await GlitterFilter.renderToCanvas(ctx, w, h, this.filterDataFor(lookId), 1, { seed: stream.seed, frameIndex });
 			if (target.width !== w) target.width = w;
 			if (target.height !== h) target.height = h;
 			target.getContext('2d').drawImage(work, 0, 0);

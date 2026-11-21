@@ -42,6 +42,12 @@ function bindListReorder(container, { item, handle, scroller = container, ids, c
 		destination = resolve({ ids: draggedIds, target, place });
 		if (!destination) { clearTarget(); return; }
 		if (drop === 'onto') { marked = target; target.classList.add('is-drop-target'); return; }
+		showInsertion(target, place);
+	};
+	// The insertion line between two rows; also driven by gestures that start
+	// outside the list (a timeline bar dragged up or down).
+	const showInsertion = (target, place) => {
+		const list = rows(), rect = target.getBoundingClientRect();
 		const index = list.indexOf(target), adjacent = list[index + (place === 'above' ? -1 : 1)];
 		let y = place === 'above' ? rect.top : rect.bottom;
 		if (adjacent) {
@@ -54,6 +60,8 @@ function bindListReorder(container, { item, handle, scroller = container, ids, c
 		line.style.top = `${clampNumber(contentY - height / 2, 0, container.scrollHeight - height)}px`;
 		line.classList.add('visible');
 	};
+	state.showInsertion = showInsertion;
+	state.hideInsertion = () => line?.classList.remove('visible');
 	const autoScroll = () => {
 		if (!state.dragging) return;
 		const rect = scroller.getBoundingClientRect(), { zoneSize, speed } = CONFIG.ui.reorder.autoScroll;

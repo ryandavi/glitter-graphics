@@ -22,6 +22,9 @@ class PathLayerManager {
 		this.layerTransforms = new Map();
 		this.measurementCache = createMeasurementCache(4);
 		this.maskUrlCache = createMaskUrlCache(64);
+		// Flowing-dash stroke masks by offset: a cycle revisits the same few.
+		this.flowUrls = new Map();
+		this.flowPaintedAt = new Map();
 		this.slotPicker = new SlotGlitterPicker(editor, {
 			type: LayerType.PATH,
 			// The paint a gallery pick lands on: the fill while it is on, the
@@ -53,6 +56,8 @@ class PathLayerManager {
 			dashRow: id('pathStrokeDash')?.closest('.property-row') || null,
 			gapRow: id('pathStrokeGap')?.closest('.property-row') || null,
 			dashOffsetRow: id('pathStrokeDashOffset')?.closest('.property-row') || null,
+			flowRow: id('pathStrokeFlowRow'),
+			flowCycleRow: id('pathStrokeDashCycle')?.closest('.property-row') || null,
 			endsSet: id('pathStrokeEnds'),
 			endSet: id('pathStrokeEndSet'),
 			startShapes: id('pathStrokeStartShapes'),
@@ -163,6 +168,7 @@ class PathLayerManager {
 			data.stroke.edgeStyle = getStrokeEdgeStyle(data.stroke);
 			data.stroke.cap = getStrokeCap(data.stroke);
 			data.stroke.dashStyle = getStrokeDashStyle(data.stroke);
+			data.stroke.dashFlow = getStrokeDashFlow(data.stroke);
 			STROKE_ENDS.forEach((end) => {
 				if (!ShapeLibrary.getOrnament(data.stroke[`${end}ShapeId`])) data.stroke[`${end}ShapeId`] = null;
 			});
@@ -648,7 +654,12 @@ class PathLayerManager {
 			fill: measurement.fillCanvas || measurement.canvas,
 			renderWidth: measurement.width,
 			renderHeight: measurement.height,
-			measurement
+			measurement,
+			// A flowing dash's stroke mask at a moment; the exporter asks per frame.
+			frameMask: (key, timeMs) => {
+				const stroke = this.getActiveStroke(layer);
+				return key === 'stroke' && isStrokeFlowing(stroke) ? this.buildFlowStrokeMask(layer, measurement, getStrokeDashFlowOffset(stroke, timeMs)) : null;
+			}
 		};
 		getLayerPaintSlots(layer).forEach((entry) => {
 			if (!entry.renders || entry.key === 'fill' || entry.role === 'sparkles') return;
@@ -658,6 +669,55 @@ class PathLayerManager {
 				: slotMask;
 		});
 		return masks;
+	}
+
+	// The stroke mask with its dashes slid `flowOffsetPx` (marching ants). The
+	// measurement's own stroke mask stays at rest, so the frame and the effects
+	// built from the body do not move.
+	buildFlowStrokeMask(layer, measurement, flowOffsetPx) {
+		const canvas = buildStrokeMask({ subpaths: layer.pathData.subpaths }, this.getActiveStroke(layer),
+			{ width: measurement.width, height: measurement.height, originX: measurement.originX, originY: measurement.originY }, flowOffsetPx);
+		copyMaskTextureOrigin(canvas, measurement.canvas);
+		return canvas;
+	}
+
+	// Registers (or drops) the preview tick that re-strokes a flowing dash.
+	syncDashFlow(wrapper, layer) {
+		const ticker = this.editor.animationTicker;
+		const id = `${layer.id}:dashFlow`;
+		const stroke = this.getActiveStroke(layer);
+		if (!stroke || !isStrokeFlowing(stroke) || !getLayerPaintSlots(layer).some((entry) => entry.key === 'stroke' && entry.renders)) {
+			ticker?.unregister(id);
+			return;
+		}
+		// The render just reset the span to its rest mask, so paint at once.
+		this.flowPaintedAt.delete(layer.id);
+		ticker?.register(id, {
+			getLayer: () => layer,
+			getWrapper: () => wrapper,
+			paint: (timeMs) => this.paintDashFlow(layer, wrapper, timeMs)
+		});
+	}
+
+	paintDashFlow(layer, wrapper, timeMs) {
+		const stroke = this.getActiveStroke(layer);
+		const span = wrapper.querySelector('[data-span-key="stroke"]');
+		if (!stroke || !span) return;
+		const now = performance.now();
+		if (now - (this.flowPaintedAt.get(layer.id) || 0) < 1000 / CONFIG.tools.path.stroke.flowFps) return;
+		this.flowPaintedAt.set(layer.id, now);
+		// Whole pixels: a cycle revisits a few dozen masks, each encoded once.
+		const offset = Math.round(getStrokeDashFlowOffset(stroke, timeMs));
+		const measurement = this.getMeasurementEntry(layer);
+		const key = `${measurement.key}|flow:${offset}`;
+		let url = this.flowUrls.get(key);
+		if (!url) {
+			url = this.buildFlowStrokeMask(layer, measurement, offset).toDataURL('image/png');
+			this.flowUrls.set(key, url);
+			if (this.flowUrls.size > 96) this.flowUrls.delete(this.flowUrls.keys().next().value);
+		}
+		span.style.maskImage = `url(${url})`;
+		span.style.webkitMaskImage = `url(${url})`;
 	}
 
 	// Sparkles read the body painted with whichever of its paints shows.
@@ -725,6 +785,7 @@ class PathLayerManager {
 		});
 		reconcileSparkleLayers(stack, layer, { editor: this.editor, width: measurement.width, height: measurement.height });
 		syncLayerAnimationPreview(wrapper, layer, this.editor.animationTicker);
+		this.syncDashFlow(wrapper, layer);
 		wrapper.setAttribute('aria-label', layer.name || 'Path');
 		transform.applyTransform(wrapper, { width: measurement.width, height: measurement.height });
 
@@ -858,6 +919,8 @@ class PathLayerManager {
 		if (this.ui.dashRow) this.ui.dashRow.hidden = dashStyle !== 'dashed';
 		if (this.ui.gapRow) this.ui.gapRow.hidden = dashStyle === 'solid';
 		if (this.ui.dashOffsetRow) this.ui.dashOffsetRow.hidden = dashStyle === 'solid';
+		if (this.ui.flowRow) this.ui.flowRow.hidden = dashStyle === 'solid';
+		if (this.ui.flowCycleRow) this.ui.flowCycleRow.hidden = !isStrokeFlowing(shown);
 		if (this.ui.startSizeRow) this.ui.startSizeRow.hidden = !shown.startShapeId;
 		if (this.ui.endSizeRow) this.ui.endSizeRow.hidden = !shown.endShapeId;
 

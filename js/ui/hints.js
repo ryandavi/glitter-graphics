@@ -105,7 +105,7 @@ const HINT_RULES = [
 		id: 'select-tool',
 		tool: true,
 		when: (_editor, { tool }) => tool === ToolType.SELECT,
-		resolve(_editor, { layer, isMobile }) {
+		resolve(editor, { layer, isMobile }) {
 			if (!layer) return { hint: 'Add a sticker layer to move items around, or use Glitter Fill for glitter' };
 			if (layer.type === LayerType.STICKER && layer.stickerSourceId) return isMobile
 				? { hint: 'Drag to move, pinch to scale and rotate', context: 'Or tap settings button to adjust position, flip, and opacity.' }
@@ -116,6 +116,7 @@ const HINT_RULES = [
 			if (layer.type === LayerType.GLITTER_FILL && hasMaskContent(layer)) return isMobile
 				? { hint: 'Drag to move, pinch to scale and rotate this fill', context: 'Switch to Glitter Fill or the Glitter Brush to change where the glitter is.' }
 				: { hint: 'Drag to move this fill, or use its handles to resize and rotate', context: 'Switch to Glitter Fill or the Glitter Brush to change where the glitter is.' };
+			if (layer.type === LayerType.BASE_IMAGE && editor.baseBackgroundManager.hasBaseImage() && editor.baseBackgroundManager.getAutoGlitterAvailability(layer).available) return { hint: 'Try Auto Glitter to glitter the whole picture in one go, or pick Glitter Fill to choose colors yourself' };
 			if (layer.type === LayerType.GLITTER_FILL || layer.type === LayerType.BASE_IMAGE) return { hint: 'Switch to Glitter Fill or the Glitter Brush to add or modify glitter, or add a sticker layer' };
 			return null;
 		}

@@ -13384,6 +13384,15 @@ body.modal-open {
 #cameraModal .camera-countdown[hidden] {
   display: none;
 }
+#cameraModal .camera-retake {
+  position: absolute;
+  left: var(--retake-x, 50%);
+  top: var(--retake-y, 50%);
+  transform: translate(-50%, -50%);
+}
+#cameraModal .camera-retake[hidden] {
+  display: none;
+}
 #cameraModal .camera-flash {
   position: absolute;
   inset: 0;
@@ -15139,6 +15148,42 @@ body.home-page {
   .phone-chip-bar.has-overflow-end:not(.has-overflow-start) {
     -webkit-mask-image: linear-gradient(to left, transparent 0, #000 var(--spacing-xl));
     mask-image: linear-gradient(to left, transparent 0, #000 var(--spacing-xl));
+  }
+  .property-scrollbox.preset-grid:not(.is-flyout-open.is-preset-content *) {
+    --preset-strip-tile-width: 88px;
+    --preset-strip-row-height: 68px;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: var(--preset-strip-tile-width);
+    grid-template-rows: repeat(2, var(--preset-strip-row-height));
+    height: calc(2 * var(--preset-strip-row-height) + var(--property-scrollbox-pad) * 3 + 2px);
+    overflow: auto hidden;
+    overscroll-behavior: auto contain;
+    touch-action: pan-x pan-y;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+  .property-scrollbox.preset-grid:not(.is-flyout-open.is-preset-content *).has-overflow-start.has-overflow-end {
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 var(--spacing-xl), #000 calc(100% - var(--spacing-xl)), transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0, #000 var(--spacing-xl), #000 calc(100% - var(--spacing-xl)), transparent 100%);
+  }
+  .property-scrollbox.preset-grid:not(.is-flyout-open.is-preset-content *).has-overflow-start:not(.has-overflow-end) {
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 var(--spacing-xl));
+    mask-image: linear-gradient(to right, transparent 0, #000 var(--spacing-xl));
+  }
+  .property-scrollbox.preset-grid:not(.is-flyout-open.is-preset-content *).has-overflow-end:not(.has-overflow-start) {
+    -webkit-mask-image: linear-gradient(to left, transparent 0, #000 var(--spacing-xl));
+    mask-image: linear-gradient(to left, transparent 0, #000 var(--spacing-xl));
+  }
+  .property-scrollbox.preset-grid:not(.is-flyout-open.is-preset-content *) .preset-grid-group,
+  .property-scrollbox.preset-grid:not(.is-flyout-open.is-preset-content *) .preset-grid-options {
+    display: contents;
+  }
+  .property-scrollbox.preset-grid:not(.is-flyout-open.is-preset-content *) .preset-grid-heading {
+    display: none;
+  }
+  .property-scrollbox.preset-grid:not(.is-flyout-open.is-preset-content *) .preset-grid-option {
+    scroll-snap-align: start;
   }
   .phone-chip {
     display: inline-flex;

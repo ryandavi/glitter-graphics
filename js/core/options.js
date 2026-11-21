@@ -72,6 +72,13 @@ defineOptions('strokeDashStyle', [
 	{ value: 'dashed', label: 'Dashed', suffix: 'DashDashed' },
 	{ value: 'dotted', label: 'Dotted', suffix: 'DashDotted' }
 ]);
+// Which way a cycling parameter runs (marching ants, animated text warps; see
+// getCycledPhase in js/core/animation-timing.js).
+defineOptions('cycleFlow', [
+	{ value: 'none', label: 'Off', suffix: 'FlowNone' },
+	{ value: 'forward', label: 'Forward', suffix: 'FlowForward' },
+	{ value: 'back', label: 'Back', suffix: 'FlowBack' }
+]);
 defineOptions('pathPointType', [
 	{ value: 'corner', label: 'Corner', icon: 'point-corner' },
 	{ value: 'smooth', label: 'Smooth', icon: 'point-smooth' },

@@ -317,6 +317,20 @@ setupImageListeners() {
 		this.updateOrientationButtons(width, height);
 	},
 
+	// The File size limit row: the choices come from the shared size-target list,
+	// and Custom reveals the KB field.
+	syncNewCanvasSizeLimit(limit = null) {
+		const select = document.getElementById('newCanvasSizeLimit');
+		if (select.options.length < 2) getSizeTargetOptions().forEach(({ value, label }) => {
+			if (value !== 'none') select.add(new Option(label, value));
+		});
+		if (limit) {
+			select.value = limit.targetSize;
+			document.getElementById('newCanvasSizeLimitKB').value = limit.targetSizeKB;
+		}
+		document.getElementById('newCanvasSizeLimitKBRow').hidden = select.value !== 'custom';
+	},
+
 	initializeNewCanvasModal() {
 		this.renderNewCanvasPresets();
 		this.renderRecentCanvasSizes();
@@ -326,6 +340,7 @@ setupImageListeners() {
 		document.getElementById('newCanvasHeight').value = defaults.height;
 		document.getElementById('newCanvasColor').value = defaults.color;
 		document.getElementById('newCanvasName').value = '';
+		this.syncNewCanvasSizeLimit({ targetSize: CONFIG.export.defaults.targetSize, targetSizeKB: CONFIG.export.defaults.targetSizeKB });
 		this.setNewCanvasBackground('color');
 		this.syncNewCanvasSelection();
 	},
@@ -354,9 +369,13 @@ setupImageListeners() {
 				delete presetsHost.dataset.selectedTemplateId;
 				widthInput.value = button.dataset.width;
 				heightInput.value = button.dataset.height;
+				// A preset can carry its own limit; one without leaves the row as set.
+				const sizeTarget = CONFIG.canvas.presets.find((preset) => preset.id === button.dataset.presetId)?.sizeTarget;
+				if (sizeTarget) this.syncNewCanvasSizeLimit({ targetSize: sizeTarget, targetSizeKB: CONFIG.export.defaults.targetSizeKB });
 			}
 			this.syncNewCanvasSelection();
 		});
+		document.getElementById('newCanvasSizeLimit')?.addEventListener('change', () => this.syncNewCanvasSizeLimit());
 		presetsHost?.addEventListener('dblclick', (event) => {
 			if (event.target.closest('.blank-image-option')) createBtn.click();
 		});
@@ -410,6 +429,10 @@ setupImageListeners() {
 				const name = nameInput.value.trim();
 
 				if (!await this.createBlankCanvas(width, height, color)) return;
+				this.setDocumentSizeLimit({
+					targetSize: document.getElementById('newCanvasSizeLimit').value,
+					targetSizeKB: Number(document.getElementById('newCanvasSizeLimitKB').value)
+				}, { markDirty: false });
 				this.setProjectName(name, { markDirty: false });
 				this.modalManager.close('newCanvasModal');
 			});

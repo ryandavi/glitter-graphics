@@ -176,6 +176,7 @@ const SLOT_OPTION_CONTROLS = Object.freeze({
 		{ key: 'drawOrder', read: getBorderDrawOrder, options: { behind: 'OrderBehind', front: 'OrderFront' } }
 	]),
 	stroke: Object.freeze([
+		{ key: 'dashFlow', read: (data) => data.dashFlow, options: optionControlSuffixes('cycleFlow', 'Flow') },
 		{ key: 'edgeStyle', geometry: true, read: getBorderEdgeStyle, options: Object.fromEntries(getOptions('borderEdgeStyle').map(({ value, suffix }) => [value, suffix])) },
 		{ key: 'cap', geometry: true, read: (data) => data.cap, options: Object.fromEntries(getOptions('strokeCap').map(({ value, suffix }) => [value, suffix])) },
 		{ key: 'dashStyle', geometry: true, read: (data) => data.dashStyle, options: Object.fromEntries(getOptions('strokeDashStyle').map(({ value, suffix }) => [value, suffix])) }
@@ -346,7 +347,13 @@ function bindLayerFieldControls(host) {
 			apply: (value, ticket) => {
 				const layer = host.getLayer();
 				if (!layer) return undefined;
-				const result = host.apply(layer, () => writeFieldValue(layer, binding, value), { live: true, geometry: binding.geometry, ticket });
+				const result = host.apply(layer, () => {
+					if (CYCLE_FIELD_TIMING_KINDS[binding.field]) {
+						const target = listTimingTargets(host.editor, [layer]).find(entry => entry.kind === CYCLE_FIELD_TIMING_KINDS[binding.field]);
+						if (target) return host.editor.writeTiming(target.key, { period: value }, { live: true });
+					}
+					writeFieldValue(layer, binding, value);
+				}, { live: true, geometry: binding.geometry, ticket });
 				host.afterFieldChange?.(layer, null, binding);
 				return result;
 			},
@@ -358,6 +365,10 @@ function bindLayerFieldControls(host) {
 	});
 }
 
+// Cycle fields write through their timing target, so the panel and the
+// timeline share one clamp and one history path.
+const CYCLE_FIELD_TIMING_KINDS = Object.freeze({ sparkleCycle: 'sparkles', patternScrollCycle: 'patternScroll', strokeDashCycle: 'dashFlow', textWarpCycle: 'warpFlow' });
+
 function bindPaintSlotFields(host, definition, prefix, include = () => true, withLayer = (run) => {
 	const layer = host.getLayer();
 	return layer ? run(layer) : undefined;
@@ -368,8 +379,8 @@ function bindPaintSlotFields(host, definition, prefix, include = () => true, wit
 		bindFieldControl(control, binding, {
 			apply: (value, ticket) => withLayer((layer) => {
 				const result = host.apply(layer, () => {
-					if (['sparkleCycle', 'patternScrollCycle'].includes(binding.field)) {
-						const target = listTimingTargets(host.editor, [layer]).find(entry => entry.slot === definition.key && entry.kind === (binding.field === 'sparkleCycle' ? 'sparkles' : 'patternScroll'));
+					if (CYCLE_FIELD_TIMING_KINDS[binding.field]) {
+						const target = listTimingTargets(host.editor, [layer]).find(entry => entry.slot === definition.key && entry.kind === CYCLE_FIELD_TIMING_KINDS[binding.field]);
 						if (target) return host.editor.writeTiming(target.key, { period: value }, { live: true });
 					}
 					writeFieldValue(host.ensureSlot(layer, definition.key), binding, value);

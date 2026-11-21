@@ -156,6 +156,7 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 		},
 		{ path: 'textData.lineHeight', field: 'textLineHeight', id: 'textLineHeight', factor: 100, geometry: true },
 		{ path: 'textData.warp.bend', field: 'textWarpBend', id: 'textWarpBend', geometry: true },
+		{ path: 'textData.warp.cycleMs', field: 'textWarpCycle', id: 'textWarpCycle' },
 		{ path: 'textData.boxWidth', documentScale: 'geometry', documentScaleAxis: 'x', minimum: 1 },
 		{ path: 'textData.boxHeight', documentScale: 'geometry', minimum: 1 },
 		{ path: 'textData.paddingX', field: 'textPaddingH', id: 'textPaddingH', geometry: true, documentScale: 'geometry' },

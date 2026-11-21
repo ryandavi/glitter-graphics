@@ -3,7 +3,7 @@ const CLIPBOARD_COPY = Object.freeze({
 	copied: (count) => `${formatCount(count, 'layer')} copied`,
 	pasted: (count) => `${formatCount(count, 'layer')} pasted`,
 	missingBase: 'Add or paste a base image before pasting layers',
-	imageName: 'clipboard-image.png'
+	imageName: 'Pasted image'
 });
 
 function isClipboardTextTarget(target) {
@@ -85,16 +85,12 @@ function installClipboardHandlers(editor) {
 		const image = [...(event.clipboardData?.items || [])].find((item) => item.type.startsWith('image/'));
 		if (image) {
 			event.preventDefault();
-			const file = image.getAsFile();
-			if (!file) return;
-			if (editor.originalImage) {
-				await editor.replaceBaseImageFile(file);
-			} else {
-				await editor.loadImageFile(file, {
-					fileName: file.name || CLIPBOARD_COPY.imageName,
-					source: { kind: 'clipboard', file }
-				});
-			}
+			const blob = image.getAsFile();
+			if (!blob) return;
+			// Same routing as drag and drop: base image before a document, sticker after.
+			const extension = (blob.type.split('/')[1] || 'png').replace(/\+.*$/, '');
+			const file = new File([blob], `${CLIPBOARD_COPY.imageName}.${extension}`, { type: blob.type });
+			await openEditorFiles(editor, [file]);
 			return;
 		}
 

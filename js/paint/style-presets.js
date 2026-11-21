@@ -43,6 +43,8 @@ const STYLE_PRESET_TEXT_DEFAULTS = Object.freeze({
 	'textData.lineHeight': FIELDS.textLineHeight.value / 100,
 	'textData.warp.type': CONFIG.tools.text.defaultWarpType,
 	'textData.warp.bend': FIELDS.textWarpBend.value,
+	'textData.warp.flow': 'none',
+	'textData.warp.cycleMs': FIELDS.textWarpCycle.value,
 	'textData.decoration.underline': false,
 	'textData.decoration.strikethrough': false
 });
@@ -92,7 +94,7 @@ const STYLE_PRESET_ENTRIES = (() => {
 			value: {
 				slots: { fill: buildDefaultFill({ defaultGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId.text }) },
 				data: { 'textData.fontId': CONFIG.tools.text.defaultFontId, 'textData.fontStyle': CONFIG.tools.text.defaultFontStyle, 'textData.textCase': CONFIG.tools.text.defaultTextCase,
-					'textData.orientation': CONFIG.tools.text.defaultOrientation, 'textData.letterSpacing': FIELDS.textLetterSpacing.value, 'textData.warp.type': CONFIG.tools.text.defaultWarpType, 'textData.warp.bend': FIELDS.textWarpBend.value }
+					'textData.orientation': CONFIG.tools.text.defaultOrientation, 'textData.letterSpacing': FIELDS.textLetterSpacing.value, 'textData.warp.type': CONFIG.tools.text.defaultWarpType, 'textData.warp.bend': FIELDS.textWarpBend.value, 'textData.warp.flow': 'none' }
 			}
 		},
 		{ id: 'plain', label: 'Plain', group: 'classic', targets: ['shape', 'sticker'], tags: ['none', 'reset'], value: { slots: {} } },

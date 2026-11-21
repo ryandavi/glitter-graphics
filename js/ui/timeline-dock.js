@@ -907,21 +907,45 @@ class TimelineDock {
 		this.reconcileRows(rows, group);
 		node.appendChild(rows);
 		this.layoutGroup(node, group);
-		bindListReorder(rows, {
+		rows.listReorder = bindListReorder(rows, {
 			item: '.timeline-row[data-motion-index]', handle: '.list-row-handle', scroller: this.body,
 			ids: row => [Number(row.dataset.motionIndex)],
 			keyboardFocus: next => next.to,
 			canDrag: () => this.available && this.editor.canEditLayer(this.editor.layerManager.getLayerById(group.layerId)),
-			resolve: ({ ids, target, place }) => {
-				const from = ids[0], insertion = Number(target.dataset.motionIndex) + Number(place === 'below');
-				const to = insertion - Number(from < insertion);
-				return from !== to && to >= 0 && to < this.editor.layerManager.getLayerById(group.layerId).animations.length ? { from, to } : null;
-			},
+			resolve: ({ ids, target, place }) => this.motionMove(group.layerId, ids[0], target, place),
 			commit: ({ from, to }) => this.editor.moveAnimation(this.editor.layerManager.getLayerById(group.layerId), from, to)
 		});
 		return node;
 	}
 
+
+	// Where a motion lands when dropped above or below a sibling row, as the
+	// moveAnimation indexes; null when that changes nothing.
+	motionMove(layerId, from, target, place) {
+		const insertion = Number(target.dataset.motionIndex) + Number(place === 'below');
+		const to = insertion - Number(from < insertion);
+		return from !== to && to >= 0 && to < this.editor.layerManager.getLayerById(layerId).animations.length ? { from, to } : null;
+	}
+
+	// A motion bar dragged up or down reorders within its own layer; the
+	// insertion line is the layer's row list's own.
+	moveReorder(drag, event) {
+		if (!drag.moved) {
+			this.frameView.invalidate();
+			this.frameView.blocked = true;
+			drag.node.classList.add('is-dragging');
+			drag.moved = true;
+		}
+		const rows = drag.node.parentElement, bounds = rows.getBoundingClientRect();
+		const siblings = [...rows.children].filter(node => node.matches('.timeline-row[data-motion-index]'));
+		const middle = node => { const rect = node.getBoundingClientRect(); return rect.top + rect.height / 2; };
+		const target = siblings.find(node => event.clientY < middle(node)) || siblings.at(-1);
+		const place = event.clientY < middle(target) ? 'above' : 'below';
+		drag.destination = event.clientY >= bounds.top && event.clientY <= bounds.bottom
+			? this.motionMove(drag.row.layerId, Number(drag.node.dataset.motionIndex), target, place) : null;
+		if (drag.destination) rows.listReorder.showInsertion(target, place);
+		else rows.listReorder.hideInsertion();
+	}
 
 	syncGroupChevron(node, group) {
 		const empty = !group.rows.length, chevron = node.querySelector('.timeline-group-chevron');
@@ -1315,7 +1339,9 @@ class TimelineDock {
 
 	bindGestures() {
 		this.pointerDrag = bindPointerDrag(this.stage, {
-			threshold: this.config.dragThresholdPx, axis: 'x', clickHost: this.host,
+			threshold: this.config.dragThresholdPx, clickHost: this.host,
+			// A motion bar can also be dragged up or down; every other drag is across.
+			axis: () => this.drag?.reorderable ? null : 'x',
 			start: event => {
 				if (!this.available || this.drag) return false;
 				let target = event.target.closest('[data-drag]');
@@ -1366,7 +1392,9 @@ class TimelineDock {
 					x: event.clientX, pointerId: event.pointerId, edge: target.dataset.drag === 'right',
 					notch: target.dataset.drag === 'right'
 						? (row.endMs - row.startMs) / row.cycleMs + row.phase : Number(target.dataset.notchIndex),
-					scrollLeft: this.body.scrollLeft, moved: false
+					scrollLeft: this.body.scrollLeft, moved: false,
+					// A lone motion bar may be reordered within its layer (axis locks on the first move).
+					reorderable: kind === 'move' && !groupKeys && row.target?.kind === 'motion' && node.dataset.motionIndex != null, axis: null
 				};
 				// The grips sit inside the bar's ends, so an edge keeps its offset from
 				// the pointer rather than jumping to it.
@@ -1393,6 +1421,12 @@ class TimelineDock {
 		if (!drag || event.pointerId !== drag.pointerId) return;
 		if (!this.available) { this.finishDrag(true); return; }
 		if (drag.groupKeys && !this.groupDragCurrent(drag)) { this.finishDrag(true); return; }
+		if (drag.reorderable && !drag.axis) {
+			const dx = event.clientX - drag.x, dy = event.clientY - drag.y;
+			if (Math.hypot(dx, dy) < this.config.axisLockPx) return;
+			drag.axis = Math.abs(dy) > Math.abs(dx) ? 'y' : 'x';
+		}
+		if (drag.axis === 'y') { this.moveReorder(drag, event); return; }
 		if (!drag.moved && !RULER_DRAG_KINDS.has(drag.kind)) {
 			this.frameView.invalidate();
 			this.frameView.blocked = true;
@@ -1568,6 +1602,13 @@ class TimelineDock {
 		delete this.host.dataset.dragging;
 		drag.node?.classList.remove('is-dragging', 'is-changing-cycles');
 		if (!drag.moved) {
+			if (this.syncPending) this.resync();
+			return;
+		}
+		if (drag.axis === 'y') {
+			drag.node?.parentElement?.listReorder?.hideInsertion();
+			if (!cancelled && drag.destination) this.editor.moveAnimation(this.editor.layerManager.getLayerById(drag.row.layerId), drag.destination.from, drag.destination.to);
+			this.frameView.seek();
 			if (this.syncPending) this.resync();
 			return;
 		}

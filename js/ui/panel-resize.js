@@ -179,7 +179,10 @@ function bindPointerDrag(handle, {
 		if (!press || event.pointerId !== press.pointerId) return;
 		if (!press.moved) {
 			const dx = event.clientX - press.x, dy = event.clientY - press.y;
-			const distance = axis === 'x' ? Math.abs(dx) : axis === 'y' ? Math.abs(dy) : Math.hypot(dx, dy);
+			// `axis` may be a function, read per move, for a press that is only
+			// sometimes one-directional.
+			const lock = typeof axis === 'function' ? axis() : axis;
+			const distance = lock === 'x' ? Math.abs(dx) : lock === 'y' ? Math.abs(dy) : Math.hypot(dx, dy);
 			if (distance < threshold) return;
 			activatePress(event);
 		}

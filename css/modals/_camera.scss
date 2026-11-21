@@ -95,6 +95,16 @@
 		&[hidden] { display: none; }
 	}
 
+	// Offered over a tapped cell of a Grid or Strip; JS sets the centre.
+	.camera-retake {
+		position: absolute;
+		left: var(--retake-x, 50%);
+		top: var(--retake-y, 50%);
+		transform: translate(-50%, -50%);
+
+		&[hidden] { display: none; }
+	}
+
 	// Held bright for CONFIG.tools.camera.flashMs, then fades. Reduced motion
 	// turns it into a short dim instead of a bright flash.
 	.camera-flash {

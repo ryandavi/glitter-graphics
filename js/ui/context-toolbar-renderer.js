@@ -409,4 +409,12 @@ function syncSelectionContextToolbar(editor) {
 	for (const id of ['centerLayerHorizontal', 'centerLayerVertical', 'duplicateLayerSelection']) {
 		document.getElementById(id).hidden = !canTransform;
 	}
+	const autoGlitter = document.getElementById('contextAutoGlitter');
+	const onBase = !multi && layer?.type === LayerType.BASE_IMAGE && editor.baseBackgroundManager.hasBaseImage() && !editor.autoGlitterManager.isSessionActive();
+	autoGlitter.hidden = !onBase;
+	if (onBase) {
+		const availability = editor.baseBackgroundManager.getAutoGlitterAvailability(layer);
+		autoGlitter.disabled = !availability.available;
+		autoGlitter.title = availability.message || 'Turn the base image into editable glitter layers';
+	}
 }

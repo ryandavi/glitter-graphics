@@ -60,6 +60,7 @@ const PAINT_SLOT_ROLE_FIELDS = Object.freeze({
 		dashPx: { field: 'strokeDash', suffix: 'Dash', geometry: true, documentScale: 'effect' },
 		gapPx: { field: 'strokeGap', suffix: 'Gap', geometry: true, documentScale: 'effect' },
 		dashOffsetPx: { field: 'strokeDashOffset', suffix: 'DashOffset', geometry: true, documentScale: 'effect' },
+		dashCycleMs: { field: 'strokeDashCycle', suffix: 'DashCycle' },
 		startSize: { field: 'strokeOrnamentSize', suffix: 'StartSize', factor: 100, geometry: true },
 		endSize: { field: 'strokeOrnamentSize', suffix: 'EndSize', factor: 100, geometry: true }
 	},

@@ -159,6 +159,21 @@ initializeExportSettings() {
 		output.textContent = `Exports at ${width} \u00d7 ${height} px.`;
 	},
 
+	// The document's file size limit. It lives in exportSettings (targetSize,
+	// targetSizeKB), which the export reads; a document replace sets it from the
+	// project, and a missing limit means none.
+	getDocumentSizeLimit() {
+		return { targetSize: this.exportSettings.targetSize, targetSizeKB: this.exportSettings.targetSizeKB };
+	},
+
+	setDocumentSizeLimit(limit = {}, { markDirty = true } = {}) {
+		const defaults = CONFIG.export.defaults;
+		this.exportSettings.targetSize = EXPORT_SETTINGS_SCHEMA.targetSize.validate(limit?.targetSize ?? defaults.targetSize);
+		this.exportSettings.targetSizeKB = EXPORT_SETTINGS_SCHEMA.targetSizeKB.validate(limit?.targetSizeKB ?? defaults.targetSizeKB);
+		if (document.getElementById('exportSettingsModal')?.dataset.bodyReady) this.syncExportSettingsToUI();
+		if (markDirty && (this.originalImage || this.historyManager.canUndo())) this.isSaved = false;
+	},
+
 	updateTargetSizeUI() {
 		const row = document.getElementById('exportTargetSizeKBRow');
 		if (row) row.hidden = this.exportSettings.targetSize !== 'custom' || getActiveExportTarget(this.exportSettings).isVector;
@@ -302,6 +317,7 @@ initializeExportSettings() {
 			if (key === 'ditherEnabled' || key === 'ditherType') this.updateDitherDependentUI();
 			if (key === 'watermarkEnabled') this.updateWatermarkUI?.();
 			if (key === 'targetSize') this.updateTargetSizeUI();
+			if (EXPORT_SETTINGS_SCHEMA[key].documentField && (this.originalImage || this.historyManager.canUndo())) this.isSaved = false;
 			if (key === 'outputScale') this.updateExportOutputSizeUI();
 			if (key === 'watermark') {
 				this.updateWatermarkPreview?.();
@@ -415,6 +431,8 @@ initializeExportSettings() {
 			this.applyInterfaceTheme();
 		});
 		document.getElementById('resetToolbarPlacement')?.addEventListener('click', () => this.resetToolbarPlacement());
+		document.getElementById('protectDrafts')?.addEventListener('click', () => this.requestStoragePersistence());
+		this.refreshProtectDraftsRow();
 	},
 
 	applyShowAllControls() {

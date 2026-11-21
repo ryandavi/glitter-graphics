@@ -78,7 +78,10 @@ class SvgExportEncoder {
 			if (plan.path) {
 				const paths = structuredClone([plan.path]);
 				SvgImport.mapSubpaths(paths, [1, 0, 0, 1, origin.x, origin.y]);
-				parts.push(`<path d="${SvgExporter.escape(PathGeometry.toSvgPath(paths))}" fill="none" ${paint} stroke-width="${stroke.widthPx}" stroke-linecap="${caps}" stroke-linejoin="${getStrokeEdgeStyle(stroke)}" stroke-miterlimit="${CONFIG.tools.path.stroke.miterLimit}"${dash ? ` stroke-dasharray="${dash.join(' ')}" stroke-dashoffset="${(Number(stroke.dashOffsetPx) || 0) + plan.dashShift}"` : ''}/>`);
+				const baseOffset = (Number(stroke.dashOffsetPx) || 0) + plan.dashShift;
+				// Marching ants: one dash + gap per cycle, so the loop is seamless.
+				const flow = isStrokeFlowing(stroke) ? `<animate attributeName="stroke-dashoffset" from="${getStrokeDashFlow(stroke) === 'forward' ? baseOffset : baseOffset - dash[0] - dash[1]}" to="${getStrokeDashFlow(stroke) === 'forward' ? baseOffset - dash[0] - dash[1] : baseOffset}" dur="${(Number(stroke.dashCycleMs) || FIELDS.strokeDashCycle.value) / 1000}s" repeatCount="indefinite"/>` : '';
+				parts.push(`<path d="${SvgExporter.escape(PathGeometry.toSvgPath(paths))}" fill="none" ${paint} stroke-width="${stroke.widthPx}" stroke-linecap="${caps}" stroke-linejoin="${getStrokeEdgeStyle(stroke)}" stroke-miterlimit="${CONFIG.tools.path.stroke.miterLimit}"${dash ? ` stroke-dasharray="${dash.join(' ')}" stroke-dashoffset="${baseOffset}"` : ''}${flow ? `>${flow}</path>` : '/>'}`);
 			}
 			for (const placement of plan.ornaments) {
 				const bounds = getStrokeOrnament(placement.shapeId).bounds;

@@ -19,6 +19,7 @@ const COMMANDS = {
 	documentScaleApply: { run: (editor) => editor.applyScaleDesign() },
 	documentScaleReset: { run: (editor) => editor.setDocumentScale(editor.documentSizeDefaults().scale) },
 	removeBackground: { label: 'Remove background', group: 'Sticker', when: editor => editor.stickerManager.canRemoveBackground(), run: editor => editor.stickerManager.removeBackground() },
+	autoGlitter: { run: (editor) => editor.autoGlitterManager?.open() },
 	recolorGlitter: { label: 'Recolor a glitter', group: 'Library', run: (editor, target) => editor.glitterRecolor.command(target) },
 	copyStyleAsPreset: {
 		label: 'Copy style as preset', group: 'Text', feature: 'stylePresetCopy',

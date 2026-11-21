@@ -473,6 +473,32 @@
 		@include overflow-edge-mask(var(--spacing-xl), true);
 	}
 
+	// A preset grid is a horizontal strip of two rows: a vertical swipe that
+	// starts on it scrolls the panel, a horizontal one browses. The height is
+	// fixed (two rows), so a category change never reflows the panel. The
+	// window's preset sections keep their full-pane grid.
+	.property-scrollbox.preset-grid:not(.is-flyout-open.is-preset-content *) {
+		--preset-strip-tile-width: 88px;
+		--preset-strip-row-height: 68px;
+		display: grid;
+		grid-auto-flow: column;
+		grid-auto-columns: var(--preset-strip-tile-width);
+		grid-template-rows: repeat(2, var(--preset-strip-row-height));
+		height: calc(2 * var(--preset-strip-row-height) + var(--property-scrollbox-pad) * 3 + 2px);
+		overflow: auto hidden;
+		overscroll-behavior: auto contain;
+		touch-action: pan-x pan-y;
+		scroll-snap-type: x proximity;
+		scrollbar-width: none;
+		@include overflow-edge-mask(var(--spacing-xl), true);
+
+		// Groups and their option lists dissolve into the strip's columns.
+		.preset-grid-group,
+		.preset-grid-options { display: contents; }
+		.preset-grid-heading { display: none; }
+		.preset-grid-option { scroll-snap-align: start; }
+	}
+
 	// A chip is a flat label: the bar is the one piece of chrome here, and a
 	// row of glossy buttons would read as a dozen separate tools.
 	.phone-chip {
