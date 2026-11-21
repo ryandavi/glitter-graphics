@@ -1,3 +1,164 @@
+// Start mark easter egg: clicking the mark throws old-web pixel sparkles (a
+// cross that shrinks to a speck) and leaves a short trail behind the pointer.
+// One overlay canvas exists only while sparkles are alive; nothing runs idle.
+const START_SPARKLE = {
+	burstCount: 36,
+	burstSpeed: [90, 280],   // px/s
+	burstLife: [900, 1600],  // ms
+	trailFor: 1600,          // ms after a click that pointer moves leave sparkles
+	trailEvery: 30,          // ms between trail sparkles
+	trailLife: [700, 1200],
+	gravity: 420,            // px/s²
+	drag: 2.2,               // 1/s
+	maxParticles: 180
+};
+
+const startSparkles = {
+	canvas: null,
+	ctx: null,
+	particles: [],
+	frame: 0,
+	lastTime: 0,
+	trailUntil: 0,
+	lastTrail: 0,
+	palette: null, // null = rainbow
+
+	// --start-sparkle-colors on .start-sparkles: a comma list, or `rainbow`.
+	readPalette() {
+		const value = getComputedStyle(this.canvas).getPropertyValue('--start-sparkle-colors').trim();
+		if (!value || value === 'rainbow') return null;
+		// Split on top-level commas only, so rgb(…) and color-mix(…) survive.
+		const colors = [];
+		let depth = 0;
+		let start = 0;
+		for (let i = 0; i < value.length; i++) {
+			if (value[i] === '(') depth++;
+			else if (value[i] === ')') depth--;
+			else if (value[i] === ',' && depth === 0) {
+				colors.push(value.slice(start, i).trim());
+				start = i + 1;
+			}
+		}
+		colors.push(value.slice(start).trim());
+		return colors.filter(Boolean);
+	},
+
+	color() {
+		if (this.palette?.length) return this.palette[Math.random() * this.palette.length | 0];
+		// Rainbow: one channel full, two random, so always bright, never muddy.
+		const channels = [255, Math.random() * 256 | 0, Math.random() * 256 | 0];
+		for (let i = 2; i > 0; i--) {
+			const j = Math.random() * (i + 1) | 0;
+			[channels[i], channels[j]] = [channels[j], channels[i]];
+		}
+		return `rgb(${channels.join(',')})`;
+	},
+
+	between([min, max]) { return min + Math.random() * (max - min); },
+
+	add(x, y, vx, vy, life) {
+		if (this.particles.length >= START_SPARKLE.maxParticles) return;
+		this.particles.push({ x, y, vx, vy, age: 0, life, color: this.color() });
+	},
+
+	burst(x, y) {
+		if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+		this.start();
+		this.palette = this.readPalette();
+		for (let i = 0; i < START_SPARKLE.burstCount; i++) {
+			const angle = (i / START_SPARKLE.burstCount) * Math.PI * 2 + Math.random() * 0.4;
+			const speed = this.between(START_SPARKLE.burstSpeed);
+			this.add(x, y, Math.cos(angle) * speed, Math.sin(angle) * speed - 80, this.between(START_SPARKLE.burstLife));
+		}
+		this.trailUntil = performance.now() + START_SPARKLE.trailFor;
+	},
+
+	trail(event) {
+		const now = performance.now();
+		if (now > this.trailUntil || now - this.lastTrail < START_SPARKLE.trailEvery) return;
+		this.lastTrail = now;
+		this.add(event.clientX, event.clientY, this.between([-25, 25]), this.between([20, 90]), this.between(START_SPARKLE.trailLife));
+		this.start();
+	},
+
+	start() {
+		if (!this.canvas) {
+			this.canvas = document.createElement('canvas');
+			this.canvas.className = 'start-sparkles';
+			this.canvas.setAttribute('aria-hidden', 'true');
+			document.body.appendChild(this.canvas);
+			this.ctx = this.canvas.getContext('2d');
+			this.resize();
+			this.onMove = (event) => this.trail(event);
+			window.addEventListener('pointermove', this.onMove, { passive: true });
+		}
+		if (!this.frame) {
+			this.lastTime = 0;
+			this.frame = requestAnimationFrame((time) => this.step(time));
+		}
+	},
+
+	resize() {
+		const ratio = Math.min(window.devicePixelRatio || 1, 2);
+		this.canvas.width = Math.round(window.innerWidth * ratio);
+		this.canvas.height = Math.round(window.innerHeight * ratio);
+		this.ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+	},
+
+	step(time) {
+		this.frame = 0;
+		const delta = this.lastTime ? Math.min(time - this.lastTime, 50) : 16.7;
+		this.lastTime = time;
+		const seconds = delta / 1000;
+		const damp = Math.exp(-START_SPARKLE.drag * seconds);
+		const { ctx } = this;
+		ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+		for (let i = this.particles.length - 1; i >= 0; i--) {
+			const p = this.particles[i];
+			p.age += delta;
+			if (p.age >= p.life || p.y > window.innerHeight + 5) {
+				this.particles.splice(i, 1);
+				continue;
+			}
+			p.vx *= damp;
+			p.vy = p.vy * damp + START_SPARKLE.gravity * seconds;
+			p.x += p.vx * seconds;
+			p.y += p.vy * seconds;
+
+			const t = p.age / p.life;
+			const px = Math.round(p.x);
+			const py = Math.round(p.y);
+			ctx.globalAlpha = t > 0.85 ? (1 - t) / 0.15 : (Math.random() < 0.15 ? 0.45 : 1);
+			ctx.fillStyle = p.color;
+			if (t < 0.6) {
+				// Cross sparkle, 5px then 3px.
+				const size = t < 0.3 ? 5 : 3;
+				const half = size >> 1;
+				ctx.fillRect(px, py - half, 1, size);
+				ctx.fillRect(px - half, py, size, 1);
+			} else {
+				const size = t < 0.8 ? 2 : 1;
+				ctx.fillRect(px, py, size, size);
+			}
+		}
+		ctx.globalAlpha = 1;
+
+		if (this.particles.length || performance.now() < this.trailUntil) {
+			this.frame = requestAnimationFrame((next) => this.step(next));
+		} else {
+			this.stop();
+		}
+	},
+
+	stop() {
+		window.removeEventListener('pointermove', this.onMove);
+		this.canvas?.remove();
+		this.canvas = null;
+		this.ctx = null;
+	}
+};
+
 const DOCUMENT_START_METHODS = {
 	whenBooted(stageId) { return APP_BOOT.whenBooted(stageId); },
 setupImageListeners() {
@@ -142,6 +303,10 @@ setupImageListeners() {
 	},
 
 	setupStartWelcome() {
+		document.querySelectorAll('.start-mark').forEach(mark => mark.addEventListener('click', () => {
+			const box = mark.getBoundingClientRect();
+			startSparkles.burst(box.left + box.width / 2, box.top + box.height / 2);
+		}));
 		document.getElementById('startWelcomeClose')?.addEventListener('click', () => {
 			this.setStartWelcomeVisible(false);
 			document.getElementById('openImageBtn')?.focus({ preventScroll: true });
