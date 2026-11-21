@@ -73,6 +73,10 @@ async function main() {
 		await startupPage.waitForSelector('#aboutModal.visible', { timeout: 5000 });
 		await startupPage.waitForSelector('#aboutModal #AboutWhatYouCanMake', { timeout: 5000 });
 		await startupPage.click('#closeAboutModal');
+		await startupPage.click('#workspaceStartGuide');
+		await startupPage.waitForSelector('#guideModal.visible', { timeout: 5000 });
+		await startupPage.waitForSelector('#guideModal #getting-started', { timeout: 5000 });
+		await startupPage.click('#closeGuideModal');
 
 		// Close reveals the base for the session; Help → Show Welcome brings it
 		// back; "Don't show again" turns it off for the next startup.

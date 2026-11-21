@@ -179,6 +179,7 @@ setupImageListeners() {
 
 		document.getElementById('workspaceStartTutorial')?.addEventListener('click', () => this.openDocumentAt('guideModal', 'getting-started'));
 		document.getElementById('workspaceStartAbout')?.addEventListener('click', () => this.modalManager.open('aboutModal'));
+		document.getElementById('workspaceStartGuide')?.addEventListener('click', () => this.modalManager.open('guideModal'));
 		document.getElementById('workspaceStartWhatsNew')?.addEventListener('click', (event) => {
 			try {
 				PREFERENCES.set('welcomeLastSeenRelease', CONFIG.app.currentRelease);
