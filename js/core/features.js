@@ -10,8 +10,7 @@ const FEATURES = Object.freeze({
 	personalWeb: Object.freeze({ stage: 'on' }),
 	htmlScene: Object.freeze({ stage: 'local' }),
 	stylePresetCopy: Object.freeze({ stage: 'debug' }),
-	memoryOverlay: Object.freeze({ stage: 'debug' }),
-	welcomeOnStartup: Object.freeze({ stage: 'off' })
+	memoryOverlay: Object.freeze({ stage: 'debug' })
 });
 
 const FEATURE_ENABLED = new Map();

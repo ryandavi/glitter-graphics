@@ -30,7 +30,7 @@
 
 				>img {
 					image-rendering: auto;
-					// Concentric with the figure's corner (_welcome.scss: radius-sm,
+					// Concentric with the figure's corner (_documents.scss: radius-sm,
 					// 1px border, this padding).
 					border-radius: concentric-radius(var(--radius-sm), 1px, var(--spacing-sm));
 				}

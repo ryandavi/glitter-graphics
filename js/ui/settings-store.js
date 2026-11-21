@@ -162,7 +162,7 @@ const APP_SETTINGS_LAYOUT = (() => {
 			toggle('recoverUnsavedWork', 'Keep a Recovery Copy', 'Keep a copy of unsaved work in this browser, so the start card can resume it after the tab closes. Off deletes the copy.', { aliases: 'autosave recover resume restore crash draft unsaved' }),
 			action('Protect Drafts', 'Ask the browser not to clear your recovery copies when storage runs low. Some browsers ask you to confirm.', { id: 'protectDrafts', label: 'Protect' }, { statusId: 'protectDraftsStatus', aliases: 'persist storage recovery draft evict keep' }),
 			toggle('reduceMotion', 'Reduce Motion', 'Turn off interface transitions and animated previews. Exported animation is unaffected.', { aliases: 'animation accessibility motion transitions' }),
-			toggle('showWelcomeOnStartup', 'Welcome on Startup', 'Show the Welcome screen when Glitter Editor starts.', { feature: 'welcomeOnStartup' }),
+			toggle('showWelcomeOnStartup', 'Welcome on Startup', 'Show the Welcome card on the start screen.'),
 			toggle('balanceSidebars', 'Balance Sidebar Widths', 'Keep the Inspector as wide as the toolbar and Layers together. Dragging the Inspector turns this off.', { aliases: 'panels layout symmetric widths resize' })
 		] },
 		{ title: 'Canvas', section: 'canvas', rows: [

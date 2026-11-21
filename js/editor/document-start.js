@@ -5,14 +5,16 @@ setupImageListeners() {
 		const projectUpload = document.getElementById('projectUpload');
 		const openProjectBtn = document.getElementById('openProjectBtn');
 		const openProjectMenuItem = document.getElementById('openProjectMenuItem');
-		const openImageBtn = document.getElementById('openImageBtn');
 
-		const openNewCanvasBtn = document.getElementById('openNewCanvasBtn');
-		openNewCanvasBtn?.addEventListener('click', (event) => {
+		// The base and the Welcome each draw the three open buttons; one handler
+		// per action serves both.
+		const openNewCanvas = (event) => {
 			event.stopPropagation();
 			this.modalManager.open('newCanvasModal');
-		});
-		this.renderWorkspaceStartPresets();
+		};
+		['openNewCanvasBtn', 'startBlankCanvasBtn'].forEach((id) => document.getElementById(id)?.addEventListener('click', openNewCanvas));
+		this.setupWorkspaceStartPresets();
+		this.setupStartWelcome();
 
 		document.getElementById('workspaceStartTutorial')?.addEventListener('click', () => this.openDocumentAt('guideModal', 'getting-started'));
 		document.getElementById('workspaceStartAbout')?.addEventListener('click', () => this.modalManager.open('aboutModal'));
@@ -27,20 +29,28 @@ setupImageListeners() {
 			this.modalManager.open('updatesModal');
 		});
 
-		openImageBtn?.addEventListener('click', () => imageUpload?.click());
-		// The drop area reads as one target, so a click on its empty space
-		// opens an image too. Its buttons keep their own actions.
-		document.querySelector('.workspace-start-drop')?.addEventListener('click', (event) => {
-			if (!event.target.closest('button, a, input')) imageUpload?.click();
+		['openImageBtn', 'welcomeOpenImageBtn'].forEach((id) => document.getElementById(id)?.addEventListener('click', () => imageUpload?.click()));
+		// Take Photo renders from the first paint, disabled while the camera
+		// check runs (enabled at once where the last visit found one), so the
+		// row never re-centres. The menu item stays hidden without a camera.
+		const takePhotoButtons = document.querySelectorAll('[data-take-photo]');
+		const takePhotoMenuItem = document.getElementById('takePhotoMenuItem');
+		const setTakePhotoState = (available, title) => takePhotoButtons.forEach((button) => {
+			button.disabled = !available;
+			if (title) button.title = title;
+			else button.removeAttribute('title');
 		});
-		const takePhotoButtons = document.querySelectorAll('#takePhotoBtn, #takePhotoMenuItem');
-		// Each stays as the page drew it (the start hint) until the check answers.
-		takePhotoButtons.forEach((button) => {
+		if (document.documentElement.classList.contains('has-camera-hint')) {
+			setTakePhotoState(true);
+			if (takePhotoMenuItem) takePhotoMenuItem.hidden = false;
+		}
+		[...takePhotoButtons, takePhotoMenuItem].filter(Boolean).forEach((button) => {
 			button.addEventListener('click', () => COMMANDS.takePhoto.run(this));
 		});
 		CameraCapture.watchAvailability(() => {
 			const supported = CameraCapture.isSupported();
-			takePhotoButtons.forEach((button) => { button.hidden = !supported; });
+			setTakePhotoState(supported, supported ? null : 'No camera found');
+			if (takePhotoMenuItem) takePhotoMenuItem.hidden = !supported;
 			document.documentElement.classList.remove('has-camera-hint');
 			writeStartHint('hasCamera', supported);
 		});
@@ -61,7 +71,7 @@ setupImageListeners() {
 			});
 		}
 
-		[openProjectBtn, openProjectMenuItem].forEach((button) => {
+		[openProjectBtn, document.getElementById('welcomeOpenProjectBtn'), openProjectMenuItem].forEach((button) => {
 			if (button && projectUpload) {
 				button.addEventListener('click', () => {
 					projectUpload.click();
@@ -113,11 +123,43 @@ setupImageListeners() {
 			workspaceStart.setAttribute('aria-hidden', noDocument ? 'false' : 'true');
 		}
 		document.body.classList.toggle('no-document', noDocument);
+		// Help → Show Welcome works on the start screen only, as Save works on
+		// a document only.
+		const showWelcome = document.getElementById('showWelcomeMenuItem');
+		if (showWelcome) showWelcome.disabled = !noDocument;
 		if (noDocument && this.recovery) this.refreshWorkspaceStartResume();
 	},
 
-	// Resume rows lead the start card under Continue, one per recovery draft,
-	// newest first (js/editor/document-recovery.js). They read only the drafts'
+	// The Welcome replaces the base while <html> lacks has-welcome-hidden (the
+	// head script stamps it before first paint). Close hides it for the rest of
+	// the tab's session; Help → Show Welcome brings it back.
+	setStartWelcomeVisible(visible) {
+		document.documentElement.classList.toggle('has-welcome-hidden', !visible);
+		try {
+			if (visible) sessionStorage.removeItem(WELCOME_CLOSED_KEY);
+			else sessionStorage.setItem(WELCOME_CLOSED_KEY, '1');
+		} catch (_error) { /* storage unavailable: the class still applies */ }
+	},
+
+	setupStartWelcome() {
+		document.getElementById('startWelcomeClose')?.addEventListener('click', () => {
+			this.setStartWelcomeVisible(false);
+			document.getElementById('openImageBtn')?.focus({ preventScroll: true });
+		});
+		document.getElementById('showWelcomeMenuItem')?.addEventListener('click', () => {
+			if (this.originalImage) return;
+			this.setStartWelcomeVisible(true);
+			document.getElementById('startWelcomeClose')?.focus({ preventScroll: true });
+		});
+		// "Don't show again" is the inverse of the Welcome on Startup setting.
+		// It never closes the card; Close does that.
+		const dontShow = document.getElementById('welcomeDontShowAgain');
+		if (dontShow) this.bindPreferenceControl(dontShow, 'showWelcomeOnStartup', { invert: true });
+	},
+
+	// Continue: one item per recovery draft, newest first, at most keepDrafts
+	// (js/editor/document-recovery.js). The same items render as tiles under
+	// the base and as a list in the Welcome rail. They read only the drafts'
 	// summaries.
 	async refreshWorkspaceStartResume() {
 		const summaries = this.isRecoveryEnabled() && !this.originalImage ? await RECOVERY_STORE.listSummaries() : [];
@@ -125,77 +167,79 @@ setupImageListeners() {
 	},
 
 	renderWorkspaceStartResume(summaries) {
-		const section = document.getElementById('workspaceStartResume');
-		const list = document.getElementById('workspaceStartResumeList');
-		if (!section || !list) return;
-		list.querySelectorAll('[data-thumbnail-url]').forEach(tile => URL.revokeObjectURL(tile.dataset.thumbnailUrl));
-		// Rows replacing the boot placeholders fade in; later re-renders don't.
-		list.classList.toggle('is-arriving', Boolean(list.querySelector('.is-placeholder')));
-		list.replaceChildren(...summaries.map(summary => this.buildWorkspaceStartResumeTile(summary)));
-		section.hidden = !summaries.length;
-		// The real rows are in, so the reserved space (index.html head) goes,
-		// and the next load reserves this many.
-		document.documentElement.classList.remove('has-resume-hint');
-		writeStartHint('resumeCount', summaries.length);
+		const drafts = summaries.slice(0, CONFIG.app.recovery.keepDrafts);
+		const base = document.getElementById('workspaceStartResumeList');
+		// Both lists share one object URL per thumbnail; the base list owns them.
+		base?.querySelectorAll('[data-thumbnail-url]').forEach(item => URL.revokeObjectURL(item.dataset.thumbnailUrl));
+		const thumbnails = new Map(drafts.filter(summary => summary.thumbnail).map(summary => [summary.id, URL.createObjectURL(summary.thumbnail)]));
+		[['workspaceStartResume', base], ['welcomeResume', document.getElementById('welcomeResumeList')]].forEach(([sectionId, list]) => {
+			const section = document.getElementById(sectionId);
+			if (!section || !list) return;
+			// Items fade in the first time they arrive; later re-renders don't.
+			list.classList.toggle('is-arriving', list.dataset.rendered !== 'true' && drafts.length > 0);
+			list.dataset.rendered = 'true';
+			list.replaceChildren(...drafts.map(summary => this.buildWorkspaceStartDraft(summary, thumbnails.get(summary.id), list === base)));
+			section.hidden = !drafts.length;
+		});
 	},
 
-	buildWorkspaceStartResumeTile(summary) {
+	buildWorkspaceStartDraft(summary, thumbnailUrl, ownsThumbnail) {
 		const name = summary.name || CONFIG.project.name.placeholder;
 		const { width, height } = summary.canvas;
 		const edited = formatRelativeTime(summary.savedAt);
-		const tile = buildElement('workspace-start-resume');
-		const media = buildElement('action-card-media workspace-start-resume-preview', undefined, 'span');
-		if (summary.thumbnail) {
-			const image = buildElement('workspace-start-resume-thumbnail', undefined, 'img');
+		const item = buildElement('list-row start-draft');
+		item.tabIndex = 0;
+		item.setAttribute('role', 'button');
+		item.setAttribute('aria-label', `Resume ${name}, ${width} by ${height} pixels, edited ${edited}${summary.fileSaved ? '' : ', not saved to a file'}`);
+		item.title = `${width} × ${height} px`;
+		const media = item.appendChild(buildElement('list-row-media', undefined, 'span'));
+		if (thumbnailUrl) {
+			const image = media.appendChild(document.createElement('img'));
 			image.alt = '';
-			image.src = tile.dataset.thumbnailUrl = URL.createObjectURL(summary.thumbnail);
-			media.appendChild(image);
+			image.src = thumbnailUrl;
+			if (ownsThumbnail) item.dataset.thumbnailUrl = thumbnailUrl;
 		} else {
-			media.appendChild(buildElement('icon-wrapper', undefined, 'span')).appendChild(createIcon('clock-history'));
+			media.classList.add('icon-wrapper');
+			media.appendChild(createIcon('clock-history'));
 		}
-		const size = `${width} × ${height} px`;
-		const card = buildActionCard({
-			className: 'is-quiet workspace-start-resume-card',
-			dataset: {},
-			ariaLabel: `Resume ${name}, ${width} by ${height} pixels, edited ${edited}${summary.fileSaved ? '' : ', not saved to a file'}`,
-			media,
-			title: name,
-			details: [
-				{ text: `Edited ${edited} · ${size}` },
-				...(summary.fileSaved ? [] : [{ text: 'Not saved to a file', className: 'is-warning' }])
-			]
-		});
-		card.addEventListener('click', () => this.resumeRecovery(summary.id));
-		const discard = buildIconButton({
-			className: 'btn-icon-simple icon-wrapper sm workspace-start-resume-discard',
+		const text = item.appendChild(buildElement('list-row-text', undefined, 'span'));
+		text.appendChild(buildElement('list-row-name', name, 'span'));
+		const meta = text.appendChild(buildElement('list-row-meta', undefined, 'span'));
+		meta.appendChild(buildElement('', edited, 'span'));
+		if (!summary.fileSaved) meta.appendChild(buildElement('start-draft-unsaved', 'not saved', 'span'));
+		const actions = item.appendChild(buildElement('list-row-actions', undefined, 'span'));
+		actions.appendChild(buildIconButton({
+			className: 'btn-icon-simple icon-wrapper sm list-row-action',
 			label: `Discard ${name}`,
-			icon: 'x-mark',
-			onClick: () => this.discardRecovery(summary.id)
-		});
-		tile.append(card, discard);
-		return tile;
-	},
-
-	// One-click blank canvases on the start card. Each tile uses the default
-	// blank-document color; anything else goes through More Presets.
-	renderWorkspaceStartPresets() {
-		const host = document.getElementById('workspaceStartPresets');
-		if (!host || host.dataset.rendered === 'true') return;
-		host.dataset.rendered = 'true';
-		const morePresets = document.getElementById('openNewCanvasBtn');
-		CONFIG.canvas.presets.filter((preset) => preset.quickStart).forEach((preset) => {
-			let button = host.querySelector(`[data-preset-id="${preset.id}"]`);
-			if (!button) {
-				button = buildCanvasSizeCard(preset, { quickStart: true });
-				host.insertBefore(button, morePresets);
+			icon: 'trash',
+			onClick: (event) => {
+				event.stopPropagation();
+				this.discardRecovery(summary.id);
 			}
-			button.addEventListener('click', () => this.createBlankCanvas(preset.width, preset.height));
+		}));
+		item.addEventListener('click', () => this.resumeRecovery(summary.id));
+		item.addEventListener('keydown', (event) => {
+			if (event.target !== item || (event.key !== 'Enter' && event.key !== ' ')) return;
+			event.preventDefault();
+			this.resumeRecovery(summary.id);
+		});
+		return item;
+	},
+
+	// One-click blank canvases on the Welcome. The chips are generated at build
+	// time (tools/build-shell.js); each uses the default blank-document color,
+	// and anything else goes through Other size.
+	setupWorkspaceStartPresets() {
+		document.getElementById('workspaceStartPresets')?.addEventListener('click', (event) => {
+			const id = event.target.closest('[data-preset-id]')?.dataset.presetId;
+			const preset = id && CONFIG.canvas.presets.find((entry) => entry.id === id);
+			if (preset) this.createBlankCanvas(preset.width, preset.height);
 		});
 	},
 
-	// With the startup Welcome gated off, an unseen release marks the start
-	// card's "What's new" link instead of reopening the modal. A first visit
-	// has nothing to compare against, so it records the release silently.
+	// An unseen release marks the Welcome's "What's new" instead of opening
+	// anything on load. A first visit has nothing to compare against, so it
+	// records the release silently.
 	syncWhatsNewMarker() {
 		const link = document.getElementById('workspaceStartWhatsNew');
 		if (!link) return;

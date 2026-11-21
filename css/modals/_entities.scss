@@ -7,7 +7,7 @@
    places: the build puts data-icon on a site's first mention per section, and
    css/generated/_entity-icons.scss maps each icon name to its file (a .svg is
    a currentColor mask, a .color.svg is drawn as is). Global rather than
-   document-modal scoped because the welcome screen uses entities too. */
+   document-modal scoped because pages outside the document modals use entities too. */
 @mixin entity-icon-glyph {
 	content: "";
 	display: inline-block;

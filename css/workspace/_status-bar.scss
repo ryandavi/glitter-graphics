@@ -162,25 +162,28 @@
 		margin-left: auto;
 	}
 
+	// The footer lines up with the body text, past the icon column.
+	> .card-footer {
+		padding-inline: calc(var(--spacing-sm) + var(--icon-size-xs) + var(--spacing-sm)) var(--spacing-sm);
+	}
+
+	// A quiet text button: turning hints off is the footer's one control.
 	.helpful-message-disable {
-		width: 100%;
-		margin-top: var(--spacing-xs);
-		padding: var(--spacing-xs) var(--spacing-sm);
+		// The footer's full height is the hit area.
+		align-self: stretch;
+		padding: 0;
 		border: none;
-		background: var(--color-bg-tertiary);
-		color: var(--color-text-secondary);
-		font-size: var(--font-size-xs);
-		border-radius: var(--radius-sm);
+		background: none;
+		color: var(--color-text-tertiary);
+		font: inherit;
 		cursor: pointer;
-		transition: background-color var(--transition-fast), color var(--transition-fast), outline-color var(--transition-fast);
 		white-space: nowrap;
 		pointer-events: auto;
+		transition: color var(--transition-fast);
 
-		outline: 1px solid transparent;
-
-		&:hover {
+		&:is(:hover, :focus-visible) {
 			color: var(--color-text-primary);
-			outline: 1px solid var(--color-border-hover);
+			text-decoration: underline;
 		}
 	}
 
@@ -216,11 +219,6 @@
 		}
 		.helpful-message-text { font-size: var(--font-size-xs); }
 		.helpful-message-description { font-size: var(--font-size-xs); }
-
-		.helpful-message-disable {
-			max-width: none;
-			min-height: 32px;
-		}
 	}
 }
 

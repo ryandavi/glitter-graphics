@@ -85,8 +85,6 @@ class RecoveryStore {
 					drafts.delete(id);
 					summaries.delete(id);
 				});
-				// The start card holds this many Continue rows on the next load.
-				if (typeof writeStartHint === 'function') writeStartHint('resumeCount', Math.min(keep, others.length + 1));
 			};
 		});
 	}

@@ -10,12 +10,11 @@ const defaultFiles = [
 	'modals/aylana.html',
 	'preservation/content.html',
 	'about/content.html',
-	'modals/welcome.html',
 	'guide/content.html',
 	'documentation/content.html'
 ];
 // Prose-style rules apply to the long-form articles only; the guide and the
-// welcome screen get the token and structure rules.
+// documentation get the token and structure rules.
 const articleFiles = new Set(['history', 'personal-web', 'aylana', 'preservation', 'about']);
 const PROSE_RULES = new Set(['em-dash', 'bare-name', 'bare-date']);
 const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];

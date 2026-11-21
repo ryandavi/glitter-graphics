@@ -29,16 +29,21 @@ function renderToolButtons(indent, registries) {
 	return lines.join('\n');
 }
 
+// Blank-size chips on the Welcome: a 16px glyph drawn to the preset aspect
+// (--aspect), scaled by its long side against the canvas limit (--scale), so
+// a small canvas reads smaller. css/workspace/_start-card.scss draws it.
 function renderStartPresets(indent, registries) {
-	return registries.CONFIG.canvas.presets.filter((preset) => preset.quickStart).map((preset) => [
-		`${indent}<button class="action-card is-quiet workspace-start-preset" type="button" data-preset-id="${escapeHtml(preset.id)}" aria-label="New ${escapeHtml(preset.label)} canvas, ${escapeHtml(preset.width)} by ${escapeHtml(preset.height)} pixels">`,
-		`${indent}\t<span class="action-card-media workspace-start-preset-preview">`,
-		`${indent}\t\t<span class="workspace-start-preset-shape" style="aspect-ratio: ${escapeHtml(preset.width)} / ${escapeHtml(preset.height)};"></span>`,
-		`${indent}\t</span>`,
-		`${indent}\t<strong class="action-card-title">${escapeHtml(preset.label)}</strong>`,
-		`${indent}\t<span class="action-card-detail">${escapeHtml(preset.width)} × ${escapeHtml(preset.height)} px</span>`,
-		`${indent}</button>`
-	].join('\n')).join('\n');
+	const { presets, limits } = registries.CONFIG.canvas;
+	const longest = Math.max(limits.maxWidth, limits.maxHeight);
+	return presets.filter((preset) => preset.quickStart).map((preset) => {
+		const scale = Math.max(0.55, Math.min(1, Math.max(preset.width, preset.height) / longest)).toFixed(2);
+		return [
+			`${indent}<button class="start-size" type="button" data-preset-id="${escapeHtml(preset.id)}" title="${escapeHtml(preset.width)} × ${escapeHtml(preset.height)} px" aria-label="New ${escapeHtml(preset.label)} canvas, ${escapeHtml(preset.width)} by ${escapeHtml(preset.height)} pixels">`,
+			`${indent}	<span class="start-size-glyph" aria-hidden="true"><span style="--aspect: ${escapeHtml(preset.width)} / ${escapeHtml(preset.height)}; --scale: ${scale};"></span></span>`,
+			`${indent}	<span>${escapeHtml(preset.label)}</span>`,
+			`${indent}</button>`
+		].join('\n');
+	}).join('\n');
 }
 
 function replaceRegion(source, name, render) {

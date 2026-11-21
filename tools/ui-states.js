@@ -20,7 +20,7 @@ const VIEWPORTS = {
 	phone: { width: 390, height: 844 }
 };
 
-const MODALS = ['newCanvasModal', 'settingsModal', 'exportSettingsModal', 'shortcutsModal', 'layerTypePickerModal', 'aboutModal', 'guideModal', 'historyModal', 'welcomeModal', 'stickerUploadModal', 'exportPreviewModal'];
+const MODALS = ['newCanvasModal', 'settingsModal', 'exportSettingsModal', 'shortcutsModal', 'layerTypePickerModal', 'aboutModal', 'guideModal', 'historyModal', 'stickerUploadModal', 'exportPreviewModal'];
 const PHONE_MODALS = ['settingsModal', 'newCanvasModal', 'exportSettingsModal', 'layerTypePickerModal', 'shortcutsModal'];
 
 const wait = (page, ms = 350) => page.waitForTimeout(ms);

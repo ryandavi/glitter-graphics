@@ -682,23 +682,172 @@
 
 }
 
-/* Same "term with a hover definition" treatment as #aboutModal .context,
-   reused where the Welcome modal names a feature that benefits from a
-   one-line explanation without sending someone off to the Guide. */
-#welcomeModal .context {
-	font-weight: bold;
-	cursor: help;
-	color: inherit;
-	display: inline;
+// Release-note links in the Updates modal and page, and the shared document
+// typography (moved from the retired Welcome modal partial).
+#updatesModal,
+.doc-page-updates {
+	.version-history-guide-link {
+		padding: 0;
+		border: 0;
+		background: none;
+		font: inherit;
+		font-size: var(--font-size-xs);
+		color: var(--color-accent);
+		text-decoration: underline;
+		cursor: pointer;
+		white-space: nowrap;
 
-	-webkit-text-decoration: underline dotted;
-	text-decoration: underline dotted;
-	text-decoration-thickness: 2px;
-	text-underline-offset: 2px;
-	-webkit-text-decoration-skip: ink;
-	text-decoration-skip-ink: auto;
+		&:hover,
+		&:focus-visible { color: var(--color-text-primary); }
+	}
 
-	&:hover {
-		color: var(--color-text-primary);
+	.version-history-format-note {
+		font-size: var(--font-size-xs);
+		color: var(--color-text-tertiary);
 	}
 }
+
+.modal-content,
+.doc-content {
+	h2 { font-size: var(--font-size-2xl); }
+	h3 { font-size: var(--font-size-xl); }
+	h4 { font-size: var(--font-size-lg); }
+	h5 { font-size: var(--font-size-md); }
+	h6 { font-size: var(--font-size-base); }
+
+	.figure-gallery {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+		grid-auto-rows: 1fr;
+		gap: var(--spacing-md);
+		margin: var(--spacing-lg) 0;
+
+		>figure {
+			display: flex;
+			flex-direction: column;
+			width: 100%;
+			height: 100%;
+			min-width: 0;
+			padding: var(--spacing-md);
+			border: 1px solid var(--color-border);
+			border-radius: var(--radius-sm);
+			background: var(--color-bg-tertiary);
+
+			>img {
+				display: block;
+				width: 100%;
+				height: 100%;
+				max-height: 300px;
+				object-fit: contain;
+				image-rendering: pixelated;
+			}
+
+			>figcaption {
+				display: flex;
+				flex-direction: column;
+				gap: var(--spacing-xs);
+				margin-top: var(--spacing-md);
+				font-size: var(--font-size-sm);
+				line-height: 1.4;
+
+				>cite {
+					font-style: normal;
+					font-weight: var(--font-weight-semibold);
+					letter-spacing: 0.01em;
+				}
+
+				>.figure-description { color: var(--color-text-secondary); }
+
+				>.figure-credit {
+					margin-top: var(--spacing-xs);
+					color: var(--color-text-tertiary);
+					font-size: var(--font-size-xs);
+					opacity: 0.85;
+				}
+			}
+		}
+
+		@include mobile {
+			grid-template-columns: 1fr;
+
+			>figure { padding: var(--spacing-sm); }
+		}
+	}
+
+	.figure-gallery-userbars { grid-template-columns: 1fr; }
+
+	.figure-wrapper:not(.figure-gallery) {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 0;
+		max-width: 100%;
+		margin: var(--spacing-lg) 0;
+
+		>figure {
+			display: inline-block;
+			box-sizing: border-box;
+			min-width: 0;
+			max-width: 80%;
+			padding: var(--spacing-md);
+			overflow: hidden;
+			border: 1px solid var(--color-border);
+			border-radius: var(--radius-sm);
+			background-color: var(--color-bg-tertiary);
+
+			>img {
+				display: block;
+				width: 100%;
+				max-width: 100%;
+				height: auto;
+				image-rendering: pixelated;
+			}
+
+			>figcaption {
+				display: flex;
+				flex-direction: column;
+				gap: var(--spacing-xs);
+				margin-top: var(--spacing-md);
+				font-size: var(--font-size-sm);
+				line-height: 1.4;
+
+				>cite {
+					font-style: normal;
+					font-weight: var(--font-weight-semibold);
+					letter-spacing: 0.01em;
+				}
+
+				>.figure-description {
+					color: var(--color-text-secondary);
+				}
+
+				>.figure-credit {
+					margin-top: var(--spacing-xs);
+					color: var(--color-text-tertiary);
+					font-size: var(--font-size-xs);
+					opacity: 0.85;
+				}
+			}
+		}
+
+		// Unusually tall figures: cap the height and let the width follow the
+		// intrinsic aspect ratio instead of the default width: 100% stretch.
+		&.figure-wrapper-contained>figure>img {
+			width: 100%;
+			height: 100%;
+			max-height: 500px;
+			object-fit: contain;
+			margin-inline: auto;
+		}
+	}
+}
+
+// A document opens with its title as h1 (in the hero), so its sections are
+// h2 and run one size smaller than an h2 elsewhere in a modal.
+.doc-content {
+	h2 { font-size: var(--font-size-xl); }
+	h3 { font-size: var(--font-size-lg); }
+	h4 { font-size: var(--font-size-md); }
+	h5 { font-size: var(--font-size-base); }
+}
+

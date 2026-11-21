@@ -46,47 +46,69 @@ async function main() {
 		const startupContext = await browser.newContext({ viewport: { width: 1280, height: 800 } });
 		await startupContext.addInitScript(() => {
 			localStorage.setItem('glitter.theme', JSON.stringify('bubblegum'));
-			localStorage.setItem('glitter.preferences', JSON.stringify({
-				showWelcomeOnStartup: true
-			}));
-			localStorage.removeItem('glitterEditor_welcomeModalSeen');
-		});
-		await startupContext.route('**/modals/welcome.html*', async (route) => {
-			await new Promise((resolve) => setTimeout(resolve, 600));
-			await route.continue();
+			// Seeded once; reloads keep what the page wrote since.
+			if (localStorage.getItem('glitter.preferences') === null) {
+				localStorage.setItem('glitter.preferences', JSON.stringify({ showWelcomeOnStartup: true }));
+			}
 		});
 		const startupPage = await startupContext.newPage();
 		await startupPage.goto(APP_URL, { waitUntil: 'domcontentloaded' });
 		assert(await startupPage.evaluate(() => document.documentElement.dataset.theme === 'bubblegum'),
 			'Saved theme was not applied by the head bootstrap before app initialization');
-		await startupPage.waitForFunction(() => window.editor != null, null, { timeout: 15000 });
-		await startupPage.waitForSelector('.workspace-start-preset[data-preset-id]');
-		assert(await startupPage.evaluate(() => !isFeatureEnabled('welcomeOnStartup')
-			&& !document.querySelector('.modal-overlay.visible')
-			&& !document.getElementById('workspaceStart').hidden),
-			'Startup did not land on the start card with no modal open');
-		assert(await startupPage.evaluate(() => document.querySelectorAll('.workspace-start-preset[data-preset-id]').length
-			=== CONFIG.canvas.presets.filter((preset) => preset.quickStart).length),
-			'Start card quick presets do not match the configured quickStart presets');
+		await startupPage.waitForFunction(() => window.editor != null && document.body.classList.contains('boot-interactive'), null, { timeout: 15000 });
+		const startup = await startupPage.evaluate(() => ({
+			noModal: !document.querySelector('.modal-overlay.visible'),
+			startVisible: !document.getElementById('workspaceStart').hidden,
+			welcomeVisible: getComputedStyle(document.getElementById('startWelcome')).display !== 'none',
+			baseHidden: getComputedStyle(document.getElementById('workspaceStartBase')).display === 'none',
+			chips: document.querySelectorAll('#workspaceStartPresets .start-size[data-preset-id]').length,
+			quickStart: CONFIG.canvas.presets.filter((preset) => preset.quickStart).length,
+			takePhotoPresent: document.querySelectorAll('[data-take-photo]').length === 2
+		}));
+		assert(startup.noModal && startup.startVisible, 'Startup did not land on the start screen with no modal open');
+		assert(startup.welcomeVisible && startup.baseHidden, 'The Welcome did not replace the base on startup');
+		assert(startup.chips === startup.quickStart, 'Welcome size chips do not match the configured quickStart presets');
+		assert(startup.takePhotoPresent, 'Take Photo is not rendered on both the base and the Welcome');
 		await startupPage.click('#workspaceStartAbout');
 		await startupPage.waitForSelector('#aboutModal.visible', { timeout: 5000 });
 		await startupPage.waitForSelector('#aboutModal #AboutWhatYouCanMake', { timeout: 5000 });
 		await startupPage.click('#closeAboutModal');
-		await startupPage.evaluate(() => document.getElementById('openWelcomeModal').click());
-		await startupPage.waitForSelector('#welcomeModal.visible', { timeout: 1000 });
-		assert(await startupPage.isVisible('#welcomeModal .modal-loading'),
-			'Welcome modal waits for its external content before becoming visible');
-		await startupPage.waitForFunction(() => !document.querySelector('#welcomeModal .modal-loading'), null, { timeout: 5000 });
-		assert(await startupPage.evaluate(() => [...document.querySelectorAll('#welcomeModal .welcome-checkbox')].every((node) => node.hidden)),
-			'Welcome still offers a startup option while startup Welcome is gated off');
-		await startupPage.click('#welcomeStartCreatingBtn');
-		await startupPage.click('.workspace-start-preset[data-preset-id="classic-blingee"]');
+
+		// Close reveals the base for the session; Help → Show Welcome brings it
+		// back; "Don't show again" turns it off for the next startup.
+		await startupPage.click('#startWelcomeClose');
+		assert(await startupPage.evaluate(() => document.documentElement.classList.contains('has-welcome-hidden')
+			&& getComputedStyle(document.getElementById('workspaceStartBase')).display !== 'none'),
+			'Close did not hide the Welcome and reveal the base');
+		await startupPage.reload({ waitUntil: 'domcontentloaded' });
+		assert(await startupPage.evaluate(() => document.documentElement.classList.contains('has-welcome-hidden')),
+			'A closed Welcome came back on reload within the same session');
+		await startupPage.waitForFunction(() => document.body.classList.contains('boot-interactive'), null, { timeout: 15000 });
+		await startupPage.evaluate(() => document.getElementById('showWelcomeMenuItem').click());
+		assert(await startupPage.evaluate(() => !document.documentElement.classList.contains('has-welcome-hidden')),
+			'Help → Show Welcome did not reopen the Welcome');
+		await startupPage.click('#startWelcome .welcome-checkbox');
+		assert(await startupPage.evaluate(() => PREFERENCES.get('showWelcomeOnStartup') === false),
+			"Don't show again did not turn off Welcome on Startup");
+		await startupPage.evaluate(() => sessionStorage.clear());
+		await startupPage.reload({ waitUntil: 'domcontentloaded' });
+		assert(await startupPage.evaluate(() => document.documentElement.classList.contains('has-welcome-hidden')),
+			"Don't show again did not persist across reloads");
+		await startupPage.waitForFunction(() => document.body.classList.contains('boot-interactive'), null, { timeout: 15000 });
+		await startupPage.evaluate(() => {
+			PREFERENCES.set('showWelcomeOnStartup', true);
+			document.getElementById('showWelcomeMenuItem').click();
+		});
+
+		await startupPage.click('.start-size[data-preset-id="classic-blingee"]');
 		await startupPage.waitForFunction(() => window.editor.originalImage != null);
 		assert(await startupPage.evaluate(() => window.editor.previewCanvas.width === 400 && window.editor.previewCanvas.height === 400
 			&& document.getElementById('workspaceStart').hidden),
-			'A start card preset did not create its canvas in one click');
+			'A Welcome size chip did not create its canvas in one click');
 		assert(await startupPage.evaluate(() => PREFERENCES.get('recentCanvasSizes')[0].width === 400
-			&& PREFERENCES.get('recentCanvasSizes')[0].height === 400), 'Start card creation did not record a recent size');
+			&& PREFERENCES.get('recentCanvasSizes')[0].height === 400), 'Start screen creation did not record a recent size');
+		assert(await startupPage.evaluate(() => document.getElementById('showWelcomeMenuItem').disabled),
+			'Show Welcome stayed enabled with a document open');
 		await startupContext.close();
 
 		const desktop = await openEditor(browser, { width: 1440, height: 900 });

@@ -730,6 +730,32 @@ input.color-hex-input {
 	}
 }
 
+// ===========================================================================
+// CARD FOOTER
+// ---------------------------------------------------------------------------
+// The bottom strip of a floating card (the canvas hint, the Welcome): one row
+// under a divider, small tertiary text, the card's "turn this off" control on
+// the left and any meta pushed to the right (.card-footer-meta). The card
+// sets the inline padding to line up with its own content.
+// ===========================================================================
+.card-footer {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0 var(--spacing-md);
+	min-height: var(--row-height);
+	padding: 0 var(--spacing-sm);
+	border-top: 1px solid var(--color-border);
+	box-sizing: border-box;
+	color: var(--color-text-tertiary);
+	font-size: var(--font-size-xs);
+}
+
+.card-footer-meta {
+	margin-left: auto;
+	font-size: inherit;
+}
+
 // Column rules: text starts on the left, anything measured or counted ends
 // on the right so digits line up, and a heading sits over its own column.
 // The first column takes the spare width and is the one that truncates.

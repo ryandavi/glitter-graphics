@@ -150,40 +150,10 @@ updateOrientationButtons(width, height) {
 			onOpen: () => this.initializeNewCanvasModal()
 		});
 
-		// Welcome modal opens from the header menu and the start card, and
-		// automatically on load only while welcomeOnStartup is enabled.
-		this.modalManager.register('welcomeModal', {
-			openBtnId: 'openWelcomeModal',
-			closeBtnId: 'closeWelcomeModal',
-			externalContentUrl: 'modals/welcome.html?v=1ac1eacc',
-			cacheContent: true,
-			showWhileLoading: true,
-			loadingLabel: 'Preparing Glitter…',
-			resetScrollOnOpen: false,
-			onContentLoaded: (modalBody) => {
-				initPixelScalerInContainer(modalBody);
-				// Only the latest release earns a first-time reader's attention;
-				// older ones are a click away instead of pushing past the fold.
-				this.renderVersionHistory(modalBody, { headingLevel: 3 });
-				this.setupWelcomeModalListeners();
-				initTooltipsInContainer(modalBody);
-			},
-			onOpen: () => {
-				document.querySelectorAll('#welcomeDontShowAgain, #welcomeDontShowAgainMobile').forEach((checkbox) => {
-					checkbox.closest('.welcome-checkbox').hidden = !isFeatureEnabled('welcomeOnStartup');
-				});
-			},
-			onClose: () => {
-				try {
-					PREFERENCES.set('welcomeLastSeenRelease', CONFIG.app.currentRelease);
-				} catch (e) {
-					console.warn('Failed to save welcome modal preference:', e);
-				}
-			}
-		});
-
-		// A #modal= link (see openModalFromHash) replaces the startup welcome.
-		if (!this.openModalFromHash()) this.checkWelcomeModal();
+		// A #modal= link opens its modal over the start screen; the inline
+		// Welcome (js/editor/document-start.js) never blocks it.
+		this.openModalFromHash();
+		this.syncWhatsNewMarker();
 		this.watchModalSources();
 
 
@@ -365,72 +335,6 @@ async openDocumentAt(modalId, anchor) {
 		return;
 	}
 	requestAnimationFrame(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }));
-},
-
-async checkWelcomeModal() {
-
-	if (!isFeatureEnabled('welcomeOnStartup')) {
-		this.syncWhatsNewMarker();
-		return;
-	}
-
-	try {
-		const lastSeenRelease = PREFERENCES.get('welcomeLastSeenRelease');
-		const showOnStartup = PREFERENCES.get('showWelcomeOnStartup');
-		const hasUnseenRelease = lastSeenRelease !== CONFIG.app.currentRelease;
-		
-		if (showOnStartup || hasUnseenRelease) {
-			await this.modalManager.open('welcomeModal');
-
-			// Warm the guide after the welcome screen is visible so startup never
-			// waits on content the user has not requested yet.
-			const guideConfig = this.modalManager.modals.get('guideModal');
-			if (guideConfig && guideConfig.externalContentUrl) {
-				this.modalManager.loadExternalContent(guideConfig).catch((error) => dbg('Guide preload failed:', error));
-			}
-		}
-	} catch (e) {
-		console.warn('Failed to check welcome modal status:', e);
-	}
-},
-
-setupWelcomeModalListeners() {
-	
-	const takeTourBtn = document.getElementById('welcomeTakeTourBtn');
-	const startCreatingBtn = document.getElementById('welcomeStartCreatingBtn');
-	const dontShowCheckbox = document.getElementById('welcomeDontShowAgain');
-	const dontShowMobileCheckbox = document.getElementById('welcomeDontShowAgainMobile');
-	if (takeTourBtn?.dataset.welcomeBound === 'true') return;
-	if (takeTourBtn) takeTourBtn.dataset.welcomeBound = 'true';
-	if (startCreatingBtn) startCreatingBtn.dataset.welcomeBound = 'true';
-
-	[dontShowCheckbox, dontShowMobileCheckbox].filter(Boolean).forEach(checkbox => {
-		this.bindPreferenceControl(checkbox, 'showWelcomeOnStartup', { invert: true });
-	});
-	
-	const markAsSeenIfChecked = () => {
-		if (dontShowCheckbox?.checked || dontShowMobileCheckbox?.checked) {
-			try {
-				PREFERENCES.set('showWelcomeOnStartup', false);
-			} catch (e) {
-				console.warn('Failed to save welcome modal preference:', e);
-			}
-		}
-	};
-	
-	if (takeTourBtn) {
-		takeTourBtn.addEventListener('click', () => {
-			markAsSeenIfChecked();
-			this.modalManager.open('guideModal', { resetScroll: true });
-		});
-	}
-	
-	if (startCreatingBtn) {
-		startCreatingBtn.addEventListener('click', () => {
-			markAsSeenIfChecked();
-			this.modalManager.close('welcomeModal');
-		});
-	}
 },
 
 	setupConfirmationModalListeners() {

@@ -13,7 +13,7 @@ function run(tool, options = []) {
 	if (result.status !== 0) process.exit(result.status || 1);
 }
 
-// Modals and the standalone pages first: the build stamps the Welcome hash
+// Modals and the standalone pages first: the build stamps each modal's hash
 // into js/editor/modals-wiring.js, which the bundle then includes.
 run('build-modals.js', args);
 run('build-shell.js', args);

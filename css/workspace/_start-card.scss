@@ -1,290 +1,435 @@
 @use '../mixins' as *;
 
-// The empty-document start card.
+// The empty-document start screen: a quiet base (mark, one line, the three
+// open buttons, Continue below), or the Welcome card in its place.
+//
+// Which one shows is one class on <html>: has-welcome-hidden, stamped by the
+// head script before first paint and toggled by js/editor/document-start.js.
 
+// The start layer scrolls, and its one visible child centres itself with
+// margin: auto, which never clips the top when the content is taller than
+// the screen. The bottom padding lifts the optical centre a little above the
+// middle and leaves room for Continue under the base.
 .workspace-start {
 	@include cover;
 	z-index: 20;
 	display: flex;
-	justify-content: center;
-	padding: clamp(var(--spacing-md), 4vw, var(--spacing-xl));
+	flex-direction: column;
+	padding: var(--spacing-xl) clamp(16px, 4vw, 32px) max(var(--spacing-xl), 14vh);
 	overflow: auto;
 	overscroll-behavior: contain;
 	touch-action: pan-y;
-	// One corner for every canvas drawn on the card: the preset shapes and
-	// the Continue thumbnails. Each sits centred in its tile, not in the
-	// tile's corner, so a concentric radius does not apply.
-	--start-shape-radius: var(--radius-sm);
-	// A Continue row: the thumbnail box, the card padding and its border.
-	--start-resume-preview: 48px;
-	--start-resume-row: calc(var(--start-resume-preview) + 2 * var(--spacing-sm) + 2px);
+	// One corner for every canvas drawn here: draft thumbnails and size glyphs.
+	--start-shape-radius: var(--radius-xs);
+
+	> :is(.start-base, .start-welcome) { margin: auto; }
 }
 
-.workspace-start-card {
-	width: min(560px, 100%);
-	display: flex;
-	flex-direction: column;
-	margin-block: auto;
-	border: 1px solid var(--color-border);
-	border-radius: var(--radius-lg);
-	background: var(--panel-bg);
-	-webkit-backdrop-filter: var(--panel-backdrop);
-	backdrop-filter: var(--panel-backdrop);
-	text-align: center;
-}
+:root:not(.has-welcome-hidden) .start-base,
+:root.has-welcome-hidden .start-welcome { display: none; }
 
-body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
+body:not(.boot-interactive):not(.boot-failed) .workspace-start :is(button, a) {
 	opacity: var(--opacity-disabled);
 	pointer-events: none;
 	cursor: default;
 }
 
-// The card is two bands: the main content with its own padding, then the
-// links strip along the bottom edge.
-.workspace-start-main {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: var(--spacing-lg);
-	padding: clamp(16px, 2.5vw, 24px) clamp(20px, 4vw, 32px);
-}
-
-.workspace-start-copy {
-	h2 {
-		margin: 0;
-		color: var(--color-text-primary);
-		font-size: clamp(22px, 4vw, 30px);
-
-		@supports ((background-clip: text) or (-webkit-background-clip: text)) {
-			background-color: var(--color-accent);
-			background-image: var(--workspace-heading-glitter-image);
-			background-repeat: repeat;
-			-webkit-background-clip: text;
-			background-clip: text;
-			color: transparent;
-		}
-
-		@media (forced-colors: active), (prefers-reduced-motion: reduce) {
-			background-image: none;
-			color: var(--color-text-primary);
-		}
-	}
-}
-
-// A section is a label over its tiles, as in New Canvas and the Add menu:
-// the tiles are the content, so the section draws no box.
-.workspace-start-section {
-	width: 100%;
-	display: flex;
-	flex-direction: column;
-	gap: var(--spacing-xs);
-	text-align: left;
-
-	&[hidden] { display: none; }
-}
-
-.workspace-start-presets {
-	display: grid;
-	grid-template-columns: repeat(4, minmax(0, 1fr));
-	gap: var(--spacing-xs);
-}
-
-// The tiles are `.action-card.is-quiet`; only the preview box is sized here.
-.workspace-start-preset-preview {
-	width: 100%;
-	height: 64px;
-	margin-bottom: var(--spacing-xs);
-}
-
-// More Presets draws #icon-new-canvas as a mask so hover can fill it with
-// glitter like the size shapes. Keep the path in step with the sprite symbol.
-.workspace-start-more-icon {
-	--icon-size: 36px;
-	width: var(--icon-size);
-	height: var(--icon-size);
-	background-color: currentColor;
+// The glitter mark: #icon-glitter drawn as a mask, so hover can fill it with
+// the theme's glitter. Keep the paths in step with the sprite symbol.
+.start-mark {
+	--start-mark-size: 40px;
+	width: var(--start-mark-size);
+	height: var(--start-mark-size);
+	flex: 0 0 auto;
+	background-color: var(--color-text-tertiary);
 	background-repeat: repeat;
-	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2.5' y='2.5' width='11' height='11' rx='1.5'/%3E%3Cpath d='M8 6v4M6 8h4'/%3E%3C/svg%3E") center / contain no-repeat;
-	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2.5' y='2.5' width='11' height='11' rx='1.5'/%3E%3Cpath d='M8 6v4M6 8h4'/%3E%3C/svg%3E") center / contain no-repeat;
+	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 2.2c.35 2.9 1.05 3.6 3.95 3.95C9.05 6.5 8.35 7.2 8 10.1 7.65 7.2 6.95 6.5 4.05 6.15 6.95 5.8 7.65 5.1 8 2.2Z'/%3E%3Cpath d='M12.6 8.6c.15 1.25.5 1.6 1.75 1.75-1.25.15-1.6.5-1.75 1.75-.15-1.25-.5-1.6-1.75-1.75 1.25-.15 1.6-.5 1.75-1.75Z'/%3E%3C/svg%3E") center / contain no-repeat;
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 2.2c.35 2.9 1.05 3.6 3.95 3.95C9.05 6.5 8.35 7.2 8 10.1 7.65 7.2 6.95 6.5 4.05 6.15 6.95 5.8 7.65 5.1 8 2.2Z'/%3E%3Cpath d='M12.6 8.6c.15 1.25.5 1.6 1.75 1.75-1.25.15-1.6.5-1.75 1.75-.15-1.25-.5-1.6-1.75-1.75 1.25-.15 1.6-.5 1.75-1.75Z'/%3E%3C/svg%3E") center / contain no-repeat;
+
+	:is(.start-base, .start-welcome):hover & {
+		background-image: var(--workspace-heading-glitter-image);
+
+		@media (forced-colors: active), (prefers-reduced-motion: reduce) { background-image: none; }
+	}
 
 	@media (forced-colors: active) { forced-color-adjust: none; background-color: CanvasText; }
 }
 
-.workspace-start-preset-shape {
-	height: 100%;
-	max-width: 100%;
-	border: 1px solid var(--color-border);
-	border-radius: var(--start-shape-radius);
-	background-color: var(--new-canvas-preview-bg);
-	background-repeat: repeat;
-	transition: border-color var(--transition-fast);
+.start-line {
+	margin: 0;
+	color: var(--color-text-secondary);
+	font-size: var(--font-size-md);
+
+	> .is-phone { display: none; }
 }
 
-// Hovering a size previews what it is for: the shape fills with the theme's
-// glitter, the same texture as the heading.
-.workspace-start-preset:is(:hover, :focus-visible) {
-	.workspace-start-preset-shape { border-color: var(--color-border-hover); }
-
-	:is(.workspace-start-preset-shape, .workspace-start-more-icon) {
-		background-image: var(--workspace-heading-glitter-image);
-
-		@media (forced-colors: active), (prefers-reduced-motion: reduce) {
-			background-image: none;
-		}
-	}
-}
-
-// Continue: one row per recovery draft, newest first. Discard sits at the
-// row's end and shows on hover or focus (always on touch).
-.workspace-start-resume-list {
-	display: flex;
-	flex-direction: column;
-	gap: 2px;
-}
-
-// The drafts are read after boot, and the card is centred, so rows arriving
-// late would push everything down. The head script stamps the last known
-// count (START_HINTS_KEY, js/core/storage.js) on <html>, and an inline script
-// under the list shows Continue with that many placeholder rows: an outline
-// and an empty thumbnail square, the same size as a real row. The real rows
-// replace them and fade in.
-
-.workspace-start-resume.is-placeholder {
-	height: var(--start-resume-row);
-	padding: var(--spacing-sm);
-	border: 1px solid var(--color-border);
-	border-radius: var(--radius-md);
-
-	&::before {
-		content: '';
-		display: block;
-		width: var(--start-resume-preview);
-		height: var(--start-resume-preview);
-		border: 1px solid var(--color-border);
-		border-radius: var(--start-shape-radius);
-		background: var(--new-canvas-preview-bg);
-		box-sizing: border-box;
-	}
-}
-
-.workspace-start-resume-list.is-arriving > .workspace-start-resume {
-	animation: start-resume-arrive var(--transition-fast) ease-out;
-
-	@media (prefers-reduced-motion: reduce) { animation: none; }
-}
-
-@keyframes start-resume-arrive {
-	from { opacity: 0; }
-}
-
-.workspace-start-resume {
-	position: relative;
-	min-width: 0;
-
-	> .workspace-start-resume-card {
-		width: 100%;
-		@include action-card-horizontal;
-		grid-template-rows: none;
-		align-content: center;
-		min-height: var(--start-resume-row);
-		padding-right: calc(var(--spacing-sm) + var(--row-height));
-
-		> .action-card-media { grid-row: 1 / span 3; }
-		> .action-card-title { @include truncate; }
-		> .is-warning { color: var(--color-warning-text); }
-	}
-
-	.workspace-start-resume-preview {
-		width: var(--start-resume-preview);
-		height: var(--start-resume-preview);
-	}
-}
-
-.workspace-start-resume-thumbnail {
-	max-width: 100%;
-	max-height: 100%;
-	border: 1px solid var(--color-border);
-	border-radius: var(--start-shape-radius);
-	background: var(--new-canvas-preview-bg);
-}
-
-.workspace-start-resume-discard {
-	position: absolute;
-	top: 50%;
-	right: var(--spacing-xs);
-	translate: 0 -50%;
-	opacity: 0;
-	transition: opacity var(--transition-fast);
-
-	.workspace-start-resume:is(:hover, :focus-within) > &,
-	&:focus-visible { opacity: 1; }
-
-	@media (hover: none) { opacity: 1; }
-}
-
-// Everything that brings a file in: the label, the open buttons and the
-// limits share one dashed well, so the drop target is plain to see. While a
-// file is dragged, the workspace's own drop outline (_stage.scss) answers.
-.workspace-start-drop {
-	position: relative;
-	width: 100%;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: var(--spacing-sm);
-	padding: var(--spacing-lg) var(--spacing-md);
-	border: 1px dashed var(--color-border-hover);
-	border-radius: var(--radius-lg);
-	@include type-body;
-	transition: border-color var(--transition-fast), background-color var(--transition-fast);
-
-	.workspace-start-drop-icon {
-		width: 24px;
-		height: 24px;
-		color: var(--color-text-tertiary);
-		transition: color var(--transition-fast);
-	}
-
-	// Once the editor is up, the whole well opens an image on click
-	// (js/editor/document-start.js), so it answers hover like a button.
-	body.boot-interactive & {
-		cursor: pointer;
-
-		&:hover {
-			border-color: var(--color-accent-border);
-			background: var(--color-accent-surface);
-
-			.workspace-start-drop-icon { color: var(--color-accent); }
-		}
-	}
-
-	small { @include type-meta; }
-}
-
-// Sized to their labels and centred; they wrap rather than stretch.
-.workspace-start-actions {
+// Sized to their labels and centred; they wrap rather than stretch. All three
+// render from the first paint (Take Photo disabled until the camera check),
+// so the row never re-centres.
+.start-actions {
 	display: flex;
 	flex-wrap: wrap;
 	justify-content: center;
 	gap: var(--spacing-sm);
 
-	>button { min-height: var(--row-height); }
+	> button { min-height: var(--row-height); }
 }
 
-body:not(.boot-interactive):not(.boot-failed) .workspace-start-drop > :not(.workspace-start-loading) {
-	visibility: hidden;
+// "or start with a blank canvas…": a .btn-flat read as a quiet text link.
+.btn-flat.start-link {
+	height: auto;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--color-text-tertiary);
+	font-weight: var(--font-weight-normal);
+
+	&:is(:hover, :focus-visible):not(:disabled) {
+		border: 0;
+		background: none;
+		color: var(--color-text-primary);
+		text-decoration: underline;
+	}
+}
+
+// ---------- Base ----------
+.start-base {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--spacing-md);
+	text-align: center;
+}
+
+// Continue hangs below the base, out of flow: when drafts arrive, or don't,
+// the base stays where it is.
+.start-continue {
+	position: absolute;
+	top: calc(100% + var(--spacing-xl));
+	left: 0;
+	right: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--spacing-2xs);
+	min-width: 0;
+
+	&[hidden] { display: none; }
+}
+
+// ---------- Drafts ----------
+// One draft item, two layouts: a list in the Welcome rail, tiles under the
+// base (.is-tiles). Same markup (js/editor/document-start.js).
+.start-drafts {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-2xs);
+	min-width: 0;
+}
+
+.start-draft {
+	--list-row-media: 28px;
+	border-radius: var(--radius-control);
+	cursor: pointer;
+
+	.list-row-media > img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		border-radius: var(--start-shape-radius);
+		background: var(--new-canvas-preview-bg);
+	}
+
+	.list-row-name {
+		font-size: var(--font-size-sm);
+		font-weight: var(--font-weight-normal);
+	}
+
+	.list-row-meta { color: var(--color-text-tertiary); }
+}
+
+// "not saved", inline after the time; the separator is CSS so tiles drop it.
+.start-draft-unsaved {
+	color: var(--color-warning-text);
+
+	&::before { content: '· '; }
+}
+
+.start-drafts.is-tiles {
+	flex-direction: row;
+	justify-content: center;
+	gap: var(--spacing-md);
+
+	> .start-draft {
+		--list-row-media: 64px;
+		position: relative;
+		flex-direction: column;
+		gap: var(--spacing-xs);
+		width: 88px;
+		padding: var(--spacing-xs);
+		text-align: center;
+	}
+
+	.list-row-text {
+		align-self: stretch;
+		align-items: center;
+	}
+
+	.list-row-name {
+		max-width: 100%;
+		font-size: var(--font-size-xs);
+	}
+
+	.list-row-meta {
+		flex-direction: column;
+		gap: 0;
+		line-height: 1.3;
+	}
+
+	.start-draft-unsaved::before { content: none; }
+
+	// Discard sits in the thumb's top-right corner on a blurred backing.
+	.list-row-actions {
+		position: absolute;
+		top: calc(var(--spacing-xs) + 2px);
+		right: calc(var(--spacing-xs) + 2px);
+	}
+
+	.list-row-action {
+		background: var(--color-bg-translucent);
+		-webkit-backdrop-filter: blur(var(--glass-blur));
+		backdrop-filter: blur(var(--glass-blur));
+	}
+}
+
+// The real rows fade in when they first arrive; later re-renders don't.
+.start-drafts.is-arriving > .start-draft {
+	animation: start-draft-arrive var(--transition-fast) ease-out;
+
+	@media (prefers-reduced-motion: reduce) { animation: none; }
+}
+
+@keyframes start-draft-arrive {
+	from { opacity: 0; }
+}
+
+// ---------- Welcome: the base, expanded. Hint surface, no title bar. ----------
+.start-welcome {
+	position: relative;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 248px;
+	grid-template-rows: minmax(0, 1fr) auto;
+	width: min(760px, 100%);
+	// Sized for its fullest case (three drafts), so drafts fill the rail
+	// instead of growing the card.
+	min-height: 360px;
+	@include mini-modal($layer: null);
+}
+
+.start-welcome-close {
+	position: absolute;
+	top: var(--spacing-sm);
+	right: var(--spacing-sm);
+}
+
+.start-welcome-main {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--spacing-md);
+	padding: var(--spacing-2xl) var(--spacing-xl) var(--spacing-lg);
+
+	> .start-line {
+		max-width: 34em;
+		font-size: var(--font-size-base);
+	}
+
+	> .start-actions { justify-content: flex-start; }
+}
+
+.start-welcome-title {
+	margin: 0;
+	color: var(--color-text-primary);
+	font-size: var(--font-size-xl);
+	font-weight: var(--font-weight-semibold);
+}
+
+.start-sizes {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-xs);
+	margin-top: var(--spacing-xs);
+}
+
+// The chips' own padding would indent their glyphs; pull the row back so the
+// glyphs line up with the label above.
+.start-size-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--spacing-2xs);
+	margin-left: calc(-1 * var(--spacing-sm));
+}
+
+// A quiet chip: a glyph drawn to the preset's aspect, then its name.
+.start-size {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--spacing-xs);
+	min-height: var(--control-height);
+	padding: 0 var(--spacing-sm);
+	border: 0;
+	border-radius: var(--radius-control);
+	background: none;
+	color: var(--color-text-secondary);
+	font: inherit;
+	font-size: var(--font-size-sm);
+	cursor: pointer;
+	transition: background-color var(--transition-fast), color var(--transition-fast);
+
+	&:hover { background: var(--color-quiet-hover); color: var(--color-text-primary); }
+	&:focus-visible { outline: none; box-shadow: var(--control-focus-ring); }
+}
+
+// --aspect (w / h) and --scale come inline from tools/build-shell.js; the
+// long side is 14px at full scale.
+.start-size-glyph {
+	display: grid;
+	place-items: center;
+	width: 16px;
+	height: 16px;
+	flex: 0 0 auto;
+
+	> span {
+		width: calc(14px * var(--scale) * min(1, var(--aspect)));
+		height: calc(14px * var(--scale) * min(1, 1 / (var(--aspect))));
+		border: 1.5px solid currentColor;
+		border-radius: 2px;
+		box-sizing: border-box;
+	}
+
+	> .icon { width: 16px; height: 16px; }
+}
+
+.start-rail {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-lg);
+	padding: var(--spacing-2xl) var(--spacing-md) var(--spacing-lg);
+	border-left: 1px solid var(--color-border);
+}
+
+.start-rail-section {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-2xs);
+
+	&[hidden] { display: none; }
+}
+
+// Learn entries are .list-row buttons and links with an icon in the media slot.
+.start-learn {
+	--list-row-media: 16px;
+	min-height: 0;
+	padding: var(--spacing-xs) var(--spacing-sm);
+	border: 0;
+	border-radius: var(--radius-control);
+	background: none;
+	font: inherit;
+	text-align: left;
+	text-decoration: none;
+	cursor: pointer;
+
+	> .list-row-media { color: var(--color-text-tertiary); }
+
+	> .list-row-name {
+		color: var(--color-text-secondary);
+		font-size: var(--font-size-sm);
+		font-weight: var(--font-weight-normal);
+	}
+
+	&:hover > .list-row-name { color: var(--color-text-primary); }
+
+	// An unseen release, shown in place of reopening anything on load.
+	&.has-update::after {
+		content: '';
+		width: 6px;
+		height: 6px;
+		margin-left: auto;
+		border-radius: 50%;
+		background: var(--color-accent);
+	}
+}
+
+// The footer spans both columns. Its left inset lines up with the main
+// column's content.
+.start-welcome > .card-footer {
+	grid-column: 1 / -1;
+	padding-inline: var(--spacing-xl);
+}
+
+// "Don't show again": the label is the hit area, the face after the input is
+// the chip.
+.welcome-checkbox {
+	display: inline-flex;
+	align-items: center;
+	cursor: pointer;
+	-webkit-user-select: none;
+	user-select: none;
+
+	> input[type="checkbox"] {
+		@include visually-hidden-control;
+
+		&:checked + span {
+			outline-color: var(--color-accent);
+			background: var(--color-bg-accent-tint);
+			color: var(--color-text-primary);
+		}
+
+		&:focus-visible + span { box-shadow: var(--control-focus-ring); }
+	}
+
+	> span {
+		display: inline-flex;
+		align-items: center;
+		min-height: var(--control-height);
+		padding: 0 var(--spacing-md);
+		border-radius: var(--radius-sm);
+		outline: 1px solid transparent;
+		background: var(--color-bg-tertiary);
+		color: var(--color-text-secondary);
+		transition: color var(--transition-fast), background-color var(--transition-fast), outline-color var(--transition-fast);
+
+		&:hover {
+			outline-color: var(--color-border-hover);
+			color: var(--color-text-primary);
+		}
+	}
+}
+
+// ---------- Boot status ----------
+// Under whichever view shows, out of flow, so it never moves either.
+.start-boot {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: var(--spacing-xl);
+	display: flex;
+	justify-content: center;
+	pointer-events: none;
+
+	> * { pointer-events: auto; }
 }
 
 .workspace-start-loading {
-	@include cover;
 	display: grid;
-	align-content: center;
 	gap: var(--spacing-xs);
-	// Inset like the well's own content, so the bar never touches the dashes.
-	padding-inline: var(--spacing-xl);
+	width: min(240px, 100%);
+	color: var(--color-text-tertiary);
+	font-size: var(--font-size-xs);
+	text-align: center;
 	visibility: hidden;
 	animation: boot-indicator var(--boot-indicator-min-visible) var(--boot-indicator-delay) forwards;
-	.export-progress-bar { align-self: center; }
 
 	body.boot-interactive &, body.boot-failed & { display: none; }
 }
@@ -293,38 +438,72 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start-drop > :not(.work
 	from, to { visibility: visible; }
 }
 
-.workspace-start-links {
-	display: flex;
-	flex-wrap: wrap;
-	justify-content: center;
-	gap: var(--spacing-xs) var(--spacing-lg);
-	padding: var(--spacing-md);
-	border-top: 1px solid var(--color-border);
-}
-
-.workspace-start-link {
-	padding: 0;
-	border: 0;
-	background: none;
-	font: inherit;
-	@include type-body;
-	cursor: pointer;
-
-	&:hover,
-	&:focus-visible {
-		color: var(--color-text-primary);
-		text-decoration: underline;
+// ---------- Phone ----------
+// Phones open files rather than drop them.
+@include mobile {
+	.workspace-start {
+		padding:
+			max(var(--spacing-lg), env(safe-area-inset-top))
+			max(var(--spacing-lg), env(safe-area-inset-right))
+			max(var(--spacing-xl), 18vh, env(safe-area-inset-bottom))
+			max(var(--spacing-lg), env(safe-area-inset-left));
 	}
 
-	// An unseen release, shown in place of reopening Welcome on load.
-	&.has-update::after {
-		content: '';
-		display: inline-block;
-		width: 6px;
-		height: 6px;
-		margin-left: var(--spacing-xs);
-		border-radius: 50%;
-		background: var(--color-accent);
-		vertical-align: middle;
+	:root:not(.has-welcome-hidden) .workspace-start { padding-bottom: max(var(--spacing-xl), env(safe-area-inset-bottom)); }
+
+	.start-line {
+		> .is-desktop { display: none; }
+		> .is-phone { display: inline; }
+	}
+
+	.start-actions > button { min-height: var(--touch-target-min); }
+}
+
+// One column where modals go to one column: buttons stack full width and the
+// Welcome's rail moves under its main column. The Welcome scrolls with the
+// page, never on its own.
+@include modal-compact {
+	.start-mark { --start-mark-size: 36px; }
+	// Full width: centred vertically only, since auto side margins beat stretch.
+	.workspace-start > .start-base { margin-inline: 0; }
+
+	.start-actions {
+		flex-direction: column;
+		align-self: stretch;
+
+		> button {
+			width: 100%;
+			justify-content: center;
+		}
+	}
+
+	.start-continue { width: 100%; }
+
+	.start-welcome {
+		grid-template-columns: minmax(0, 1fr);
+		min-height: 0;
+	}
+
+	.start-welcome-main {
+		align-items: stretch;
+		padding: var(--spacing-xl) var(--spacing-md) var(--spacing-md);
+	}
+
+	.start-rail {
+		padding: var(--spacing-md);
+		border-top: 1px solid var(--color-border);
+		border-left: 0;
+	}
+
+	// Centred; the limits wrap to their own line under the checkbox.
+	.start-welcome > .card-footer {
+		justify-content: center;
+		padding: var(--spacing-xs) var(--spacing-md);
+		text-align: center;
+
+		> .card-footer-meta {
+			flex-basis: 100%;
+			margin-left: 0;
+		}
 	}
 }

@@ -36,7 +36,7 @@ assert(!fixture({ stage: 'off', local: true, debug: true, search: '?features=tim
 const app = fixture({ local: true });
 assert.throws(() => app.run("isFeatureEnabled('missing')"), /Unknown feature/);
 assert.throws(() => app.run("isFeatureEnabled('toString')"), /Unknown feature/);
-assert.strictEqual(app.run('Object.keys(FEATURES).join()'), 'customMotion,timeline,docks,loopLength,gifCycle,history,personalWeb,htmlScene,stylePresetCopy,memoryOverlay,welcomeOnStartup');
+assert.strictEqual(app.run('Object.keys(FEATURES).join()'), 'customMotion,timeline,docks,loopLength,gifCycle,history,personalWeb,htmlScene,stylePresetCopy,memoryOverlay');
 assert(fixture().run("isFeatureEnabled('customMotion')"));
 for (const id of ['history', 'personalWeb', 'htmlScene']) {
 	// public-pages ships history and personalWeb as 'on'; the editor branch keeps them 'local'.
@@ -50,7 +50,6 @@ for (const id of ['stylePresetCopy', 'memoryOverlay']) {
 	assert(fixture({ debug: true }).run(`isFeatureEnabled('${id}')`));
 	assert(!fixture({ search: `?features=${id}` }).run(`isFeatureEnabled('${id}')`));
 }
-assert(!fixture({ local: true, debug: true, search: '?features=welcomeOnStartup' }).run("isFeatureEnabled('welcomeOnStartup')"));
 assert.strictEqual(app.run("featureLayout('timeline')"), 'desktop');
 assert.strictEqual(app.run("featureLayout('loopLength')"), null);
 assert(app.run("isFeatureAvailable('timeline')"));

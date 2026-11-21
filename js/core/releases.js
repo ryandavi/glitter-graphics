@@ -45,13 +45,14 @@ const RELEASES = [
 			{ type: 'added', name: 'Retake one photo', text: 'Tap a Grid or Strip photo to retake just that one.', guide: 'getting-started' },
 			{ type: 'added', name: 'Livelier webcam', text: 'The Webcam look ghosts, flickers, and drifts in color in live preview and GIFs, like a real laptop camera.', guide: 'filters' },
 			{ type: 'changed', name: 'Paste an image', text: 'Pasting an image works like dropping one: it opens as the picture when nothing is open, and adds a sticker once something is.' },
+			{ type: 'changed', name: 'Calmer start screen', text: 'The start screen is now a glitter mark, one line and the three open buttons, with your drafts underneath. A Welcome card with blank sizes and Learn links can take its place; close it, or turn it off with Don\x27t show again and bring it back from Help.', guide: 'getting-started' },
 			{ type: 'changed', name: 'Start on your picture', text: 'An opened image starts selected, with an Auto Glitter button right on its toolbar.' },
 			{ type: 'changed', name: 'Preset strips on phones', text: 'Preset tiles on phones scroll sideways in a strip, so swiping up and down always scrolls the panel.' },
 			{ type: 'changed', name: 'Protect drafts', text: 'Settings can ask the browser to keep recovery drafts even when storage runs low. Chrome and Edge do this on their own.' },
 			{ type: 'changed', name: 'Resume your last three', text: 'Every graphic keeps its own recovery draft, and the start screen offers the newest three to resume. Starting something new never asks first or replaces another draft.', guide: 'getting-started' },
 			{ type: 'fixed', name: 'Camera behind a grid review', text: 'Reviewing a Grid or Strip no longer shows the live camera in the margins.' },
 			{ type: 'fixed', name: 'Balance Sidebar Widths', text: 'Now accounts for the gaps between docked panels, so the canvas keeps its minimum width.' },
-			{ type: 'fixed', name: 'Take Photo without a camera', text: 'Take Photo hides when the listed camera cannot be opened, and camera errors now show as a message instead of only in the status line.' }
+			{ type: 'fixed', name: 'Take Photo without a camera', text: 'Take Photo turns off when the listed camera cannot be opened, and camera errors now show as a message instead of only in the status line.' }
 		]
 	},
 	{

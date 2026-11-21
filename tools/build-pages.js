@@ -201,7 +201,7 @@ function prefixRelativeUrls(html, prefix) {
 
 // The Updates page reads as one document: a contents list, then each release
 // as a plain section with its changes grouped by type (renderUpdateReleaseHtml,
-// shared with the editor's About and Welcome modals).
+// shared with the editor's About and Updates modals).
 function pageBody(page, fragment, context) {
 	if (page.source === 'releases') {
 		const { CONFIG, versionBadge, releaseAnchor, renderUpdateReleaseHtml } = context.registries;

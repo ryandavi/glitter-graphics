@@ -55,21 +55,21 @@ function buildCanvasPresetGroup(label, grid) {
 	return group;
 }
 
-function buildCanvasSizeCard(preset, { quickStart = false, recent = false } = {}) {
+function buildCanvasSizeCard(preset, { recent = false } = {}) {
 	const media = document.createElement('span');
-	media.className = `action-card-media ${quickStart ? 'workspace-start-preset-preview' : 'blank-preview-wrapper'}`;
+	media.className = 'action-card-media blank-preview-wrapper';
 	const shape = document.createElement('span');
-	shape.className = quickStart ? 'workspace-start-preset-shape' : 'blank-preview';
+	shape.className = 'blank-preview';
 	shape.style.aspectRatio = `${preset.width} / ${preset.height}`;
-	if (!quickStart) shape.classList.toggle('wide', preset.width > preset.height);
+	shape.classList.toggle('wide', preset.width > preset.height);
 	media.appendChild(shape);
-	const details = [{ text: `${preset.width} × ${preset.height}${quickStart ? ' px' : ''}` }];
-	if (!quickStart && preset.detail) details.push({ text: preset.detail, className: 'blank-detail' });
+	const details = [{ text: `${preset.width} × ${preset.height}` }];
+	if (preset.detail) details.push({ text: preset.detail, className: 'blank-detail' });
 	return buildActionCard({
-		className: quickStart ? 'is-quiet workspace-start-preset' :'blank-image-option new-canvas-preset-btn',
+		className: 'blank-image-option new-canvas-preset-btn',
 		dataset: { ...(preset.id && !recent ? { presetId: preset.id } : {}), width: preset.width, height: preset.height },
-		ariaLabel: `${quickStart ? 'New ' : ''}${preset.label}${quickStart ? ' canvas' : ''}, ${preset.width} by ${preset.height} pixels`,
-		pressed: quickStart ? undefined : false, media, title: preset.label, details
+		ariaLabel: `${preset.label}, ${preset.width} by ${preset.height} pixels`,
+		pressed: false, media, title: preset.label, details
 	});
 }
 

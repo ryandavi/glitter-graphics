@@ -19,7 +19,7 @@ const { openApp } = require('../lib/app');
 	const browser = await chromium.launch({ headless: true, args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream', '--autoplay-policy=no-user-gesture-required'] });
 	try {
 		const { page, errors } = await openApp({ browser });
-		assert(await page.evaluate(() => !document.getElementById('takePhotoBtn').hidden && !document.getElementById('takePhotoMenuItem').hidden), 'Take Photo shows on the start card and in the menu');
+		assert(await page.evaluate(() => [...document.querySelectorAll('[data-take-photo]')].every(button => !button.disabled) && !document.getElementById('takePhotoMenuItem').hidden), 'Take Photo is enabled on the start screen and shows in the menu');
 		const ready = () => page.waitForFunction(() => editor.cameraCapture?.stream && document.getElementById('cameraVideo').videoWidth > 0);
 		const openBooth = async (mode) => {
 			await page.evaluate(() => COMMANDS.takePhoto.run(editor));
@@ -34,7 +34,7 @@ const { openApp } = require('../lib/app');
 			return [id, !element.hidden && box.width > 0, Math.round(box.left), Math.round(box.width)];
 		}));
 
-		await page.locator('#takePhotoBtn').click();
+		await page.locator('[data-take-photo]:visible').click();
 		await ready();
 		const live = await page.evaluate(() => ({ mirror: document.getElementById('cameraMirror').checked, mirrored: document.getElementById('cameraStage').classList.contains('is-mirrored'), useDisabled: document.getElementById('cameraUseBtn').disabled, use: document.querySelector('#cameraUseBtn .name').textContent, modes: [...document.querySelectorAll('#cameraModes [data-mode]')].map(button => button.getAttribute('aria-label')), effects: document.querySelectorAll('#cameraEffects .camera-effect').length, roll: document.getElementById('cameraRoll').classList.contains('is-empty') }));
 		assert.deepEqual(live, { mirror: true, mirrored: true, useDisabled: true, use: 'Use', modes: ['Photo', 'Grid', 'Strip', 'GIF'], effects: 9, roll: true }, 'A front camera previews mirrored, with four modes, a 3×3 Effects grid, an empty roll and Use disabled');
@@ -209,13 +209,14 @@ const { openApp } = require('../lib/app');
 			navigator.mediaDevices.getUserMedia = () => Promise.reject(new DOMException('Failed', errorName));
 			COMMANDS.takePhoto.run(editor);
 			await new Promise(resolve => setTimeout(resolve, 300));
-			return { open: editor.modalManager.isAnyOpen(), message: document.getElementById('errorText')?.textContent || '', buttonHidden: document.getElementById('takePhotoBtn').hidden };
+			return { open: editor.modalManager.isAnyOpen(), message: document.getElementById('errorText')?.textContent || '', buttonDisabled: document.getElementById('takePhotoBtn').disabled };
 		}, name);
 		const denied = await failWith('NotAllowedError');
-		assert(!denied.open && /blocked/.test(denied.message) && !denied.buttonHidden, `A blocked camera explains itself: ${JSON.stringify(denied)}`);
-		// A listed camera that cannot be opened hides Take Photo everywhere.
+		assert(!denied.open && /blocked/.test(denied.message) && !denied.buttonDisabled, `A blocked camera explains itself: ${JSON.stringify(denied)}`);
+		// A listed camera that cannot be opened disables Take Photo on the start
+		// screen and hides the menu item.
 		const missing = await failWith('NotFoundError');
-		assert(!missing.open && /No camera/.test(missing.message) && missing.buttonHidden, `A missing camera hides Take Photo: ${JSON.stringify(missing)}`);
+		assert(!missing.open && /No camera/.test(missing.message) && missing.buttonDisabled, `A missing camera disables Take Photo: ${JSON.stringify(missing)}`);
 		assert(await page.evaluate(() => document.getElementById('takePhotoMenuItem').hidden && !CameraCapture.isSupported()), 'The menu item hides too');
 		assert.deepEqual(errors, []);
 		console.log('PASS Take Photo: entry points, mirror, fixed footer, roll, use, Square crop, Grid fill-in, cancel, stop motion, GIF + Bounce + Speed, effect + Webcam layers, stream stop, blocked and missing camera');
