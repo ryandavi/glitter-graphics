@@ -46,7 +46,7 @@
   --color-preview-light: #ece6f3;
   /* backdrops for preset thumbnails drawn in fixed paint: the paint does
      not follow the theme, so neither do these unless a theme sets them */
-  --color-bg-translucent: rgb(24 27 31 / 95%);
+  --color-bg-translucent: rgb(25, 28, 32, .96);
   /* Shadow tiers — every UI-chrome shadow (panels, modals, drawers, popovers)
      uses one of these so themes can soften them in one place. Shadows painted
      OVER artwork (selection outlines, canvas overlays) stay literal — they
