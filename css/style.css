@@ -5894,11 +5894,11 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start :is(button, a) {
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 2.2c.35 2.9 1.05 3.6 3.95 3.95C9.05 6.5 8.35 7.2 8 10.1 7.65 7.2 6.95 6.5 4.05 6.15 6.95 5.8 7.65 5.1 8 2.2Z'/%3E%3Cpath d='M12.6 8.6c.15 1.25.5 1.6 1.75 1.75-1.25.15-1.6.5-1.75 1.75-.15-1.25-.5-1.6-1.75-1.75 1.25-.15 1.6-.5 1.75-1.75Z'/%3E%3C/svg%3E") center/contain no-repeat;
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 2.2c.35 2.9 1.05 3.6 3.95 3.95C9.05 6.5 8.35 7.2 8 10.1 7.65 7.2 6.95 6.5 4.05 6.15 6.95 5.8 7.65 5.1 8 2.2Z'/%3E%3Cpath d='M12.6 8.6c.15 1.25.5 1.6 1.75 1.75-1.25.15-1.6.5-1.75 1.75-.15-1.25-.5-1.6-1.75-1.75 1.25-.15 1.6-.5 1.75-1.75Z'/%3E%3C/svg%3E") center/contain no-repeat;
 }
-.start-mark:hover {
+.start-mark:is(:hover, .is-sparkling) {
   background-image: var(--workspace-heading-glitter-image);
 }
 @media (forced-colors: active), (prefers-reduced-motion: reduce) {
-  .start-mark:hover {
+  .start-mark:is(:hover, .is-sparkling) {
     background-image: none;
   }
 }
@@ -5915,7 +5915,7 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start :is(button, a) {
 }
 
 .start-sparkles {
-  --start-sparkle-colors: var(--color-accent), var(--color-accent-light), #fff;
+  --start-sparkle-colors: var(--color-accent), var(--color-accent), oklch(from var(--color-accent) calc(l * 0.85) c h), oklch(from var(--color-accent) calc(l * 0.93) c h), oklch(from var(--color-accent) min(0.95, calc(l + 0.06)) calc(c * 0.9) h), oklch(from var(--color-accent) min(0.95, calc(l + 0.12)) calc(c * 0.8) h), color-mix(in oklch, var(--color-accent) 88%, white), #fff;
   position: fixed;
   inset: 0;
   width: 100%;

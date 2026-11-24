@@ -44,7 +44,6 @@ const EDITOR_TIMELINE_METHODS = {
 	},
 	setupTimeline() {
 		if (!isFeatureEnabled('timeline')) return;
-		document.getElementById('timelineToggle').addEventListener('click', () => COMMANDS.timelineToggle.run(this));
 		PREFERENCES.onChange('timelineOpen', () => this.syncTimelineVisibility());
 		this.syncTimelineVisibility();
 	},
@@ -55,12 +54,13 @@ const EDITOR_TIMELINE_METHODS = {
 	async syncTimelineVisibility() {
 		if (!isFeatureAvailable('timeline')) return;
 		const open = Boolean(this.originalImage && PREFERENCES.get('timelineOpen'));
-		const button = document.getElementById('timelineToggle');
-		button.disabled = !this.originalImage;
-		button.classList.toggle('active', open);
-		button.setAttribute('aria-pressed', String(open));
 		const view = document.getElementById('viewTimelineToggle');
-		if (view) { view.classList.toggle('active', open); view.setAttribute('aria-pressed', String(open)); }
+		if (view) {
+			view.disabled = !this.originalImage;
+			view.classList.toggle('active', open);
+			view.setAttribute('aria-pressed', String(open));
+			view.setAttribute('aria-controls', 'timelineDock');
+		}
 		if (!open) { this.timelineDock?.close(); return; }
 		try {
 			const dock = await this.ensureTimelineDock();

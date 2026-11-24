@@ -22,6 +22,7 @@ const startSparkles = {
 	trailUntil: 0,
 	lastTrail: 0,
 	palette: null, // null = rainbow
+	mark: null,
 
 	// --start-sparkle-colors on .start-sparkles: a comma list, or `rainbow`.
 	readPalette() {
@@ -61,8 +62,11 @@ const startSparkles = {
 		this.particles.push({ x, y, vx, vy, age: 0, life, color: this.color() });
 	},
 
-	burst(x, y) {
+	burst(x, y, mark) {
 		if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+		this.mark?.classList.remove('is-sparkling');
+		this.mark = mark;
+		this.mark?.classList.add('is-sparkling');
 		this.start();
 		this.palette = this.readPalette();
 		for (let i = 0; i < START_SPARKLE.burstCount; i++) {
@@ -107,6 +111,10 @@ const startSparkles = {
 
 	step(time) {
 		this.frame = 0;
+		if (time >= this.trailUntil) {
+			this.mark?.classList.remove('is-sparkling');
+			this.mark = null;
+		}
 		const delta = this.lastTime ? Math.min(time - this.lastTime, 50) : 16.7;
 		this.lastTime = time;
 		const seconds = delta / 1000;
@@ -152,6 +160,8 @@ const startSparkles = {
 	},
 
 	stop() {
+		this.mark?.classList.remove('is-sparkling');
+		this.mark = null;
 		window.removeEventListener('pointermove', this.onMove);
 		this.canvas?.remove();
 		this.canvas = null;
@@ -306,7 +316,7 @@ setupImageListeners() {
 	setupStartWelcome() {
 		document.querySelectorAll('.start-mark').forEach(mark => mark.addEventListener('click', () => {
 			const box = mark.getBoundingClientRect();
-			startSparkles.burst(box.left + box.width / 2, box.top + box.height / 2);
+			startSparkles.burst(box.left + box.width / 2, box.top + box.height / 2, mark);
 		}));
 		document.getElementById('startWelcomeClose')?.addEventListener('click', () => {
 			this.setStartWelcomeVisible(false);
