@@ -970,8 +970,12 @@ const ENTITY_DATA = {
 		"kind": "org"
 	},
 	"jem": {
-		"name": "Jem",
+		"name": "Jem Turner",
 		"kind": "person",
+		"aliases": [
+			"Jem",
+			"jemjabella"
+		],
 		"host": "qbee"
 	},
 	"jenny": {
@@ -1087,17 +1091,22 @@ const ENTITY_DATA = {
 		"name": "linuxenvy.com",
 		"kind": "site"
 	},
-	"lissa-brown": {
-		"name": "Melissa \"Lissa\" Brown",
+	"alyssa-daniels": {
+		"name": "Alyssa Daniels",
 		"kind": "person",
+		"aliases": [
+			"Lissa",
+			"LyssaTee"
+		],
 		"sites": [
-			"lissa-explains-it-all"
+			"lissa-explains-it-all",
+			"lyssatee"
 		]
 	},
 	"lissa-explains-it-all": {
 		"name": "Lissa Explains it All",
 		"kind": "site",
-		"owner": "lissa-brown"
+		"owner": "alyssa-daniels"
 	},
 	"littleangelgraphics": {
 		"name": "littleangelgraphics",
@@ -2015,5 +2024,291 @@ const ENTITY_DATA = {
 	"flight-rising": {
 		"name": "Flight Rising",
 		"kind": "site"
+	},
+	"lyssatee": {
+		"name": "LyssaTee",
+		"kind": "site",
+		"owner": "alyssa-daniels"
+	},
+	"sarahs-useful-web-stuff": {
+		"name": "Sarah's Useful Web Stuff",
+		"kind": "site"
+	},
+	"soupfaerie": {
+		"name": "SoupFaerie",
+		"kind": "site"
+	},
+	"ken-no-sozaiya-navi": {
+		"name": "Ken no Sozaiya Navi",
+		"kind": "site"
+	},
+	"web-sozai-dx": {
+		"name": "WEB Sozai DX",
+		"kind": "site"
+	},
+	"tecchan-jp": {
+		"name": "Tecchan.jp",
+		"kind": "site"
+	},
+	"together-forever-project": {
+		"name": "Together Forever Project",
+		"kind": "site"
+	},
+	"bravenet": {
+		"name": "Bravenet",
+		"kind": "site"
+	},
+	"the-site-fights": {
+		"name": "The Site Fights",
+		"kind": "site"
+	},
+	"paintbbs": {
+		"name": "PaintBBS",
+		"kind": "software"
+	},
+	"shi-painter": {
+		"name": "Shi-Painter",
+		"kind": "software"
+	},
+	"vovo2000": {
+		"name": "Vovo2000",
+		"kind": "site"
+	},
+	"10eastern": {
+		"name": "10eastern",
+		"kind": "site"
+	},
+	"draghatch": {
+		"name": "DragHatch",
+		"kind": "site"
+	},
+	"cjb-net": {
+		"name": "CJB.net",
+		"kind": "site"
+	},
+	"sarah-daniels": {
+		"name": "Sarah Daniels",
+		"kind": "person"
+	},
+	"fanlore": {
+		"name": "Fanlore",
+		"kind": "site"
+	},
+	"jaydes-shrine": {
+		"name": "Jayde’s Shrine to Great Fan Fic",
+		"kind": "site"
+	},
+	"webmaster-forums": {
+		"name": "The Webmaster Forums",
+		"kind": "site"
+	},
+	"antipixel": {
+		"name": "Antipixel",
+		"kind": "site"
+	},
+	"metafilter": {
+		"name": "MetaFilter",
+		"kind": "site"
+	},
+	"dave-winer": {
+		"name": "Dave Winer",
+		"kind": "person"
+	},
+	"pink-poogle-toy": {
+		"name": "Pink Poogle Toy",
+		"kind": "site"
+	},
+	"shamikuns-egg-shoppe": {
+		"name": "Shamikun’s Dragon Egg Shoppe",
+		"kind": "site"
+	},
+	"neowiz": {
+		"name": "Neowiz",
+		"kind": "org"
+	},
+	"oneclick": {
+		"name": "OneClick",
+		"kind": "software"
+	},
+	"toshiba": {
+		"name": "Toshiba",
+		"kind": "org"
+	},
+	"nexon": {
+		"name": "Nexon",
+		"kind": "org"
+	},
+	"ncsoft": {
+		"name": "NCsoft",
+		"kind": "org"
+	},
+	"gravity": {
+		"name": "Gravity",
+		"kind": "org"
+	},
+	"kingdom-of-the-winds": {
+		"name": "The Kingdom of the Winds",
+		"kind": "work",
+		"aliases": [
+			"Nexus: The Kingdom of the Winds"
+		]
+	},
+	"lineage": {
+		"name": "Lineage",
+		"kind": "work"
+	},
+	"ragnarok-online": {
+		"name": "Ragnarok Online",
+		"kind": "work"
+	},
+	"maplestory": {
+		"name": "MapleStory",
+		"kind": "work"
+	},
+	"actoz-soft": {
+		"name": "Actoz Soft",
+		"kind": "org"
+	},
+	"jc-entertainment": {
+		"name": "JC Entertainment",
+		"kind": "org"
+	},
+	"iyagi": {
+		"name": "Iyagi",
+		"kind": "org"
+	},
+	"sonnori": {
+		"name": "Sonnori",
+		"kind": "org"
+	},
+	"thousand-years": {
+		"name": "Thousand Years",
+		"kind": "work",
+		"aliases": [
+			"천년"
+		]
+	},
+	"red-moon": {
+		"name": "Red Moon",
+		"kind": "work",
+		"aliases": [
+			"레드문"
+		]
+	},
+	"fantasy-for-you": {
+		"name": "Fantasy For You",
+		"kind": "work",
+		"aliases": [
+			"판타지포유"
+		]
+	},
+	"forgotten-saga": {
+		"name": "Forgotten Saga",
+		"kind": "work",
+		"aliases": [
+			"포가튼 사가"
+		]
+	},
+	"softmax": {
+		"name": "Softmax",
+		"kind": "org"
+	},
+	"4leaf": {
+		"name": "4LEAF",
+		"kind": "site",
+		"aliases": [
+			"포립"
+		]
+	},
+	"talesweaver": {
+		"name": "TalesWeaver",
+		"kind": "work"
+	},
+	"neople": {
+		"name": "Neople",
+		"kind": "org",
+		"aliases": [
+			"네오플"
+		]
+	},
+	"seoul-national-university": {
+		"name": "Seoul National University",
+		"kind": "org"
+	},
+	"love-studio": {
+		"name": "Love Studio",
+		"kind": "work",
+		"aliases": [
+			"사랑의 스튜디오"
+		]
+	},
+	"love-love-studio": {
+		"name": "Love Love Studio",
+		"kind": "work"
+	},
+	"kung-kung-tta": {
+		"name": "Kung Kung Tta",
+		"kind": "work"
+	},
+	"sunny-ynk": {
+		"name": "Sunny YNK",
+		"kind": "org"
+	},
+	"k4-technology": {
+		"name": "K4 Technology",
+		"kind": "org"
+	},
+	"dungeon-fighter-online": {
+		"name": "Dungeon Fighter Online",
+		"kind": "work",
+		"aliases": [
+			"Dungeon & Fighter",
+			"던전앤파이터"
+		]
+	},
+	"yunjong-kim": {
+		"name": "Yunjong Kim",
+		"kind": "person"
+	},
+	"gamasutra": {
+		"name": "Gamasutra",
+		"kind": "site",
+		"aliases": [
+			"Game Developer"
+		]
+	},
+	"hardcore-gaming-101": {
+		"name": "Hardcore Gaming 101",
+		"kind": "site"
+	},
+	"zdnet-korea": {
+		"name": "ZDNet Korea",
+		"kind": "site"
+	},
+	"electronic-times-korea": {
+		"name": "Electronic Times",
+		"kind": "site",
+		"aliases": [
+			"ETNews"
+		]
+	},
+	"inews24": {
+		"name": "iNews24",
+		"kind": "site"
+	},
+	"game-donga": {
+		"name": "Game Donga",
+		"kind": "site"
+	},
+	"gaim": {
+		"name": "Gaim",
+		"kind": "software",
+		"aliases": [
+			"Pidgin"
+		]
+	},
+	"alex-syrov": {
+		"name": "Alex Syrov",
+		"kind": "person"
 	}
 };

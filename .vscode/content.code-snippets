@@ -1654,10 +1654,11 @@
 	"@jem": {
 		"scope": "html",
 		"prefix": [
-			"@jem"
+			"@jem",
+			"@jemjabella"
 		],
 		"body": "{@jem}",
-		"description": "Jem (person)"
+		"description": "Jem Turner (person)"
 	},
 	"@jenny": {
 		"scope": "html",
@@ -1852,13 +1853,15 @@
 		"body": "{@linuxenvy}",
 		"description": "linuxenvy.com (site)"
 	},
-	"@lissa-brown": {
+	"@alyssa-daniels": {
 		"scope": "html",
 		"prefix": [
-			"@lissa-brown"
+			"@alyssa-daniels",
+			"@lissa",
+			"@lyssatee"
 		],
-		"body": "{@lissa-brown}",
-		"description": "Melissa \"Lissa\" Brown (person)"
+		"body": "{@alyssa-daniels}",
+		"description": "Alyssa Daniels (person)"
 	},
 	"@lissa-explains-it-all": {
 		"scope": "html",
@@ -3380,6 +3383,515 @@
 		"body": "{@flight-rising}",
 		"description": "Flight Rising (site)"
 	},
+	"@lyssatee": {
+		"scope": "html",
+		"prefix": [
+			"@lyssatee"
+		],
+		"body": "{@lyssatee}",
+		"description": "LyssaTee (site)"
+	},
+	"@sarahs-useful-web-stuff": {
+		"scope": "html",
+		"prefix": [
+			"@sarahs-useful-web-stuff"
+		],
+		"body": "{@sarahs-useful-web-stuff}",
+		"description": "Sarah's Useful Web Stuff (site)"
+	},
+	"@soupfaerie": {
+		"scope": "html",
+		"prefix": [
+			"@soupfaerie"
+		],
+		"body": "{@soupfaerie}",
+		"description": "SoupFaerie (site)"
+	},
+	"@ken-no-sozaiya-navi": {
+		"scope": "html",
+		"prefix": [
+			"@ken-no-sozaiya-navi"
+		],
+		"body": "{@ken-no-sozaiya-navi}",
+		"description": "Ken no Sozaiya Navi (site)"
+	},
+	"@web-sozai-dx": {
+		"scope": "html",
+		"prefix": [
+			"@web-sozai-dx"
+		],
+		"body": "{@web-sozai-dx}",
+		"description": "WEB Sozai DX (site)"
+	},
+	"@tecchan-jp": {
+		"scope": "html",
+		"prefix": [
+			"@tecchan-jp"
+		],
+		"body": "{@tecchan-jp}",
+		"description": "Tecchan.jp (site)"
+	},
+	"@together-forever-project": {
+		"scope": "html",
+		"prefix": [
+			"@together-forever-project"
+		],
+		"body": "{@together-forever-project}",
+		"description": "Together Forever Project (site)"
+	},
+	"@bravenet": {
+		"scope": "html",
+		"prefix": [
+			"@bravenet"
+		],
+		"body": "{@bravenet}",
+		"description": "Bravenet (site)"
+	},
+	"@the-site-fights": {
+		"scope": "html",
+		"prefix": [
+			"@the-site-fights"
+		],
+		"body": "{@the-site-fights}",
+		"description": "The Site Fights (site)"
+	},
+	"@paintbbs": {
+		"scope": "html",
+		"prefix": [
+			"@paintbbs"
+		],
+		"body": "{@paintbbs}",
+		"description": "PaintBBS (software)"
+	},
+	"@shi-painter": {
+		"scope": "html",
+		"prefix": [
+			"@shi-painter"
+		],
+		"body": "{@shi-painter}",
+		"description": "Shi-Painter (software)"
+	},
+	"@vovo2000": {
+		"scope": "html",
+		"prefix": [
+			"@vovo2000"
+		],
+		"body": "{@vovo2000}",
+		"description": "Vovo2000 (site)"
+	},
+	"@10eastern": {
+		"scope": "html",
+		"prefix": [
+			"@10eastern"
+		],
+		"body": "{@10eastern}",
+		"description": "10eastern (site)"
+	},
+	"@draghatch": {
+		"scope": "html",
+		"prefix": [
+			"@draghatch"
+		],
+		"body": "{@draghatch}",
+		"description": "DragHatch (site)"
+	},
+	"@cjb-net": {
+		"scope": "html",
+		"prefix": [
+			"@cjb-net"
+		],
+		"body": "{@cjb-net}",
+		"description": "CJB.net (site)"
+	},
+	"@sarah-daniels": {
+		"scope": "html",
+		"prefix": [
+			"@sarah-daniels"
+		],
+		"body": "{@sarah-daniels}",
+		"description": "Sarah Daniels (person)"
+	},
+	"@fanlore": {
+		"scope": "html",
+		"prefix": [
+			"@fanlore"
+		],
+		"body": "{@fanlore}",
+		"description": "Fanlore (site)"
+	},
+	"@jaydes-shrine": {
+		"scope": "html",
+		"prefix": [
+			"@jaydes-shrine"
+		],
+		"body": "{@jaydes-shrine}",
+		"description": "Jayde’s Shrine to Great Fan Fic (site)"
+	},
+	"@webmaster-forums": {
+		"scope": "html",
+		"prefix": [
+			"@webmaster-forums"
+		],
+		"body": "{@webmaster-forums}",
+		"description": "The Webmaster Forums (site)"
+	},
+	"@antipixel": {
+		"scope": "html",
+		"prefix": [
+			"@antipixel"
+		],
+		"body": "{@antipixel}",
+		"description": "Antipixel (site)"
+	},
+	"@metafilter": {
+		"scope": "html",
+		"prefix": [
+			"@metafilter"
+		],
+		"body": "{@metafilter}",
+		"description": "MetaFilter (site)"
+	},
+	"@dave-winer": {
+		"scope": "html",
+		"prefix": [
+			"@dave-winer"
+		],
+		"body": "{@dave-winer}",
+		"description": "Dave Winer (person)"
+	},
+	"@pink-poogle-toy": {
+		"scope": "html",
+		"prefix": [
+			"@pink-poogle-toy"
+		],
+		"body": "{@pink-poogle-toy}",
+		"description": "Pink Poogle Toy (site)"
+	},
+	"@shamikuns-egg-shoppe": {
+		"scope": "html",
+		"prefix": [
+			"@shamikuns-egg-shoppe"
+		],
+		"body": "{@shamikuns-egg-shoppe}",
+		"description": "Shamikun’s Dragon Egg Shoppe (site)"
+	},
+	"@neowiz": {
+		"scope": "html",
+		"prefix": [
+			"@neowiz"
+		],
+		"body": "{@neowiz}",
+		"description": "Neowiz (org)"
+	},
+	"@oneclick": {
+		"scope": "html",
+		"prefix": [
+			"@oneclick"
+		],
+		"body": "{@oneclick}",
+		"description": "OneClick (software)"
+	},
+	"@toshiba": {
+		"scope": "html",
+		"prefix": [
+			"@toshiba"
+		],
+		"body": "{@toshiba}",
+		"description": "Toshiba (org)"
+	},
+	"@nexon": {
+		"scope": "html",
+		"prefix": [
+			"@nexon"
+		],
+		"body": "{@nexon}",
+		"description": "Nexon (org)"
+	},
+	"@ncsoft": {
+		"scope": "html",
+		"prefix": [
+			"@ncsoft"
+		],
+		"body": "{@ncsoft}",
+		"description": "NCsoft (org)"
+	},
+	"@gravity": {
+		"scope": "html",
+		"prefix": [
+			"@gravity"
+		],
+		"body": "{@gravity}",
+		"description": "Gravity (org)"
+	},
+	"@kingdom-of-the-winds": {
+		"scope": "html",
+		"prefix": [
+			"@kingdom-of-the-winds",
+			"@nexus-the-kingdom-of-the-winds"
+		],
+		"body": "{@kingdom-of-the-winds}",
+		"description": "The Kingdom of the Winds (work)"
+	},
+	"@lineage": {
+		"scope": "html",
+		"prefix": [
+			"@lineage"
+		],
+		"body": "{@lineage}",
+		"description": "Lineage (work)"
+	},
+	"@ragnarok-online": {
+		"scope": "html",
+		"prefix": [
+			"@ragnarok-online"
+		],
+		"body": "{@ragnarok-online}",
+		"description": "Ragnarok Online (work)"
+	},
+	"@maplestory": {
+		"scope": "html",
+		"prefix": [
+			"@maplestory"
+		],
+		"body": "{@maplestory}",
+		"description": "MapleStory (work)"
+	},
+	"@actoz-soft": {
+		"scope": "html",
+		"prefix": [
+			"@actoz-soft"
+		],
+		"body": "{@actoz-soft}",
+		"description": "Actoz Soft (org)"
+	},
+	"@jc-entertainment": {
+		"scope": "html",
+		"prefix": [
+			"@jc-entertainment"
+		],
+		"body": "{@jc-entertainment}",
+		"description": "JC Entertainment (org)"
+	},
+	"@iyagi": {
+		"scope": "html",
+		"prefix": [
+			"@iyagi"
+		],
+		"body": "{@iyagi}",
+		"description": "Iyagi (org)"
+	},
+	"@sonnori": {
+		"scope": "html",
+		"prefix": [
+			"@sonnori"
+		],
+		"body": "{@sonnori}",
+		"description": "Sonnori (org)"
+	},
+	"@thousand-years": {
+		"scope": "html",
+		"prefix": [
+			"@thousand-years",
+			"@"
+		],
+		"body": "{@thousand-years}",
+		"description": "Thousand Years (work)"
+	},
+	"@red-moon": {
+		"scope": "html",
+		"prefix": [
+			"@red-moon",
+			"@"
+		],
+		"body": "{@red-moon}",
+		"description": "Red Moon (work)"
+	},
+	"@fantasy-for-you": {
+		"scope": "html",
+		"prefix": [
+			"@fantasy-for-you",
+			"@"
+		],
+		"body": "{@fantasy-for-you}",
+		"description": "Fantasy For You (work)"
+	},
+	"@forgotten-saga": {
+		"scope": "html",
+		"prefix": [
+			"@forgotten-saga",
+			"@"
+		],
+		"body": "{@forgotten-saga}",
+		"description": "Forgotten Saga (work)"
+	},
+	"@softmax": {
+		"scope": "html",
+		"prefix": [
+			"@softmax"
+		],
+		"body": "{@softmax}",
+		"description": "Softmax (org)"
+	},
+	"@4leaf": {
+		"scope": "html",
+		"prefix": [
+			"@4leaf",
+			"@"
+		],
+		"body": "{@4leaf}",
+		"description": "4LEAF (site)"
+	},
+	"@talesweaver": {
+		"scope": "html",
+		"prefix": [
+			"@talesweaver"
+		],
+		"body": "{@talesweaver}",
+		"description": "TalesWeaver (work)"
+	},
+	"@neople": {
+		"scope": "html",
+		"prefix": [
+			"@neople",
+			"@"
+		],
+		"body": "{@neople}",
+		"description": "Neople (org)"
+	},
+	"@seoul-national-university": {
+		"scope": "html",
+		"prefix": [
+			"@seoul-national-university"
+		],
+		"body": "{@seoul-national-university}",
+		"description": "Seoul National University (org)"
+	},
+	"@love-studio": {
+		"scope": "html",
+		"prefix": [
+			"@love-studio",
+			"@"
+		],
+		"body": "{@love-studio}",
+		"description": "Love Studio (work)"
+	},
+	"@love-love-studio": {
+		"scope": "html",
+		"prefix": [
+			"@love-love-studio"
+		],
+		"body": "{@love-love-studio}",
+		"description": "Love Love Studio (work)"
+	},
+	"@kung-kung-tta": {
+		"scope": "html",
+		"prefix": [
+			"@kung-kung-tta"
+		],
+		"body": "{@kung-kung-tta}",
+		"description": "Kung Kung Tta (work)"
+	},
+	"@sunny-ynk": {
+		"scope": "html",
+		"prefix": [
+			"@sunny-ynk"
+		],
+		"body": "{@sunny-ynk}",
+		"description": "Sunny YNK (org)"
+	},
+	"@k4-technology": {
+		"scope": "html",
+		"prefix": [
+			"@k4-technology"
+		],
+		"body": "{@k4-technology}",
+		"description": "K4 Technology (org)"
+	},
+	"@dungeon-fighter-online": {
+		"scope": "html",
+		"prefix": [
+			"@dungeon-fighter-online",
+			"@dungeon-fighter",
+			"@"
+		],
+		"body": "{@dungeon-fighter-online}",
+		"description": "Dungeon Fighter Online (work)"
+	},
+	"@yunjong-kim": {
+		"scope": "html",
+		"prefix": [
+			"@yunjong-kim"
+		],
+		"body": "{@yunjong-kim}",
+		"description": "Yunjong Kim (person)"
+	},
+	"@gamasutra": {
+		"scope": "html",
+		"prefix": [
+			"@gamasutra",
+			"@game-developer"
+		],
+		"body": "{@gamasutra}",
+		"description": "Gamasutra (site)"
+	},
+	"@hardcore-gaming-101": {
+		"scope": "html",
+		"prefix": [
+			"@hardcore-gaming-101"
+		],
+		"body": "{@hardcore-gaming-101}",
+		"description": "Hardcore Gaming 101 (site)"
+	},
+	"@zdnet-korea": {
+		"scope": "html",
+		"prefix": [
+			"@zdnet-korea"
+		],
+		"body": "{@zdnet-korea}",
+		"description": "ZDNet Korea (site)"
+	},
+	"@electronic-times-korea": {
+		"scope": "html",
+		"prefix": [
+			"@electronic-times-korea",
+			"@etnews"
+		],
+		"body": "{@electronic-times-korea}",
+		"description": "Electronic Times (site)"
+	},
+	"@inews24": {
+		"scope": "html",
+		"prefix": [
+			"@inews24"
+		],
+		"body": "{@inews24}",
+		"description": "iNews24 (site)"
+	},
+	"@game-donga": {
+		"scope": "html",
+		"prefix": [
+			"@game-donga"
+		],
+		"body": "{@game-donga}",
+		"description": "Game Donga (site)"
+	},
+	"@gaim": {
+		"scope": "html",
+		"prefix": [
+			"@gaim",
+			"@pidgin"
+		],
+		"body": "{@gaim}",
+		"description": "Gaim (software)"
+	},
+	"@alex-syrov": {
+		"scope": "html",
+		"prefix": [
+			"@alex-syrov"
+		],
+		"body": "{@alex-syrov}",
+		"description": "Alex Syrov (person)"
+	},
 	"[@1991-kiss-gs": {
 		"scope": "html",
 		"prefix": "[@1991-kiss-gs",
@@ -4507,5 +5019,425 @@
 		"prefix": "[@microsoft-2003-messenger-customization",
 		"body": "[@microsoft-2003-messenger-customization]",
 		"description": "MSN Messenger 6 Allows IM Lovers to Express Themselves With Style"
+	},
+	"[@10eastern-news": {
+		"scope": "html",
+		"prefix": "[@10eastern-news",
+		"body": "[@10eastern-news]",
+		"description": "10eastern news"
+	},
+	"[@ambernia-spirit": {
+		"scope": "html",
+		"prefix": "[@ambernia-spirit",
+		"body": "[@ambernia-spirit]",
+		"description": "Realm of Ambernia — Spirit"
+	},
+	"[@elly-diary-1997": {
+		"scope": "html",
+		"prefix": "[@elly-diary-1997",
+		"body": "[@elly-diary-1997]",
+		"description": "Elly’s Diary"
+	},
+	"[@brigitte-quilting-bee": {
+		"scope": "html",
+		"prefix": "[@brigitte-quilting-bee",
+		"body": "[@brigitte-quilting-bee]",
+		"description": "Brigitte’s Quilting Bee shrine"
+	},
+	"[@together-forever-about": {
+		"scope": "html",
+		"prefix": "[@together-forever-about",
+		"body": "[@together-forever-about]",
+		"description": "Together Forever Project — About"
+	},
+	"[@userbar-tutorial-2006": {
+		"scope": "html",
+		"prefix": "[@userbar-tutorial-2006",
+		"body": "[@userbar-tutorial-2006]",
+		"description": "[PS] Making a Userbar"
+	},
+	"[@dolls-br-information": {
+		"scope": "html",
+		"prefix": "[@dolls-br-information",
+		"body": "[@dolls-br-information]",
+		"description": "Dolls.com.br — Informações"
+	},
+	"[@dolls-br-queen-for-a-day": {
+		"scope": "html",
+		"prefix": "[@dolls-br-queen-for-a-day",
+		"body": "[@dolls-br-queen-for-a-day]",
+		"description": "Queen for a Day — Participe"
+	},
+	"[@draghatch": {
+		"scope": "html",
+		"prefix": "[@draghatch",
+		"body": "[@draghatch]",
+		"description": "DragHatch"
+	},
+	"[@paint-shop-pro-tubes-1998": {
+		"scope": "html",
+		"prefix": "[@paint-shop-pro-tubes-1998",
+		"body": "[@paint-shop-pro-tubes-1998]",
+		"description": "Paint Shop Pro picture tubes FAQ"
+	},
+	"[@graphics-groups-2019": {
+		"scope": "html",
+		"prefix": "[@graphics-groups-2019",
+		"body": "[@graphics-groups-2019]",
+		"description": "Graphics groups listing"
+	},
+	"[@msn-emoticons-2003": {
+		"scope": "html",
+		"prefix": "[@msn-emoticons-2003",
+		"body": "[@msn-emoticons-2003]",
+		"description": "MSN Messenger Emotion Pictures"
+	},
+	"[@internet-watch-2001-homepage": {
+		"scope": "html",
+		"prefix": "[@internet-watch-2001-homepage",
+		"body": "[@internet-watch-2001-homepage]",
+		"description": "Guide to building a free homepage"
+	},
+	"[@internet-watch-2002-sayclub": {
+		"scope": "html",
+		"prefix": "[@internet-watch-2002-sayclub",
+		"body": "[@internet-watch-2002-sayclub]",
+		"description": "Toshiba and Neowiz announce SayClub in Japan"
+	},
+	"[@plz-accounts-kym": {
+		"scope": "html",
+		"prefix": "[@plz-accounts-kym",
+		"body": "[@plz-accounts-kym]",
+		"description": "Plz Accounts"
+	},
+	"[@doll-palace-2017-retrospective": {
+		"scope": "html",
+		"prefix": "[@doll-palace-2017-retrospective",
+		"body": "[@doll-palace-2017-retrospective]",
+		"description": "Nostalgia and The Doll Palace"
+	},
+	"[@lyssatee-website": {
+		"scope": "html",
+		"prefix": "[@lyssatee-website",
+		"body": "[@lyssatee-website]",
+		"description": "LyssaTee"
+	},
+	"[@microsoft-2004-messenger-spaces": {
+		"scope": "html",
+		"prefix": "[@microsoft-2004-messenger-spaces",
+		"body": "[@microsoft-2004-messenger-spaces]",
+		"description": "MSN Introduces New Communication Service That Enables Blogging, Picture Sharing "
+	},
+	"[@pixel-dolls-history": {
+		"scope": "html",
+		"prefix": "[@pixel-dolls-history",
+		"body": "[@pixel-dolls-history]",
+		"description": "Pixel Dolls — History"
+	},
+	"[@influence-2020-lissa": {
+		"scope": "html",
+		"prefix": "[@influence-2020-lissa",
+		"body": "[@influence-2020-lissa]",
+		"description": "Lissa Explains It All"
+	},
+	"[@doll-palace-2014-retrospective": {
+		"scope": "html",
+		"prefix": "[@doll-palace-2014-retrospective",
+		"body": "[@doll-palace-2014-retrospective]",
+		"description": "Throwback Thursday: The Doll Palace"
+	},
+	"[@tecchan-profile": {
+		"scope": "html",
+		"prefix": "[@tecchan-profile",
+		"body": "[@tecchan-profile]",
+		"description": "Tecchan.jp profile"
+	},
+	"[@techcrunch-2007-piczo-zone": {
+		"scope": "html",
+		"prefix": "[@techcrunch-2007-piczo-zone",
+		"body": "[@techcrunch-2007-piczo-zone]",
+		"description": "Piczo Zone: Better User Profiling Through Viral UGC"
+	},
+	"[@vovo2000-pbbs-archive": {
+		"scope": "html",
+		"prefix": "[@vovo2000-pbbs-archive",
+		"body": "[@vovo2000-pbbs-archive]",
+		"description": "Vovo2000 PaintBBS archive"
+	},
+	"[@soupfaerie-archive-index": {
+		"scope": "html",
+		"prefix": "[@soupfaerie-archive-index",
+		"body": "[@soupfaerie-archive-index]",
+		"description": "SoupFaerie.com archive index"
+	},
+	"[@sarahs-useful-web-stuff-2007": {
+		"scope": "html",
+		"prefix": "[@sarahs-useful-web-stuff-2007",
+		"body": "[@sarahs-useful-web-stuff-2007]",
+		"description": "Sarah’s Useful Web Stuff"
+	},
+	"[@boomspeed-2002-account": {
+		"scope": "html",
+		"prefix": "[@boomspeed-2002-account",
+		"body": "[@boomspeed-2002-account]",
+		"description": "Boomspeed.com shut me down"
+	},
+	"[@createblog-2005-ffx2": {
+		"scope": "html",
+		"prefix": "[@createblog-2005-ffx2",
+		"body": "[@createblog-2005-ffx2]",
+		"description": "Final Fantasy X-2"
+	},
+	"[@dawn-2011-doll-palace": {
+		"scope": "html",
+		"prefix": "[@dawn-2011-doll-palace",
+		"body": "[@dawn-2011-doll-palace]",
+		"description": "Website: The Doll Palace"
+	},
+	"[@deviantart-linking-help": {
+		"scope": "html",
+		"prefix": "[@deviantart-linking-help",
+		"body": "[@deviantart-linking-help]",
+		"description": "How do I link to other deviants, deviations, or pages?"
+	},
+	"[@jemjabella-website": {
+		"scope": "html",
+		"prefix": "[@jemjabella-website",
+		"body": "[@jemjabella-website]",
+		"description": "Jem’s personal website"
+	},
+	"[@jem-2010-quilting-bee": {
+		"scope": "html",
+		"prefix": "[@jem-2010-quilting-bee",
+		"body": "[@jem-2010-quilting-bee]",
+		"description": "Insert Bee Related Pun Here"
+	},
+	"[@ken-sozaiya-navi": {
+		"scope": "html",
+		"prefix": "[@ken-sozaiya-navi",
+		"body": "[@ken-sozaiya-navi]",
+		"description": "Ken no Sozaiya Navi"
+	},
+	"[@guestmap-2003-entries": {
+		"scope": "html",
+		"prefix": "[@guestmap-2003-entries",
+		"body": "[@guestmap-2003-entries]",
+		"description": "GuestMap entries"
+	},
+	"[@terri-site-fights-1999": {
+		"scope": "html",
+		"prefix": "[@terri-site-fights-1999",
+		"body": "[@terri-site-fights-1999]",
+		"description": "Terri’s Site Fights page"
+	},
+	"[@guestmap-2002-example": {
+		"scope": "html",
+		"prefix": "[@guestmap-2002-example",
+		"body": "[@guestmap-2002-example]",
+		"description": "Wormhole to the Cosmos"
+	},
+	"[@privacy-canada-2009-social-networks": {
+		"scope": "html",
+		"prefix": "[@privacy-canada-2009-social-networks",
+		"body": "[@privacy-canada-2009-social-networks]",
+		"description": "Comparison of social networking sites"
+	},
+	"[@salon-2003-dollz": {
+		"scope": "html",
+		"prefix": "[@salon-2003-dollz",
+		"body": "[@salon-2003-dollz]",
+		"description": "Playing with Dollz"
+	},
+	"[@seoul-shinmun-2001-avatars": {
+		"scope": "html",
+		"prefix": "[@seoul-shinmun-2001-avatars",
+		"body": "[@seoul-shinmun-2001-avatars]",
+		"description": "Korean avatar customization industry"
+	},
+	"[@simsforums-dragon-cave-2009": {
+		"scope": "html",
+		"prefix": "[@simsforums-dragon-cave-2009",
+		"body": "[@simsforums-dragon-cave-2009]",
+		"description": "Dragon Cave discussion"
+	},
+	"[@tumblr-theme-engine-2008": {
+		"scope": "html",
+		"prefix": "[@tumblr-theme-engine-2008",
+		"body": "[@tumblr-theme-engine-2008]",
+		"description": "Tumblr Getting Ready for New Stuff"
+	},
+	"[@web-sozai-dx-terms": {
+		"scope": "html",
+		"prefix": "[@web-sozai-dx-terms",
+		"body": "[@web-sozai-dx-terms]",
+		"description": "WEB Sozai DX usage terms"
+	},
+	"[@usenix-2008-spectator": {
+		"scope": "html",
+		"prefix": "[@usenix-2008-spectator",
+		"body": "[@usenix-2008-spectator]",
+		"description": "Spectator: Detection and Containment of JavaScript Worms"
+	},
+	"[@userbars-org-tutorial": {
+		"scope": "html",
+		"prefix": "[@userbars-org-tutorial",
+		"body": "[@userbars-org-tutorial]",
+		"description": "Userbars tutorial"
+	},
+	"[@website-review-guidelines-2004": {
+		"scope": "html",
+		"prefix": "[@website-review-guidelines-2004",
+		"body": "[@website-review-guidelines-2004]",
+		"description": "Guidelines for Writing Website Reviews"
+	},
+	"[@wired-2001-photoshop-tennis": {
+		"scope": "html",
+		"prefix": "[@wired-2001-photoshop-tennis",
+		"body": "[@wired-2001-photoshop-tennis]",
+		"description": "Anyone for Photoshop Tennis?"
+	},
+	"[@wired-2006-piczo": {
+		"scope": "html",
+		"prefix": "[@wired-2006-piczo",
+		"body": "[@wired-2006-piczo]",
+		"description": "Piczo: Pages With Privacy"
+	},
+	"[@doll-palace-2001-something-awful": {
+		"scope": "html",
+		"prefix": "[@doll-palace-2001-something-awful",
+		"body": "[@doll-palace-2001-something-awful]",
+		"description": "Another day, another lawsuit... The Dollpalace!"
+	},
+	"[@fanlore-geocities-fansites": {
+		"scope": "html",
+		"prefix": "[@fanlore-geocities-fansites",
+		"body": "[@fanlore-geocities-fansites]",
+		"description": "List of GeoCities Fansites"
+	},
+	"[@website-review-2001": {
+		"scope": "html",
+		"prefix": "[@website-review-2001",
+		"body": "[@website-review-2001]",
+		"description": "1st Attempt Site - Pls Review"
+	},
+	"[@metafilter-2003-steal-these-buttons": {
+		"scope": "html",
+		"prefix": "[@metafilter-2003-steal-these-buttons",
+		"body": "[@metafilter-2003-steal-these-buttons]",
+		"description": "Steal These Buttons"
+	},
+	"[@spiders-web-updates": {
+		"scope": "html",
+		"prefix": "[@spiders-web-updates",
+		"body": "[@spiders-web-updates]",
+		"description": "Site Updates"
+	},
+	"[@valenth-pinkpt-2008": {
+		"scope": "html",
+		"prefix": "[@valenth-pinkpt-2008",
+		"body": "[@valenth-pinkpt-2008]",
+		"description": "Valenth feeding links (forum thread)"
+	},
+	"[@valenth-sm-portugal-2009": {
+		"scope": "html",
+		"prefix": "[@valenth-sm-portugal-2009",
+		"body": "[@valenth-sm-portugal-2009]",
+		"description": "Jogo Valenth"
+	},
+	"[@squiby-egg-shoppe-2010": {
+		"scope": "html",
+		"prefix": "[@squiby-egg-shoppe-2010",
+		"body": "[@squiby-egg-shoppe-2010]",
+		"description": "Shamikun’s Dragon Egg Shoppe"
+	},
+	"[@neowiz-creativity-innovation-cycle": {
+		"scope": "html",
+		"prefix": "[@neowiz-creativity-innovation-cycle",
+		"body": "[@neowiz-creativity-innovation-cycle]",
+		"description": "Creativity-Innovation Cycle for Organisational Exploration and Exploitation: Les"
+	},
+	"[@sayclub-2000-premium-revenue": {
+		"scope": "html",
+		"prefix": "[@sayclub-2000-premium-revenue",
+		"body": "[@sayclub-2000-premium-revenue]",
+		"description": "SayClub premium-service revenue (article description)"
+	},
+	"[@sayclub-2001-game-avatar-licensing": {
+		"scope": "html",
+		"prefix": "[@sayclub-2001-game-avatar-licensing",
+		"body": "[@sayclub-2001-game-avatar-licensing]",
+		"description": "Neowiz game-character avatar licensing (article description)"
+	},
+	"[@toshiba-2002-sayclub": {
+		"scope": "html",
+		"prefix": "[@toshiba-2002-sayclub",
+		"body": "[@toshiba-2002-sayclub]",
+		"description": "Toshiba–Neowiz SayClub partnership announcement"
+	},
+	"[@gravity-2006-sec-filing": {
+		"scope": "html",
+		"prefix": "[@gravity-2006-sec-filing",
+		"body": "[@gravity-2006-sec-filing]",
+		"description": "Gravity annual report (SEC filing)"
+	},
+	"[@nexon-maplestory-interview": {
+		"scope": "html",
+		"prefix": "[@nexon-maplestory-interview",
+		"body": "[@nexon-maplestory-interview]",
+		"description": "Q&A: Nexon America Talks MapleStory"
+	},
+	"[@softmax-korean-gaming-history": {
+		"scope": "html",
+		"prefix": "[@softmax-korean-gaming-history",
+		"body": "[@softmax-korean-gaming-history]",
+		"description": "A History of Korean Gaming: Softmax"
+	},
+	"[@4leaf-talesweaver-setting": {
+		"scope": "html",
+		"prefix": "[@4leaf-talesweaver-setting",
+		"body": "[@4leaf-talesweaver-setting]",
+		"description": "TalesWeaver setting (preserved Korean description)"
+	},
+	"[@candybar-2001-publishing": {
+		"scope": "html",
+		"prefix": "[@candybar-2001-publishing",
+		"body": "[@candybar-2001-publishing]",
+		"description": "Sunny YNK and Neople Candybar publishing agreement (article description)"
+	},
+	"[@candybar-2002-avatar-sales": {
+		"scope": "html",
+		"prefix": "[@candybar-2002-avatar-sales",
+		"body": "[@candybar-2002-avatar-sales]",
+		"description": "Candybar avatar sales (article description)"
+	},
+	"[@candybar-2003-fashion-shops": {
+		"scope": "html",
+		"prefix": "[@candybar-2003-fashion-shops",
+		"body": "[@candybar-2003-fashion-shops]",
+		"description": "Candybar casual games and avatar fashion shops (article description)"
+	},
+	"[@candybar-animated-outfits": {
+		"scope": "html",
+		"prefix": "[@candybar-animated-outfits",
+		"body": "[@candybar-animated-outfits]",
+		"description": "Candybar animated game outfits (article description)"
+	},
+	"[@candybar-2003-copyright-dispute": {
+		"scope": "html",
+		"prefix": "[@candybar-2003-copyright-dispute",
+		"body": "[@candybar-2003-copyright-dispute]",
+		"description": "Candybar avatar copying allegations (article description)"
+	},
+	"[@dungeon-fighter-2009-interview": {
+		"scope": "html",
+		"prefix": "[@dungeon-fighter-2009-interview",
+		"body": "[@dungeon-fighter-2009-interview]",
+		"description": "Interview: Dungeon Fighter Online Creator On Korean Hit MMO’s Western Transition"
+	},
+	"[@gaim-faq": {
+		"scope": "html",
+		"prefix": "[@gaim-faq",
+		"body": "[@gaim-faq]",
+		"description": "Gaim FAQ"
 	}
 }
